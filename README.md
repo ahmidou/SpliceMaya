@@ -24,8 +24,8 @@ A scons (http://www.scons.org/) build script is provided. Fabric Splice for Maya
 
 Fabric Splice for Maya requires a certain folder structure to build properly. You will need to have the SpliceAPI cloned as well on your drive, as such:
 
-  SpliceAPI
-  Applications/SpliceMaya
+    SpliceAPI
+    Applications/SpliceMaya
 
 To inform scons where to find the Fabric Core includes as well as the thirdparty libraries, you need to set the following environment variables:
 
