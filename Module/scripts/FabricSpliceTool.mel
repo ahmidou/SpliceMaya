@@ -1,0 +1,26 @@
+global proc fabricSpliceActivateTool()
+{
+  // check to see if the context already exists
+  global string $gFabricSpliceToolName;
+  if(size($gFabricSpliceToolName) == 0)
+    $gFabricSpliceToolName = `eval "FabricSpliceToolContext"`;
+  setToolTo($gFabricSpliceToolName);
+}
+
+global proc fabricSpliceSaveSplice()
+{
+	string $selNodes[] = `ls -sl -et "spliceMayaNode"`;
+	if(size($selNodes) == 0)
+		$selNodes = `ls -sl -et "spliceMayaDeformer"`;
+	if(size($selNodes) > 0)
+		fabricSplice "saveSplice" $selNodes[0];
+}
+
+global proc fabricSpliceLoadSplice()
+{
+	string $selNodes[] = `ls -sl -et "spliceMayaNode"`;
+	if(size($selNodes) == 0)
+		$selNodes = `ls -sl -et "spliceMayaDeformer"`;
+	if(size($selNodes) > 0)
+		fabricSplice "loadSplice" $selNodes[0];
+}
