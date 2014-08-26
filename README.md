@@ -27,6 +27,15 @@ Fabric Splice for Maya requires a certain folder structure to build properly. Yo
     SpliceAPI
     Applications/SpliceMaya
 
+You can use the bash script below to clone the repositories accordingly:
+
+    git clone git@github.com:fabric-engine/SpliceAPI.git
+    mkdir Applications
+    cd Applications
+    git clone git@github.com:fabric-engine/SpliceMaya.git
+    cd SpliceMaya
+    scons
+
 To inform scons where to find the Fabric Core includes as well as the thirdparty libraries, you need to set the following environment variables:
 
 * FABRIC_CAPI_DIR: Should point to Fabric Engine's Core folder.
