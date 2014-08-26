@@ -8,7 +8,7 @@ AddOption(
 )
 
 # check environment variables
-for var in ['FABRIC_CAPI_DIR', 'FABRIC_SPLICE_VERSION', 'BOOST_DIR', 'MAYA_DIR', 'MAYA_VERSION']:
+for var in ['FABRIC_CAPI_DIR', 'FABRIC_SPLICE_VERSION', 'BOOST_DIR', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR', 'MAYA_VERSION']:
   if not os.environ.has_key(var):
     print 'The environment variable %s is not defined.' % var
     exit(0)
@@ -55,8 +55,9 @@ else:
   print 'The folder "'+spliceApiDir.abspath+'" does not exist. Please see the README.md for build instructions.'
   exit(0)
 
-(mayaSpliceAlias, mayaSpliceFiles) = SConscript(
-  dirs = ['.'],
+# (mayaSpliceAlias, mayaSpliceFiles) = SConscript(
+SConscript(
+  os.path.join('SConscript'),
   exports = {
     'parentEnv': spliceEnv,
     'FABRIC_CAPI_DIR': os.environ['FABRIC_CAPI_DIR'],
@@ -67,11 +68,12 @@ else:
     'SPLICE_OS': platform.system(),
     'SPLICE_ARCH': 'x86_64',
     'BOOST_DIR': os.environ['BOOST_DIR'],
-    'MAYA_DIR': os.environ['MAYA_DIR'],
+    'MAYA_INCLUDE_DIR': os.environ['MAYA_INCLUDE_DIR'],
+    'MAYA_LIB_DIR': os.environ['MAYA_LIB_DIR'],
     'MAYA_VERSION': os.environ['MAYA_VERSION']
   },
   variant_dir = spliceEnv.Dir('.build').Dir(os.environ['MAYA_VERSION'])
 )
 
-allAliases = [mayaSpliceAlias]
-spliceEnv.Alias('all', allAliases)
+# allAliases = [mayaSpliceAlias]
+# spliceEnv.Alias('all', allAliases)

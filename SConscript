@@ -4,19 +4,17 @@
 
 import os, sys, platform, copy
 
-Import('parentEnv', 'FABRIC_CAPI_DIR', 'SPLICE_VERSION', 'STAGE_DIR', 'SPLICE_OS', 'MAYA_DIR', 'MAYA_VERSION', 'sharedCapiFlags', 'spliceFlags')
+Import('parentEnv', 'FABRIC_CAPI_DIR', 'SPLICE_VERSION', 'STAGE_DIR', 'SPLICE_OS', 'SPLICE_DEBUG', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR','MAYA_VERSION', 'sharedCapiFlags', 'spliceFlags')
 
 env = parentEnv.Clone()
 
-print env['CPPPATH']
-
 mayaFlags = {
   'CPPPATH': [
-      os.path.join(MAYA_DIR, 'include'),
-      os.path.join(MAYA_DIR, 'include', 'Qt')
+      MAYA_INCLUDE_DIR,
+      os.path.join(MAYA_INCLUDE_DIR, 'Qt')
     ],
   'LIBPATH': [
-    os.path.join(MAYA_DIR, 'lib')
+    MAYA_LIB_DIR
   ],
 }
 
@@ -28,12 +26,12 @@ elif SPLICE_OS == 'Linux':
   mayaFlags['CCFLAGS'] = ['-DLINUX']
   mayaFlags['LIBS'].extend(['QtCore', 'QtGui'])
 else:
-  qtCoreLib = File(os.path.join(MAYA_DIR, 'lib', 'QtCore'))
-  qtGuiLib = File(os.path.join(MAYA_DIR, 'lib', 'QtGui'))
+  qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
+  qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
   mayaFlags['LIBS'].extend([
     qtCoreLib,
     qtGuiLib,
-    File(os.path.join(MAYA_DIR, 'lib', 'QtGui'))
+    File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
   ])
 
 env.MergeFlags(mayaFlags)
@@ -45,15 +43,17 @@ env.MergeFlags(spliceFlags)
 target = 'FabricSpliceMaya' + MAYA_VERSION
 
 mayaModule = None
+sources = env.Glob('*.cpp')
+
 if SPLICE_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
   target += '.bundle'
-  mayaModule = env.LoadableModule(target = target, source = Glob('*.cpp'))
+  mayaModule = env.LoadableModule(target = target, source = sources)
 else:
   libSuffix = '.so'
   if SPLICE_OS == 'Windows':
     libSuffix = '.mll'
-  mayaModule = env.SharedLibrary(target = target, source = Glob('*.cpp'), SHLIBSUFFIX=libSuffix, SHLIBPREFIX='')
+  mayaModule = env.SharedLibrary(target = target, source = sources, SHLIBSUFFIX=libSuffix, SHLIBPREFIX='')
 
 sedCmd = 'sed'
 if SPLICE_OS == 'Windows':  
@@ -95,6 +95,7 @@ for ui in ['FabricSpliceEditor']:
 for png in ['FE_logo']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'ui'), os.path.join('Module', 'ui', png+'.png')))
 installedModule = env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), mayaModule)
+mayaFiles.append(installedModule)
 
 # also install the FabricCore dynamic library
 mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.so'))))
@@ -124,7 +125,7 @@ mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Gl
 #   }))
 # mayaFiles.append(installedModule)
 
-if GetOption('debug_build') and SPLICE_OS == 'Windows':
+if SPLICE_DEBUG and SPLICE_OS == 'Windows':
   env['CCPDBFLAGS']  = ['${(PDB and "/Fd%s_incremental.pdb /Zi" % File(PDB)) or ""}']
   pdbSource = mayaModule[0].get_abspath().rpartition('.')[0]+".pdb"
   pdbTarget = os.path.join(STAGE_DIR.abspath, os.path.split(pdbSource)[1])
