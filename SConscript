@@ -112,8 +112,6 @@ if FABRIC_BUILD_TYPE == 'Debug' and FABRIC_BUILD_OS == 'Windows':
   env.AlwaysBuild(copyPdb)
 
 # todo: install the python client
-# # install extensions
-# mayaFiles.extend(installExtensions(os.path.join(STAGE_DIR.abspath, 'Exts'), env, installedModule))
 
 alias = env.Alias('splicemaya', mayaFiles)
 spliceData = (alias, mayaFiles)
