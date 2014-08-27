@@ -21,8 +21,6 @@ spliceApiDir = spliceEnv.Dir('..').Dir('..').Dir('SpliceAPI')
 # try to get the Splice API from there
 if os.path.exists(spliceApiDir.abspath):
 
-  # print spliceEnv['CPPPATH']
-
   (spliceAPIAlias, spliceAPIFiles) = SConscript(
     dirs = [spliceApiDir],
     exports = {
@@ -37,8 +35,6 @@ if os.path.exists(spliceApiDir.abspath):
     },
     variant_dir = spliceEnv.Dir('.build').Dir('SpliceAPI')
   )
-
-  print spliceEnv['CPPPATH']
   
   spliceApiDir = spliceEnv.Dir('.build').Dir('SpliceAPI').Dir('.stage').abspath
   
