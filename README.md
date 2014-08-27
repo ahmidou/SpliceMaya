@@ -7,7 +7,7 @@ Fabric Splice for Maya allows you to make use of the Fabric Core inside of Maya 
 Repository Status
 =================
 
-This repository will be maintained and kept up to date by Fabric Technologies to match the latest Fabric Core / Fabric Splice.
+This repository will be maintained and kept up to date by Fabric Software to match the latest Fabric Core / Fabric Splice.
 
 Supported platforms
 ===================
