@@ -50,6 +50,14 @@ To inform scons where to find the Fabric Core includes as well as the thirdparty
 
 The temporary files will be built into the *.build* folder, while the structured output files will be placed in the *.stage* folder.
 
+To perform a build you can just run
+
+    scons all -j8
+
+To clean the build you can run
+
+    scons clean
+
 License
 ==========
 

@@ -1,4 +1,18 @@
 import os, platform
+import shutil
+
+spliceEnv = Environment()
+
+def RemoveFolderCmd(target, source, env):
+  if os.path.exists(source[0].abspath):
+    shutil.rmtree(source[0].abspath)
+
+# define the clean target
+if 'clean' in COMMAND_LINE_TARGETS:
+  cleanBuild = spliceEnv.Command( spliceEnv.File('cleaning build folder'), spliceEnv.Dir('.build'), RemoveFolderCmd )
+  cleanStage = spliceEnv.Command( spliceEnv.File('cleaning stage folder'), spliceEnv.Dir('.stage'), RemoveFolderCmd )
+  spliceEnv.Alias('clean', [cleanBuild, cleanStage])
+  Return()
 
 # check environment variables
 for var in ['FABRIC_CAPI_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BUILD_ARCH', 'FABRIC_BUILD_TYPE', 'BOOST_DIR', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR', 'MAYA_VERSION']:
