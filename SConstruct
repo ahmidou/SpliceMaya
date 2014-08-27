@@ -1,14 +1,7 @@
 import os, platform
 
-AddOption(
-  '--debug-build',
-  action='store_true',
-  help='debug build',
-  default=False
-)
-
 # check environment variables
-for var in ['FABRIC_CAPI_DIR', 'FABRIC_SPLICE_VERSION', 'BOOST_DIR', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR', 'MAYA_VERSION']:
+for var in ['FABRIC_CAPI_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BUILD_ARCH', 'FABRIC_BUILD_TYPE', 'BOOST_DIR', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR', 'MAYA_VERSION']:
   if not os.environ.has_key(var):
     print 'The environment variable %s is not defined.' % var
     exit(0)
@@ -35,12 +28,11 @@ if os.path.exists(spliceApiDir.abspath):
     exports = {
       'parentEnv': spliceEnv,
       'FABRIC_CAPI_DIR': os.environ['FABRIC_CAPI_DIR'],
-      'CORE_VERSION': os.environ['FABRIC_SPLICE_VERSION'].rpartition('.')[0],
-      'SPLICE_VERSION': os.environ['FABRIC_SPLICE_VERSION'],
+      'FABRIC_SPLICE_VERSION': os.environ['FABRIC_SPLICE_VERSION'],
+      'FABRIC_BUILD_TYPE': os.environ['FABRIC_BUILD_TYPE'],
+      'FABRIC_BUILD_OS': os.environ['FABRIC_BUILD_OS'],
+      'FABRIC_BUILD_ARCH': os.environ['FABRIC_BUILD_ARCH'],
       'STAGE_DIR': spliceEnv.Dir('.build').Dir('SpliceAPI').Dir('.stage'),
-      'SPLICE_DEBUG': GetOption('debug_build'),
-      'SPLICE_OS': platform.system(),
-      'SPLICE_ARCH': 'x86_64',
       'BOOST_DIR': os.environ['BOOST_DIR']
     },
     variant_dir = spliceEnv.Dir('.build').Dir('SpliceAPI')
@@ -55,18 +47,16 @@ else:
   print 'The folder "'+spliceApiDir.abspath+'" does not exist. Please see the README.md for build instructions.'
   exit(0)
 
-# (mayaSpliceAlias, mayaSpliceFiles) = SConscript(
-SConscript(
+(mayaSpliceAlias, mayaSpliceFiles) = SConscript(
   os.path.join('SConscript'),
   exports = {
     'parentEnv': spliceEnv,
     'FABRIC_CAPI_DIR': os.environ['FABRIC_CAPI_DIR'],
-    'CORE_VERSION': os.environ['FABRIC_SPLICE_VERSION'].rpartition('.')[0],
-    'SPLICE_VERSION': os.environ['FABRIC_SPLICE_VERSION'],
+    'FABRIC_SPLICE_VERSION': os.environ['FABRIC_SPLICE_VERSION'],
+    'FABRIC_BUILD_TYPE': os.environ['FABRIC_BUILD_TYPE'],
+    'FABRIC_BUILD_OS': os.environ['FABRIC_BUILD_OS'],
+    'FABRIC_BUILD_ARCH': os.environ['FABRIC_BUILD_ARCH'],
     'STAGE_DIR': spliceEnv.Dir('.stage').Dir('Applications').Dir('FabricSpliceMaya'+os.environ['MAYA_VERSION']),
-    'SPLICE_DEBUG': GetOption('debug_build'),
-    'SPLICE_OS': platform.system(),
-    'SPLICE_ARCH': 'x86_64',
     'BOOST_DIR': os.environ['BOOST_DIR'],
     'MAYA_INCLUDE_DIR': os.environ['MAYA_INCLUDE_DIR'],
     'MAYA_LIB_DIR': os.environ['MAYA_LIB_DIR'],
@@ -75,5 +65,5 @@ SConscript(
   variant_dir = spliceEnv.Dir('.build').Dir(os.environ['MAYA_VERSION'])
 )
 
-# allAliases = [mayaSpliceAlias]
-# spliceEnv.Alias('all', allAliases)
+allAliases = [mayaSpliceAlias]
+spliceEnv.Alias('all', allAliases)

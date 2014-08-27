@@ -4,7 +4,7 @@
 
 import os, sys, platform, copy
 
-Import('parentEnv', 'FABRIC_CAPI_DIR', 'SPLICE_VERSION', 'STAGE_DIR', 'SPLICE_OS', 'SPLICE_DEBUG', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR','MAYA_VERSION', 'sharedCapiFlags', 'spliceFlags')
+Import('parentEnv', 'FABRIC_CAPI_DIR', 'FABRIC_SPLICE_VERSION', 'STAGE_DIR', 'FABRIC_BUILD_OS', 'FABRIC_BUILD_TYPE', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR','MAYA_VERSION', 'sharedCapiFlags', 'spliceFlags')
 
 env = parentEnv.Clone()
 
@@ -19,10 +19,10 @@ mayaFlags = {
 }
 
 mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'Foundation']
-if SPLICE_OS == 'Windows':
+if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CCFLAGS'] = ['/DNT_PLUGIN']
   mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4'])
-elif SPLICE_OS == 'Linux':
+elif FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CCFLAGS'] = ['-DLINUX']
   mayaFlags['LIBS'].extend(['QtCore', 'QtGui'])
 else:
@@ -45,18 +45,18 @@ target = 'FabricSpliceMaya' + MAYA_VERSION
 mayaModule = None
 sources = env.Glob('*.cpp')
 
-if SPLICE_OS == 'Darwin':
+if FABRIC_BUILD_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
   target += '.bundle'
   mayaModule = env.LoadableModule(target = target, source = sources)
 else:
   libSuffix = '.so'
-  if SPLICE_OS == 'Windows':
+  if FABRIC_BUILD_OS == 'Windows':
     libSuffix = '.mll'
   mayaModule = env.SharedLibrary(target = target, source = sources, SHLIBSUFFIX=libSuffix, SHLIBPREFIX='')
 
 sedCmd = 'sed'
-if SPLICE_OS == 'Windows':  
+if FABRIC_BUILD_OS == 'Windows':  
   envPaths = os.environ['PATH'].split(os.pathsep)
   for envPath in envPaths:
     sedPath = os.path.join(envPath, 'sed.exe')
@@ -107,12 +107,12 @@ mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Gl
 #   mayaPythonVersion = '2.6'
 
 # pythonLib = 'python'+mayaPythonVersion
-# if SPLICE_OS == 'Windows':
+# if FABRIC_BUILD_OS == 'Windows':
 #   pythonLib = 'python'+mayaPythonVersion.replace('.', '')
 
 # # [andrew 20140323] use Core lib from plug-ins folder
 # linkFlags = []
-# if SPLICE_OS == 'Linux':
+# if FABRIC_BUILD_OS == 'Linux':
 #   linkFlags.append(Literal('-Wl,-rpath,$ORIGIN/../../../plug-ins'))
 
 # mayaFiles.append(installPythonClient(
@@ -125,7 +125,7 @@ mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Gl
 #   }))
 # mayaFiles.append(installedModule)
 
-if SPLICE_DEBUG and SPLICE_OS == 'Windows':
+if FABRIC_BUILD_TYPE == 'Debug' and FABRIC_BUILD_OS == 'Windows':
   env['CCPDBFLAGS']  = ['${(PDB and "/Fd%s_incremental.pdb /Zi" % File(PDB)) or ""}']
   pdbSource = mayaModule[0].get_abspath().rpartition('.')[0]+".pdb"
   pdbTarget = os.path.join(STAGE_DIR.abspath, os.path.split(pdbSource)[1])
