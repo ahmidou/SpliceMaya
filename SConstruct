@@ -63,3 +63,4 @@ else:
 
 allAliases = [mayaSpliceAlias]
 spliceEnv.Alias('all', allAliases)
+spliceEnv.Default(allAliases)
