@@ -102,29 +102,7 @@ mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Gl
 mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.dylib'))))
 mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.dll'))))
 
-# mayaPythonVersion = '2.7'
-# if int(MAYA_VERSION[0:4]) < 2014:
-#   mayaPythonVersion = '2.6'
-
-# pythonLib = 'python'+mayaPythonVersion
-# if FABRIC_BUILD_OS == 'Windows':
-#   pythonLib = 'python'+mayaPythonVersion.replace('.', '')
-
-# # [andrew 20140323] use Core lib from plug-ins folder
-# linkFlags = []
-# if FABRIC_BUILD_OS == 'Linux':
-#   linkFlags.append(Literal('-Wl,-rpath,$ORIGIN/../../../plug-ins'))
-
-# mayaFiles.append(installPythonClient(
-#   os.path.join(STAGE_DIR.abspath, 'python'), env, installedModule, 
-#   {
-#     'CPPPATH': [os.path.join(mayaFlags['CPPPATH'][0], 'python'+mayaPythonVersion)],
-#     'LIBPATH': [mayaFlags['LIBPATH'][0]],
-#     'LIBS': [pythonLib],
-#     'LINKFLAGS': linkFlags
-#   }))
-# mayaFiles.append(installedModule)
-
+# install PDB files on windows
 if FABRIC_BUILD_TYPE == 'Debug' and FABRIC_BUILD_OS == 'Windows':
   env['CCPDBFLAGS']  = ['${(PDB and "/Fd%s_incremental.pdb /Zi" % File(PDB)) or ""}']
   pdbSource = mayaModule[0].get_abspath().rpartition('.')[0]+".pdb"
@@ -133,9 +111,10 @@ if FABRIC_BUILD_TYPE == 'Debug' and FABRIC_BUILD_OS == 'Windows':
   env.Depends( copyPdb, installedModule )
   env.AlwaysBuild(copyPdb)
 
+# todo: install the python client
 # # install extensions
 # mayaFiles.extend(installExtensions(os.path.join(STAGE_DIR.abspath, 'Exts'), env, installedModule))
 
-alias = env.Alias('maya', mayaFiles)
+alias = env.Alias('splicemaya', mayaFiles)
 spliceData = (alias, mayaFiles)
 Return('spliceData')
