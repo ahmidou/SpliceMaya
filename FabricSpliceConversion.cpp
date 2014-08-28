@@ -31,6 +31,12 @@
 #include <maya/MFloatVectorArray.h>
 #include <maya/MFnAnimCurve.h>
 
+#define CORE_CATCH_BEGIN try {
+#define CORE_CATCH_END } \
+  catch (FabricCore::Exception e) { \
+    mayaLogErrorFunc(e.getDesc_cstr()); \
+  }
+
 typedef std::map<std::string, SplicePlugToPortFunc> SplicePlugToPortFuncMap;
 typedef std::map<std::string, SplicePortToPlugFunc> SplicePortToPlugFuncMap;
 typedef SplicePlugToPortFuncMap::iterator SplicePlugToPortFuncIt;
@@ -73,6 +79,8 @@ double getFloat64FromRTVal(FabricCore::RTVal rtVal)
 
 void plugToPort_compound_convertMat44(const MMatrix & matrix, FabricCore::RTVal & rtVal)
 {
+  CORE_CATCH_BEGIN;
+
   rtVal = FabricSplice::constructRTVal("Mat44", 0, 0);
   FabricCore::RTVal dataRTVal = rtVal.callMethod("Data", "data", 0, 0);
   float * data = (float*)dataRTVal.getData();
@@ -94,11 +102,15 @@ void plugToPort_compound_convertMat44(const MMatrix & matrix, FabricCore::RTVal 
   data[offset++] = (float)matrix[1][3];
   data[offset++] = (float)matrix[2][3];
   data[offset++] = (float)matrix[3][3];
+
+  CORE_CATCH_END;
 }
 
 void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataHandle & handle, FabricCore::RTVal & rtVal)
 {
   std::vector<FabricCore::RTVal> args(5);
+
+  CORE_CATCH_BEGIN;
 
   // treat special cases
   if(compound.numChildren() == 3)
@@ -480,10 +492,14 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
     if(childRTVal.isValid())
       rtVal.callMethod("", "addParam", 1, &childRTVal);
   }
+
+  CORE_CATCH_END;
 }
 
 
 void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+  CORE_CATCH_BEGIN;
+
   if(plug.isArray()){
     FabricCore::RTVal compoundVals = FabricSplice::constructObjectRTVal("CompoundArrayParam");
     FabricCore::RTVal numElements = FabricSplice::constructUInt32RTVal(plug.numElements());
@@ -503,6 +519,8 @@ void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
   }
   else{
   }
+
+  CORE_CATCH_END;
 }
 
 void plugToPort_compound(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
@@ -654,6 +672,8 @@ void plugToPort_scalar(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & por
 }
 
 void plugToPort_string(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+  CORE_CATCH_BEGIN;
+
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
     unsigned int elements = arrayHandle.elementCount();
@@ -675,9 +695,13 @@ void plugToPort_string(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & por
     MDataHandle handle = data.inputValue(plug);
     port.setRTVal(FabricSplice::constructStringRTVal(handle.asString().asChar()));
   }
+
+  CORE_CATCH_END;
 }
 
 void plugToPort_color(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+  CORE_CATCH_BEGIN;
+
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -728,6 +752,8 @@ void plugToPort_color(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
 
     port.setRTVal(color);
   }
+
+  CORE_CATCH_END;
 }
 
 void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
@@ -807,6 +833,8 @@ void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
 }
 
 void plugToPort_euler(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+  CORE_CATCH_BEGIN;
+
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -855,6 +883,8 @@ void plugToPort_euler(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
 
     port.setRTVal(euler);
   }
+
+  CORE_CATCH_END;
 }
 
 void plugToPort_mat44(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
@@ -1215,6 +1245,8 @@ void plugToPort_Lines(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
 
 void plugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal & trackVal) {
 
+  CORE_CATCH_BEGIN;
+
   // find the usage of this plug
   // with this we might be able to determine color
   MString curveName = curve.name();
@@ -1327,6 +1359,7 @@ void plugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal & t
 
   trackVal.setMember("keys", keysVal);
 
+  CORE_CATCH_END;
 }
 
 void plugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
@@ -1431,6 +1464,8 @@ void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPo
 
 void portToPlug_compound_convertMat44(MMatrix & matrix, FabricCore::RTVal & rtVal)
 {
+  CORE_CATCH_BEGIN;
+
   FabricCore::RTVal dataRTVal = rtVal.callMethod("Data", "data", 0, 0);
   float * data = (float*)dataRTVal.getData();
 
@@ -1441,10 +1476,14 @@ void portToPlug_compound_convertMat44(MMatrix & matrix, FabricCore::RTVal & rtVa
     data[3], data[7], data[11], data[15]
   };
   matrix = MMatrix(vals);
+
+  CORE_CATCH_END;
 }
 
 void portToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDataHandle & handle, FabricCore::RTVal & rtVal)
 {
+  CORE_CATCH_BEGIN;
+
   std::vector<FabricCore::RTVal> args(5);
   std::string valueType;
 
@@ -1982,6 +2021,8 @@ void portToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
       }
     }
   }
+
+  CORE_CATCH_END;
 }
 
 void portToPlug_compound(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data){
@@ -2067,6 +2108,8 @@ void portToPlug_integer(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &da
 }
 
 void portToPlug_scalar(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data){
+  CORE_CATCH_BEGIN;
+
   std::string scalarUnit = port.getStringOption("scalarUnit");
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -2136,6 +2179,8 @@ void portToPlug_scalar(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &dat
       }
     }
   }
+
+  CORE_CATCH_END;
 }
 
 void portToPlug_string(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data){
@@ -2404,6 +2449,8 @@ void portToPlug_mat44(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
 
 void portToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtMesh)
 {
+  CORE_CATCH_BEGIN;
+
   unsigned int nbPoints = 0;
   unsigned int nbPolygons = 0;
   unsigned int nbSamples = 0;
@@ -2631,6 +2678,7 @@ void portToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtM
     handle.setClean();
   }
 
+  CORE_CATCH_END;
 }
 
 void portToPlug_PolygonMesh(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data){
@@ -2669,6 +2717,8 @@ void portToPlug_PolygonMesh(FabricSplice::DGPort & port, MPlug &plug, MDataBlock
 
 void portToPlug_Lines_singleLines(MDataHandle handle, FabricCore::RTVal rtVal)
 {
+  CORE_CATCH_BEGIN;
+
   unsigned int nbPoints = 0;
   unsigned int nbSegments = 0;
   if(!rtVal.isNullObject())
@@ -2718,6 +2768,8 @@ void portToPlug_Lines_singleLines(MDataHandle handle, FabricCore::RTVal rtVal)
 
   handle.set(curveObject);
   handle.setClean();
+
+  CORE_CATCH_END;
 }
 
 void portToPlug_Lines(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data){

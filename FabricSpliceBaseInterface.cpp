@@ -1323,14 +1323,14 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
     if(!port.isObject())
       continue;
 
-    FabricCore::RTVal value = port.getRTVal();
-    if(!value.isValid())
-      continue;
-    if(value.isNullObject())
-      continue;
-
     try
     {
+      FabricCore::RTVal value = port.getRTVal();
+      if(!value.isValid())
+        continue;
+      if(value.isNullObject())
+        continue;
+
       if(destroy)
         value.callMethod("", "_deattach", 0, 0);
       else

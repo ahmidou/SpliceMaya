@@ -17,10 +17,22 @@
 
 #include <FabricSplice.h>
 
-#define MAYASPLICE_CATCH_BEGIN(statusPtr) if(statusPtr)*statusPtr=MS::kSuccess; try{
+#define MAYASPLICE_CATCH_BEGIN(statusPtr) \
+  if(statusPtr) \
+    *statusPtr=MS::kSuccess; \
+  try {
+
 #define MAYASPLICE_CATCH_END(statusPtr) } \
-  catch(FabricSplice::Exception e){if(statusPtr)*statusPtr=MS::kFailure;} \
-  catch(FabricCore::Exception e){mayaLogErrorFunc(e.getDesc_cstr());if(statusPtr)*statusPtr=MS::kFailure;}
+  catch (FabricSplice::Exception e) { \
+    mayaLogErrorFunc(e.what()); \
+    if (statusPtr) \
+      *statusPtr=MS::kFailure; \
+  } \
+  catch (FabricCore::Exception e) { \
+    mayaLogErrorFunc(e.getDesc_cstr()); \
+    if (statusPtr) \
+      *statusPtr=MS::kFailure; \
+  }
 
 class FabricSpliceBaseInterface {
 

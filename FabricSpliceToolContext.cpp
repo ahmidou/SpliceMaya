@@ -42,26 +42,42 @@ MStatus FabricSpliceManipulationCmd::doIt(const MArgList &args)
 
 MStatus FabricSpliceManipulationCmd::redoIt()
 {
-  if(m_rtval_commands.isValid()){
-    for(int i=0; i<m_rtval_commands.getArraySize(); i++){
-      m_rtval_commands.getArrayElement(i).callMethod("", "doAction", 0, 0);
+  try
+  {
+    if(m_rtval_commands.isValid()){
+      for(int i=0; i<m_rtval_commands.getArraySize(); i++){
+        m_rtval_commands.getArrayElement(i).callMethod("", "doAction", 0, 0);
+      }
     }
+    M3dView view = M3dView::active3dView();
+    view.refresh(true, true);
+    return MStatus::kSuccess;
   }
-  M3dView view = M3dView::active3dView();
-  view.refresh(true, true);
-  return MStatus::kSuccess;
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return MStatus::kFailure;
+  }
 }
 
 MStatus FabricSpliceManipulationCmd::undoIt()
 {
-  if(m_rtval_commands.isValid()){
-    for(int i=0; i<m_rtval_commands.getArraySize(); i++){
-      m_rtval_commands.getArrayElement(i).callMethod("", "undoAction", 0, 0);
+  try
+  {
+    if(m_rtval_commands.isValid()){
+      for(int i=0; i<m_rtval_commands.getArraySize(); i++){
+        m_rtval_commands.getArrayElement(i).callMethod("", "undoAction", 0, 0);
+      }
     }
+    M3dView view = M3dView::active3dView();
+    view.refresh(true, true);
+    return MStatus::kSuccess;
   }
-  M3dView view = M3dView::active3dView();
-  view.refresh(true, true);
-  return MStatus::kSuccess;
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return MStatus::kFailure;
+  }
 }
 
 bool FabricSpliceManipulationCmd::isUndoable() const
@@ -176,21 +192,28 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &)
 
 void FabricSpliceToolContext::toolOffCleanup()
 {
-  M3dView view = M3dView::active3dView();
+  try
+  {
+    M3dView view = M3dView::active3dView();
 
-  view.widget()->removeEventFilter(&sEventFilterObject);
-  view.widget()->clearFocus();
-   
-  if(mManipulationHandle.isValid()){
-    // By deactivating the manipulation, we enable the manipulators to perform
-    // cleanup, such as hiding paint brushes/gizmos. 
-    mManipulationHandle.callMethod("", "deactivateManipulation", 0, 0);
+    view.widget()->removeEventFilter(&sEventFilterObject);
+    view.widget()->clearFocus();
+     
+    if(mManipulationHandle.isValid()){
+      // By deactivating the manipulation, we enable the manipulators to perform
+      // cleanup, such as hiding paint brushes/gizmos. 
+      mManipulationHandle.callMethod("", "deactivateManipulation", 0, 0);
+      view.refresh(true, true);
+
+      mManipulationHandle.invalidate();
+    }
+
     view.refresh(true, true);
-
-    mManipulationHandle.invalidate();
   }
-
-  view.refresh(true, true);
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+  }
 }
 
 MStatus FabricSpliceToolContext::doPress(MEvent & event)
@@ -349,29 +372,37 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
         MMatrix mayaCameraMatrix = cameraDag.inclusiveMatrix();
 
         FabricCore::RTVal cameraMat = inlineCamera.maybeGetMember("mat44");
-        FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
 
-        float * cameraMatFloats = (float*)cameraMatData.getData();
-        if(cameraMat) {
-          cameraMatFloats[0] = (float)mayaCameraMatrix[0][0];
-          cameraMatFloats[1] = (float)mayaCameraMatrix[1][0];
-          cameraMatFloats[2] = (float)mayaCameraMatrix[2][0];
-          cameraMatFloats[3] = (float)mayaCameraMatrix[3][0];
-          cameraMatFloats[4] = (float)mayaCameraMatrix[0][1];
-          cameraMatFloats[5] = (float)mayaCameraMatrix[1][1];
-          cameraMatFloats[6] = (float)mayaCameraMatrix[2][1];
-          cameraMatFloats[7] = (float)mayaCameraMatrix[3][1];
-          cameraMatFloats[8] = (float)mayaCameraMatrix[0][2];
-          cameraMatFloats[9] = (float)mayaCameraMatrix[1][2];
-          cameraMatFloats[10] = (float)mayaCameraMatrix[2][2];
-          cameraMatFloats[11] = (float)mayaCameraMatrix[3][2];
-          cameraMatFloats[12] = (float)mayaCameraMatrix[0][3];
-          cameraMatFloats[13] = (float)mayaCameraMatrix[1][3];
-          cameraMatFloats[14] = (float)mayaCameraMatrix[2][3];
-          cameraMatFloats[15] = (float)mayaCameraMatrix[3][3];
+        try
+        {
+          FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
+          float * cameraMatFloats = (float*)cameraMatData.getData();
+          if(cameraMat) {
+            cameraMatFloats[0] = (float)mayaCameraMatrix[0][0];
+            cameraMatFloats[1] = (float)mayaCameraMatrix[1][0];
+            cameraMatFloats[2] = (float)mayaCameraMatrix[2][0];
+            cameraMatFloats[3] = (float)mayaCameraMatrix[3][0];
+            cameraMatFloats[4] = (float)mayaCameraMatrix[0][1];
+            cameraMatFloats[5] = (float)mayaCameraMatrix[1][1];
+            cameraMatFloats[6] = (float)mayaCameraMatrix[2][1];
+            cameraMatFloats[7] = (float)mayaCameraMatrix[3][1];
+            cameraMatFloats[8] = (float)mayaCameraMatrix[0][2];
+            cameraMatFloats[9] = (float)mayaCameraMatrix[1][2];
+            cameraMatFloats[10] = (float)mayaCameraMatrix[2][2];
+            cameraMatFloats[11] = (float)mayaCameraMatrix[3][2];
+            cameraMatFloats[12] = (float)mayaCameraMatrix[0][3];
+            cameraMatFloats[13] = (float)mayaCameraMatrix[1][3];
+            cameraMatFloats[14] = (float)mayaCameraMatrix[2][3];
+            cameraMatFloats[15] = (float)mayaCameraMatrix[3][3];
 
-          inlineCamera.setMember("mat44", cameraMat);
+            inlineCamera.setMember("mat44", cameraMat);
+          }
         }
+        catch (FabricCore::Exception e)
+        {
+          mayaLogErrorFunc(e.getDesc_cstr());
+        }
+
         inlineViewport.setMember("camera", inlineCamera);
       }
       klevent.setMember("viewport", inlineViewport);
@@ -388,6 +419,25 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
     // Invoke the event...
     try{
       mManipulationHandle.callMethod("Boolean", "onEvent", 1, &klevent);
+
+      bool result = klevent.callMethod("Boolean", "isAccepted", 0, 0).getBoolean();
+      if(result)
+        event->accept();
+
+      if(host.maybeGetMember("redrawRequested").getBoolean())
+        view.refresh(true, true);
+
+      if(host.callMethod("Boolean", "undoRedoCommandsAdded", 0, 0).getBoolean()){
+        // Cache the rtvals in a static variable that the command will then stor in the undo stack.
+        FabricSpliceManipulationCmd::s_rtval_commands = host.callMethod("UndoRedoCommand[]", "getUndoRedoCommands", 0, 0);
+
+        bool displayEnabled = true;
+        MGlobal::executeCommandOnIdle(MString("fabricSpliceManipulation"), displayEnabled);
+      }
+
+      klevent.invalidate();
+
+      return result;
     }
     catch(FabricCore::Exception e)    {
       mayaLogErrorFunc(e.getDesc_cstr());
@@ -397,24 +447,6 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       mayaLogErrorFunc(e.what());
       return false;
     }
-
-    bool result = klevent.callMethod("Boolean", "isAccepted", 0, 0).getBoolean();
-    if(result)
-      event->accept();
-
-    if(host.maybeGetMember("redrawRequested").getBoolean())
-      view.refresh(true, true);
-
-    if(host.callMethod("Boolean", "undoRedoCommandsAdded", 0, 0).getBoolean()){
-      // Cache the rtvals in a static variable that the command will then stor in the undo stack.
-      FabricSpliceManipulationCmd::s_rtval_commands = host.callMethod("UndoRedoCommand[]", "getUndoRedoCommands", 0, 0);
-
-      bool displayEnabled = true;
-      MGlobal::executeCommandOnIdle(MString("fabricSpliceManipulation"), displayEnabled);
-    }
-
-    klevent.invalidate();
-    return result;
   }
   // the event was not handled by FabricEngine manipulation system. 
   return false;
