@@ -424,6 +424,13 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       if(result)
         event->accept();
 
+      // The manipulation system has requested that a node is dirtified. 
+      // here we use the maya command to dirtify the specified dg node.
+      MString dirtifyDCCNode(host.callMethod("String", "getDirtifedDCCNode", 0, 0).getStringCString());
+      if(dirtifyDCCNode.length() > 0){
+        MGlobal::executeCommandOnIdle(MString("dgdirty \"") + dirtifyDCCNode + MString("\""));
+      }
+
       if(host.maybeGetMember("redrawRequested").getBoolean())
         view.refresh(true, true);
 
