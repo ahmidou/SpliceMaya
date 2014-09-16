@@ -429,8 +429,8 @@ void FabricSpliceKLPlainTextWidget::keyPressEvent (QKeyEvent * e)
             {
               FabricSplice::KLParser::KLFunction f = p.getKLFunction(j);
               std::string key = f.name();
-              if(key[0] == '_')
-                continue;
+              // if(key[0] == '_')
+              //   continue;
               key += "(";
               FabricSplice::KLParser::KLArgumentList args = f.arguments();
               for(unsigned k=0;k<args.nbArgs();k++)
@@ -460,8 +460,8 @@ void FabricSpliceKLPlainTextWidget::keyPressEvent (QKeyEvent * e)
                 if(f.owner() == symbolType)
                 {
                   std::string key = f.name();
-                  if(key[0] == '_')
-                    continue;
+                  // if(key[0] == '_')
+                  //   continue;
                   key += "(";
                   FabricSplice::KLParser::KLArgumentList args = f.arguments();
                   for(unsigned k=0;k<args.nbArgs();k++)
@@ -488,8 +488,8 @@ void FabricSpliceKLPlainTextWidget::keyPressEvent (QKeyEvent * e)
                   for(unsigned k=0;k<f.nbMembers();k++)
                   {
                     std::string key = f.memberName(k);
-                    if(key[0] == '_')
-                      continue;
+                    // if(key[0] == '_')
+                    //   continue;
                     key += " (";
                     key += f.memberType(k);
                     key += ")";
@@ -573,8 +573,8 @@ void FabricSpliceKLPlainTextWidget::keyPressEvent (QKeyEvent * e)
             if(match.substr(0,name.length()) == name)
             {
               std::string key = f.name();
-              if(key[0] == '_')
-                continue;
+              // if(key[0] == '_')
+              //   continue;
               key += " = ";
               key += f.value();
               if(matches.find(key) != matches.end())
@@ -589,8 +589,8 @@ void FabricSpliceKLPlainTextWidget::keyPressEvent (QKeyEvent * e)
             if(match.substr(0,name.length()) == name)
             {
               std::string key = f.name();
-              if(key[0] == '_')
-                continue;
+              // if(key[0] == '_')
+              //   continue;
               key += " (";
               key += f.type();
               key += ")";
@@ -606,8 +606,8 @@ void FabricSpliceKLPlainTextWidget::keyPressEvent (QKeyEvent * e)
             if(strlen(f.owner()) == 0 && match.substr(0,name.length()) == name)
             {
               std::string key = f.name();
-              if(key[0] == '_')
-                continue;
+              // if(key[0] == '_')
+              //   continue;
               key += "(";
               FabricSplice::KLParser::KLArgumentList args = f.arguments();
               for(unsigned k=0;k<args.nbArgs();k++)
