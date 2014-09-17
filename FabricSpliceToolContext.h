@@ -61,7 +61,7 @@ public:
   bool onEvent(QEvent *event);
 
 private:
-  FabricCore::RTVal mManipulationHandle;
+  FabricCore::RTVal mEventDispatcherHandle;
 };
 
 class FabricSpliceToolContextCmd : public MPxContextCommand

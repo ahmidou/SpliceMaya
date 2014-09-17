@@ -163,10 +163,10 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &)
   }
 
   try{
-    mManipulationHandle = FabricSplice::constructObjectRTVal("ManipulationHandle");
+    mEventDispatcherHandle = FabricSplice::constructObjectRTVal("EventDispatcherHandle");
 
-    if(mManipulationHandle.isValid()){
-      mManipulationHandle.callMethod("", "activateManipulation", 0, 0);
+    if(mEventDispatcherHandle.isValid()){
+      mEventDispatcherHandle.callMethod("", "activateManipulation", 0, 0);
       view.refresh(true, true);
     }
   }
@@ -199,13 +199,13 @@ void FabricSpliceToolContext::toolOffCleanup()
     view.widget()->removeEventFilter(&sEventFilterObject);
     view.widget()->clearFocus();
      
-    if(mManipulationHandle.isValid()){
+    if(mEventDispatcherHandle.isValid()){
       // By deactivating the manipulation, we enable the manipulators to perform
       // cleanup, such as hiding paint brushes/gizmos. 
-      mManipulationHandle.callMethod("", "deactivateManipulation", 0, 0);
+      mEventDispatcherHandle.callMethod("", "deactivateManipulation", 0, 0);
       view.refresh(true, true);
 
-      mManipulationHandle.invalidate();
+      mEventDispatcherHandle.invalidate();
     }
 
     view.refresh(true, true);
@@ -256,7 +256,7 @@ bool EventFilterObject::eventFilter(QObject *object, QEvent *event)
 
 bool FabricSpliceToolContext::onEvent(QEvent *event)
 {
-  if(!mManipulationHandle.isValid()){
+  if(!mEventDispatcherHandle.isValid()){
     mayaLogFunc("Fabric Client not constructed yet.");
     return false;
   }
@@ -418,7 +418,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
     //////////////////////////
     // Invoke the event...
     try{
-      mManipulationHandle.callMethod("Boolean", "onEvent", 1, &klevent);
+      mEventDispatcherHandle.callMethod("Boolean", "onEvent", 1, &klevent);
 
       bool result = klevent.callMethod("Boolean", "isAccepted", 0, 0).getBoolean();
       if(result)
