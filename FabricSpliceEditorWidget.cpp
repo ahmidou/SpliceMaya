@@ -454,6 +454,8 @@ void FabricSpliceEditorWidget::addAttrPressed(void * userData)
         port.setOption("opaque", FabricCore::Variant::CreateBoolean(true));
       }
       node->addMayaAttribute(name.c_str(), dataType.c_str(), arrayType.c_str(), (FabricSplice::Port_Mode)mode);
+    } else {
+      port.setOption("internal", FabricCore::Variant::CreateBoolean(true));
     }
 
     if(persistenceType != 0){

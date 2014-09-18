@@ -1179,63 +1179,72 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName)
         dataType = "SpliceMayaData";
     }
 
+    bool addMayaAttr = true;
+    if(port.hasOption("internal")) {
+      if(port.getOption("internal").getBoolean())
+        addMayaAttr = false;
+    }
+
     if(port.hasOption("nativeArray")) {
       if(port.getOption("nativeArray").getBoolean())
         arrayType = "Array (Native)";
     }
 
-    MStatus portStatus;
-    addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, &portStatus);
-    if(portStatus != MS::kSuccess)
-      return portStatus;
-
-    if(portMode != FabricSplice::Port_Mode_OUT)
+    if(addMayaAttr)
     {
-      MFnDependencyNode thisNode(getThisMObject());
-      MPlug plug = thisNode.findPlug(portName.c_str());
-      if(!plug.isNull())
+      MStatus portStatus;
+      addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, &portStatus);
+      if(portStatus != MS::kSuccess)
+        return portStatus;
+
+      if(portMode != FabricSplice::Port_Mode_OUT)
       {
-        FabricCore::Variant variant = port.getDefault();
-        if(variant.isString())
-          plug.setString(variant.getStringData());
-        else if(variant.isBoolean())
-          plug.setBool(variant.getBoolean());
-        else if(variant.isNull())
-          continue;
-        else if(variant.isArray())
-          continue;
-        else if(variant.isDict())
-          continue;
-        else
+        MFnDependencyNode thisNode(getThisMObject());
+        MPlug plug = thisNode.findPlug(portName.c_str());
+        if(!plug.isNull())
         {
-          float value = 0.0;
-          if(variant.isSInt8())
-            value = (float)variant.getSInt8();
-          else if(variant.isSInt16())
-            value = (float)variant.getSInt16();
-          else if(variant.isSInt32())
-            value = (float)variant.getSInt32();
-          else if(variant.isSInt64())
-            value = (float)variant.getSInt64();
-          else if(variant.isUInt8())
-            value = (float)variant.getUInt8();
-          else if(variant.isUInt16())
-            value = (float)variant.getUInt16();
-          else if(variant.isUInt32())
-            value = (float)variant.getUInt32();
-          else if(variant.isUInt64())
-            value = (float)variant.getUInt64();
-          else if(variant.isFloat32())
-            value = (float)variant.getFloat32();
-          else if(variant.isFloat64())
-            value = (float)variant.getFloat64();
-          MDataHandle handle = plug.asMDataHandle();
-          if(handle.numericType() == MFnNumericData::kFloat)
-            plug.setFloat(value);
-          else if(handle.numericType() == MFnNumericData::kDouble)
-            plug.setDouble(value);
-          else if(handle.numericType() == MFnNumericData::kInt)
-            plug.setInt((int)value);
+          FabricCore::Variant variant = port.getDefault();
+          if(variant.isString())
+            plug.setString(variant.getStringData());
+          else if(variant.isBoolean())
+            plug.setBool(variant.getBoolean());
+          else if(variant.isNull())
+            continue;
+          else if(variant.isArray())
+            continue;
+          else if(variant.isDict())
+            continue;
+          else
+          {
+            float value = 0.0;
+            if(variant.isSInt8())
+              value = (float)variant.getSInt8();
+            else if(variant.isSInt16())
+              value = (float)variant.getSInt16();
+            else if(variant.isSInt32())
+              value = (float)variant.getSInt32();
+            else if(variant.isSInt64())
+              value = (float)variant.getSInt64();
+            else if(variant.isUInt8())
+              value = (float)variant.getUInt8();
+            else if(variant.isUInt16())
+              value = (float)variant.getUInt16();
+            else if(variant.isUInt32())
+              value = (float)variant.getUInt32();
+            else if(variant.isUInt64())
+              value = (float)variant.getUInt64();
+            else if(variant.isFloat32())
+              value = (float)variant.getFloat32();
+            else if(variant.isFloat64())
+              value = (float)variant.getFloat64();
+            MDataHandle handle = plug.asMDataHandle();
+            if(handle.numericType() == MFnNumericData::kFloat)
+              plug.setFloat(value);
+            else if(handle.numericType() == MFnNumericData::kDouble)
+              plug.setDouble(value);
+            else if(handle.numericType() == MFnNumericData::kInt)
+              plug.setInt((int)value);
+          }
         }
       }
     }

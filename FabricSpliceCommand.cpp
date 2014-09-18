@@ -214,6 +214,10 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
           }
           interf->addMayaAttribute(portNameStr, dataTypeStr, arrayTypeStr, portMode);
         }
+        else
+        {
+          port.setOption("internal", FabricCore::Variant::CreateBoolean(true));
+        }
       }
     }
     else if(actionStr == "removePort")
