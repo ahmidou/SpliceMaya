@@ -65,29 +65,24 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
     return MStatus::kFailure; // avoid evaluating on errors
   }
 
-  MString meshIdStr;
-  meshIdStr.set(multiIndex);
-
   if(mGeometryInitialized < 1){
-    MArrayDataHandle inputArray = block.inputArrayValue(input);
-    for(int i = 0; i < inputArray.elementCount(); ++i){
-      MPlug inputPlug(thisMObject(), input);
-      MPlug inputElementPlug = inputPlug.elementByPhysicalIndex(multiIndex);
-      MPlug meshPlug = inputElementPlug.child(inputGeom);
-
-      mGeometryInitialized = initializePolygonMeshPorts(meshIdStr, meshPlug, block);
-      if(mGeometryInitialized < 0){
-        return MStatus::kFailure;
-      }
+    MPlug inputPlug(thisMObject(), input);
+    mGeometryInitialized = initializePolygonMeshPorts(inputPlug, block);
+    if(mGeometryInitialized < 0){
+      return MStatus::kFailure;
     }
   }
 
   transferInputValuesToSplice(block);
 
-  FabricSplice::DGPort port = _spliceGraph.getDGPort(("mesh" + meshIdStr).asChar());
+  FabricSplice::DGPort port = _spliceGraph.getDGPort("meshes");
   if(port.getMode() != FabricSplice::Port_Mode_IO)
     return MStatus::kSuccess;
-  FabricCore::RTVal rtMesh = port.getRTVal();
+  FabricCore::RTVal rtMeshes = port.getRTVal();
+  if(!rtMeshes.isValid())
+    return MStatus::kSuccess;
+
+  FabricCore::RTVal rtMesh = rtMeshes.getArrayElement(multiIndex);
   if(!rtMesh.isValid() || rtMesh.isNullObject())
     return MStatus::kSuccess;
 
@@ -131,7 +126,7 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
     mayaLogErrorFunc(e.getDesc_cstr());
     return MStatus::kSuccess;
   }
-  port.setRTVal(rtMesh);
+  port.setRTVal(rtMeshes);
 
   evaluate();
 
@@ -215,10 +210,10 @@ void FabricSpliceMayaDeformer::copyInternalData(MPxNode *node){
   FabricSpliceBaseInterface::copyInternalData(node);
 }
 
-int FabricSpliceMayaDeformer::initializePolygonMeshPorts(MString &meshId, MPlug &meshPlug, MDataBlock &data){
+int FabricSpliceMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBlock &data){
   MFnDependencyNode thisNode(getThisMObject());
 
-  MString portName = "mesh" + meshId; 
+  MString portName = "meshes"; 
   FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
   if(!port.isValid()){
     return 0;

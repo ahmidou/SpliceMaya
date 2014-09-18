@@ -36,7 +36,7 @@ protected:
   virtual void invalidateNode();
 
 private:
-  int initializePolygonMeshPorts(MString &meshId, MPlug &meshPlug, MDataBlock &data);
+  int initializePolygonMeshPorts(MPlug &meshPlug, MDataBlock &data);
   // void initializeGeometry(MObject &meshObj);
   int mGeometryInitialized;
 };
