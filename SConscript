@@ -98,9 +98,11 @@ installedModule = env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), mayaM
 mayaFiles.append(installedModule)
 
 # also install the FabricCore dynamic library
-mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.so'))))
-mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.dylib'))))
-mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.dll'))))
+if FABRIC_BUILD_OS == 'Linux':
+  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../../../CAPI/lib/')])
+else:
+  mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.dylib'))))
+  mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.dll'))))
 
 # install PDB files on windows
 if FABRIC_BUILD_TYPE == 'Debug' and FABRIC_BUILD_OS == 'Windows':
