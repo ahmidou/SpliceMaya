@@ -249,10 +249,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MQtUtil::registerUIType("FabricSpliceEditor", FabricSpliceEditorWidget::creator, "fabricSpliceEditor");
 
   initModuleFolder(plugin);
-  MString moduleFolder = getModuleFolder();
-  MString rtFolder = moduleFolder + "/RT";
-  MString extFolder = moduleFolder + "/Exts";
-  FabricSplice::addExtFolder(extFolder.asChar());
 
   FabricSplice::Initialize();
   FabricSplice::Logging::setLogFunc(mayaLogFunc);

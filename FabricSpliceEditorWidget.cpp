@@ -380,6 +380,7 @@ void FabricSpliceEditorWidget::addAttrPressed(void * userData)
     std::string arrayType;
     bool addAttribute = false;
     bool useSpliceMayaData = false;
+    int persistenceType = 0;
 
     FabricCore::Variant nameVar = dialog.getValue("name");
     FabricCore::Variant modeVar = dialog.getValue("mode");
@@ -388,6 +389,7 @@ void FabricSpliceEditorWidget::addAttrPressed(void * userData)
     FabricCore::Variant arrayTypeVar = dialog.getValue("arrayType");
     FabricCore::Variant addAttributeVar = dialog.getValue("addAttribute");
     FabricCore::Variant useSpliceMayaDataVar = dialog.getValue("useSpliceMayaData");
+    FabricCore::Variant persistenceTypeVar = dialog.getValue("persistenceType");
     if(nameVar.isString())
       name = nameVar.getStringData();
     if(modeVar.isSInt32())
@@ -405,6 +407,8 @@ void FabricSpliceEditorWidget::addAttrPressed(void * userData)
       useSpliceMayaData = useSpliceMayaDataVar.getBoolean();
       addAttribute = addAttribute || useSpliceMayaData;
     }
+    if(persistenceTypeVar.isSInt32())
+      persistenceType = persistenceTypeVar.getSInt32();
 
     if(name.length() == 0 || mode < 0 || dataType.length() == 0 || arrayType.length() == 0)
       return;
@@ -452,7 +456,9 @@ void FabricSpliceEditorWidget::addAttrPressed(void * userData)
       node->addMayaAttribute(name.c_str(), dataType.c_str(), arrayType.c_str(), (FabricSplice::Port_Mode)mode);
     }
 
-    if(portPersistence){
+    if(persistenceType != 0){
+      node->setPortPersistence(MString(name.c_str()), persistenceType == 1);
+    } else if(portPersistence){
       node->setPortPersistence(MString(name.c_str()), true);
     }
 

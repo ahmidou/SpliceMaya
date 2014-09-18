@@ -82,6 +82,13 @@ FabricSplicePortDialog::FabricSplicePortDialog(QWidget * parent)
   mAttrSpliceMayaDataCheckBox = new FabricSpliceCheckBoxWidget("Use SpliceMayaData Attribute", this);
   layout()->addWidget(mAttrSpliceMayaDataCheckBox);
 
+  mPersistenceType = new FabricSpliceComboWidget(this);
+  mPersistenceType->addItem("Default");
+  mPersistenceType->addItem("Always persist");
+  mPersistenceType->addItem("Never persist");
+  mPersistenceType->setCurrentIndex(0);
+  layout()->addWidget(mPersistenceType);
+
   onDataTypeChanged(this);
   setupButtons();
 }
@@ -128,6 +135,11 @@ FabricCore::Variant FabricSplicePortDialog::getValue(const std::string & name)
   else if(name == "useSpliceMayaData"){
     bool value = mAttrSpliceMayaDataCheckBox->checkState() == Qt::Checked;
     result = FabricCore::Variant::CreateBoolean(value);
+  }
+  else if(name == "persistenceType")
+  {
+    int value = mPersistenceType->currentIndex();
+    result = FabricCore::Variant::CreateSInt32(value);
   }
 
   return result;

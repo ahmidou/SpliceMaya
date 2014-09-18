@@ -26,6 +26,7 @@ private:
   FabricSpliceCheckBoxWidget * mAttrCheckBox;
   bool mAttrCheckBoxChecked;
   FabricSpliceCheckBoxWidget * mAttrSpliceMayaDataCheckBox;
+  FabricSpliceComboWidget * mPersistenceType;
 
   static void onDataTypeChanged(void * userData);
 };
