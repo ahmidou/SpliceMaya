@@ -184,7 +184,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
           defaultValue = FabricCore::Variant::CreateFloat64(auxiliaryStr.asFloat());
         else if(dataTypeStr == "Scalar" || dataTypeStr == "Float64")
           defaultValue = FabricCore::Variant::CreateFloat64(auxiliaryStr.asDouble());
-        else
+        else if(dataTypeStr != "CompoundParam")
           defaultValue = FabricCore::Variant::CreateFromJSON(auxiliaryStr.asChar());
       }
       interf->addPort(portNameStr, dataTypeStr, portMode, dgNodeStr, autoInitObjects, extStr, defaultValue);
@@ -193,6 +193,8 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
       FabricSplice::DGPort port = interf->getPort(portNameStr);
       if(port.isValid())
       {
+        FabricCore::Variant compoundStructure = FabricCore::Variant::CreateDict();
+        compoundStructure.setDictValue("dataType", FabricCore::Variant::CreateString(dataTypeStr.asChar()));
         for(FabricCore::Variant::DictIter keyIter(scriptArgs); !keyIter.isDone(); keyIter.next())
         {
           std::string key = keyIter.getKey()->getStringData();
@@ -200,6 +202,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
           if(value.isNull())
             continue;
           port.setOption(key.c_str(), value);
+          compoundStructure.setDictValue(key.c_str(), value);
         }
 
         if(arrayTypeStr == "Array (Native)")
@@ -212,7 +215,12 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
             dataTypeStr = "SpliceMayaData";
             port.setOption("opaque", FabricCore::Variant::CreateBoolean(true));
           }
-          interf->addMayaAttribute(portNameStr, dataTypeStr, arrayTypeStr, portMode);
+          else if(dataTypeStr == "CompoundParam" && auxiliaryStr.length() > 0)
+          {
+            compoundStructure = FabricCore::Variant::CreateFromJSON(auxiliaryStr.asChar());
+            port.setOption("compoundStructure", compoundStructure);
+          }
+          interf->addMayaAttribute(portNameStr, dataTypeStr, arrayTypeStr, portMode, false, compoundStructure);
         }
         else
         {
