@@ -209,6 +209,9 @@ void mayaRefreshFunc()
 }
 
 
+#if defined(OSMac_)
+__attribute__ ((visibility("default")))
+#endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
   MFnPlugin plugin(obj, getPluginName().asChar(), "1.0", "Any");
@@ -263,6 +266,9 @@ MAYA_EXPORT initializePlugin(MObject obj)
   return status;
 }
 
+#if defined(OSMac_)
+__attribute__ ((visibility("default")))
+#endif
 MAYA_EXPORT uninitializePlugin(MObject obj)
 {
   MFnPlugin plugin(obj);
