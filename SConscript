@@ -66,11 +66,14 @@ if FABRIC_BUILD_OS == 'Windows':
 moduleFileMayaVersion = MAYA_VERSION
 moduleFileMayaVersion = moduleFileMayaVersion[:moduleFileMayaVersion.find('201')+4]
 
+pythonVersion = Glob(os.path.join(MAYA_INCLUDE_DIR, 'python*'))[0].abspath[-3:]
+
 env.Append(BUILDERS = {
   'SubstMayaModuleFile': Builder(action = [
     [
       sedCmd,
       '-e', 's/{{MAYA_VERSION}}/'+moduleFileMayaVersion+'/g ',
+      '-e', 's/{{PYTHON_VERSION}}/'+pythonVersion+'/g ',
       '<$SOURCE', '>$TARGET',
     ]
   ])
