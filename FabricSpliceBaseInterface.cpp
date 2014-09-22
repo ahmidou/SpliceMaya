@@ -291,11 +291,56 @@ void FabricSpliceBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affect
   }
 }
 
-void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const MString &dataType, const MString &arrayType, const FabricSplice::Port_Mode &portMode, MStatus *stat)
+float getScalarOption(const char * key, FabricCore::Variant options, float value = 0.0) {
+  if(options.isNull())
+    return value;
+  if(!options.isDict())
+    return value;
+  const FabricCore::Variant * option = options.getDictValue(key);
+  if(!option)
+    return value;
+  if(option->isSInt8())
+    return (float)option->getSInt8();
+  if(option->isSInt16())
+    return (float)option->getSInt8();
+  if(option->isSInt32())
+    return (float)option->getSInt8();
+  if(option->isSInt64())
+    return (float)option->getSInt8();
+  if(option->isUInt8())
+    return (float)option->getUInt8();
+  if(option->isUInt16())
+    return (float)option->getUInt8();
+  if(option->isUInt32())
+    return (float)option->getUInt8();
+  if(option->isUInt64())
+    return (float)option->getUInt8();
+  if(option->isFloat32())
+    return (float)option->getFloat32();
+  if(option->isFloat64())
+    return (float)option->getFloat64();
+  return value;
+} 
+
+std::string getStringOption(const char * key, FabricCore::Variant options, std::string value = "") {
+  if(options.isNull())
+    return value;
+  if(!options.isDict())
+    return value;
+  const FabricCore::Variant * option = options.getDictValue(key);
+  if(!option)
+    return value;
+  if(option->isString())
+    return option->getStringData();
+  return value;
+} 
+
+MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const MString &dataType, const MString &arrayType, const FabricSplice::Port_Mode &portMode, bool compoundChild, FabricCore::Variant compoundStructure, MStatus *stat)
 {
   MAYASPLICE_CATCH_BEGIN(stat);
 
   FabricSplice::Logging::AutoTimer timer("Maya::addMayaAttribute()");
+  MObject newAttribute;
 
   MString dataTypeOverride = dataType;
 
@@ -310,7 +355,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
   MPlug plug = thisNode.findPlug(portName);
   if(!plug.isNull()){
     mayaLogFunc("Attribute '"+portName+"' already exists on node '"+thisNode.name()+"'.");
-    return;
+    return newAttribute;
   }
 
   MFnNumericAttribute nAttr;
@@ -324,10 +369,81 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
 
   bool storable = true;
 
-  MObject newAttribute;
 
-  FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
-  if(dataTypeOverride == "Boolean")
+  if(dataTypeOverride == "CompoundParam")
+  {
+    if(compoundStructure.isNull())
+    {
+      mayaLogErrorFunc("CompoundParam used for a maya attribute but no compound structure provided.");
+      return newAttribute;
+    }
+
+    if(!compoundStructure.isDict())
+    {
+      mayaLogErrorFunc("CompoundParam used for a maya attribute but compound structure does not contain a dictionary.");
+      return newAttribute;
+    }
+
+    if(arrayType == "Single Value" || arrayType == "Array (Multi)")
+    {
+      MObjectArray children;
+      for(FabricCore::Variant::DictIter childIter(compoundStructure); !childIter.isDone(); childIter.next())
+      {
+        MString childNameStr = childIter.getKey()->getStringData();
+        const FabricCore::Variant * value = childIter.getValue();
+        if(!value)
+          continue;
+        if(value->isNull())
+          continue;
+        if(value->isDict()) {
+          const FabricCore::Variant * childDataType = value->getDictValue("dataType");
+          if(childDataType)
+          {
+            if(childDataType->isString())
+            {
+              MString childArrayTypeStr = "Single Value";
+              MString childDataTypeStr = childDataType->getStringData();
+              MStringArray childDataTypeStrParts;
+              childDataTypeStr.split('[', childDataTypeStrParts);
+              if(childDataTypeStrParts.length() > 1)
+                childArrayTypeStr = "Array (Multi)";
+
+              MObject child = addMayaAttribute(childNameStr, childDataTypeStr, childArrayTypeStr, portMode, true, *value, stat);
+              if(child.isNull())
+                return newAttribute;
+              
+              children.append(child);
+              continue;
+            }
+          }
+
+          // we assume it's a nested compound param
+          MObject child = addMayaAttribute(childNameStr, "CompoundParam", "Single Value", portMode, true, *value, stat);
+          if(child.isNull())
+            return newAttribute;
+          children.append(child);
+        }
+      }
+
+      /// now create the compound attribute
+      newAttribute = cAttr.create(portName, portName);
+      if(arrayType == "Array (Multi)")
+      {
+        cAttr.setArray(true);
+        cAttr.setUsesArrayDataBuilder(true);
+      }
+      for(unsigned int i=0;i<children.length();i++)
+      {
+        cAttr.addChild(children[i]);
+      }
+    }
+    else
+    {
+      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
+      return newAttribute;
+    }
+  }
+  else if(dataTypeOverride == "Boolean")
   {
     if(arrayType == "Single Value")
     {
@@ -342,7 +458,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
   }
   else if(dataTypeOverride == "Integer")
@@ -364,17 +480,17 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
 
-    float uiMin = port.getScalarOption("uiMin");
-    float uiMax = port.getScalarOption("uiMax");
+    float uiMin = getScalarOption("uiMin", compoundStructure);
+    float uiMax = getScalarOption("uiMax", compoundStructure);
     if(uiMin < uiMax) 
     {
       nAttr.setMin(uiMin);
       nAttr.setMax(uiMax);
-      float uiSoftMin = port.getScalarOption("uiSoftMin");
-      float uiSoftMax = port.getScalarOption("uiSoftMax");
+      float uiSoftMin = getScalarOption("uiSoftMin", compoundStructure);
+      float uiSoftMax = getScalarOption("uiSoftMax", compoundStructure);
       if(uiSoftMin < uiSoftMax) 
       {
         nAttr.setSoftMin(uiSoftMin);
@@ -390,7 +506,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
   else if(dataTypeOverride == "Scalar")
   {
     bool isUnitAttr = true;
-    std::string scalarUnit = port.getStringOption("scalarUnit");
+    std::string scalarUnit = getStringOption("scalarUnit", compoundStructure);
     if(arrayType == "Single Value" || arrayType == "Array (Multi)")
     {
       if(scalarUnit == "time")
@@ -426,11 +542,11 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
 
-    float uiMin = port.getScalarOption("uiMin");
-    float uiMax = port.getScalarOption("uiMax");
+    float uiMin = getScalarOption("uiMin", compoundStructure);
+    float uiMax = getScalarOption("uiMax", compoundStructure);
     if(uiMin < uiMax) 
     {
       if(isUnitAttr)
@@ -443,8 +559,8 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
         nAttr.setMin(uiMin);
         nAttr.setMax(uiMax);
       }
-      float uiSoftMin = port.getScalarOption("uiSoftMin");
-      float uiSoftMax = port.getScalarOption("uiSoftMax");
+      float uiSoftMin = getScalarOption("uiSoftMin", compoundStructure);
+      float uiSoftMax = getScalarOption("uiSoftMax", compoundStructure);
       if(isUnitAttr)
       {
         if(uiSoftMin < uiSoftMax) 
@@ -482,12 +598,12 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else if(arrayType == "Array (Multi)"){
       newAttribute = tAttr.create(portName, portName, MFnData::kString, emptyStringObject);
       tAttr.setArray(true);
-      nAttr.setUsesArrayDataBuilder(true);
+      tAttr.setUsesArrayDataBuilder(true);
     }
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
   }
   else if(dataTypeOverride == "Color")
@@ -505,7 +621,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
   }
   else if(dataTypeOverride == "Vec3")
@@ -551,7 +667,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
   }
   else if(dataTypeOverride == "Euler")
@@ -590,7 +706,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
   }
   else if(dataTypeOverride == "Mat44")
@@ -608,7 +724,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
   }
   else if(dataTypeOverride == "PolygonMesh")
@@ -628,7 +744,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
   }
   else if(dataTypeOverride == "Lines")
@@ -648,7 +764,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
     else
     {
       mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return;
+      return newAttribute;
     }
   }
   else if(dataTypeOverride == "KeyframeTrack"){
@@ -663,7 +779,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
-        return;
+        return newAttribute;
       }
     }
     else
@@ -677,7 +793,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
-        return;
+        return newAttribute;
       }
     }
   }
@@ -692,7 +808,7 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
-        return;
+        return newAttribute;
       }
     }
     else
@@ -706,14 +822,14 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
-        return;
+        return newAttribute;
       }
     }
   }
   else
   {
     mayaLogErrorFunc("DataType '"+dataType+"' not supported.");
-    return;
+    return newAttribute;
   }
 
   // set the mode
@@ -754,12 +870,18 @@ void FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, const 
       pAttr.setStorable(true);
     }
 
-    thisNode.addAttribute(newAttribute);
+    if(!compoundChild)
+      thisNode.addAttribute(newAttribute);
   }
 
-  setupMayaAttributeAffects(portName, portMode, newAttribute);
+  if(!compoundChild)
+    setupMayaAttributeAffects(portName, portMode, newAttribute);
+
+  return newAttribute;
 
   MAYASPLICE_CATCH_END(stat);
+
+  return MObject();
 }
 
 void FabricSpliceBaseInterface::setupMayaAttributeAffects(MString portName, FabricSplice::Port_Mode portMode, MObject newAttribute, MStatus *stat)
@@ -1190,10 +1312,15 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName)
         arrayType = "Array (Native)";
     }
 
+    FabricCore::Variant compoundStructure;
+    if(port.hasOption("compoundStructure")) {
+      compoundStructure = port.getOption("compoundStructure");
+    }
+
     if(addMayaAttr)
     {
       MStatus portStatus;
-      addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, &portStatus);
+      addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, false, compoundStructure, &portStatus);
       if(portStatus != MS::kSuccess)
         return portStatus;
 

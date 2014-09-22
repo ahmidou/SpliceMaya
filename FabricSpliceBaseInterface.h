@@ -48,7 +48,7 @@ public:
   static std::vector<FabricSpliceBaseInterface*> getInstances();
   static FabricSpliceBaseInterface * getInstanceByName(const std::string & name);
 
-  void addMayaAttribute(const MString &portName, const MString &dataType, const MString &arrayType, const FabricSplice::Port_Mode &portMode, MStatus *stat = 0);
+  MObject addMayaAttribute(const MString &portName, const MString &dataType, const MString &arrayType, const FabricSplice::Port_Mode &portMode, bool compoundChild = false, FabricCore::Variant compoundStructure = FabricCore::Variant(), MStatus *stat = 0);
   void addPort(const MString &portName, const MString &dataType, const FabricSplice::Port_Mode &portMode, const MString & dgNode, bool autoInitObjects, const MString & extension, const FabricCore::Variant & defaultValue, MStatus *stat = 0);
   void removeMayaAttribute(const MString &portName, MStatus *stat = 0);
   void removePort(const MString &portName, MStatus *stat = 0);
