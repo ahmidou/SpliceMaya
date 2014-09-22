@@ -1468,13 +1468,13 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
         continue;
 
       if(destroy)
-        value.callMethod("", "_deattach", 0, 0);
+        value.callMethod("", "deattach", 0, 0);
       else
-        value.callMethod("", "_attach", 0, 0);
+        value.callMethod("", "attach", 0, 0);
     }
     catch(FabricCore::Exception e)
     {
-      // ignore errors, probably an object which does not implement _deattach and _attach
+      // ignore errors, probably an object which does not implement deattach and attach
     }
   }
 
