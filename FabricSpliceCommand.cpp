@@ -184,7 +184,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
           defaultValue = FabricCore::Variant::CreateFloat64(auxiliaryStr.asFloat());
         else if(dataTypeStr == "Scalar" || dataTypeStr == "Float64")
           defaultValue = FabricCore::Variant::CreateFloat64(auxiliaryStr.asDouble());
-        else if(dataTypeStr != "CompoundParam")
+        else if(dataTypeStr != "CompoundParam" && dataTypeStr != "CompoundParam[]")
           defaultValue = FabricCore::Variant::CreateFromJSON(auxiliaryStr.asChar());
       }
       interf->addPort(portNameStr, dataTypeStr, portMode, dgNodeStr, autoInitObjects, extStr, defaultValue);
@@ -215,7 +215,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
             dataTypeStr = "SpliceMayaData";
             port.setOption("opaque", FabricCore::Variant::CreateBoolean(true));
           }
-          else if(dataTypeStr == "CompoundParam" && auxiliaryStr.length() > 0)
+          else if((dataTypeStr == "CompoundParam" || dataTypeStr == "CompoundParam[]") && auxiliaryStr.length() > 0)
           {
             compoundStructure = FabricCore::Variant::CreateFromJSON(auxiliaryStr.asChar());
             port.setOption("compoundStructure", compoundStructure);
