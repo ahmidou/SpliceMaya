@@ -54,6 +54,9 @@ env.Append(CPPDEFINES = ["_SPLICE_MAYA_VERSION="+str(MAYA_VERSION[:4])])
 env.MergeFlags(sharedCapiFlags)
 env.MergeFlags(spliceFlags)
 
+if FABRIC_BUILD_OS == 'Linux':
+  env.Append(LIBS=['boost_filesystem', 'boost_system'])
+
 target = 'FabricSpliceMaya' + MAYA_VERSION
 
 mayaModule = None
