@@ -34,7 +34,7 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
 
   //////////////////////////
   // Setup the viewport
-  FabricCore::RTVal inlineViewport = FabricSplice::constructObjectRTVal("InlineViewport");
+  FabricCore::RTVal inlineViewport = sDrawContext.maybeGetMember("viewport");
   double width = view.portWidth();
   double height = view.portHeight();
   FabricCore::RTVal viewportDim = FabricSplice::constructRTVal("Vec2");
@@ -43,7 +43,7 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
   inlineViewport.setMember("dimensions", viewportDim);
 
   {
-    FabricCore::RTVal inlineCamera = FabricSplice::constructObjectRTVal("InlineCamera");
+    FabricCore::RTVal inlineCamera = inlineViewport.maybeGetMember("camera");
 
     MDagPath cameraDag;
     view.getCamera(cameraDag);
@@ -105,9 +105,7 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
     {
       mayaLogErrorFunc(e.getDesc_cstr());
     }
-    inlineViewport.setMember("camera", inlineCamera);
   }
-  sDrawContext.setMember("viewport", inlineViewport);
   
   return sDrawContext;
 }
