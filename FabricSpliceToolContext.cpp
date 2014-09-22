@@ -163,10 +163,11 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &)
   }
 
   try{
-    mEventDispatcherHandle = FabricSplice::constructObjectRTVal("EventDispatcherHandle");
+    FabricCore::RTVal eventDispatcherHandle = FabricSplice::constructObjectRTVal("EventDispatcherHandle");
+    mEventDispatcher = eventDispatcherHandle.callMethod("EventDispatcher", "getEventDispatcher", 0, 0);
 
-    if(mEventDispatcherHandle.isValid()){
-      mEventDispatcherHandle.callMethod("", "activateManipulation", 0, 0);
+    if(mEventDispatcher.isValid()){
+      mEventDispatcher.callMethod("", "activateManipulation", 0, 0);
       view.refresh(true, true);
     }
   }
@@ -199,13 +200,13 @@ void FabricSpliceToolContext::toolOffCleanup()
     view.widget()->removeEventFilter(&sEventFilterObject);
     view.widget()->clearFocus();
      
-    if(mEventDispatcherHandle.isValid()){
+    if(mEventDispatcher.isValid()){
       // By deactivating the manipulation, we enable the manipulators to perform
       // cleanup, such as hiding paint brushes/gizmos. 
-      mEventDispatcherHandle.callMethod("", "deactivateManipulation", 0, 0);
+      mEventDispatcher.callMethod("", "deactivateManipulation", 0, 0);
       view.refresh(true, true);
 
-      mEventDispatcherHandle.invalidate();
+      mEventDispatcher.invalidate();
     }
 
     view.refresh(true, true);
@@ -256,7 +257,7 @@ bool EventFilterObject::eventFilter(QObject *object, QEvent *event)
 
 bool FabricSpliceToolContext::onEvent(QEvent *event)
 {
-  if(!mEventDispatcherHandle.isValid()){
+  if(!mEventDispatcher.isValid()){
     mayaLogFunc("Fabric Client not constructed yet.");
     return false;
   }
@@ -418,7 +419,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
     //////////////////////////
     // Invoke the event...
     try{
-      mEventDispatcherHandle.callMethod("Boolean", "onEvent", 1, &klevent);
+      mEventDispatcher.callMethod("Boolean", "onEvent", 1, &klevent);
 
       bool result = klevent.callMethod("Boolean", "isAccepted", 0, 0).getBoolean();
       if(result)
