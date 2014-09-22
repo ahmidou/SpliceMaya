@@ -978,21 +978,30 @@ void plugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricSplice::DGPort 
         handles.push_back(arrayHandle.inputValue());
 
         FabricCore::RTVal polygonMesh;
-        if(portRTVal.getArraySize() <= i)
+        if(portRTVal.isArray())
         {
-          polygonMesh = FabricSplice::constructObjectRTVal("PolygonMesh");
-          portRTVal.callMethod("", "push", 1, &polygonMesh);
+          if(portRTVal.getArraySize() <= i)
+          {
+            polygonMesh = FabricSplice::constructObjectRTVal("PolygonMesh");
+            portRTVal.callMethod("", "push", 1, &polygonMesh);
+          }
+          else
+          {
+            polygonMesh = portRTVal.getArrayElement(i);
+            if(!polygonMesh.isValid() || polygonMesh.isNullObject())
+            {
+              polygonMesh = FabricSplice::constructObjectRTVal("PolygonMesh");
+              portRTVal.setArrayElement(i, polygonMesh);
+            }
+          }
+          rtVals.push_back(polygonMesh);
         }
         else
         {
-          polygonMesh = portRTVal.getArrayElement(i);
-          if(!polygonMesh.isValid() || polygonMesh.isNullObject())
-          {
-            polygonMesh = FabricSplice::constructObjectRTVal("PolygonMesh");
-            portRTVal.setArrayElement(i, polygonMesh);
-          }
+          if(!portRTVal.isValid() || portRTVal.isNullObject())
+            portRTVal = FabricSplice::constructObjectRTVal("PolygonMesh");
+          rtVals.push_back(portRTVal);
         }
-        rtVals.push_back(polygonMesh);
       }
     }
     else
