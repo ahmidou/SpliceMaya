@@ -75,14 +75,37 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
 
   transferInputValuesToSplice(block);
 
+  FabricCore::RTVal rtValToSet;
+  FabricCore::RTVal rtMesh;
   FabricSplice::DGPort port = _spliceGraph.getDGPort("meshes");
-  if(port.getMode() != FabricSplice::Port_Mode_IO)
-    return MStatus::kSuccess;
-  FabricCore::RTVal rtMeshes = port.getRTVal();
-  if(!rtMeshes.isValid())
-    return MStatus::kSuccess;
 
-  FabricCore::RTVal rtMesh = rtMeshes.getArrayElement(multiIndex);
+  if(port.isValid()){
+
+    if(port.getMode() != FabricSplice::Port_Mode_IO)
+      return MStatus::kSuccess;
+    FabricCore::RTVal rtMeshes = port.getRTVal();
+    if(!rtMeshes.isValid())
+      return MStatus::kSuccess;
+    rtValToSet = rtMeshes;
+
+    FabricCore::RTVal rtMesh = rtMeshes.getArrayElement(multiIndex);
+
+  } else {
+
+    // backward compatibility
+    MString portName;
+    portName.set(multiIndex);
+    portName = "mesh" + portName;
+
+    port = _spliceGraph.getDGPort(portName.asChar());
+    if(!port.isValid())
+      return MStatus::kFailure;
+
+    if(port.getMode() != FabricSplice::Port_Mode_IO)
+      return MStatus::kSuccess;
+    rtMesh = port.getRTVal();
+    rtValToSet = rtMesh;
+  }
   if(!rtMesh.isValid() || rtMesh.isNullObject())
     return MStatus::kSuccess;
 
@@ -126,7 +149,7 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
     mayaLogErrorFunc(e.getDesc_cstr());
     return MStatus::kSuccess;
   }
-  port.setRTVal(rtMeshes);
+  port.setRTVal(rtValToSet);
 
   evaluate();
 
@@ -216,7 +239,12 @@ int FabricSpliceMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataB
   MString portName = "meshes"; 
   FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
   if(!port.isValid()){
-    return 0;
+
+    // backwards compatibility
+    portName = "mesh0";
+    port = _spliceGraph.getDGPort(portName.asChar());
+    if(!port.isValid())
+      return 0;
   }
 
   std::string dataType = port.getDataType();
