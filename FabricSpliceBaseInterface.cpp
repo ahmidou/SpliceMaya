@@ -34,7 +34,7 @@ FabricSpliceBaseInterface::FabricSpliceBaseInterface(){
   MStatus stat;
   MAYASPLICE_CATCH_BEGIN(&stat);
 
-  _restoredFromPersistenceData = false;
+_restoredFromPersistenceData = false;
   _dummyValue = 17;
   _spliceGraph = FabricSplice::DGGraph();
   _spliceGraph.setUserPointer(this);
@@ -1467,10 +1467,14 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
       if(value.isNullObject())
         continue;
 
+      FabricCore::RTVal detachable = FabricSplice::constructObjectRTVal("Detachable", 1, &value);
+      if(detachable.isNullObject())
+        continue;
+
       if(destroy)
-        value.callMethod("", "deattach", 0, 0);
+        detachable.callMethod("", "deattach", 0, 0);
       else
-        value.callMethod("", "attach", 0, 0);
+        detachable.callMethod("", "attach", 0, 0);
     }
     catch(FabricCore::Exception e)
     {
