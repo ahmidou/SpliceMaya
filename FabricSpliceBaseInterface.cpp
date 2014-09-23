@@ -1472,7 +1472,7 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
         continue;
 
       if(destroy)
-        detachable.callMethod("", "deattach", 0, 0);
+        detachable.callMethod("", "detach", 0, 0);
       else
         detachable.callMethod("", "attach", 0, 0);
     }
