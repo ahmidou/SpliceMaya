@@ -265,8 +265,6 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
   }
   // Now we translate the Qt events to FabricEngine events..
 
-  mayaLogFunc("FabricSpliceToolContext::onEvent: %i", int(event->type()));
-
   try
   {
     M3dView view = M3dView::active3dView();
@@ -296,7 +294,6 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
 
       klevent = FabricSplice::constructObjectRTVal("MouseEvent");
-      mayaLogFunc("MouseEvent");
 
       FabricCore::RTVal klpos = FabricSplice::constructRTVal("Vec2");
       klpos.setMember("x", FabricSplice::constructFloat32RTVal(mouseEvent->pos().x()));
