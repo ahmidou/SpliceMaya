@@ -1452,6 +1452,7 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
   if(_portObjectsDestroyed == destroy)
     return;
 
+  mayaErrorLogEnable(false);
   for(unsigned int i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
     FabricSplice::DGPort port = _spliceGraph.getDGPort(i);
     if(!port.isValid())
@@ -1467,7 +1468,7 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
       if(value.isNullObject())
         continue;
 
-      FabricCore::RTVal detachable = FabricSplice::constructObjectRTVal("Detachable", 1, &value);
+      FabricCore::RTVal detachable = FabricSplice::constructInterfaceRTVal("Detachable", value);
       if(detachable.isNullObject())
         continue;
 
@@ -1480,7 +1481,12 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
     {
       // ignore errors, probably an object which does not implement deattach and attach
     }
+    catch(FabricSplice::Exception e)
+    {
+      // ignore errors, probably an object which does not implement deattach and attach
+    }
   }
+  mayaErrorLogEnable(true);
 
   _portObjectsDestroyed = destroy;
 }

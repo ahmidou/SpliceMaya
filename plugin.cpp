@@ -150,9 +150,17 @@ void mayaLogFunc(const char * message, unsigned int length)
   mayaLogFunc(MString(message));
 }
 
+bool gErrorEnabled = true;
+void mayaErrorLogEnable(bool enable)
+{
+  gErrorEnabled = enable;
+}
+
 bool gErrorOccured = false;
 void mayaLogErrorFunc(const MString & message)
 {
+  if(!gErrorEnabled)
+    return;
   MGlobal::displayError(MString("[Splice] ")+message);
   gErrorOccured = true;
 }
