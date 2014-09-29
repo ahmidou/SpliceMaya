@@ -414,7 +414,15 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       // Invoke the custom command passing the speficied args.
       MString customCommand(host.maybeGetMember("customCommand").getStringCString());
       if(customCommand.length() > 0){
-        MGlobal::executeCommandOnIdle(customCommand + MString(" ") + MString(host.maybeGetMember("customCommandArg").getStringCString()));
+        FabricCore::RTVal customCommandArgs = host.maybeGetMember("customCommandArgs");
+        MString args;
+        for(int i=0; i<customCommandArgs.getArraySize(); i++){
+          if(i>0)
+            args += MString(" ");
+          args += MString(customCommandArgs.getArrayElement(i).getStringCString());
+        }
+        bool displayEnabled = true;
+        MGlobal::executeCommandOnIdle(customCommand + MString(" ") + args, displayEnabled);
       }
 
       if(host.maybeGetMember("redrawRequested").getBoolean())
