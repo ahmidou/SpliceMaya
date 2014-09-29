@@ -74,6 +74,8 @@ void onSceneSave(void *userData){
 
   MStatus status = MS::kSuccess;
   MString file = MFileIO::beforeSaveFilename(&status);
+  if(file.length() == 0) // this happens during copy & paste
+    return;
 
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
