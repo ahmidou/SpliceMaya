@@ -21,7 +21,6 @@
 #include "FabricSpliceMayaDeformer.h"
 #include "FabricSpliceCommand.h"
 #include "FabricSpliceEditorCmd.h"
-#include "FabricSpliceLicenseDialog.h"
 #include "FabricSpliceMayaData.h"
 #include "FabricSpliceToolContext.h"
 #include "FabricSpliceRenderCallback.h"
@@ -201,16 +200,7 @@ void mayaCompilerErrorFunc(unsigned int row, unsigned int col, const char * file
 
 void mayaKLStatusFunc(const char * topic, unsigned int topicLength,  const char * message, unsigned int messageLength)
 {
-  if(std::string(topic) == "licensing" && MGlobal::mayaState() == MGlobal::kInteractive)
-  {
-    MStatus stat;
-    MAYASPLICE_CATCH_BEGIN(&stat);
-    FabricSpliceLicenseDialog dialog(message, MQtUtil::mainWindow());
-    dialog.exec();
-    MAYASPLICE_CATCH_END(&stat);
-  }
-  else
-    MGlobal::displayInfo(MString("[KL Status]: ")+MString(message));
+  MGlobal::displayInfo(MString("[KL Status]: ")+MString(message));
 }
 
 void mayaRefreshFunc()

@@ -22,6 +22,7 @@
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceEditorCmd.h"
 #include "FabricSpliceRenderCallback.h"
+#include "FabricSpliceLicenseDialog.h"
 
 #define kActionFlag "-a"
 #define kActionFlagLong "-action"
@@ -78,6 +79,16 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     else if(actionStr == "getClientContextID"){
       MString clientContextID = FabricSplice::GetClientContextID();
       setResult(clientContextID);
+      return mayaErrorOccured();
+    }
+    else if(actionStr == "setupLicensing"){
+
+      MStatus stat;
+      MAYASPLICE_CATCH_BEGIN(&stat);
+      FabricSpliceLicenseDialog dialog(MQtUtil::mainWindow());
+      dialog.exec();
+      MAYASPLICE_CATCH_END(&stat);
+
       return mayaErrorOccured();
     }
     else if(actionStr == "registerKLType"){

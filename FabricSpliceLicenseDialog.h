@@ -13,7 +13,7 @@
 class FabricSpliceLicenseDialog : public QDialog {
 public:
 
-  FabricSpliceLicenseDialog(const char * message, QWidget * parent);
+  FabricSpliceLicenseDialog(QWidget * parent);
   ~FabricSpliceLicenseDialog();
 
 private:
@@ -21,7 +21,6 @@ private:
   static void onCancelPressed(void * userData);
   static std::string getStdStringFromQString(QString input); 
 
-  QTextEdit * mLicenseText;
   QLineEdit * mLicenseServer;
 };
 
