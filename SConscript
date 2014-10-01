@@ -6,7 +6,7 @@ import os, sys, platform, copy
 
 Import(
   'parentEnv',
-  'FABRIC_CAPI_DIR',
+  'FABRIC_DIR',
   'FABRIC_SPLICE_VERSION',
   'STAGE_DIR',
   'FABRIC_BUILD_OS',
@@ -132,7 +132,7 @@ if FABRIC_BUILD_OS == 'Linux':
 if FABRIC_BUILD_OS == 'Darwin':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../../../..')])
 if FABRIC_BUILD_OS == 'Windows':
-  mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.dll'))))
+  mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_DIR, 'lib', '*.dll'))))
 
 # install PDB files on windows
 if FABRIC_BUILD_TYPE == 'Debug' and FABRIC_BUILD_OS == 'Windows':
