@@ -116,7 +116,6 @@ mayaModuleFile = env.SubstMayaModuleFile(
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
 mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), os.path.join('Module', 'plug-ins', 'FabricSpliceManipulation.py')))
-mayaFiles.append(env.Install(STAGE_DIR, env.File('license.txt')))
 
 for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
