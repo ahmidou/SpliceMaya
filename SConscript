@@ -33,12 +33,12 @@ mayaFlags = {
 
 mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
-  mayaFlags['CCFLAGS'] = ['/DNT_PLUGIN']
+  mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
   mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4'])
-elif FABRIC_BUILD_OS == 'Linux':
-  mayaFlags['CCFLAGS'] = ['-DLINUX']
+if FABRIC_BUILD_OS == 'Linux':
+  mayaFlags['CPPDEFINES'] = ['LINUX']
   mayaFlags['LIBS'].extend(['QtCore', 'QtGui'])
-elif FABRIC_BUILD_OS == 'Darwin':
+if FABRIC_BUILD_OS == 'Darwin':
   mayaFlags['CPPDEFINES'] = ['OSMac_']
   qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
   qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
@@ -46,7 +46,7 @@ elif FABRIC_BUILD_OS == 'Darwin':
     qtCoreLib,
     qtGuiLib,
     File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
-  ])
+    ])
 
 env.MergeFlags(mayaFlags)
 env.Append(CPPDEFINES = ["_SPLICE_MAYA_VERSION="+str(MAYA_VERSION[:4])])
@@ -134,10 +134,11 @@ if FABRIC_BUILD_OS == 'Linux':
 if FABRIC_BUILD_OS == 'Darwin':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../../../..')])
 if FABRIC_BUILD_OS == 'Windows':
+  FABRIC_CORE_VERSION = FABRIC_SPLICE_VERSION.rpartition('.')[0]
   mayaFiles.append(
     env.Install(
       os.path.join(STAGE_DIR.abspath, 'plug-ins'),
-      FABRIC_DIR.Dir('lib').File('FabricCore-' + FABRIC_SPLICE_VERSION + '.dll')
+      os.path.join(FABRIC_DIR, 'lib', 'FabricCore-' + FABRIC_CORE_VERSION + '.dll')
       )
     )
 
