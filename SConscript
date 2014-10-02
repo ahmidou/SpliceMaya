@@ -6,7 +6,7 @@ import os, sys, platform, copy
 
 Import(
   'parentEnv',
-  'FABRIC_CAPI_DIR',
+  'FABRIC_DIR',
   'FABRIC_SPLICE_VERSION',
   'STAGE_DIR',
   'FABRIC_BUILD_OS',
@@ -33,12 +33,12 @@ mayaFlags = {
 
 mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
-  mayaFlags['CCFLAGS'] = ['/DNT_PLUGIN']
+  mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
   mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4'])
-elif FABRIC_BUILD_OS == 'Linux':
-  mayaFlags['CCFLAGS'] = ['-DLINUX']
+if FABRIC_BUILD_OS == 'Linux':
+  mayaFlags['CPPDEFINES'] = ['LINUX']
   mayaFlags['LIBS'].extend(['QtCore', 'QtGui'])
-elif FABRIC_BUILD_OS == 'Darwin':
+if FABRIC_BUILD_OS == 'Darwin':
   mayaFlags['CPPDEFINES'] = ['OSMac_']
   qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
   qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
@@ -46,7 +46,7 @@ elif FABRIC_BUILD_OS == 'Darwin':
     qtCoreLib,
     qtGuiLib,
     File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
-  ])
+    ])
 
 env.MergeFlags(mayaFlags)
 env.Append(CPPDEFINES = ["_SPLICE_MAYA_VERSION="+str(MAYA_VERSION[:4])])
@@ -116,7 +116,6 @@ mayaModuleFile = env.SubstMayaModuleFile(
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
 mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), os.path.join('Module', 'plug-ins', 'FabricSpliceManipulation.py')))
-mayaFiles.append(env.Install(STAGE_DIR, env.File('license.txt')))
 
 for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
@@ -131,11 +130,17 @@ mayaFiles.append(installedModule)
 
 # also install the FabricCore dynamic library
 if FABRIC_BUILD_OS == 'Linux':
-  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../../../CAPI/lib/')])
+  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../../../lib/')])
 if FABRIC_BUILD_OS == 'Darwin':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../../../..')])
 if FABRIC_BUILD_OS == 'Windows':
-  mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), env.Glob(os.path.join(FABRIC_CAPI_DIR, 'lib', '*.dll'))))
+  FABRIC_CORE_VERSION = FABRIC_SPLICE_VERSION.rpartition('.')[0]
+  mayaFiles.append(
+    env.Install(
+      os.path.join(STAGE_DIR.abspath, 'plug-ins'),
+      os.path.join(FABRIC_DIR, 'lib', 'FabricCore-' + FABRIC_CORE_VERSION + '.dll')
+      )
+    )
 
 # install PDB files on windows
 if FABRIC_BUILD_TYPE == 'Debug' and FABRIC_BUILD_OS == 'Windows':
