@@ -130,9 +130,9 @@ mayaFiles.append(installedModule)
 
 # also install the FabricCore dynamic library
 if FABRIC_BUILD_OS == 'Linux':
-  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../../../lib/')])
+  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../../lib/')])
 if FABRIC_BUILD_OS == 'Darwin':
-  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../../../..')])
+  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../../..')])
 if FABRIC_BUILD_OS == 'Windows':
   FABRIC_CORE_VERSION = FABRIC_SPLICE_VERSION.rpartition('.')[0]
   mayaFiles.append(
