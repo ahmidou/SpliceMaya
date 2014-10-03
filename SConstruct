@@ -66,7 +66,7 @@ else:
     'FABRIC_BUILD_TYPE': os.environ['FABRIC_BUILD_TYPE'],
     'FABRIC_BUILD_OS': os.environ['FABRIC_BUILD_OS'],
     'FABRIC_BUILD_ARCH': os.environ['FABRIC_BUILD_ARCH'],
-    'STAGE_DIR': spliceEnv.Dir('.stage').Dir('Applications').Dir('FabricSpliceMaya'+os.environ['MAYA_VERSION']),
+    'STAGE_DIR': spliceEnv.Dir('.stage').Dir('SpliceIntegrations').Dir('FabricSpliceMaya'+os.environ['MAYA_VERSION']),
     'BOOST_DIR': os.environ['BOOST_DIR'],
     'MAYA_INCLUDE_DIR': os.environ['MAYA_INCLUDE_DIR'],
     'MAYA_LIB_DIR': os.environ['MAYA_LIB_DIR'],
