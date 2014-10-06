@@ -55,6 +55,7 @@ MCallbackId gRenderCallback3;
 MCallbackId gRenderCallback4;
 MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
+MCallbackId gBeforeSceneOpenCallbackId;
 
 MString gModuleFolder;
 void initModuleFolder(MFnPlugin &plugin){
@@ -224,7 +225,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   gOnSceneSaveCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, onSceneSave);
   gOnSceneLoadCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterOpen, onSceneLoad);
-  gOnSceneNewCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterNew, onSceneNew);
+  gBeforeSceneOpenCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeOpen, onSceneNew);
+  gOnSceneNewCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeNew, onSceneNew);
   gOnMayaExitCallbackId = MSceneMessage::addCallback(MSceneMessage::kMayaExiting, onMayaExiting);
   gOnSceneExportCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeExport, onSceneSave);
   gOnSceneImportCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImport, onSceneLoad);
