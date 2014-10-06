@@ -1078,7 +1078,17 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
 
   MPlug saveDataPlug = getSaveDataPlug();
 
-  FabricCore::Variant dictData = FabricCore::Variant::CreateFromJSON(saveDataPlug.asString().asChar());
+  std::string dictString = saveDataPlug.asString().asChar();
+  if(dictString == "" || dictString == "null")
+  {
+    MFnDependencyNode thisNode(getThisMObject());
+    MString message = "The persistance data for Splice on '";
+    message += thisNode.name();
+    message += "' is corrupt.";
+    mayaLogErrorFunc(message);
+    return;
+  }
+  FabricCore::Variant dictData = FabricCore::Variant::CreateFromJSON(dictString);
   bool dataRestored = _spliceGraph.setFromPersistenceDataDict(dictData, &info);
 
   if(dataRestored){
