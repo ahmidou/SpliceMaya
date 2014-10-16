@@ -57,7 +57,7 @@ env.MergeFlags(spliceFlags)
 if FABRIC_BUILD_OS == 'Linux':
   env.Append(LIBS=['boost_filesystem', 'boost_system'])
 
-target = 'FabricSpliceMaya' + MAYA_VERSION
+target = 'FabricSpliceMaya'
 
 mayaModule = None
 sources = env.Glob('*.cpp')
@@ -109,7 +109,7 @@ env.Append(BUILDERS = {
 })
 
 mayaModuleFile = env.SubstMayaModuleFile(
-  env.File('FabricSpliceMaya' + MAYA_VERSION + '.mod'),
+  env.File('FabricSpliceMaya.mod'),
   env.Dir('Module').File('FabricSpliceMaya.mod.template')
 )[0]
 
