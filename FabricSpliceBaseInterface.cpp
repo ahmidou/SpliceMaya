@@ -954,7 +954,13 @@ void FabricSpliceBaseInterface::removeMayaAttribute(const MString &portName, MSt
   MFnDependencyNode thisNode(getThisMObject());
   MPlug plug = thisNode.findPlug(portName);
   if(!plug.isNull())
-    thisNode.removeAttribute(plug.attribute());
+  {
+    MString command = "deleteAttr "+thisNode.name()+"."+portName;
+    MGlobal::executeCommandOnIdle(command); 
+
+    // in Maya 2015 this is causing a crash in Qt due to a bug in Maya.
+    // thisNode.removeAttribute(plug.attribute());
+  }
 
   MAYASPLICE_CATCH_END(stat);
 }
