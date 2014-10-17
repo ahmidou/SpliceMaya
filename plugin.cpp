@@ -314,9 +314,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 
 MString getPluginName()
 {
-  MString version;
-  version.set(_SPLICE_MAYA_VERSION);
-  return "FabricSpliceMaya"+version;
+  return "FabricSpliceMaya";
 }
 
 void loadMenu()
