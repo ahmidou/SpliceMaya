@@ -28,7 +28,7 @@ MStatus ProceedToNextSceneCommand::doIt(const MArgList &args)
   boost::filesystem::path currentSample = sceneFileName.asChar();
   boost::filesystem::path samplesDir = currentSample.parent_path();
 
-  while(samplesDir.stem().string() != "Samples") {
+  while(samplesDir.stem().string() != "Samples" && samplesDir.stem().string() != "Splice") {
     samplesDir = samplesDir.parent_path();
     if(samplesDir.empty()) {
       MGlobal::displayError("You can only use proceedToNextScene on the Fabric Engine sample scenes.");
