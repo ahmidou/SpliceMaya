@@ -351,8 +351,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
 
           MMatrix mayaCameraMatrix = cameraDag.inclusiveMatrix();
 
-          FabricCore::RTVal cameraMat = inlineCamera.maybeGetMember("mat44");
-
+          FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
           FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
           float * cameraMatFloats = (float*)cameraMatData.getData();
           if(cameraMat) {
@@ -373,7 +372,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
             cameraMatFloats[14] = (float)mayaCameraMatrix[2][3];
             cameraMatFloats[15] = (float)mayaCameraMatrix[3][3];
 
-            inlineCamera.setMember("mat44", cameraMat);
+            inlineCamera.callMethod("", "setFromMat44", 1, &cameraMat);
           }
 
           inlineViewport.setMember("camera", inlineCamera);
