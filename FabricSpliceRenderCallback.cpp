@@ -74,7 +74,7 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
 
     MMatrix mayaCameraMatrix = cameraDag.inclusiveMatrix();
 
-    FabricCore::RTVal cameraMat = inlineCamera.maybeGetMember("mat44");
+    FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
 
     try
     {
@@ -98,7 +98,7 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
         cameraMatFloats[14] = (float)mayaCameraMatrix[2][3];
         cameraMatFloats[15] = (float)mayaCameraMatrix[3][3];
 
-        inlineCamera.setMember("mat44", cameraMat);
+        inlineCamera.callMethod("", "setFromMat44", 1, &cameraMat);
       }
     }
     catch (FabricCore::Exception e)
