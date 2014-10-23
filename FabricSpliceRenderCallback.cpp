@@ -10,6 +10,7 @@
 #include <maya/MFnDagNode.h>
 #include <maya/MDagPath.h>
 #include <maya/MMatrix.h>
+#include <maya/MAnimControl.h>
 
 bool gRTRPassEnabled = true;
 
@@ -31,6 +32,9 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
     sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
   else if(sDrawContext.isObject() && sDrawContext.isNullObject())
     sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+
+  // sync the time
+  sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
 
   //////////////////////////
   // Setup the viewport
