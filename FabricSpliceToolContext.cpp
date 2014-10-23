@@ -326,11 +326,18 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       // Setup the viewport
       FabricCore::RTVal inlineViewport = FabricSplice::constructObjectRTVal("InlineViewport");
       {
-        FabricCore::RTVal viewportDim = FabricSplice::constructRTVal("Vec2");
-        viewportDim.setMember("x", FabricSplice::constructFloat64RTVal(view.portWidth()));
-        viewportDim.setMember("y", FabricSplice::constructFloat64RTVal(view.portHeight()));
-        inlineViewport.setMember("dimensions", viewportDim);
-
+        double width = view.portWidth();
+        double height = view.portHeight();
+        // Note: There is a task open to unify the viewports between rendering and manipulation
+        // This will mean that resize can occur against the propper draw context. 
+        // Here I create a temporary DrawContext, but that should be eliminated.
+        FabricCore::RTVal drawContext = FabricSplice::constructObjectRTVal("DrawContext");
+        drawContext.setMember("viewport", inlineViewport);
+        std::vector<FabricCore::RTVal> args(3);
+        args[0] = drawContext;
+        args[1] = FabricSplice::constructFloat64RTVal(width);
+        args[2] = FabricSplice::constructFloat64RTVal(height);
+        inlineViewport.callMethod("", "resize", 3, &args[0]);
 
         //////////////////////////
         // Setup the Camera
@@ -341,13 +348,29 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
           view.getCamera(cameraDag);
           MFnCamera camera(cameraDag);
 
-          inlineCamera.setMember("isOrthographic", FabricSplice::constructBooleanRTVal(camera.isOrtho()));
+          bool isOrthographic = camera.isOrtho();
+          inlineCamera.callMethod("", "setOrthographic", 1, &FabricSplice::constructBooleanRTVal(isOrthographic));
 
-          double fovX, fovY;
-          camera.getPortFieldOfView(view.portWidth(), view.portHeight(), fovX, fovY);
-          inlineCamera.setMember("fovY", FabricSplice::constructFloat64RTVal(fovY));
-          inlineCamera.setMember("nearDistance", FabricSplice::constructFloat64RTVal(camera.nearClippingPlane()));
-          inlineCamera.setMember("farDistance", FabricSplice::constructFloat64RTVal(camera.farClippingPlane()));
+          if(isOrthographic){
+            double windowAspect = width/height;
+            double left;
+            double right;
+            double bottom;
+            double top;
+            bool  applyOverscan;
+            bool  applySqueeze;
+            bool  applyPanZoom;
+            camera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
+            inlineCamera.callMethod("", "orthographicFrustumH", 1, &FabricSplice::constructFloat64RTVal(top-bottom ));
+          }
+          else{
+            double fovX, fovY;
+            camera.getPortFieldOfView(view.portWidth(), view.portHeight(), fovX, fovY);    
+            inlineCamera.callMethod("", "setFovY", 1, &FabricSplice::constructFloat64RTVal(fovY));
+          }
+
+          inlineCamera.callMethod("", "setNearDistance", 1, &FabricSplice::constructFloat64RTVal(camera.nearClippingPlane()));
+          inlineCamera.callMethod("", "setFarDistance", 1, &FabricSplice::constructFloat64RTVal(camera.farClippingPlane()));
 
           MMatrix mayaCameraMatrix = cameraDag.inclusiveMatrix();
 
@@ -375,7 +398,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
             inlineCamera.callMethod("", "setFromMat44", 1, &cameraMat);
           }
 
-          inlineViewport.setMember("camera", inlineCamera);
+          inlineViewport.callMethod("", "setCamera", 1, &inlineCamera);
         }
       }
 
