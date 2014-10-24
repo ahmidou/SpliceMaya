@@ -79,13 +79,16 @@ MStatus ProceedToNextSceneCommand::doIt(const MArgList &args)
   if(!nextSample.empty()) {
 
     MGlobal::displayInfo("Opening next scene: "+MString(nextSample.string().c_str()));
-    std::string nextSampleStr = nextSample.string();
+    std::string nextSampleStr = nextSample.make_preferred().string();
+    std::string nextSampleStrEscaped;
     for(unsigned int i=0;i<nextSampleStr.length();i++)
     {
       if(nextSampleStr[i] == '\\')
-        nextSampleStr[i] = '/';
+        nextSampleStrEscaped += "\\\\";
+      else
+        nextSampleStrEscaped += nextSampleStr[i];
     }
-    MGlobal::executeCommandOnIdle("file -f -o \""+MString(nextSampleStr.c_str())+"\"");
+    MGlobal::executeCommandOnIdle("file -f -o \""+MString(nextSampleStrEscaped.c_str())+"\"");
   }
 
   return MStatus::kSuccess;
