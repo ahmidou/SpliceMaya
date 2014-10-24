@@ -1302,9 +1302,10 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName)
       continue;
 
     MString dataType = port.getDataType();
-    if(getSplicePlugToPortFunc(dataType.asChar(), &port) == NULL &&
-       getSplicePortToPlugFunc(dataType.asChar(), &port) == NULL)
-      continue;
+    if(port.hasOption("opaque")) {
+      if(port.getOption("opaque").getBoolean())
+        dataType = "SpliceMayaData";
+    }
 
     bool isArray = port.isArray();
     FabricSplice::Port_Mode portMode = port.getMode();
@@ -1312,11 +1313,6 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName)
     MString arrayType = "Single Value";
     if(isArray)
       arrayType = "Array (Multi)";
-
-    if(port.hasOption("opaque")) {
-      if(port.getOption("opaque").getBoolean())
-        dataType = "SpliceMayaData";
-    }
 
     bool addMayaAttr = true;
     if(port.hasOption("internal")) {
