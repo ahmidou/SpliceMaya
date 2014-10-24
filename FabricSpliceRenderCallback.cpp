@@ -10,6 +10,7 @@
 #include <maya/MFnDagNode.h>
 #include <maya/MDagPath.h>
 #include <maya/MMatrix.h>
+#include <maya/MAnimControl.h>
 
 bool gRTRPassEnabled = true;
 
@@ -32,25 +33,29 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
   else if(sDrawContext.isObject() && sDrawContext.isNullObject())
     sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
 
+  // sync the time
+  sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
+
   //////////////////////////
   // Setup the viewport
   FabricCore::RTVal inlineViewport = sDrawContext.maybeGetMember("viewport");
   double width = view.portWidth();
   double height = view.portHeight();
-  FabricCore::RTVal viewportDim = FabricSplice::constructRTVal("Vec2");
-  viewportDim.setMember("x", FabricSplice::constructFloat64RTVal(width));
-  viewportDim.setMember("y", FabricSplice::constructFloat64RTVal(height));
-  inlineViewport.setMember("dimensions", viewportDim);
+  std::vector<FabricCore::RTVal> args(3);
+  args[0] = sDrawContext;
+  args[1] = FabricSplice::constructFloat64RTVal(width);
+  args[2] = FabricSplice::constructFloat64RTVal(height);
+  inlineViewport.callMethod("", "resize", 3, &args[0]);
 
   {
-    FabricCore::RTVal inlineCamera = inlineViewport.maybeGetMember("camera");
+    FabricCore::RTVal inlineCamera = inlineViewport.callMethod("Camera", "getCamera", 0, 0);
 
     MDagPath cameraDag;
     view.getCamera(cameraDag);
     MFnCamera camera(cameraDag);
 
-    bool isOrthographic =camera.isOrtho();
-    inlineCamera.setMember("isOrthographic", FabricSplice::constructBooleanRTVal(isOrthographic));
+    bool isOrthographic = camera.isOrtho();
+    inlineCamera.callMethod("", "setOrthographic", 1, &FabricSplice::constructBooleanRTVal(isOrthographic));
 
     if(isOrthographic){
       double windowAspect = width/height;
@@ -62,15 +67,15 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
       bool  applySqueeze;
       bool  applyPanZoom;
       camera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
-      inlineCamera.setMember("orthographicFrustumH", FabricSplice::constructFloat64RTVal(top-bottom ));
+      inlineCamera.callMethod("", "orthographicFrustumH", 1, &FabricSplice::constructFloat64RTVal(top-bottom ));
     }
     else{
       double fovX, fovY;
       camera.getPortFieldOfView(view.portWidth(), view.portHeight(), fovX, fovY);    
-      inlineCamera.setMember("fovY", FabricSplice::constructFloat64RTVal(fovY));
+      inlineCamera.callMethod("", "setFovY", 1, &FabricSplice::constructFloat64RTVal(fovY));
     }
-    inlineCamera.setMember("nearDistance", FabricSplice::constructFloat64RTVal(camera.nearClippingPlane()));
-    inlineCamera.setMember("farDistance", FabricSplice::constructFloat64RTVal(camera.farClippingPlane()));
+    inlineCamera.callMethod("", "setNearDistance", 1, &FabricSplice::constructFloat64RTVal(camera.nearClippingPlane()));
+    inlineCamera.callMethod("", "setFarDistance", 1, &FabricSplice::constructFloat64RTVal(camera.farClippingPlane()));
 
     MMatrix mayaCameraMatrix = cameraDag.inclusiveMatrix();
 

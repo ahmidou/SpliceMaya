@@ -58,6 +58,13 @@ MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
 MCallbackId gBeforeSceneOpenCallbackId;
 
+
+MString gLastLoadedScene;
+MString mayaGetLastLoadedScene()
+{
+  return gLastLoadedScene;
+}
+
 MString gModuleFolder;
 void initModuleFolder(MFnPlugin &plugin){
   MString pluginPath = plugin.loadPath();
@@ -74,15 +81,15 @@ MString getModuleFolder()
 void onSceneSave(void *userData){
 
   MStatus status = MS::kSuccess;
-  MString file = MFileIO::beforeSaveFilename(&status);
-  if(file.length() == 0) // this happens during copy & paste
+  gLastLoadedScene = MFileIO::beforeSaveFilename(&status);
+  if(gLastLoadedScene.length() == 0) // this happens during copy & paste
     return;
 
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
   for(int i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
-    node->storePersistenceData(file, &status);
+    node->storePersistenceData(gLastLoadedScene, &status);
   }
 }
 
@@ -101,7 +108,7 @@ void onSceneLoad(void *userData){
     FabricSplice::Logging::enableTimers();
 
   MStatus status = MS::kSuccess;
-  MString file = MFileIO::currentFile();
+  gLastLoadedScene = MFileIO::currentFile();
 
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
@@ -109,7 +116,7 @@ void onSceneLoad(void *userData){
   FabricSplice::Logging::AutoTimer persistenceTimer("Maya::onSceneLoad");
   for(int i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
-    node->restoreFromPersistenceData(file, &status); 
+    node->restoreFromPersistenceData(gLastLoadedScene, &status); 
     if( status != MS::kSuccess)
       return;
   }
@@ -210,6 +217,7 @@ void mayaRefreshFunc()
 {
   MGlobal::executeCommandOnIdle("refresh");
 }
+
 
 
 #if defined(OSMac_)

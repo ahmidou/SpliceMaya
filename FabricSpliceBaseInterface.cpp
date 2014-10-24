@@ -159,6 +159,7 @@ void FabricSpliceBaseInterface::evaluate(){
   context.setMember("host", FabricSplice::constructStringRTVal("Maya"));
   context.setMember("graph", FabricSplice::constructStringRTVal(thisNode.name().asChar()));
   context.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
+  context.setMember("currentFilePath", FabricSplice::constructStringRTVal(mayaGetLastLoadedScene().asChar()));
 
   _spliceGraph.evaluate();
 }

@@ -16,5 +16,6 @@ void mayaLogErrorFunc(const MString & message);
 void mayaClearError();
 MStatus mayaErrorOccured();
 void mayaRefreshFunc();
+MString mayaGetLastLoadedScene();
 
 #endif
