@@ -55,7 +55,9 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
     MFnCamera camera(cameraDag);
 
     bool isOrthographic = camera.isOrtho();
-    inlineCamera.callMethod("", "setOrthographic", 1, &FabricSplice::constructBooleanRTVal(isOrthographic));
+
+    FabricCore::RTVal param = FabricSplice::constructBooleanRTVal(isOrthographic);
+    inlineCamera.callMethod("", "setOrthographic", 1, &param);
 
     if(isOrthographic){
       double windowAspect = width/height;
@@ -67,15 +69,20 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
       bool  applySqueeze;
       bool  applyPanZoom;
       camera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
-      inlineCamera.callMethod("", "orthographicFrustumH", 1, &FabricSplice::constructFloat64RTVal(top-bottom ));
+
+      param = FabricSplice::constructFloat64RTVal(top-bottom);
+      inlineCamera.callMethod("", "orthographicFrustumH", 1, &param);
     }
     else{
       double fovX, fovY;
       camera.getPortFieldOfView(view.portWidth(), view.portHeight(), fovX, fovY);    
-      inlineCamera.callMethod("", "setFovY", 1, &FabricSplice::constructFloat64RTVal(fovY));
+      param = FabricSplice::constructFloat64RTVal(fovY);
+      inlineCamera.callMethod("", "setFovY", 1, &param);
     }
-    inlineCamera.callMethod("", "setNearDistance", 1, &FabricSplice::constructFloat64RTVal(camera.nearClippingPlane()));
-    inlineCamera.callMethod("", "setFarDistance", 1, &FabricSplice::constructFloat64RTVal(camera.farClippingPlane()));
+    param = FabricSplice::constructFloat64RTVal(camera.nearClippingPlane());
+    inlineCamera.callMethod("", "setNearDistance", 1, &param);
+    param = FabricSplice::constructFloat64RTVal(camera.farClippingPlane());
+    inlineCamera.callMethod("", "setFarDistance", 1, &param);
 
     MMatrix mayaCameraMatrix = cameraDag.inclusiveMatrix();
 
