@@ -78,17 +78,18 @@ MStatus ProceedToNextSceneCommand::doIt(const MArgList &args)
 
   if(!nextSample.empty()) {
 
-    MGlobal::displayInfo("Opening next scene: "+MString(nextSample.string().c_str()));
     std::string nextSampleStr = nextSample.make_preferred().string();
+    MGlobal::displayInfo("Opening next scene: "+MString(nextSampleStr.c_str()));
     std::string nextSampleStrEscaped;
     for(unsigned int i=0;i<nextSampleStr.length();i++)
     {
       if(nextSampleStr[i] == '\\')
-        nextSampleStrEscaped += "\\\\";
+        nextSampleStrEscaped += "/";
       else
         nextSampleStrEscaped += nextSampleStr[i];
     }
-    MGlobal::executeCommandOnIdle("file -f -o \""+MString(nextSampleStrEscaped.c_str())+"\"");
+    MString command = "file -f -options \"v=0\"  -typ \"mayaAscii\" -o \""+MString(nextSampleStrEscaped.c_str())+"\";";
+    MGlobal::executeCommandOnIdle(command);
   }
 
   return MStatus::kSuccess;
