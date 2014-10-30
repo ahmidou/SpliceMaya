@@ -79,6 +79,9 @@ else:
   libSuffix = '.so'
   if FABRIC_BUILD_OS == 'Windows':
     libSuffix = '.mll'
+  if FABRIC_BUILD_OS == 'Linux':
+    exportsFile = env.File('Linux.exports').srcnode()
+    env.Append(SHLINKFLAGS = ['-Wl,--version-script='+str(exportsFile)])
   mayaModule = env.SharedLibrary(target = target, source = sources, SHLIBSUFFIX=libSuffix, SHLIBPREFIX='')
 
 sedCmd = 'sed'
