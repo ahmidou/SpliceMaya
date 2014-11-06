@@ -86,9 +86,11 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
     FabricCore::RTVal rtMeshes = port.getRTVal();
     if(!rtMeshes.isValid())
       return MStatus::kSuccess;
+    if(!rtMeshes.isArray())
+      return MStatus::kSuccess;
     rtValToSet = rtMeshes;
 
-    FabricCore::RTVal rtMesh = rtMeshes.getArrayElement(multiIndex);
+    rtMesh = rtMeshes.getArrayElement(multiIndex);
 
   } else {
 
