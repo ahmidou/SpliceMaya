@@ -26,8 +26,8 @@ for var in ['FABRIC_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BU
 
 spliceEnv = Environment()
 
-if not os.path.exists(spliceEnv.Dir('.stage').abspath):
-  os.makedirs(spliceEnv.Dir('.stage').abspath)
+if not os.path.exists(spliceEnv.Dir('.stage').Dir('lib').abspath):
+  os.makedirs(spliceEnv.Dir('.stage').Dir('lib').abspath)
 
 # determine if we have the SpliceAPI two levels up
 spliceApiDir = spliceEnv.Dir('..').Dir('..').Dir('SpliceAPI')
@@ -44,7 +44,7 @@ if os.path.exists(spliceApiDir.abspath):
       'FABRIC_BUILD_TYPE': os.environ['FABRIC_BUILD_TYPE'],
       'FABRIC_BUILD_OS': os.environ['FABRIC_BUILD_OS'],
       'FABRIC_BUILD_ARCH': os.environ['FABRIC_BUILD_ARCH'],
-      'STAGE_DIR': spliceEnv.Dir('.build').Dir('SpliceAPI').Dir('.stage'),
+      'STAGE_DIR': spliceEnv.Dir('.stage'),
       'BOOST_DIR': os.environ['BOOST_DIR']
     },
     variant_dir = spliceEnv.Dir('.build').Dir('SpliceAPI')
