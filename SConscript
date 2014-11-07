@@ -16,7 +16,6 @@ Import(
   'MAYA_VERSION',
   'sharedCapiFlags',
   'spliceFlags',
-  'spliceAppName',
   )
 
 env = parentEnv.Clone()
@@ -64,6 +63,7 @@ sources = env.Glob('*.cpp')
 
 if FABRIC_BUILD_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
+  spliceAppName = 'FabricSpliceMaya'+MAYA_VERSION
   target += '.bundle'
   env.Append(SHLINKFLAGS = ','.join([
     '-Wl',
