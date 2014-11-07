@@ -28,7 +28,11 @@ MStatus ProceedToNextSceneCommand::doIt(const MArgList &args)
   boost::filesystem::path currentSample = sceneFileName.asChar();
   boost::filesystem::path samplesDir = currentSample.parent_path();
 
+#if BOOST_VERSION == 105500
   while(samplesDir.stem().string() != "Samples" && samplesDir.stem().string() != "Splice") {
+#else
+  while(samplesDir.stem() != "Samples" && samplesDir.stem() != "Splice") {
+#endif
     samplesDir = samplesDir.parent_path();
     if(samplesDir.empty()) {
       MGlobal::displayError("You can only use proceedToNextScene on the Fabric Engine sample scenes.");
@@ -53,10 +57,17 @@ MStatus ProceedToNextSceneCommand::doIt(const MArgList &args)
       {
         folders.push_back(dir_iter->path());
       }
+#if BOOST_VERSION == 105500
       else if(dir_iter->path().extension().string() == ".ma" || 
         dir_iter->path().extension().string() == ".MA" ||
         dir_iter->path().extension().string() == ".mb" ||
         dir_iter->path().extension().string() == ".MB")
+#else
+      else if(dir_iter->path().extension() == ".ma" || 
+        dir_iter->path().extension() == ".MA" ||
+        dir_iter->path().extension() == ".mb" ||
+        dir_iter->path().extension() == ".MB")
+#endif
       {
         sampleScenes.push_back(dir_iter->path());
       }
@@ -78,7 +89,11 @@ MStatus ProceedToNextSceneCommand::doIt(const MArgList &args)
 
   if(!nextSample.empty()) {
 
+#if BOOST_VERSION == 105500
     std::string nextSampleStr = nextSample.make_preferred().string();
+#else
+    std::string nextSampleStr = nextSample.string();
+#endif
     MGlobal::displayInfo("Opening next scene: "+MString(nextSampleStr.c_str()));
     std::string nextSampleStrEscaped;
     for(unsigned int i=0;i<nextSampleStr.length();i++)
