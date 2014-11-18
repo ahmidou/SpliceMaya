@@ -50,6 +50,8 @@ public:
   static void editOpPressed(void * userData);
   static void removeOpPressed(void * userData);
 
+  static const char * getSourceCodeForOperator(const char * graphName, const char * opName);
+
 private:
   typedef std::map<std::string, FabricSpliceEditorWidget*> widgetMap;
   typedef widgetMap::iterator widgetIt;
@@ -57,6 +59,7 @@ private:
 
   std::string mName;
   std::string mOpName;
+  std::string mLastSourceCode;
   static widgetMap gWidgets;
   static bool gUpdatePosted;
 
