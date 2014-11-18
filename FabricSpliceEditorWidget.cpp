@@ -769,3 +769,21 @@ void FabricSpliceEditorWidget::bringToFront()
     parent = parent->parentWidget();
   }
 }
+
+const char * FabricSpliceEditorWidget::getSourceCodeForOperator(const char * graphName, const char * opName)
+{
+  FabricSpliceEditorWidget * editor = getFirst();
+  if(editor)
+  {
+    FabricSpliceBaseInterface * interf = editor->getCurrentBaseInterface();
+    if(interf)
+    {
+      if(interf->getSpliceGraph().getName() == std::string(graphName) && editor->mOpName == opName)
+      {
+        editor->mLastSourceCode = editor->mSourceCode->getSourceCode();
+        return editor->mLastSourceCode.c_str();
+      }
+    }
+  }
+  return NULL;
+}

@@ -21,6 +21,7 @@
 
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceEditorCmd.h"
+#include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceLicenseDialog.h"
 
@@ -69,6 +70,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     if(actionStr == "constructClient"){
       bool clientCreated = FabricSplice::ConstructClient().isValid();
       setResult(clientCreated);
+      FabricSplice::setDCCOperatorSourceCodeCallback(&FabricSpliceEditorWidget::getSourceCodeForOperator);
       return mayaErrorOccured();
     }
     else if(actionStr == "destroyClient"){
