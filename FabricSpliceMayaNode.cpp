@@ -50,6 +50,9 @@ MStatus FabricSpliceMayaNode::initialize(){
 }
 
 MStatus FabricSpliceMayaNode::compute(const MPlug& plug, MDataBlock& data){
+
+  _outputsDirtied = false;
+  
   MStatus stat;
   
   MAYASPLICE_CATCH_BEGIN(&stat);
