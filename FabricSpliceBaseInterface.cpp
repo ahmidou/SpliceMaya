@@ -293,22 +293,18 @@ void FabricSpliceBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affect
   }
 
   for(int i = 0; i < plug.numChildren(); ++i){
-    const MPlug &childPlug = plug.child(i);
+    MPlug childPlug = plug.child(i);
     if(!childPlug.isNull()){
       affectedPlugs.append(childPlug);
+      affectChildPlugs(childPlug, affectedPlugs);
     }
   }
 
   for(int i = 0; i < plug.numElements(); ++i){
-    const MPlug &elementPlug = plug.elementByPhysicalIndex(i);
+    MPlug elementPlug = plug.elementByPhysicalIndex(i);
     if(!elementPlug.isNull()){
       affectedPlugs.append(elementPlug);
-      for(int j = 0; j < elementPlug.numChildren(); ++j){
-        const MPlug &childPlug = elementPlug.child(j);
-        if(!childPlug.isNull()){
-          affectedPlugs.append(childPlug);
-        }
-      }
+      affectChildPlugs(elementPlug, affectedPlugs);
     }
   }
 }
@@ -1440,11 +1436,11 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
 
   FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty()");
 
-  if(_outputsDirtied)
-    return;
-
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
+
+  if(_outputsDirtied)
+    return;
 
   if(_affectedPlugsDirty)
   {
