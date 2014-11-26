@@ -107,6 +107,7 @@ protected:
   // MString _manipulationCommand;
   bool _dgDirtyEnabled;
   bool _affectedPlugsDirty;
+  bool _outputsDirtied;
   MPlugArray _affectedPlugs;
 
 #if _SPLICE_MAYA_VERSION < 2014

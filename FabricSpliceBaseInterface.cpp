@@ -43,6 +43,7 @@ FabricSpliceBaseInterface::FabricSpliceBaseInterface(){
   _dgDirtyEnabled = true;
   _portObjectsDestroyed = false;
   _affectedPlugsDirty = true;
+  _outputsDirtied = false;
 
   FabricSplice::setDCCOperatorSourceCodeCallback(&FabricSpliceEditorWidget::getSourceCodeForOperator);
 
@@ -194,6 +195,7 @@ void FabricSpliceBaseInterface::evaluate(){
   }
 
   _spliceGraph.evaluate();
+  _outputsDirtied = false;
 }
 
 void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
@@ -1436,11 +1438,21 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
 
   MFnDependencyNode thisNode(thisMObject);
 
+  FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty()");
+
+  if(_outputsDirtied)
+    return;
+
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
 
   if(_affectedPlugsDirty)
   {
+    FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty() _affectedPlugsDirty");
+
+    if(_affectedPlugs.length() > 0)
+      affectedPlugs.setSizeIncrement(_affectedPlugs.length());
+    
     _affectedPlugs.clear();
 
     for(unsigned int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
@@ -1461,7 +1473,13 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
     }
     _affectedPlugsDirty = false;
   }
-  affectedPlugs = _affectedPlugs;
+
+  {
+    FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty() copying _affectedPlugs");
+    affectedPlugs = _affectedPlugs;
+  }
+
+  _outputsDirtied = true;
 }
 
 void FabricSpliceBaseInterface::copyInternalData(MPxNode *node){
