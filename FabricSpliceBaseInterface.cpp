@@ -34,7 +34,7 @@ FabricSpliceBaseInterface::FabricSpliceBaseInterface(){
   MStatus stat;
   MAYASPLICE_CATCH_BEGIN(&stat);
 
-_restoredFromPersistenceData = false;
+  _restoredFromPersistenceData = false;
   _dummyValue = 17;
   _spliceGraph = FabricSplice::DGGraph();
   _spliceGraph.setUserPointer(this);
@@ -42,6 +42,8 @@ _restoredFromPersistenceData = false;
   _instances.push_back(this);
   _dgDirtyEnabled = true;
   _portObjectsDestroyed = false;
+  _affectedPlugsDirty = true;
+  _outputsDirtied = false;
 
   FabricSplice::setDCCOperatorSourceCodeCallback(&FabricSpliceEditorWidget::getSourceCodeForOperator);
 
@@ -156,12 +158,41 @@ void FabricSpliceBaseInterface::evaluate(){
   FabricSplice::Logging::AutoTimer timer("Maya::evaluate()");
   managePortObjectValues(false); // recreate objects if not there yet
 
-  // setup the context
-  FabricCore::RTVal context = _spliceGraph.getEvalContext();
-  context.setMember("host", FabricSplice::constructStringRTVal("Maya"));
-  context.setMember("graph", FabricSplice::constructStringRTVal(thisNode.name().asChar()));
-  context.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
-  context.setMember("currentFilePath", FabricSplice::constructStringRTVal(mayaGetLastLoadedScene().asChar()));
+  if(_spliceGraph.usesEvalContext())
+  {
+    // setup the context
+    FabricCore::RTVal context = _spliceGraph.getEvalContext();
+    context.setMember("host", FabricSplice::constructStringRTVal("Maya"));
+    context.setMember("graph", FabricSplice::constructStringRTVal(thisNode.name().asChar()));
+    context.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
+    context.setMember("currentFilePath", FabricSplice::constructStringRTVal(mayaGetLastLoadedScene().asChar()));
+
+    if(_evalContextPlugNames.length() > 0)
+    {
+      for(unsigned int i=0;i<_evalContextPlugNames.length();i++)
+      {
+        MString name = _evalContextPlugNames[i];
+        MString portName = name;
+        int periodPos = portName.index('.');
+        if(periodPos > 0)
+          portName = portName.substring(0, periodPos-1);
+        FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
+        if(port.isValid()){
+          if(port.getMode() != FabricSplice::Port_Mode_OUT)
+          {
+            std::vector<FabricCore::RTVal> args(1);
+            args[0] = FabricSplice::constructStringRTVal(name.asChar());
+            if(_evalContextPlugIds[i] >= 0)
+              args.push_back(FabricSplice::constructSInt32RTVal(_evalContextPlugIds[i]));
+            context.callMethod("", "_addDirtyInput", args.size(), &args[0]);
+          }
+        }
+      }
+    
+      _evalContextPlugNames.clear();
+      _evalContextPlugIds.clear();
+    }
+  }
 
   _spliceGraph.evaluate();
 }
@@ -219,34 +250,22 @@ void FabricSpliceBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   MStatus stat;
   MString name;
 
-  MAYASPLICE_CATCH_BEGIN(&stat);
+  name = inPlug.name();
+  int periodPos = name.rindex('.');
+  if(periodPos > -1)
+    name = name.substring(periodPos+1, name.length()-1);
+  int bracketPos = name.index('[');
+  if(bracketPos > -1)
+    name = name.substring(0, bracketPos-1);
 
-  // notify the context about this
-  FabricCore::RTVal context = _spliceGraph.getEvalContext();
-
-  if(inPlug.isElement()){
-    name = inPlug.array().partialName(false, false, false, false, false, true);
+  if(_spliceGraph.usesEvalContext())
+  {
+    _evalContextPlugNames.append(name);
+    if(inPlug.isElement())
+      _evalContextPlugIds.append(inPlug.logicalIndex());
+    else
+      _evalContextPlugIds.append(-1);
   }
-  else{
-    name = inPlug.partialName(false, false, false, false, false, true);
-  }
-
-  std::vector<FabricCore::RTVal> args(1);
-  args[0] = FabricSplice::constructStringRTVal(name.asChar());
-  if(inPlug.isElement()){
-    args.push_back(FabricSplice::constructSInt32RTVal(inPlug.logicalIndex()));
-  }
-  MStringArray splitBuffer;
-  name.split('.', splitBuffer);
-
-  MString portName = splitBuffer[0];
-  FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
-  if(port.isValid()){
-    if(port.getMode() != FabricSplice::Port_Mode_OUT)
-      context.callMethod("", "_addDirtyInput", args.size(), &args[0]);
-  }
-
-  MAYASPLICE_CATCH_END(&stat);
 
   if(inPlug.isChild()){
     // if plug belongs to translation or rotation we collect the parent to transfer all x,y,z values
@@ -274,22 +293,18 @@ void FabricSpliceBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affect
   }
 
   for(int i = 0; i < plug.numChildren(); ++i){
-    const MPlug &childPlug = plug.child(i);
+    MPlug childPlug = plug.child(i);
     if(!childPlug.isNull()){
       affectedPlugs.append(childPlug);
+      affectChildPlugs(childPlug, affectedPlugs);
     }
   }
 
   for(int i = 0; i < plug.numElements(); ++i){
-    const MPlug &elementPlug = plug.elementByPhysicalIndex(i);
+    MPlug elementPlug = plug.elementByPhysicalIndex(i);
     if(!elementPlug.isNull()){
       affectedPlugs.append(elementPlug);
-      for(int j = 0; j < elementPlug.numChildren(); ++j){
-        const MPlug &childPlug = elementPlug.child(j);
-        if(!childPlug.isNull()){
-          affectedPlugs.append(childPlug);
-        }
-      }
+      affectChildPlugs(elementPlug, affectedPlugs);
     }
   }
 }
@@ -880,6 +895,7 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
   if(!compoundChild)
     setupMayaAttributeAffects(portName, portMode, newAttribute);
 
+  _affectedPlugsDirty = true;
   return newAttribute;
 
   MAYASPLICE_CATCH_END(stat);
@@ -946,6 +962,7 @@ void FabricSpliceBaseInterface::addPort(const MString &portName, const MString &
 
   _spliceGraph.addDGNodeMember(portName.asChar(), dataType.asChar(), defaultValue, dgNode.asChar(), extension.asChar());
   _spliceGraph.addDGPort(portName.asChar(), portName.asChar(), portMode, dgNode.asChar(), autoInitObjects);
+  _affectedPlugsDirty = true;
 
   MAYASPLICE_CATCH_END(stat);
 }
@@ -960,9 +977,9 @@ void FabricSpliceBaseInterface::removeMayaAttribute(const MString &portName, MSt
   {
     MString command = "deleteAttr "+thisNode.name()+"."+portName;
     MGlobal::executeCommandOnIdle(command); 
-
     // in Maya 2015 this is causing a crash in Qt due to a bug in Maya.
     // thisNode.removeAttribute(plug.attribute());
+    _affectedPlugsDirty = true;
   }
 
   MAYASPLICE_CATCH_END(stat);
@@ -973,6 +990,7 @@ void FabricSpliceBaseInterface::removePort(const MString &portName, MStatus *sta
 
   FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
   _spliceGraph.removeDGNodeMember(portName.asChar(), port.getDGNodeName());
+  _affectedPlugsDirty = true;
 
   MAYASPLICE_CATCH_END(stat);
 }
@@ -1232,6 +1250,8 @@ void FabricSpliceBaseInterface::invalidateNode()
       }
     }
   }
+  _affectedPlugsDirty = true;
+  _outputsDirtied = false;
 }
 
 void FabricSpliceBaseInterface::incEvalID(){
@@ -1414,25 +1434,48 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
 
   MFnDependencyNode thisNode(thisMObject);
 
+  FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty()");
+
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
 
-  for(unsigned int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
-    FabricSplice::DGPort port = _spliceGraph.getDGPort(i);
-    if(!port.isValid())
-      continue;
-    int portMode = (int)port.getMode();
+  if(_outputsDirtied)
+    return;
+
+  if(_affectedPlugsDirty)
+  {
+    FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty() _affectedPlugsDirty");
+
+    if(_affectedPlugs.length() > 0)
+      affectedPlugs.setSizeIncrement(_affectedPlugs.length());
     
-    if(port.getMode() != FabricSplice::Port_Mode_IN){
-      MPlug outPlug = thisNode.findPlug(port.getName());
-      if(!outPlug.isNull()){
-        if(!plugInArray(outPlug, affectedPlugs)){
-          affectedPlugs.append(outPlug);
-          affectChildPlugs(outPlug, affectedPlugs);
+    _affectedPlugs.clear();
+
+    for(unsigned int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+      FabricSplice::DGPort port = _spliceGraph.getDGPort(i);
+      if(!port.isValid())
+        continue;
+      int portMode = (int)port.getMode();
+      
+      if(port.getMode() != FabricSplice::Port_Mode_IN){
+        MPlug outPlug = thisNode.findPlug(port.getName());
+        if(!outPlug.isNull()){
+          if(!plugInArray(outPlug, _affectedPlugs)){
+            _affectedPlugs.append(outPlug);
+            affectChildPlugs(outPlug, _affectedPlugs);
+          }
         }
       }
     }
+    _affectedPlugsDirty = false;
   }
+
+  {
+    FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty() copying _affectedPlugs");
+    affectedPlugs = _affectedPlugs;
+  }
+
+  _outputsDirtied = true;
 }
 
 void FabricSpliceBaseInterface::copyInternalData(MPxNode *node){

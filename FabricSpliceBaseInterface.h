@@ -89,6 +89,8 @@ protected:
 
   FabricSplice::DGGraph _spliceGraph;
   MStringArray _dirtyPlugs;
+  MStringArray _evalContextPlugNames;
+  MIntArray _evalContextPlugIds;
   std::vector<std::string> mSpliceMayaDataOverride;
   bool _isTransferingInputs;
   bool _portObjectsDestroyed;
@@ -104,6 +106,9 @@ protected:
   // static MString sManipulationCommand;
   // MString _manipulationCommand;
   bool _dgDirtyEnabled;
+  bool _affectedPlugsDirty;
+  bool _outputsDirtied;
+  MPlugArray _affectedPlugs;
 
 #if _SPLICE_MAYA_VERSION < 2014
   static std::map<std::string, int> _nodeCreatorCounts;
