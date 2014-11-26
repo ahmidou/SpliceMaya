@@ -56,6 +56,9 @@ MStatus FabricSpliceMayaDeformer::initialize(){
 }
 
 MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, const MMatrix&, unsigned int multiIndex){
+
+  _outputsDirtied = false;
+  
   MStatus stat;
   MAYASPLICE_CATCH_BEGIN(&stat);
 

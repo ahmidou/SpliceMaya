@@ -195,7 +195,6 @@ void FabricSpliceBaseInterface::evaluate(){
   }
 
   _spliceGraph.evaluate();
-  _outputsDirtied = false;
 }
 
 void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
@@ -1256,6 +1255,7 @@ void FabricSpliceBaseInterface::invalidateNode()
     }
   }
   _affectedPlugsDirty = true;
+  _outputsDirtied = false;
 }
 
 void FabricSpliceBaseInterface::incEvalID(){
