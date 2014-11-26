@@ -104,6 +104,8 @@ protected:
   // static MString sManipulationCommand;
   // MString _manipulationCommand;
   bool _dgDirtyEnabled;
+  bool _affectedPlugsDirty;
+  MPlugArray _affectedPlugs;
 
 #if _SPLICE_MAYA_VERSION < 2014
   static std::map<std::string, int> _nodeCreatorCounts;

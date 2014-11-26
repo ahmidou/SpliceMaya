@@ -34,7 +34,7 @@ FabricSpliceBaseInterface::FabricSpliceBaseInterface(){
   MStatus stat;
   MAYASPLICE_CATCH_BEGIN(&stat);
 
-_restoredFromPersistenceData = false;
+  _restoredFromPersistenceData = false;
   _dummyValue = 17;
   _spliceGraph = FabricSplice::DGGraph();
   _spliceGraph.setUserPointer(this);
@@ -42,6 +42,7 @@ _restoredFromPersistenceData = false;
   _instances.push_back(this);
   _dgDirtyEnabled = true;
   _portObjectsDestroyed = false;
+  _affectedPlugsDirty = true;
 
   FabricSplice::setDCCOperatorSourceCodeCallback(&FabricSpliceEditorWidget::getSourceCodeForOperator);
 
@@ -880,6 +881,7 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
   if(!compoundChild)
     setupMayaAttributeAffects(portName, portMode, newAttribute);
 
+  _affectedPlugsDirty = true;
   return newAttribute;
 
   MAYASPLICE_CATCH_END(stat);
@@ -946,6 +948,7 @@ void FabricSpliceBaseInterface::addPort(const MString &portName, const MString &
 
   _spliceGraph.addDGNodeMember(portName.asChar(), dataType.asChar(), defaultValue, dgNode.asChar(), extension.asChar());
   _spliceGraph.addDGPort(portName.asChar(), portName.asChar(), portMode, dgNode.asChar(), autoInitObjects);
+  _affectedPlugsDirty = true;
 
   MAYASPLICE_CATCH_END(stat);
 }
@@ -960,9 +963,9 @@ void FabricSpliceBaseInterface::removeMayaAttribute(const MString &portName, MSt
   {
     MString command = "deleteAttr "+thisNode.name()+"."+portName;
     MGlobal::executeCommandOnIdle(command); 
-
     // in Maya 2015 this is causing a crash in Qt due to a bug in Maya.
     // thisNode.removeAttribute(plug.attribute());
+    _affectedPlugsDirty = true;
   }
 
   MAYASPLICE_CATCH_END(stat);
@@ -973,6 +976,7 @@ void FabricSpliceBaseInterface::removePort(const MString &portName, MStatus *sta
 
   FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
   _spliceGraph.removeDGNodeMember(portName.asChar(), port.getDGNodeName());
+  _affectedPlugsDirty = true;
 
   MAYASPLICE_CATCH_END(stat);
 }
@@ -1417,22 +1421,29 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
 
-  for(unsigned int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
-    FabricSplice::DGPort port = _spliceGraph.getDGPort(i);
-    if(!port.isValid())
-      continue;
-    int portMode = (int)port.getMode();
-    
-    if(port.getMode() != FabricSplice::Port_Mode_IN){
-      MPlug outPlug = thisNode.findPlug(port.getName());
-      if(!outPlug.isNull()){
-        if(!plugInArray(outPlug, affectedPlugs)){
-          affectedPlugs.append(outPlug);
-          affectChildPlugs(outPlug, affectedPlugs);
+  if(_affectedPlugsDirty)
+  {
+    _affectedPlugs.clear();
+
+    for(unsigned int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+      FabricSplice::DGPort port = _spliceGraph.getDGPort(i);
+      if(!port.isValid())
+        continue;
+      int portMode = (int)port.getMode();
+      
+      if(port.getMode() != FabricSplice::Port_Mode_IN){
+        MPlug outPlug = thisNode.findPlug(port.getName());
+        if(!outPlug.isNull()){
+          if(!plugInArray(outPlug, _affectedPlugs)){
+            _affectedPlugs.append(outPlug);
+            affectChildPlugs(outPlug, _affectedPlugs);
+          }
         }
       }
     }
+    _affectedPlugsDirty = false;
   }
+  affectedPlugs = _affectedPlugs;
 }
 
 void FabricSpliceBaseInterface::copyInternalData(MPxNode *node){
