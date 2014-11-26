@@ -249,12 +249,13 @@ void FabricSpliceBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   MStatus stat;
   MString name;
 
-  if(inPlug.isElement()){
-    name = inPlug.array().partialName(false, false, false, false, false, true);
-  }
-  else{
-    name = inPlug.partialName(false, false, false, false, false, true);
-  }
+  name = inPlug.name();
+  int periodPos = name.rindex('.');
+  if(periodPos > -1)
+    name = name.substring(periodPos+1, name.length()-1);
+  int bracketPos = name.index('[');
+  if(bracketPos > -1)
+    name = name.substring(0, bracketPos-1);
 
   if(_spliceGraph.usesEvalContext())
   {
