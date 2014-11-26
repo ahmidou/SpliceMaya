@@ -157,37 +157,40 @@ void FabricSpliceBaseInterface::evaluate(){
   FabricSplice::Logging::AutoTimer timer("Maya::evaluate()");
   managePortObjectValues(false); // recreate objects if not there yet
 
-  // setup the context
-  FabricCore::RTVal context = _spliceGraph.getEvalContext();
-  context.setMember("host", FabricSplice::constructStringRTVal("Maya"));
-  context.setMember("graph", FabricSplice::constructStringRTVal(thisNode.name().asChar()));
-  context.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
-  context.setMember("currentFilePath", FabricSplice::constructStringRTVal(mayaGetLastLoadedScene().asChar()));
-
-  if(_evalContextPlugNames.length() > 0)
+  if(_spliceGraph.usesEvalContext())
   {
-    for(unsigned int i=0;i<_evalContextPlugNames.length();i++)
+    // setup the context
+    FabricCore::RTVal context = _spliceGraph.getEvalContext();
+    context.setMember("host", FabricSplice::constructStringRTVal("Maya"));
+    context.setMember("graph", FabricSplice::constructStringRTVal(thisNode.name().asChar()));
+    context.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
+    context.setMember("currentFilePath", FabricSplice::constructStringRTVal(mayaGetLastLoadedScene().asChar()));
+
+    if(_evalContextPlugNames.length() > 0)
     {
-      MString name = _evalContextPlugNames[i];
-      MString portName = name;
-      int periodPos = portName.index('.');
-      if(periodPos > 0)
-        portName = portName.substring(0, periodPos-1);
-      FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
-      if(port.isValid()){
-        if(port.getMode() != FabricSplice::Port_Mode_OUT)
-        {
-          std::vector<FabricCore::RTVal> args(1);
-          args[0] = FabricSplice::constructStringRTVal(name.asChar());
-          if(_evalContextPlugIds[i] >= 0)
-            args.push_back(FabricSplice::constructSInt32RTVal(_evalContextPlugIds[i]));
-          context.callMethod("", "_addDirtyInput", args.size(), &args[0]);
+      for(unsigned int i=0;i<_evalContextPlugNames.length();i++)
+      {
+        MString name = _evalContextPlugNames[i];
+        MString portName = name;
+        int periodPos = portName.index('.');
+        if(periodPos > 0)
+          portName = portName.substring(0, periodPos-1);
+        FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
+        if(port.isValid()){
+          if(port.getMode() != FabricSplice::Port_Mode_OUT)
+          {
+            std::vector<FabricCore::RTVal> args(1);
+            args[0] = FabricSplice::constructStringRTVal(name.asChar());
+            if(_evalContextPlugIds[i] >= 0)
+              args.push_back(FabricSplice::constructSInt32RTVal(_evalContextPlugIds[i]));
+            context.callMethod("", "_addDirtyInput", args.size(), &args[0]);
+          }
         }
       }
+    
+      _evalContextPlugNames.clear();
+      _evalContextPlugIds.clear();
     }
-  
-    _evalContextPlugNames.clear();
-    _evalContextPlugIds.clear();
   }
 
   _spliceGraph.evaluate();
