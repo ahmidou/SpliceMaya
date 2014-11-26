@@ -1236,6 +1236,7 @@ void FabricSpliceBaseInterface::invalidateNode()
       }
     }
   }
+  _affectedPlugsDirty = true;
 }
 
 void FabricSpliceBaseInterface::incEvalID(){
