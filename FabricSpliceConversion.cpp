@@ -1640,8 +1640,6 @@ void portToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
     MFnAttribute child(compound.child(i));
     MString childName = child.name();
     FabricCore::RTVal childNameRTVal = FabricSplice::constructStringRTVal(childName.asChar());
-    FabricCore::RTVal childRTVal = rtVal.callMethod("Param", "getParam", 1, &childNameRTVal);
-    valueType = childRTVal.callMethod("String", "getValueType", 0, 0).getStringCString();
 
     if(!rtVal.callMethod("Boolean", "hasParam", 1, &childNameRTVal).getBoolean())
     {
@@ -1649,6 +1647,8 @@ void portToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
       continue;
     }
 
+    FabricCore::RTVal childRTVal = rtVal.callMethod("Param", "getParam", 1, &childNameRTVal);
+    valueType = childRTVal.callMethod("String", "getValueType", 0, 0).getStringCString();
     MStatus attrStatus;
 
     MFnNumericAttribute nAttr(child.object(), &attrStatus);
