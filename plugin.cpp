@@ -315,6 +315,12 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 
   plugin.deregisterContextCommand("FabricSpliceToolContext", "FabricSpliceToolCommand");
 
+  // [pzion 20141201] RM#3318: it seems that sending KL report statements
+  // at this point, which might result from destructors called by
+  // destroying the Core client, can cause Maya to crash on OS X.
+  // 
+  FabricSplice::Logging::setKLReportFunc(0);
+
   FabricSplice::DestroyClient();
   FabricSplice::Finalize();
   return status;
