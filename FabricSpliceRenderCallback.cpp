@@ -71,7 +71,7 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
       camera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
 
       param = FabricSplice::constructFloat64RTVal(top-bottom);
-      inlineCamera.callMethod("", "orthographicFrustumH", 1, &param);
+      inlineCamera.callMethod("", "setOrthographicFrustumHeight", 1, &param);
     }
     else{
       double fovX, fovY;
