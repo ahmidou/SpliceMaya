@@ -48,44 +48,22 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
   inlineViewport.callMethod("", "resize", 3, &args[0]);
 
   {
-    FabricCore::RTVal inlineCamera = inlineViewport.callMethod("Camera", "getCamera", 0, 0);
+    FabricCore::RTVal inlineCamera = inlineViewport.callMethod("InlineCamera", "getCamera", 0, 0);
 
     MDagPath cameraDag;
     view.getCamera(cameraDag);
     MFnCamera camera(cameraDag);
 
-    bool isOrthographic = camera.isOrtho();
+    MMatrix projectionMatrix;
+    view.projectionMatrix(projectionMatrix);
+    projectionMatrix = projectionMatrix.transpose();
 
-    FabricCore::RTVal param = FabricSplice::constructBooleanRTVal(isOrthographic);
-    inlineCamera.callMethod("", "setOrthographic", 1, &param);
-
-    if(isOrthographic){
-      double windowAspect = width/height;
-      double left;
-      double right;
-      double bottom;
-      double top;
-      bool  applyOverscan;
-      bool  applySqueeze;
-      bool  applyPanZoom;
-      camera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
-
-      param = FabricSplice::constructFloat64RTVal(top-bottom);
-      inlineCamera.callMethod("", "setOrthographicFrustumHeight", 1, &param);
-    }
-    else{
-      double fovX, fovY;
-      camera.getPortFieldOfView(view.portWidth(), view.portHeight(), fovX, fovY);    
-      param = FabricSplice::constructFloat64RTVal(fovY);
-      inlineCamera.callMethod("", "setFovY", 1, &param);
-    }
-    param = FabricSplice::constructFloat64RTVal(camera.nearClippingPlane());
-    inlineCamera.callMethod("", "setNearDistance", 1, &param);
-    param = FabricSplice::constructFloat64RTVal(camera.farClippingPlane());
-    inlineCamera.callMethod("", "setFarDistance", 1, &param);
+    FabricCore::RTVal projectionMatrixExtArray = FabricSplice::constructExternalArrayRTVal("Float64", 16, &projectionMatrix.matrix);
+    FabricCore::RTVal projectionVal = inlineCamera.maybeGetMember("projection");
+    projectionVal.callMethod("", "set", 1, &projectionMatrixExtArray);
+    inlineCamera.setMember("projection", projectionVal);
 
     MMatrix mayaCameraMatrix = cameraDag.inclusiveMatrix();
-
     FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
 
     try
