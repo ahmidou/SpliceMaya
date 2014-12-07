@@ -35,14 +35,14 @@ void FabricSpliceKLLineNumberWidget::paintEvent ( QPaintEvent * event )
   QPalette palette(qApp->palette());
   painter.fillRect(event->rect(), palette.color(QPalette::Background));
 
-  int lineHeight = mFontMetrics->height() + mFontMetrics->leading() * 2;
+  int lineHeight = mFontMetrics->lineSpacing();
   int width = event->rect().width();
   int height = event->rect().height();
   int offset = lineHeight;
   if(mLineOffset == 0)
-    offset += 2;
+    offset += 4;
   else
-    offset -= 2;
+    offset -= 0;
 
   painter.setFont(mFont);
   painter.setPen(palette.color(QPalette::Highlight));
