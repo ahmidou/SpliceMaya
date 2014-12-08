@@ -144,15 +144,12 @@ if FABRIC_BUILD_OS == 'Windows':
       os.path.join(FABRIC_DIR, 'lib', 'FabricCore-' + FABRIC_CORE_VERSION + '.dll')
       )
     )
-
-# install PDB files on windows
-if FABRIC_BUILD_TYPE == 'Debug' and FABRIC_BUILD_OS == 'Windows':
-  env['CCPDBFLAGS']  = ['${(PDB and "/Fd%s_incremental.pdb /Zi" % File(PDB)) or ""}']
-  pdbSource = mayaModule[0].get_abspath().rpartition('.')[0]+".pdb"
-  pdbTarget = os.path.join(STAGE_DIR.abspath, os.path.split(pdbSource)[1])
-  copyPdb = env.Command( 'copy', None, 'copy "%s" "%s" /Y' % (pdbSource, pdbTarget) )
-  env.Depends( copyPdb, installedModule )
-  env.AlwaysBuild(copyPdb)
+  mayaFiles.append(
+    env.Install(
+      os.path.join(STAGE_DIR.abspath, 'plug-ins'),
+      os.path.join(FABRIC_DIR, 'lib', 'FabricCore-' + FABRIC_CORE_VERSION + '.pdb')
+      )
+    )
 
 # todo: install the python client
 
