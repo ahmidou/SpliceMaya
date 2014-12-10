@@ -1,4 +1,3 @@
-
 #ifndef _FabricSpliceBaseInterface_H_
 #define _FabricSpliceBaseInterface_H_
 
@@ -73,6 +72,7 @@ public:
 
   static void onNodeAdded(MObject &node, void *clientData);
   static void onNodeRemoved(MObject &node, void *clientData);
+  static void onConnection(MPlug &srcPlug, MPlug &destPlug, bool made, void *clientData);
 
   void managePortObjectValues(bool destroy);
 
