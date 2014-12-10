@@ -72,7 +72,6 @@ public:
 
   static void onNodeAdded(MObject &node, void *clientData);
   static void onNodeRemoved(MObject &node, void *clientData);
-  static void onConnection(MPlug &srcPlug, MPlug &destPlug, bool made, void *clientData);
 
   void managePortObjectValues(bool destroy);
 
@@ -102,6 +101,8 @@ protected:
   void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
   void setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
   void copyInternalData(MPxNode *node);
+  MStatus onConnectionMade(const MPlug &   plug, const MPlug &   otherPlug, bool  asSrc);
+  MStatus onConnectionBroken(const MPlug &   plug, const MPlug &   otherPlug, bool  asSrc);
 
   // static MString sManipulationCommand;
   // MString _manipulationCommand;

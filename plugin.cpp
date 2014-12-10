@@ -56,7 +56,6 @@ MCallbackId gRenderCallback3;
 MCallbackId gRenderCallback4;
 MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
-MCallbackId gOnConnectionCallbackId;
 MCallbackId gBeforeSceneOpenCallbackId;
 
 
@@ -249,7 +248,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gRenderCallback4 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel4", FabricSpliceRenderCallback::draw);
   gOnNodeAddedCallbackId = MDGMessage::addNodeAddedCallback(FabricSpliceBaseInterface::onNodeAdded);
   gOnNodeRemovedCallbackId = MDGMessage::addNodeRemovedCallback(FabricSpliceBaseInterface::onNodeRemoved);
-  gOnConnectionCallbackId = MDGMessage::addConnectionCallback(FabricSpliceBaseInterface::onConnection);
 
   plugin.registerData(FabricSpliceMayaData::typeName, FabricSpliceMayaData::id, FabricSpliceMayaData::creator);
 
@@ -310,7 +308,6 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MUiMessage::removeCallback(gRenderCallback4);
   MDGMessage::removeCallback(gOnNodeAddedCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedCallbackId);
-  MDGMessage::removeCallback(gOnConnectionCallbackId);
 
   plugin.deregisterData(FabricSpliceMayaData::id);
 

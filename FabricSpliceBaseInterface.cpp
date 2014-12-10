@@ -1505,23 +1505,18 @@ void FabricSpliceBaseInterface::onNodeRemoved(MObject &node, void *clientData)
     interf->managePortObjectValues(true); // detach
 }
 
-void FabricSpliceBaseInterface::onConnection(MPlug &srcPlug, MPlug &destPlug, bool made, void *clientData)
+MStatus FabricSpliceBaseInterface::onConnectionMade(const MPlug &   plug, const MPlug &   otherPlug, bool  asSrc)
 {
-  MFnDependencyNode srcNode(srcPlug);
-  FabricSpliceBaseInterface * srcInterf = getInstanceByName(srcPlug.name().asChar());
-  if(srcInterf)
-  {
-    srcInterf->_outputsDirtied = false;
-    srcInterf->_affectedPlugsDirty = true;
-  }
+  _outputsDirtied = false;
+  _affectedPlugsDirty = true;
+  return MStatus::kSuccess;
+}
 
-  MFnDependencyNode destNode(destPlug);
-  FabricSpliceBaseInterface * destInterf = getInstanceByName(destPlug.name().asChar());
-  if(destInterf)
-  {
-    destInterf->_outputsDirtied = false;
-    destInterf->_affectedPlugsDirty = true;
-  }
+MStatus FabricSpliceBaseInterface::onConnectionBroken(const MPlug &   plug, const MPlug &   otherPlug, bool  asSrc)
+{
+  _outputsDirtied = false;
+  _affectedPlugsDirty = true;
+  return MStatus::kSuccess;
 }
 
 void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)

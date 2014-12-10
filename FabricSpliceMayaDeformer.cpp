@@ -263,3 +263,13 @@ int FabricSpliceMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataB
   _spliceGraph.requireEvaluate();
   return 1;
 }
+
+MStatus FabricSpliceMayaDeformer::connectionMade(const MPlug &   plug, const MPlug &   otherPlug, bool  asSrc)
+{
+  return FabricSpliceBaseInterface::onConnectionMade(plug, otherPlug, asSrc);
+}
+
+MStatus FabricSpliceMayaDeformer::connectionBroken(const MPlug &   plug, const MPlug &   otherPlug, bool  asSrc)
+{
+  return FabricSpliceBaseInterface::onConnectionMade(plug, otherPlug, asSrc);
+}
