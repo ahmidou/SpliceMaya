@@ -241,11 +241,11 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnSceneImportCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImport, onSceneLoad);
   gOnSceneReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterReference, onSceneLoad);
   gOnSceneImportReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImportReference, onSceneLoad);
-  gRenderCallback0 = MUiMessage::add3dViewPreRenderMsgCallback("modelPanel0", FabricSpliceRenderCallback::draw);
-  gRenderCallback1 = MUiMessage::add3dViewPreRenderMsgCallback("modelPanel1", FabricSpliceRenderCallback::draw);
-  gRenderCallback2 = MUiMessage::add3dViewPreRenderMsgCallback("modelPanel2", FabricSpliceRenderCallback::draw);
-  gRenderCallback3 = MUiMessage::add3dViewPreRenderMsgCallback("modelPanel3", FabricSpliceRenderCallback::draw);
-  gRenderCallback4 = MUiMessage::add3dViewPreRenderMsgCallback("modelPanel4", FabricSpliceRenderCallback::draw);
+  gRenderCallback0 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel0", FabricSpliceRenderCallback::draw);
+  gRenderCallback1 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel1", FabricSpliceRenderCallback::draw);
+  gRenderCallback2 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel2", FabricSpliceRenderCallback::draw);
+  gRenderCallback3 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel3", FabricSpliceRenderCallback::draw);
+  gRenderCallback4 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel4", FabricSpliceRenderCallback::draw);
   gOnNodeAddedCallbackId = MDGMessage::addNodeAddedCallback(FabricSpliceBaseInterface::onNodeAdded);
   gOnNodeRemovedCallbackId = MDGMessage::addNodeRemovedCallback(FabricSpliceBaseInterface::onNodeRemoved);
 
