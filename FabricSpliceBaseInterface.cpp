@@ -454,6 +454,9 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
       {
         cAttr.addChild(children[i]);
       }
+
+      // initialize the compound param
+      _dirtyPlugs.append(portName);
     }
     else
     {
@@ -963,6 +966,15 @@ void FabricSpliceBaseInterface::addPort(const MString &portName, const MString &
   _spliceGraph.addDGNodeMember(portName.asChar(), dataType.asChar(), defaultValue, dgNode.asChar(), extension.asChar());
   _spliceGraph.addDGPort(portName.asChar(), portName.asChar(), portMode, dgNode.asChar(), autoInitObjects);
   _affectedPlugsDirty = true;
+
+  // initialize the compound param
+  if(dataType == "CompoundParam")
+  {
+    MFnDependencyNode thisNode(getThisMObject());
+    MPlug plug = thisNode.findPlug(portName);
+    if(!plug.isNull())
+      _dirtyPlugs.append(portName);
+  }
 
   MAYASPLICE_CATCH_END(stat);
 }
