@@ -588,6 +588,7 @@ void plugToPort_integer(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & po
     MAYASPLICE_MEMORY_FREE();
   }else{
     MDataHandle handle = data.inputValue(plug);
+
     if(handle.type() == MFnData::kIntArray) {
       MIntArray arrayValues = MFnIntArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
@@ -2094,7 +2095,8 @@ void portToPlug_integer(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &da
     arrayHandle.setAllClean();
   }else{
     MDataHandle handle = data.outputValue(plug);
-    if(handle.type() == MFnData::kIntArray) {
+
+    if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {
       unsigned int elements = port.getArrayCount();
 
       MIntArray arrayValues;

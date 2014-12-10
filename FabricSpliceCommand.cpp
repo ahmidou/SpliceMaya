@@ -111,6 +111,11 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
       mayaRefreshFunc();
       return mayaErrorOccured();
     }
+    else if(actionStr == "isRendererEnabled")
+    {
+      setResult(isRTRPassEnabled());
+      return mayaErrorOccured();
+    }
     else if(actionStr == "startProfiling")
     {
       FabricSplice::Logging::enableTimers();

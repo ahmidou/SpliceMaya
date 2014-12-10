@@ -96,7 +96,7 @@ void onSceneSave(void *userData){
 void onSceneNew(void *userData){
   MGlobal::executeCommandOnIdle("unloadPlugin \"FabricSpliceManipulation.py\";");
   MGlobal::executeCommandOnIdle("loadPlugin \"FabricSpliceManipulation.py\";");
-  FabricSpliceEditorWidget::postUpdateAll();
+  FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
   FabricSplice::DestroyClient();
 }
@@ -120,7 +120,7 @@ void onSceneLoad(void *userData){
     if( status != MS::kSuccess)
       return;
   }
-  FabricSpliceEditorWidget::postUpdateAll();
+  FabricSpliceEditorWidget::postClearAll();
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
   {

@@ -190,6 +190,12 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &)
   setHelpString(helpString);
   setTitleString("FabricSplice Tool");
 
+  MString moduleFolder = getModuleFolder();
+  MString imagePath = moduleFolder + "/ui/FE_tool.xpm";
+  setImage(imagePath, kImage1);
+  setImage(imagePath, kImage2);
+  setImage(imagePath, kImage3);
+
   view.refresh(true, true);
 }
 
