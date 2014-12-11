@@ -264,12 +264,14 @@ int FabricSpliceMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataB
   return 1;
 }
 
-MStatus FabricSpliceMayaDeformer::connectionMade(const MPlug &   plug, const MPlug &   otherPlug, bool  asSrc)
+MStatus FabricSpliceMayaDeformer::connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
 {
-  return FabricSpliceBaseInterface::onConnectionMade(plug, otherPlug, asSrc);
+  FabricSpliceBaseInterface::onConnection(plug, otherPlug, asSrc, true);
+  return MS::kSuccess;
 }
 
-MStatus FabricSpliceMayaDeformer::connectionBroken(const MPlug &   plug, const MPlug &   otherPlug, bool  asSrc)
+MStatus FabricSpliceMayaDeformer::connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
 {
-  return FabricSpliceBaseInterface::onConnectionMade(plug, otherPlug, asSrc);
+  FabricSpliceBaseInterface::onConnection(plug, otherPlug, asSrc, false);
+  return MS::kSuccess;
 }
