@@ -96,11 +96,11 @@ void FabricSpliceMayaNode::copyInternalData(MPxNode *node){
 MStatus FabricSpliceMayaNode::connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
 {
   FabricSpliceBaseInterface::onConnection(plug, otherPlug, asSrc, true);
-  return MS::kSuccess;
+  return MS::kUnknownParameter;
 }
 
 MStatus FabricSpliceMayaNode::connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
 {
   FabricSpliceBaseInterface::onConnection(plug, otherPlug, asSrc, false);
-  return MS::kSuccess;
+  return MS::kUnknownParameter;
 }
