@@ -110,9 +110,9 @@ FabricSpliceBaseInterface * FabricSpliceBaseInterface::getInstanceByName(const s
   return NULL;
 }
 
-void FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
+bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
   if(_isTransferingInputs)
-    return;
+    return false;
 
   managePortObjectValues(false); // recreate objects if not there yet
 
@@ -150,6 +150,7 @@ void FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
 
   _dirtyPlugs.clear();
   _isTransferingInputs = false;
+  return true;
 }
 
 void FabricSpliceBaseInterface::evaluate(){
