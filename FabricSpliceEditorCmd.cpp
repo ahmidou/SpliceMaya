@@ -68,6 +68,10 @@ MStatus FabricSpliceEditorCmd::doIt(const MArgList &args){
   {
     FabricSpliceEditorWidget::updateAll();
   }
+  else if(action == "clear")
+  {
+    FabricSpliceEditorWidget::clearAll();
+  }
   else
   {
     mayaLogErrorFunc("Action '" + action + "' not supported by FabricSpliceEditor command.");

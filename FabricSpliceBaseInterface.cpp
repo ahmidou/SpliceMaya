@@ -110,9 +110,9 @@ FabricSpliceBaseInterface * FabricSpliceBaseInterface::getInstanceByName(const s
   return NULL;
 }
 
-void FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
+bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
   if(_isTransferingInputs)
-    return;
+    return false;
 
   managePortObjectValues(false); // recreate objects if not there yet
 
@@ -150,6 +150,7 @@ void FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
 
   _dirtyPlugs.clear();
   _isTransferingInputs = false;
+  return true;
 }
 
 void FabricSpliceBaseInterface::evaluate(){
@@ -454,6 +455,9 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
       {
         cAttr.addChild(children[i]);
       }
+
+      // initialize the compound param
+      _dirtyPlugs.append(portName);
     }
     else
     {
@@ -963,6 +967,15 @@ void FabricSpliceBaseInterface::addPort(const MString &portName, const MString &
   _spliceGraph.addDGNodeMember(portName.asChar(), dataType.asChar(), defaultValue, dgNode.asChar(), extension.asChar());
   _spliceGraph.addDGPort(portName.asChar(), portName.asChar(), portMode, dgNode.asChar(), autoInitObjects);
   _affectedPlugsDirty = true;
+
+  // initialize the compound param
+  if(dataType == "CompoundParam")
+  {
+    MFnDependencyNode thisNode(getThisMObject());
+    MPlug plug = thisNode.findPlug(portName);
+    if(!plug.isNull())
+      _dirtyPlugs.append(portName);
+  }
 
   MAYASPLICE_CATCH_END(stat);
 }

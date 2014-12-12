@@ -22,6 +22,7 @@ public:
   ~FabricSpliceEditorWidget();
 
   void update(MStatus * status = NULL);
+  void clear(MStatus * status = NULL);
   void updateNodeDropDown(MStatus * status = NULL);
   void updateOperatorDropDown(MStatus * status = NULL);
   void setOperatorName(const std::string & opName, MStatus * status = NULL);
@@ -33,7 +34,9 @@ public:
   static FabricSpliceEditorWidget * getFirstOrOpen(bool onIdle = true);
 
   static void postUpdateAll(MStatus * status = NULL);
+  static void postClearAll(MStatus * status = NULL);
   static void updateAll(MStatus * status = NULL);
+  static void clearAll(MStatus * status = NULL);
   static void updateAllNodeDropDowns(MStatus * status = NULL);
   static void updateAllOperatorDropDowns(MStatus * status = NULL);
   static void setAllNodeDropDowns(std::string nodeName, bool onIdle = true, MStatus * status = NULL);

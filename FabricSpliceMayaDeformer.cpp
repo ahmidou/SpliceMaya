@@ -76,115 +76,117 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
     }
   }
 
-  transferInputValuesToSplice(block);
-
-  FabricCore::RTVal rtValToSet;
-  FabricCore::RTVal rtMesh;
-  FabricSplice::DGPort port = _spliceGraph.getDGPort("meshes");
-
-  if(port.isValid()){
-
-    if(port.getMode() != FabricSplice::Port_Mode_IO)
-      return MStatus::kSuccess;
-    FabricCore::RTVal rtMeshes = port.getRTVal();
-    if(!rtMeshes.isValid())
-      return MStatus::kSuccess;
-    if(!rtMeshes.isArray())
-      return MStatus::kSuccess;
-    rtValToSet = rtMeshes;
-
-    rtMesh = rtMeshes.getArrayElement(multiIndex);
-
-  } else {
-
-    // backward compatibility
-    MString portName;
-    portName.set(multiIndex);
-    portName = "mesh" + portName;
-
-    port = _spliceGraph.getDGPort(portName.asChar());
-    if(!port.isValid())
-      return MStatus::kFailure;
-
-    if(port.getMode() != FabricSplice::Port_Mode_IO)
-      return MStatus::kSuccess;
-    rtMesh = port.getRTVal();
-    rtValToSet = rtMesh;
-  }
-  if(!rtMesh.isValid() || rtMesh.isNullObject())
-    return MStatus::kSuccess;
-
-  MPointArray mayaPoints;
-  iter.allPositions(mayaPoints);
-
-  // MPlug inputPlug(thisMObject(), input);
-  // MPlug inputElementPlug = inputPlug.elementByPhysicalIndex(multiIndex);
-  // MPlug meshPlug = inputElementPlug.child(inputGeom);
-  // MDataHandle handle = block.outputValue(meshPlug);
-  // MObject meshObj = handle.asMesh();
-  // MFnMesh mesh(meshObj);
-
-  // MFloatVectorArray mayaFnormals;
-  // mesh.getNormals(mayaFnormals);
-  // MIntArray mayaCounts, mayaIndices;
-  // mesh.getNormalIds(mayaCounts, mayaIndices);
-
-  // MVectorArray mayaNormals;
-  // mayaNormals.setLength(mayaIndices.length());
-  // for(unsigned int i=0;i<mayaIndices.length();i++)
-  // {
-  //   mayaNormals[i].x = mayaFnormals[mayaIndices[i]].x;
-  //   mayaNormals[i].y = mayaFnormals[mayaIndices[i]].y;
-  //   mayaNormals[i].z = mayaFnormals[mayaIndices[i]].z;
-  // }
-
-  try
+  if(transferInputValuesToSplice(block))
   {
-    std::vector<FabricCore::RTVal> args(2);
-    args[0] = FabricSplice::constructExternalArrayRTVal("Float64", mayaPoints.length() * 4, &mayaPoints[0]);
-    args[1] = FabricSplice::constructUInt32RTVal(4); // components
-    rtMesh.callMethod("", "setPointsFromExternalArray_d", 2, &args[0]);
 
-    // FabricCore::RTVal normalsVar = 
-    //   FabricSplice::constructExternalArrayRTVal("Float64", mayaNormals.length() * 3, &mayaNormals[0]);
-    // rtMesh.callMethod("", "setNormalsFromFloat64Array", 1, &normalsVar);
-  }
-  catch(FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return MStatus::kSuccess;
-  }
-  port.setRTVal(rtValToSet);
+    FabricCore::RTVal rtValToSet;
+    FabricCore::RTVal rtMesh;
+    FabricSplice::DGPort port = _spliceGraph.getDGPort("meshes");
 
-  evaluate();
+    if(port.isValid()){
 
-  try
-  {
-    std::vector<FabricCore::RTVal> args(2);
-    args[0] = FabricSplice::constructExternalArrayRTVal("Float64", mayaPoints.length() * 4, &mayaPoints[0]);
-    args[1] = FabricSplice::constructUInt32RTVal(4); // components
-    rtMesh.callMethod("", "getPointsAsExternalArray_d", 2, &args[0]);
+      if(port.getMode() != FabricSplice::Port_Mode_IO)
+        return MStatus::kSuccess;
+      FabricCore::RTVal rtMeshes = port.getRTVal();
+      if(!rtMeshes.isValid())
+        return MStatus::kSuccess;
+      if(!rtMeshes.isArray())
+        return MStatus::kSuccess;
+      rtValToSet = rtMeshes;
 
-    // FabricCore::RTVal normalsVar = 
-    //     FabricSplice::constructExternalArrayRTVal("Float64", mayaNormals.length() * 3, &mayaNormals[0]);
-    // rtMesh.callMethod("", "getNormalsAsFloat64Array", 1, &normalsVar);
+      rtMesh = rtMeshes.getArrayElement(multiIndex);
 
+    } else {
+
+      // backward compatibility
+      MString portName;
+      portName.set(multiIndex);
+      portName = "mesh" + portName;
+
+      port = _spliceGraph.getDGPort(portName.asChar());
+      if(!port.isValid())
+        return MStatus::kFailure;
+
+      if(port.getMode() != FabricSplice::Port_Mode_IO)
+        return MStatus::kSuccess;
+      rtMesh = port.getRTVal();
+      rtValToSet = rtMesh;
+    }
+    if(!rtMesh.isValid() || rtMesh.isNullObject())
+      return MStatus::kSuccess;
+
+    MPointArray mayaPoints;
+    iter.allPositions(mayaPoints);
+
+    // MPlug inputPlug(thisMObject(), input);
+    // MPlug inputElementPlug = inputPlug.elementByPhysicalIndex(multiIndex);
+    // MPlug meshPlug = inputElementPlug.child(inputGeom);
+    // MDataHandle handle = block.outputValue(meshPlug);
+    // MObject meshObj = handle.asMesh();
+    // MFnMesh mesh(meshObj);
+
+    // MFloatVectorArray mayaFnormals;
+    // mesh.getNormals(mayaFnormals);
+    // MIntArray mayaCounts, mayaIndices;
+    // mesh.getNormalIds(mayaCounts, mayaIndices);
+
+    // MVectorArray mayaNormals;
+    // mayaNormals.setLength(mayaIndices.length());
     // for(unsigned int i=0;i<mayaIndices.length();i++)
     // {
-    //   mayaFnormals[mayaIndices[i]].x = mayaNormals[i].x;
-    //   mayaFnormals[mayaIndices[i]].y = mayaNormals[i].y;
-    //   mayaFnormals[mayaIndices[i]].z = mayaNormals[i].z;
+    //   mayaNormals[i].x = mayaFnormals[mayaIndices[i]].x;
+    //   mayaNormals[i].y = mayaFnormals[mayaIndices[i]].y;
+    //   mayaNormals[i].z = mayaFnormals[mayaIndices[i]].z;
     // }
-  }
-  catch(FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return MStatus::kSuccess;
-  }
 
-  iter.setAllPositions(mayaPoints);
-  // mesh.setNormals(mayaFnormals);
-  transferOutputValuesToMaya(block, true);
+    try
+    {
+      std::vector<FabricCore::RTVal> args(2);
+      args[0] = FabricSplice::constructExternalArrayRTVal("Float64", mayaPoints.length() * 4, &mayaPoints[0]);
+      args[1] = FabricSplice::constructUInt32RTVal(4); // components
+      rtMesh.callMethod("", "setPointsFromExternalArray_d", 2, &args[0]);
+
+      // FabricCore::RTVal normalsVar = 
+      //   FabricSplice::constructExternalArrayRTVal("Float64", mayaNormals.length() * 3, &mayaNormals[0]);
+      // rtMesh.callMethod("", "setNormalsFromFloat64Array", 1, &normalsVar);
+    }
+    catch(FabricCore::Exception e)
+    {
+      mayaLogErrorFunc(e.getDesc_cstr());
+      return MStatus::kSuccess;
+    }
+    port.setRTVal(rtValToSet);
+
+    evaluate();
+
+    try
+    {
+      std::vector<FabricCore::RTVal> args(2);
+      args[0] = FabricSplice::constructExternalArrayRTVal("Float64", mayaPoints.length() * 4, &mayaPoints[0]);
+      args[1] = FabricSplice::constructUInt32RTVal(4); // components
+      rtMesh.callMethod("", "getPointsAsExternalArray_d", 2, &args[0]);
+
+      // FabricCore::RTVal normalsVar = 
+      //     FabricSplice::constructExternalArrayRTVal("Float64", mayaNormals.length() * 3, &mayaNormals[0]);
+      // rtMesh.callMethod("", "getNormalsAsFloat64Array", 1, &normalsVar);
+
+      // for(unsigned int i=0;i<mayaIndices.length();i++)
+      // {
+      //   mayaFnormals[mayaIndices[i]].x = mayaNormals[i].x;
+      //   mayaFnormals[mayaIndices[i]].y = mayaNormals[i].y;
+      //   mayaFnormals[mayaIndices[i]].z = mayaNormals[i].z;
+      // }
+    }
+    catch(FabricCore::Exception e)
+    {
+      mayaLogErrorFunc(e.getDesc_cstr());
+      return MStatus::kSuccess;
+    }
+
+    iter.setAllPositions(mayaPoints);
+    // mesh.setNormals(mayaFnormals);
+    transferOutputValuesToMaya(block, true);
+  }
 
   MAYASPLICE_CATCH_END(&stat);
   
