@@ -95,7 +95,7 @@ protected:
   bool _isTransferingInputs;
   bool _portObjectsDestroyed;
 
-  void transferInputValuesToSplice(MDataBlock& data);
+  bool transferInputValuesToSplice(MDataBlock& data);
   void evaluate();
   void transferOutputValuesToMaya(MDataBlock& data, bool isDeformer = false);
   void collectDirtyPlug(MPlug const &inPlug);

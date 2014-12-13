@@ -590,6 +590,15 @@ void FabricSpliceEditorWidget::update(MStatus * status)
   updateNodeDropDown(status);
 }
 
+void FabricSpliceEditorWidget::clear(MStatus * status)
+{
+  mAttrList->clear();
+  mOperatorList->clear();
+  mNodeCombo->clear();
+  mSourceCode->setSourceCode("", "");
+  mPortText->setText("");
+}
+
 void FabricSpliceEditorWidget::updateNodeDropDown(MStatus * status)
 {
   MAYASPLICE_CATCH_BEGIN(status);
@@ -694,10 +703,28 @@ void FabricSpliceEditorWidget::postUpdateAll(MStatus * status)
   gUpdatePosted = true;
 }
 
+void FabricSpliceEditorWidget::postClearAll(MStatus * status)
+{
+  if(gUpdatePosted)
+    return;
+  MString cmd = "fabricSpliceEditor -a \"clear\";";
+  MStatus cmdStatus = MGlobal::executeCommandOnIdle(cmd, false);
+  if(status != NULL)
+    *status = cmdStatus;
+  gUpdatePosted = true;
+}
+
 void FabricSpliceEditorWidget::updateAll(MStatus * status)
 {
   for(widgetIt it = gWidgets.begin(); it != gWidgets.end(); it++)
     it->second->update(status);
+  gUpdatePosted = false;
+}
+
+void FabricSpliceEditorWidget::clearAll(MStatus * status)
+{
+  for(widgetIt it = gWidgets.begin(); it != gWidgets.end(); it++)
+    it->second->clear(status);
   gUpdatePosted = false;
 }
 
