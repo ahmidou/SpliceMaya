@@ -269,11 +269,11 @@ int FabricSpliceMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataB
 MStatus FabricSpliceMayaDeformer::connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
 {
   FabricSpliceBaseInterface::onConnection(plug, otherPlug, asSrc, true);
-  return MS::kSuccess;
+  return MS::kUnknownParameter;
 }
 
 MStatus FabricSpliceMayaDeformer::connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
 {
   FabricSpliceBaseInterface::onConnection(plug, otherPlug, asSrc, false);
-  return MS::kSuccess;
+  return MS::kUnknownParameter;
 }
