@@ -49,6 +49,8 @@ struct KLEuler{
   int32_t order;
 };
 
+typedef float floatVec[3];
+
 double getFloat64FromRTVal(FabricCore::RTVal rtVal)
 {
   FabricCore::RTVal::SimpleData simpleData;
@@ -433,6 +435,75 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
               childRTVal.callMethod("", "setValue", 2, &args[0]);
               childHandle.next();
             }
+          }
+        }
+        else if(tAttr.attrType() == MFnData::kIntArray)
+        {
+          if(!tAttr.isArray())
+          {
+            MDataHandle childHandle(handle.child(child.object()));
+            args[0] = childNameRTVal;
+            childRTVal = FabricSplice::constructObjectRTVal("SInt32ArrayParam", 1, &args[0]);
+
+            MIntArray arrayValues = MFnIntArrayData(handle.data()).array();
+            unsigned int numArrayValues = arrayValues.length();
+            args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
+            childRTVal.callMethod("", "resize", 1, &args[0]);
+
+            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+            void * data = dataRTVal.getData();
+            memcpy(data, &arrayValues[0], sizeof(int32_t) * numArrayValues);
+          }
+          else
+          {
+            mayaLogErrorFunc("Arrays of MFnData::kIntArray are not supported for '"+childName+"'.");
+          }
+        }
+        else if(tAttr.attrType() == MFnData::kDoubleArray)
+        {
+          if(!tAttr.isArray())
+          {
+            MDataHandle childHandle(handle.child(child.object()));
+            args[0] = childNameRTVal;
+            childRTVal = FabricSplice::constructObjectRTVal("Float64ArrayParam", 1, &args[0]);
+
+            MDoubleArray arrayValues = MFnDoubleArrayData(handle.data()).array();
+            unsigned int numArrayValues = arrayValues.length();
+            args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
+            childRTVal.callMethod("", "resize", 1, &args[0]);
+
+            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+            void * data = dataRTVal.getData();
+            memcpy(data, &arrayValues[0], sizeof(double) * numArrayValues);
+          }
+          else
+          {
+            mayaLogErrorFunc("Arrays of MFnData::kDoubleArray are not supported for '"+childName+"'.");
+          }
+        }
+        else if(tAttr.attrType() == MFnData::kVectorArray)
+        {
+          if(!tAttr.isArray())
+          {
+            MDataHandle childHandle(handle.child(child.object()));
+            args[0] = childNameRTVal;
+            childRTVal = FabricSplice::constructObjectRTVal("Vec3ArrayParam", 1, &args[0]);
+
+            MVectorArray arrayValues = MFnVectorArrayData(handle.data()).array();
+            unsigned int numArrayValues = arrayValues.length();
+            args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
+            childRTVal.callMethod("", "resize", 1, &args[0]);
+
+            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+            float * data = (float*)dataRTVal.getData();
+            arrayValues.get((floatVec*)data);
+          }
+          else
+          {
+            mayaLogErrorFunc("Arrays of MFnData::kVectorArray are not supported for '"+childName+"'.");
           }
         }
         else
@@ -1940,19 +2011,101 @@ void portToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             }
 
             childRTVal = rtVal.callMethod("StringArrayParam", "getParam", 1, &childNameRTVal);
-            FabricCore::RTVal arrayValues = childRTVal.maybeGetMember("values");
+            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
             MArrayDataHandle childHandle(handle.child(child.object()));
             MArrayDataBuilder arraybuilder = childHandle.builder();
 
-            for(unsigned int j=0;j<arrayValues.getArraySize();j++)
+            for(unsigned int j=0;j<valuesRTVal.getArraySize();j++)
             {
-              FabricCore::RTVal value = childRTVal.maybeGetMember("value");
-              MDataHandle elementHandle = arraybuilder.addElement(i);
-              elementHandle.setString(value.getStringCString());
+              FabricCore::RTVal valueRT = valuesRTVal.getArrayElement(j);
+              MDataHandle elementHandle = arraybuilder.addElement(j);
+              elementHandle.setString(valueRT.getStringCString());
             }
 
             childHandle.set(arraybuilder);
             childHandle.setAllClean();
+          }
+        }
+        else if(tAttr.attrType() == MFnData::kIntArray)
+        {
+          if(!tAttr.isArray())
+          {
+            if(valueType != "SInt32[]")
+            {
+              mayaLogErrorFunc("Incompatible param for compound attribute - expected a SInt32ArrayParam.");
+              return;
+            }
+
+            MArrayDataHandle childHandle(handle.child(child.object()));
+
+            childRTVal = rtVal.callMethod("SInt32ArrayParam", "getParam", 1, &childNameRTVal);
+            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+
+            MIntArray arrayValues;
+            arrayValues.setLength(valuesRTVal.getArraySize());
+            memcpy(&arrayValues[0], dataRTVal.getData(), sizeof(int32_t) * arrayValues.length());
+            handle.set(MFnIntArrayData().create(arrayValues));
+          }
+          else
+          {
+            mayaLogErrorFunc("Arrays of MFnData::kIntArray are not supported for '"+childName+"'.");
+          }
+        }
+        else if(tAttr.attrType() == MFnData::kDoubleArray)
+        {
+          if(!tAttr.isArray())
+          {
+            if(valueType != "Float64[]")
+            {
+              mayaLogErrorFunc("Incompatible param for compound attribute - expected a Float64ArrayParam.");
+              return;
+            }
+
+            MArrayDataHandle childHandle(handle.child(child.object()));
+
+            childRTVal = rtVal.callMethod("Float64ArrayParam", "getParam", 1, &childNameRTVal);
+            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+
+            MDoubleArray arrayValues;
+            arrayValues.setLength(valuesRTVal.getArraySize());
+            memcpy(&arrayValues[0], dataRTVal.getData(), sizeof(double) * arrayValues.length());
+            handle.set(MFnDoubleArrayData().create(arrayValues));
+          }
+          else
+          {
+            mayaLogErrorFunc("Arrays of MFnData::kDoubleArray are not supported for '"+childName+"'.");
+          }
+        }
+        else if(tAttr.attrType() == MFnData::kVectorArray)
+        {
+          if(!tAttr.isArray())
+          {
+            if(valueType != "Vec3[]")
+            {
+              mayaLogErrorFunc("Incompatible param for compound attribute - expected a Vec3ArrayParam.");
+              return;
+            }
+
+            MArrayDataHandle childHandle(handle.child(child.object()));
+
+            childRTVal = rtVal.callMethod("Vec3ArrayParam", "getParam", 1, &childNameRTVal);
+            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+            floatVec * data = (floatVec *)dataRTVal.getData();
+
+            MVectorArray arrayValues;
+            arrayValues.setLength(valuesRTVal.getArraySize());
+
+            for(uint32_t i=0;i<arrayValues.length();i++)
+              arrayValues.set(data[i], i);
+
+            handle.set(MFnVectorArrayData().create(arrayValues));
+          }
+          else
+          {
+            mayaLogErrorFunc("Arrays of MFnData::kVectorArray are not supported for '"+childName+"'.");
           }
         }
         else
