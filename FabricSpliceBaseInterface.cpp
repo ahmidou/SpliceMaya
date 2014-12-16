@@ -1518,6 +1518,11 @@ void FabricSpliceBaseInterface::onNodeRemoved(MObject &node, void *clientData)
     interf->managePortObjectValues(true); // detach
 }
 
+void FabricSpliceBaseInterface::onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made)
+{
+  _affectedPlugsDirty = true;
+}
+
 void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
 {
   if(_portObjectsDestroyed == destroy)

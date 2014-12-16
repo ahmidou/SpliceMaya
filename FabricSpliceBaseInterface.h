@@ -1,4 +1,3 @@
-
 #ifndef _FabricSpliceBaseInterface_H_
 #define _FabricSpliceBaseInterface_H_
 
@@ -39,7 +38,7 @@ class FabricSpliceBaseInterface {
 public:
 
   FabricSpliceBaseInterface();
-  ~FabricSpliceBaseInterface();
+  virtual ~FabricSpliceBaseInterface();
   void constructBaseInterface();
 
   virtual MObject getThisMObject() = 0;
@@ -102,6 +101,7 @@ protected:
   void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
   void setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
   void copyInternalData(MPxNode *node);
+  void onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made);
 
   // static MString sManipulationCommand;
   // MString _manipulationCommand;

@@ -30,6 +30,9 @@ public:
   MStatus shouldSave(const MPlug &plug, bool &isSaving);
   void copyInternalData(MPxNode *node);
 
+  virtual MStatus connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
+  virtual MStatus connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
+
   // node attributes
   static MTypeId id;
   static MObject saveData;
