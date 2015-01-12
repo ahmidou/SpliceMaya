@@ -445,15 +445,20 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             args[0] = childNameRTVal;
             childRTVal = FabricSplice::constructObjectRTVal("SInt32ArrayParam", 1, &args[0]);
 
-            MIntArray arrayValues = MFnIntArrayData(handle.data()).array();
-            unsigned int numArrayValues = arrayValues.length();
-            args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
-            childRTVal.callMethod("", "resize", 1, &args[0]);
+            MStatus arrayStat;
+            MFnIntArrayData arrayData(childHandle.data(), &arrayStat);
+            if(arrayStat == MStatus::kSuccess)
+            {
+              MIntArray arrayValues = arrayData.array();
+              unsigned int numArrayValues = arrayValues.length();
+              args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
+              childRTVal.callMethod("", "resize", 1, &args[0]);
 
-            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
-            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
-            void * data = dataRTVal.getData();
-            memcpy(data, &arrayValues[0], sizeof(int32_t) * numArrayValues);
+              FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+              FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+              void * data = dataRTVal.getData();
+              memcpy(data, &arrayValues[0], sizeof(int32_t) * numArrayValues);
+            }
           }
           else
           {
@@ -468,15 +473,20 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             args[0] = childNameRTVal;
             childRTVal = FabricSplice::constructObjectRTVal("Float64ArrayParam", 1, &args[0]);
 
-            MDoubleArray arrayValues = MFnDoubleArrayData(handle.data()).array();
-            unsigned int numArrayValues = arrayValues.length();
-            args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
-            childRTVal.callMethod("", "resize", 1, &args[0]);
+            MStatus arrayStat;
+            MFnDoubleArrayData arrayData(childHandle.data(), &arrayStat);
+            if(arrayStat == MStatus::kSuccess)
+            {
+              MDoubleArray arrayValues = arrayData.array();
+              unsigned int numArrayValues = arrayValues.length();
+              args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
+              childRTVal.callMethod("", "resize", 1, &args[0]);
 
-            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
-            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
-            void * data = dataRTVal.getData();
-            memcpy(data, &arrayValues[0], sizeof(double) * numArrayValues);
+              FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+              FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+              void * data = dataRTVal.getData();
+              memcpy(data, &arrayValues[0], sizeof(double) * numArrayValues);
+            }
           }
           else
           {
@@ -491,15 +501,20 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             args[0] = childNameRTVal;
             childRTVal = FabricSplice::constructObjectRTVal("Vec3ArrayParam", 1, &args[0]);
 
-            MVectorArray arrayValues = MFnVectorArrayData(handle.data()).array();
-            unsigned int numArrayValues = arrayValues.length();
-            args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
-            childRTVal.callMethod("", "resize", 1, &args[0]);
+            MStatus arrayStat;
+            MFnVectorArrayData arrayData(childHandle.data(), &arrayStat);
+            if(arrayStat == MStatus::kSuccess)
+            {
+              MVectorArray arrayValues = arrayData.array();
+              unsigned int numArrayValues = arrayValues.length();
+              args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
+              childRTVal.callMethod("", "resize", 1, &args[0]);
 
-            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
-            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
-            float * data = (float*)dataRTVal.getData();
-            arrayValues.get((floatVec*)data);
+              FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+              FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+              float * data = (float*)dataRTVal.getData();
+              arrayValues.get((floatVec*)data);
+            }
           }
           else
           {
