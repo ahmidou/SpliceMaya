@@ -19,6 +19,7 @@ public:
   ~FabricSpliceKLLineNumberWidget();
   void paintEvent ( QPaintEvent * event );
   void setLineOffset(int lineOffset) { mLineOffset = lineOffset; update(); }
+  float lineHeight() const { return mFontMetrics->lineSpacing(); }
 private:
   QFont mFont;
   QFontMetrics * mFontMetrics;
