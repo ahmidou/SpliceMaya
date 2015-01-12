@@ -591,6 +591,8 @@ void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
     FabricCore::RTVal numElements = FabricSplice::constructUInt32RTVal(plug.numElements());
     compoundVals.callMethod("", "resize", 1, &numElements);
 
+    FabricCore::RTVal paramsArray = compoundVals.maybeGetMember("params");
+
     for(unsigned int j=0;j<plug.numElements();j++) {
 
       MPlug element = plug.elementByPhysicalIndex(j);
@@ -599,7 +601,14 @@ void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
 
       FabricCore::RTVal compoundVal = FabricSplice::constructObjectRTVal("CompoundParam");
       plugToPort_compound_convertCompound(compound, handle, compoundVal);
-      compoundVals.callMethod("", "addParam", 1, &compoundVal);
+
+      if(j == 0)
+        compoundVals.callMethod("", "addParam", 1, &compoundVal);
+      else
+      {
+        FabricCore::RTVal paramArray = paramsArray.getArrayElement(j);
+        paramArray.setArrayElement(0, compoundVal);
+      }
     }
     port.setRTVal(compoundVals);
   }
