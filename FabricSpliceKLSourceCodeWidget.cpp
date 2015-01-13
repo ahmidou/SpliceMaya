@@ -659,21 +659,6 @@ void FabricSpliceKLPlainTextWidget::keyPressEvent (QKeyEvent * e)
 
 void FabricSpliceKLPlainTextWidget::paintEvent ( QPaintEvent * event )
 {
-#if _SPLICE_MAYA_VERSION > 2013
-  // ensure that all blocks are using the right line height
-  QTextDocument* doc = document();
-  QTextCursor prevCursor = textCursor();
-  for(QTextBlock it = doc->begin(); it != doc->end(); it = it.next())
-  {
-    QTextBlockFormat textBlockFormat = it.blockFormat();
-    textBlockFormat.setLineHeight(mLineNumbers->lineHeight(), QTextBlockFormat::FixedHeight);
-    QTextCursor cursor(it);
-    cursor.setBlockFormat(textBlockFormat);
-    setTextCursor(cursor);
-  }
-  setTextCursor(prevCursor);
-#endif
-
   QPlainTextEdit::paintEvent(event);
   if(mLastScrollOffset == verticalScrollBar()->value())
     return;
