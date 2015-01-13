@@ -1201,6 +1201,26 @@ void FabricSpliceBaseInterface::invalidatePlug(MPlug & plug)
   }
 
   MGlobal::executeCommandOnIdle(command+plugName);
+
+  // ensure to set the attribute values one more time
+  // to guarantee that the values are reflected within KL
+  MStringArray cmds;
+  plug.getSetAttrCmds(cmds);
+  for(unsigned int i=0;i<cmds.length();i++)
+  {
+    // strip
+    while(cmds[i].asChar()[0] == ' ' || cmds[i].asChar()[0] == '\t')
+      cmds[i] = cmds[i].substring(1, cmds[i].length());
+
+    // ensure to only use direct setAttr's
+    if(cmds[i].substring(0, 9) == "setAttr \".")
+    {
+      MFnDependencyNode node(plug.node());
+      MString condition = "if(size(`listConnections -d no \"" + node.name() + cmds[i].substring(9, cmds[i].rindex('"'))+"`) == 0)";
+      cmds[i] = condition + "{ setAttr \"" + node.name() + cmds[i].substring(9, cmds[i].length()) + " }";
+      MGlobal::executeCommandOnIdle(cmds[i]);
+    }
+  }
 }
 
 void FabricSpliceBaseInterface::invalidateNode()
