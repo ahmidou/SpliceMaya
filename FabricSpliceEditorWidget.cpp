@@ -331,7 +331,7 @@ void FabricSpliceEditorWidget::onOperatorChanged(void * userData)
   if(interf != NULL && opName.length() > 0)
     code = interf->getSpliceGraph().getKLOperatorSourceCode(opName.c_str());
   editor->mSourceCode->setSourceCode(opName, code);
-  editor->mSourceCode->setEnabled(true);
+  editor->mSourceCode->setEnabled(!interf->getSpliceGraph().isKLOperatorFileBased(opName.c_str()));
   editor->mErrorLog->setText("");
   editor->mErrorLog->hide();
 
@@ -526,6 +526,7 @@ void FabricSpliceEditorWidget::addOpPressed(void * userData)
       MAYASPLICE_CATCH_BEGIN(&status);
         code = node->getSpliceGraph().getKLOperatorSourceCode(name.c_str());
         editor->mSourceCode->setSourceCode(name, code);
+        editor->mSourceCode->setEnabled(!node->getSpliceGraph().isKLOperatorFileBased(name.c_str()));
       MAYASPLICE_CATCH_END(&status);
 
       editor->update();
