@@ -1261,9 +1261,6 @@ void FabricSpliceBaseInterface::invalidatePlug(MPlug & plug)
         plug.getSetAttrCmds(cmds);
         for(unsigned int i=0;i<cmds.length();i++)
         {
-          if(cmds[i].index('-') > -1)
-            continue;
-
           // strip
           while(cmds[i].asChar()[0] == ' ' || cmds[i].asChar()[0] == '\t')
             cmds[i] = cmds[i].substring(1, cmds[i].length());
@@ -1272,7 +1269,9 @@ void FabricSpliceBaseInterface::invalidatePlug(MPlug & plug)
           if(cmds[i].substring(0, 9) == "setAttr \".")
           {
             MFnDependencyNode node(plug.node());
-            MString condition = "if(size(`listConnections -d no \"" + node.name() + cmds[i].substring(9, cmds[i].rindex('"'))+"`) == 0)";
+            MString cmdPlugName = cmds[i].substring(9, cmds[i].length());
+            cmdPlugName = cmdPlugName.substring(0, cmdPlugName.index('"')-1);
+            MString condition = "if(size(`listConnections -d no \"" + node.name() + cmdPlugName +"\"`) == 0)";
             cmds[i] = condition + "{ setAttr \"" + node.name() + cmds[i].substring(9, cmds[i].length()) + " }";
             MGlobal::executeCommandOnIdle(cmds[i]);
           }
