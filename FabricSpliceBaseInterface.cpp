@@ -250,9 +250,6 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
         } else {
           SplicePortToPlugFunc func = getSplicePortToPlugFunc(portDataType, &port);
           if(func != NULL) {
-            FabricSplice::Logging::AutoTimer globalTimer("Maya::transferOutputValuesToMaya::conversionFunc()");
-            std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::conversionFunc()").c_str();
-            FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
             (*func)(port, plug, data);
             data.setClean(plug);
           }
