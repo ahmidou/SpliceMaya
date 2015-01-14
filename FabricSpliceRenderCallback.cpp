@@ -126,6 +126,7 @@ void FabricSpliceRenderCallback::draw(const MString &str, void *clientData){
   // draw all gizmos
   try
   {
+    FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()");
     FabricSplice::SceneManagement::drawOpenGL(getDrawContext(view));
   }
   catch(FabricSplice::Exception e)
