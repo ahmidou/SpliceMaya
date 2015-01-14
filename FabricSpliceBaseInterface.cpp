@@ -1202,23 +1202,41 @@ void FabricSpliceBaseInterface::invalidatePlug(MPlug & plug)
 
   MGlobal::executeCommandOnIdle(command+plugName);
 
-  // ensure to set the attribute values one more time
-  // to guarantee that the values are reflected within KL
-  MStringArray cmds;
-  plug.getSetAttrCmds(cmds);
-  for(unsigned int i=0;i<cmds.length();i++)
+  if(plugName.index('.') > -1)
   {
-    // strip
-    while(cmds[i].asChar()[0] == ' ' || cmds[i].asChar()[0] == '\t')
-      cmds[i] = cmds[i].substring(1, cmds[i].length());
+    plugName = plugName.substring(plugName.index('.')+1, plugName.length());
+  	if(plugName.index('[') > -1)
+	   plugName = plugName.substring(0, plugName.index('[')-1);
 
-    // ensure to only use direct setAttr's
-    if(cmds[i].substring(0, 9) == "setAttr \".")
+    FabricSplice::DGPort port = getPort(plugName.asChar());
+    if(port.isValid())
     {
-      MFnDependencyNode node(plug.node());
-      MString condition = "if(size(`listConnections -d no \"" + node.name() + cmds[i].substring(9, cmds[i].rindex('"'))+"`) == 0)";
-      cmds[i] = condition + "{ setAttr \"" + node.name() + cmds[i].substring(9, cmds[i].length()) + " }";
-      MGlobal::executeCommandOnIdle(cmds[i]);
+      std::string dataType = port.getDataType();
+      if(dataType.substr(0, 8) == "Compound")
+      {
+        // ensure to set the attribute values one more time
+        // to guarantee that the values are reflected within KL
+        MStringArray cmds;
+        plug.getSetAttrCmds(cmds);
+        for(unsigned int i=0;i<cmds.length();i++)
+        {
+          if(cmds[i].index('-') > -1)
+            continue;
+
+          // strip
+          while(cmds[i].asChar()[0] == ' ' || cmds[i].asChar()[0] == '\t')
+            cmds[i] = cmds[i].substring(1, cmds[i].length());
+
+          // ensure to only use direct setAttr's
+          if(cmds[i].substring(0, 9) == "setAttr \".")
+          {
+            MFnDependencyNode node(plug.node());
+            MString condition = "if(size(`listConnections -d no \"" + node.name() + cmds[i].substring(9, cmds[i].rindex('"'))+"`) == 0)";
+            cmds[i] = condition + "{ setAttr \"" + node.name() + cmds[i].substring(9, cmds[i].length()) + " }";
+            MGlobal::executeCommandOnIdle(cmds[i]);
+          }
+        }
+      }
     }
   }
 }
