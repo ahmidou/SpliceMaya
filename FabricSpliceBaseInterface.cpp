@@ -1168,7 +1168,7 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
     return;
   }
   FabricCore::Variant dictData = FabricCore::Variant::CreateFromJSON(dictString);
-  bool dataRestored = _spliceGraph.setFromPersistenceDataDict(dictData, &info);
+  bool dataRestored = _spliceGraph.setFromPersistenceDataDict(dictData, &info, file.asChar());
 
   if(dataRestored){
     // const FabricCore::Variant * manipulationCommandVar = dictData.getDictValue("manipulationCommand");
