@@ -374,6 +374,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     else if(actionStr == "loadSplice")
     {
       MString fileNameStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "fileName", "", true).c_str();
+      bool asReferenced = FabricSplice::Scripting::consumeBooleanArgument(scriptArgs, "asReferenced", false, true);
 
       int portLimit = 0;
       if(spliceMayaNodeFn.typeName() == "spliceMayaDeformer")
@@ -403,7 +404,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
         fileNameStr = qFileName.toUtf8().constData();
     #endif      
       }
-      interf->loadFromFile(fileNameStr);
+      interf->loadFromFile(fileNameStr, asReferenced);
       return mayaErrorOccured();
     }
     else if(actionStr == "getPortInfo")

@@ -65,7 +65,8 @@ public:
   MStringArray getPortNames();
   FabricSplice::DGPort getPort(MString name);
   void saveToFile(MString fileName);
-  MStatus loadFromFile(MString fileName);
+  MStatus loadFromFile(MString fileName, bool asReferenced = false);
+  MStatus createAttributeForPort(FabricSplice::DGPort port);
   void setPortPersistence(const MString &portName, bool persistence);
   FabricSplice::DGGraph & getSpliceGraph() { return _spliceGraph; }
   void setDgDirtyEnabled(bool enabled) { _dgDirtyEnabled = enabled; }
