@@ -84,6 +84,7 @@ private:
 
   std::string getCurrentNodeName();
   FabricSpliceBaseInterface * getCurrentBaseInterface();
+  void performReferencedCheck();
 
 protected:
   virtual bool event ( QEvent * event );

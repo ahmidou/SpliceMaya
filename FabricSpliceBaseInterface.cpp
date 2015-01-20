@@ -1180,6 +1180,22 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
 
   _restoredFromPersistenceData = true;
 
+  // update all attributes, and eventually add new ones!
+  if(_spliceGraph.isReferenced())
+  {
+    MFnDependencyNode thisNode(getThisMObject());
+    for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+      std::string portName = _spliceGraph.getDGPortName(i);
+      FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.c_str());
+
+      MPlug plug = thisNode.findPlug(portName.c_str());
+      if(plug.isNull())
+      {
+        createAttributeForPort(port);
+      }
+    }
+  }
+
   invalidateNode();
 
   MFnDependencyNode thisNode(getThisMObject());
@@ -1397,7 +1413,7 @@ void FabricSpliceBaseInterface::saveToFile(MString fileName)
   _spliceGraph.saveToFile(fileName.asChar(), &info);
 }
 
-MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName)
+MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName, bool asReferenced)
 {
   MStatus loadStatus;
   MAYASPLICE_CATCH_BEGIN(&loadStatus);
@@ -1411,7 +1427,7 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName)
   info.hostAppVersion = FabricCore::Variant::CreateString(MGlobal::mayaVersion().asChar());
   info.filePath = FabricCore::Variant::CreateString(fileName.asChar());
 
-  _spliceGraph.loadFromFile(fileName.asChar());
+  _spliceGraph.loadFromFile(fileName.asChar(), &info, asReferenced);
 
   // create all relevant maya attributes
   for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
@@ -1419,100 +1435,111 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName)
     FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.c_str());
     if(!port.isValid())
       continue;
-
-    MString dataType = port.getDataType();
-    if(port.hasOption("opaque")) {
-      if(port.getOption("opaque").getBoolean())
-        dataType = "SpliceMayaData";
-    }
-
-    bool isArray = port.isArray();
-    FabricSplice::Port_Mode portMode = port.getMode();
-
-    MString arrayType = "Single Value";
-    if(isArray)
-      arrayType = "Array (Multi)";
-
-    bool addMayaAttr = true;
-    if(port.hasOption("internal")) {
-      if(port.getOption("internal").getBoolean())
-        addMayaAttr = false;
-    }
-
-    if(port.hasOption("nativeArray")) {
-      if(port.getOption("nativeArray").getBoolean())
-        arrayType = "Array (Native)";
-    }
-
-    FabricCore::Variant compoundStructure;
-    if(port.hasOption("compoundStructure")) {
-      compoundStructure = port.getOption("compoundStructure");
-    }
-
-    if(addMayaAttr)
-    {
-      MStatus portStatus;
-      addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, false, compoundStructure, &portStatus);
-      if(portStatus != MS::kSuccess)
-        return portStatus;
-
-      if(portMode != FabricSplice::Port_Mode_OUT)
-      {
-        MFnDependencyNode thisNode(getThisMObject());
-        MPlug plug = thisNode.findPlug(portName.c_str());
-        if(!plug.isNull())
-        {
-          FabricCore::Variant variant = port.getDefault();
-          if(variant.isString())
-            plug.setString(variant.getStringData());
-          else if(variant.isBoolean())
-            plug.setBool(variant.getBoolean());
-          else if(variant.isNull())
-            continue;
-          else if(variant.isArray())
-            continue;
-          else if(variant.isDict())
-            continue;
-          else
-          {
-            float value = 0.0;
-            if(variant.isSInt8())
-              value = (float)variant.getSInt8();
-            else if(variant.isSInt16())
-              value = (float)variant.getSInt16();
-            else if(variant.isSInt32())
-              value = (float)variant.getSInt32();
-            else if(variant.isSInt64())
-              value = (float)variant.getSInt64();
-            else if(variant.isUInt8())
-              value = (float)variant.getUInt8();
-            else if(variant.isUInt16())
-              value = (float)variant.getUInt16();
-            else if(variant.isUInt32())
-              value = (float)variant.getUInt32();
-            else if(variant.isUInt64())
-              value = (float)variant.getUInt64();
-            else if(variant.isFloat32())
-              value = (float)variant.getFloat32();
-            else if(variant.isFloat64())
-              value = (float)variant.getFloat64();
-            MDataHandle handle = plug.asMDataHandle();
-            if(handle.numericType() == MFnNumericData::kFloat)
-              plug.setFloat(value);
-            else if(handle.numericType() == MFnNumericData::kDouble)
-              plug.setDouble(value);
-            else if(handle.numericType() == MFnNumericData::kInt)
-              plug.setInt((int)value);
-          }
-        }
-      }
-    }
+    createAttributeForPort(port);
   }
 
   invalidateNode();
 
   MAYASPLICE_CATCH_END(&loadStatus);
   return loadStatus;
+}
+
+MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort port)
+{
+  MStatus portStatus;
+  MAYASPLICE_CATCH_BEGIN(&portStatus);
+
+  std::string portName = port.getName();
+
+  MString dataType = port.getDataType();
+  if(port.hasOption("opaque")) {
+    if(port.getOption("opaque").getBoolean())
+      dataType = "SpliceMayaData";
+  }
+
+  bool isArray = port.isArray();
+  FabricSplice::Port_Mode portMode = port.getMode();
+
+  MString arrayType = "Single Value";
+  if(isArray)
+    arrayType = "Array (Multi)";
+
+  bool addMayaAttr = true;
+  if(port.hasOption("internal")) {
+    if(port.getOption("internal").getBoolean())
+      addMayaAttr = false;
+  }
+
+  if(port.hasOption("nativeArray")) {
+    if(port.getOption("nativeArray").getBoolean())
+      arrayType = "Array (Native)";
+  }
+
+  FabricCore::Variant compoundStructure;
+  if(port.hasOption("compoundStructure")) {
+    compoundStructure = port.getOption("compoundStructure");
+  }
+
+  if(addMayaAttr)
+  {
+    MStatus portStatus;
+    addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, false, compoundStructure, &portStatus);
+    if(portStatus != MS::kSuccess)
+      return portStatus;
+
+    if(portMode != FabricSplice::Port_Mode_OUT)
+    {
+      MFnDependencyNode thisNode(getThisMObject());
+      MPlug plug = thisNode.findPlug(portName.c_str());
+      if(!plug.isNull())
+      {
+        FabricCore::Variant variant = port.getDefault();
+        if(variant.isString())
+          plug.setString(variant.getStringData());
+        else if(variant.isBoolean())
+          plug.setBool(variant.getBoolean());
+        else if(variant.isNull())
+          return MStatus::kSuccess;
+        else if(variant.isArray())
+          return MStatus::kSuccess;
+        else if(variant.isDict())
+          return MStatus::kSuccess;
+        else
+        {
+          float value = 0.0;
+          if(variant.isSInt8())
+            value = (float)variant.getSInt8();
+          else if(variant.isSInt16())
+            value = (float)variant.getSInt16();
+          else if(variant.isSInt32())
+            value = (float)variant.getSInt32();
+          else if(variant.isSInt64())
+            value = (float)variant.getSInt64();
+          else if(variant.isUInt8())
+            value = (float)variant.getUInt8();
+          else if(variant.isUInt16())
+            value = (float)variant.getUInt16();
+          else if(variant.isUInt32())
+            value = (float)variant.getUInt32();
+          else if(variant.isUInt64())
+            value = (float)variant.getUInt64();
+          else if(variant.isFloat32())
+            value = (float)variant.getFloat32();
+          else if(variant.isFloat64())
+            value = (float)variant.getFloat64();
+          MDataHandle handle = plug.asMDataHandle();
+          if(handle.numericType() == MFnNumericData::kFloat)
+            plug.setFloat(value);
+          else if(handle.numericType() == MFnNumericData::kDouble)
+            plug.setDouble(value);
+          else if(handle.numericType() == MFnNumericData::kInt)
+            plug.setInt((int)value);
+        }
+      }
+    }
+  }
+
+  MAYASPLICE_CATCH_END(&portStatus);  
 }
 
 bool FabricSpliceBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
