@@ -1,4 +1,3 @@
 + FabricSpliceMaya 1.0 .
 FABRIC_EXTS_PATH +:= ../../Exts
 PYTHONPATH +:= python/{{PYTHON_VERSION}}
-PATH +:= plug-ins
