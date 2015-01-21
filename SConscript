@@ -3,6 +3,7 @@
 #
 
 import os, sys, platform, copy
+from subprocess import Popen, PIPE
 
 Import(
   'parentEnv',
@@ -100,12 +101,17 @@ if FABRIC_BUILD_OS == 'Darwin':
 else:
   pythonVersion = Glob(os.path.join(MAYA_INCLUDE_DIR, 'python*'))[0].abspath[-3:]
 
+process = Popen(["kl", "--noloadexts", "-c", "operator entry() { report(FabricVersionMaj+'.'+FabricVersionMin); }"], stdout=PIPE)
+(fabricVersionMajMin, err) = process.communicate()
+exit_code = process.wait()
+
 env.Append(BUILDERS = {
   'SubstMayaModuleFile': Builder(action = [
     [
       sedCmd,
       '-e', 's/{{MAYA_VERSION}}/'+moduleFileMayaVersion+'/g ',
       '-e', 's/{{PYTHON_VERSION}}/'+pythonVersion+'/g ',
+      '-e', 's/{{FABRIC_VERSION_MAJ_MIN}}/'+fabricVersionMajMin.strip()+'/g ',
       '<$SOURCE', '>$TARGET',
     ]
   ])
