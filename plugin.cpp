@@ -223,7 +223,7 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
-  MFnPlugin plugin(obj, getPluginName().asChar(), "1.0", "Any");
+  MFnPlugin plugin(obj, getPluginName().asChar(), FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status;
 
   status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
