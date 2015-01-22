@@ -30,6 +30,12 @@ mayaFlags = {
   ],
 }
 
+try:
+  Import('spliceApiDir')
+  mayaFlags['CPPPATH'].append(spliceApiDir)
+except:
+  pass
+
 mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
