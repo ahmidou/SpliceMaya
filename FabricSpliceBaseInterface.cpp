@@ -1444,6 +1444,43 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName, bool asReferen
   return loadStatus;
 }
 
+float createAttributeForPort_getFloatFromVariant(const FabricCore::Variant * variant)
+{
+  float value = 0.0;
+  if(variant->isSInt8())
+    value = (float)variant->getSInt8();
+  else if(variant->isSInt16())
+    value = (float)variant->getSInt16();
+  else if(variant->isSInt32())
+    value = (float)variant->getSInt32();
+  else if(variant->isSInt64())
+    value = (float)variant->getSInt64();
+  else if(variant->isUInt8())
+    value = (float)variant->getUInt8();
+  else if(variant->isUInt16())
+    value = (float)variant->getUInt16();
+  else if(variant->isUInt32())
+    value = (float)variant->getUInt32();
+  else if(variant->isUInt64())
+    value = (float)variant->getUInt64();
+  else if(variant->isFloat32())
+    value = (float)variant->getFloat32();
+  else if(variant->isFloat64())
+    value = (float)variant->getFloat64();
+  return value;  
+}
+
+void createAttributeForPort_setFloatOnPlug(MPlug & plug, float value)
+{
+  MDataHandle handle = plug.asMDataHandle();
+  if(handle.numericType() == MFnNumericData::kFloat)
+    plug.setFloat(value);
+  else if(handle.numericType() == MFnNumericData::kDouble)
+    plug.setDouble(value);
+  else if(handle.numericType() == MFnNumericData::kInt)
+    plug.setInt((int)value);
+}
+
 MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort port)
 {
   MStatus portStatus;
@@ -1480,7 +1517,7 @@ MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort p
     compoundStructure = port.getOption("compoundStructure");
   }
 
-  if(addMayaAttr)
+  if(addMayaAttr && !isArray)
   {
     MStatus portStatus;
     addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, false, compoundStructure, &portStatus);
@@ -1503,37 +1540,71 @@ MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort p
         else if(variant.isArray())
           return MStatus::kSuccess;
         else if(variant.isDict())
-          return MStatus::kSuccess;
+        {
+          if(dataType == "Vec3")
+          {
+            MPlug x = plug.child(0);
+            MPlug y = plug.child(1);
+            MPlug z = plug.child(2);
+            if(!x.isNull() && !x.isNull() && !z.isNull())
+            {
+              const FabricCore::Variant * xVar = variant.getDictValue("x");
+              const FabricCore::Variant * yVar = variant.getDictValue("y");
+              const FabricCore::Variant * zVar = variant.getDictValue("z");
+              if(xVar && yVar && zVar)
+              {
+                createAttributeForPort_setFloatOnPlug(x, createAttributeForPort_getFloatFromVariant(xVar));
+                createAttributeForPort_setFloatOnPlug(y, createAttributeForPort_getFloatFromVariant(yVar));
+                createAttributeForPort_setFloatOnPlug(z, createAttributeForPort_getFloatFromVariant(zVar));
+              }
+            }
+          }
+          else if(dataType == "Euler")
+          {
+            MPlug x = plug.child(0);
+            MPlug y = plug.child(1);
+            MPlug z = plug.child(2);
+            if(!x.isNull() && !x.isNull() && !z.isNull())
+            {
+              const FabricCore::Variant * xVar = variant.getDictValue("x");
+              const FabricCore::Variant * yVar = variant.getDictValue("y");
+              const FabricCore::Variant * zVar = variant.getDictValue("z");
+              if(xVar && yVar && zVar)
+              {
+                x.setMAngle(MAngle(createAttributeForPort_getFloatFromVariant(xVar), MAngle::kRadians));
+                y.setMAngle(MAngle(createAttributeForPort_getFloatFromVariant(yVar), MAngle::kRadians));
+                z.setMAngle(MAngle(createAttributeForPort_getFloatFromVariant(zVar), MAngle::kRadians));
+              }
+            }
+          }
+          else if(dataType == "Color")
+          {
+            const FabricCore::Variant * rVar = variant.getDictValue("r");
+            const FabricCore::Variant * gVar = variant.getDictValue("g");
+            const FabricCore::Variant * bVar = variant.getDictValue("b");
+            if(rVar && gVar && bVar)
+            {
+              MDataHandle handle = plug.asMDataHandle();
+              if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
+                handle.setMFloatVector(MFloatVector(
+                  createAttributeForPort_getFloatFromVariant(rVar),
+                  createAttributeForPort_getFloatFromVariant(gVar),
+                  createAttributeForPort_getFloatFromVariant(bVar)
+                ));
+              }else{
+                handle.setMVector(MVector(
+                  createAttributeForPort_getFloatFromVariant(rVar),
+                  createAttributeForPort_getFloatFromVariant(gVar),
+                  createAttributeForPort_getFloatFromVariant(bVar)
+                ));
+              }
+            }
+          }
+        }
         else
         {
-          float value = 0.0;
-          if(variant.isSInt8())
-            value = (float)variant.getSInt8();
-          else if(variant.isSInt16())
-            value = (float)variant.getSInt16();
-          else if(variant.isSInt32())
-            value = (float)variant.getSInt32();
-          else if(variant.isSInt64())
-            value = (float)variant.getSInt64();
-          else if(variant.isUInt8())
-            value = (float)variant.getUInt8();
-          else if(variant.isUInt16())
-            value = (float)variant.getUInt16();
-          else if(variant.isUInt32())
-            value = (float)variant.getUInt32();
-          else if(variant.isUInt64())
-            value = (float)variant.getUInt64();
-          else if(variant.isFloat32())
-            value = (float)variant.getFloat32();
-          else if(variant.isFloat64())
-            value = (float)variant.getFloat64();
-          MDataHandle handle = plug.asMDataHandle();
-          if(handle.numericType() == MFnNumericData::kFloat)
-            plug.setFloat(value);
-          else if(handle.numericType() == MFnNumericData::kDouble)
-            plug.setDouble(value);
-          else if(handle.numericType() == MFnNumericData::kInt)
-            plug.setInt((int)value);
+          float value = createAttributeForPort_getFloatFromVariant(&variant);
+          createAttributeForPort_setFloatOnPlug(plug, value);
         }
       }
     }
