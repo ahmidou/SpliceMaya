@@ -1571,9 +1571,12 @@ MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort p
               const FabricCore::Variant * zVar = variant.getDictValue("z");
               if(xVar && yVar && zVar)
               {
-                x.setMAngle(MAngle(createAttributeForPort_getFloatFromVariant(xVar), MAngle::kRadians));
-                y.setMAngle(MAngle(createAttributeForPort_getFloatFromVariant(yVar), MAngle::kRadians));
-                z.setMAngle(MAngle(createAttributeForPort_getFloatFromVariant(zVar), MAngle::kRadians));
+                MAngle xangle(createAttributeForPort_getFloatFromVariant(xVar), MAngle::kRadians);
+                x.setMAngle(xangle);
+                MAngle yangle(createAttributeForPort_getFloatFromVariant(yVar), MAngle::kRadians);
+                y.setMAngle(yangle);
+                MAngle zangle(createAttributeForPort_getFloatFromVariant(zVar), MAngle::kRadians);
+                z.setMAngle(zangle);
               }
             }
           }
