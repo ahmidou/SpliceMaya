@@ -368,7 +368,11 @@ void FabricSpliceEditorWidget::onOperatorChanged(void * userData)
   if(interf != NULL && opName.length() > 0)
     code = interf->getSpliceGraph().getKLOperatorSourceCode(opName.c_str());
   editor->mSourceCode->setSourceCode(opName, code);
-  editor->mSourceCode->setEnabled(!interf->getSpliceGraph().isKLOperatorFileBased(opName.c_str()));
+
+  if(interf != NULL)
+    editor->mSourceCode->setEnabled(!interf->getSpliceGraph().isKLOperatorFileBased(opName.c_str()));
+  else
+    editor->mSourceCode->setEnabled(false);
   editor->mErrorLog->setText("");
   editor->mErrorLog->hide();
 
