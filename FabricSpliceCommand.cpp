@@ -407,6 +407,11 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
       interf->loadFromFile(fileNameStr, asReferenced);
       return mayaErrorOccured();
     }
+    else if(actionStr == "reloadSplice")
+    {
+      interf->reloadFromFile();
+      return mayaErrorOccured();
+    }
     else if(actionStr == "getPortInfo")
     {
       MString portInfo = interf->getSpliceGraph().getDGPortInfo().c_str();

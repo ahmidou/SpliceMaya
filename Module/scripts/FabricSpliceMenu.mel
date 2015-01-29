@@ -15,7 +15,14 @@ global proc createSpliceNode()
 global proc createReferencedSpliceNode()
 {
   $node = `createNode "spliceMayaNode"`;
-  fabricSplice("loadSplice", $node, "{\"referenced\": true}");
+  fabricSplice("loadSplice", $node, "{\"asReferenced\": true}");
+}
+
+global proc reloadReferencedSpliceNode()
+{
+  string $sel[];
+  $sel = `ls -selection`;
+  fabricSplice("reloadSplice", $sel[0], "{}");
 }
 
 global proc FabricSpliceLoadMenu(string $pluginName)
@@ -39,12 +46,14 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -l "Splice Editor" -c ("source \"FabricSpliceUI.mel\"; showSpliceEditor(\"" + $pluginName + "\");");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Create Splice Node" -c ("createSpliceNode();");
-  menuItem -p $fabricSpliceMenu -l "Create Referenced Splice Node" -c ("createReferencedSpliceNode();");
   menuItem -p $fabricSpliceMenu -l "Create Splice Deformer" -c ("addSpliceDeformer();");
   menuItem -p $fabricSpliceMenu -l "Create Splice Debugger" -c ("createNode \"spliceMayaDebugger\";");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Export Splice Node" -c ("source \"FabricSpliceTool.mel\"; fabricSpliceSaveSplice();");
   menuItem -p $fabricSpliceMenu -l "Import Splice Node" -c ("source \"FabricSpliceTool.mel\"; fabricSpliceLoadSplice();");
+  menuItem -p $fabricSpliceMenu -divider true;
+  menuItem -p $fabricSpliceMenu -l "Create referenced Splice Node" -c ("createReferencedSpliceNode();");
+  menuItem -p $fabricSpliceMenu -l "Reload referenced Splice Node" -c ("reloadReferencedSpliceNode();");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Enable Tool" -c $toolCmd;
   menuItem -p $fabricSpliceMenu -divider true;

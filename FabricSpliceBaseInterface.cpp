@@ -1444,6 +1444,37 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName, bool asReferen
   return loadStatus;
 }
 
+MStatus FabricSpliceBaseInterface::reloadFromFile()
+{
+  MStatus reloadStatus;
+  MAYASPLICE_CATCH_BEGIN(&reloadStatus);
+
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::loadFromFile()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::loadFromFile()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
+
+  FabricSplice::PersistenceInfo info;
+  info.hostAppName = FabricCore::Variant::CreateString("Maya");
+  info.hostAppVersion = FabricCore::Variant::CreateString(MGlobal::mayaVersion().asChar());
+  info.filePath = FabricCore::Variant::CreateString(_spliceGraph.getReferencedFilePath());
+
+  _spliceGraph.reloadFromFile(&info);
+
+  // create all relevant maya attributes
+  for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+    std::string portName = _spliceGraph.getDGPortName(i);
+    FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.c_str());
+    if(!port.isValid())
+      continue;
+    createAttributeForPort(port);
+  }
+
+  invalidateNode();
+
+  MAYASPLICE_CATCH_END(&reloadStatus);
+  return reloadStatus;
+}
+
 float createAttributeForPort_getFloatFromVariant(const FabricCore::Variant * variant)
 {
   float value = 0.0;
@@ -1519,10 +1550,15 @@ MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort p
 
   if(addMayaAttr && !isArray)
   {
-    MStatus portStatus;
-    addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, false, compoundStructure, &portStatus);
-    if(portStatus != MS::kSuccess)
+    MFnDependencyNode thisNode(getThisMObject());
+    MPlug plug = thisNode.findPlug(portName.c_str());
+    if(!plug.isNull())
       return portStatus;
+
+    MStatus attributeStatus;
+    addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, false, compoundStructure, &attributeStatus);
+    if(attributeStatus != MS::kSuccess)
+      return attributeStatus;
 
     if(portMode != FabricSplice::Port_Mode_OUT)
     {
