@@ -7,6 +7,17 @@ global proc addSpliceDeformer()
   fabricSplice("addIOPort", $d, "{\"portName\":\""+("meshes")+"\", \"dataType\":\"PolygonMesh[]\", \"addSpliceMayaAttr\":true}");
 }
 
+global proc createSpliceNode()
+{
+  createNode "spliceMayaNode";
+}
+
+global proc createReferencedSpliceNode()
+{
+  $node = `createNode "spliceMayaNode"`;
+  fabricSplice("loadSplice", $node, "{\"referenced\": true}");
+}
+
 global proc FabricSpliceLoadMenu(string $pluginName)
 {
   global string $fabricSpliceMenu;
@@ -27,7 +38,8 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   // menu items
   menuItem -p $fabricSpliceMenu -l "Splice Editor" -c ("source \"FabricSpliceUI.mel\"; showSpliceEditor(\"" + $pluginName + "\");");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Create Splice Node" -c ("createNode \"spliceMayaNode\";");
+  menuItem -p $fabricSpliceMenu -l "Create Splice Node" -c ("createSpliceNode();");
+  menuItem -p $fabricSpliceMenu -l "Create Referenced Splice Node" -c ("createReferencedSpliceNode();");
   menuItem -p $fabricSpliceMenu -l "Create Splice Deformer" -c ("addSpliceDeformer();");
   menuItem -p $fabricSpliceMenu -l "Create Splice Debugger" -c ("createNode \"spliceMayaDebugger\";");
   menuItem -p $fabricSpliceMenu -divider true;
