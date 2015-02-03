@@ -2808,32 +2808,35 @@ void portToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtM
 
     if(rtMesh.callMethod("Boolean", "hasUVs", 0, 0).getBoolean())
     {
-      MFloatArray values(nbSamples*2);
-      std::vector<FabricCore::RTVal> args(2);
-      args[0] = FabricSplice::constructExternalArrayRTVal("Float32", values.length(), &values[0]);
-      args[1] = FabricSplice::constructUInt32RTVal(2); // components
-      rtMesh.callMethod("", "getUVsAsExternalArray", 2, &args[0]);
+      FabricCore::RTVal packedIndicesVal = FabricSplice::constructRTVal("UInt32[]");
+      FabricCore::RTVal packedUVsVal = rtMesh.callMethod("Vec2[]", "getUVsAsPackedArray", 1, &packedIndicesVal);
 
-      MFloatArray u, v;
-      u.setLength(nbSamples);      
-      v.setLength(nbSamples);      
-      unsigned int offset = 0;
-      for(unsigned int i=0;i<u.length();i++)
+      if(packedUVsVal.getArraySize() > 0)
       {
-        u[i] = values[offset++];
-        v[i] = values[offset++];
+        uint32_t * packedIndices = (uint32_t *)packedIndicesVal.callMethod("Data", "data", 0, 0).getData();
+        float * packedValues = (float *)packedUVsVal.callMethod("Data", "data", 0, 0).getData();
+
+        MFloatArray u, v;
+        u.setLength(packedUVsVal.getArraySize());      
+        v.setLength(packedUVsVal.getArraySize());      
+        unsigned int offset = 0;
+        for(unsigned int i=0;i<u.length();i++)
+        {
+          u[i] = packedValues[offset++];
+          v[i] = packedValues[offset++];
+        }
+        
+        MIntArray mayaPackedIndices;
+        mayaPackedIndices.setLength(packedIndicesVal.getArraySize());
+        for(unsigned int i=0;i<mayaPackedIndices.length();i++)
+          mayaPackedIndices[i] = (int)packedIndices[i];
+
+        MString setName("map1");
+        mesh.createUVSet(setName);
+        mesh.setCurrentUVSetName(setName);
+        mesh.setUVs(u, v);
+        mesh.assignUVs(mayaCounts, mayaPackedIndices);
       }
-      values.clear();
-      MString setName("map1");
-      mesh.createUVSet(setName);
-      mesh.setCurrentUVSetName(setName);
-
-      mesh.setUVs(u, v);
-
-      MIntArray indices(nbSamples);
-      for(unsigned int i=0;i<nbSamples;i++)
-        indices[i] = i;
-      mesh.assignUVs(mayaCounts, indices);
     }
 
     if(rtMesh.callMethod("Boolean", "hasVertexColors", 0, 0).getBoolean())
