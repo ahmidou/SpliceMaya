@@ -1351,6 +1351,8 @@ void FabricSpliceBaseInterface::invalidateNode()
       else
       {
         invalidatePlug(plug);
+        if(mode == FabricSplice::Port_Mode_IO)
+          collectDirtyPlug(plug);
 
         MPlugArray plugs;
         affectChildPlugs(plug, plugs);
