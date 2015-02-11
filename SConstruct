@@ -50,8 +50,6 @@ if os.path.exists(spliceApiDir.abspath):
     variant_dir = spliceEnv.Dir('.build').Dir('SpliceAPI')
   )
   
-  spliceApiDir = spliceEnv.Dir('.build').Dir('SpliceAPI').Dir('.stage').abspath
-  
 else:
 
   print 'The folder "'+spliceApiDir.abspath+'" does not exist. Please see the README.md for build instructions.'
@@ -61,6 +59,7 @@ else:
   os.path.join('SConscript'),
   exports = {
     'parentEnv': spliceEnv,
+    'spliceApiDir': spliceApiDir,
     'FABRIC_DIR': os.environ['FABRIC_DIR'],
     'FABRIC_SPLICE_VERSION': os.environ['FABRIC_SPLICE_VERSION'],
     'FABRIC_BUILD_TYPE': os.environ['FABRIC_BUILD_TYPE'],
