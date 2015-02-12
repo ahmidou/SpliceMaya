@@ -118,4 +118,7 @@ private:
   bool plugInArray(const MPlug &plug, const MPlugArray &array);
 };
 
+float getScalarOption(const char * key, FabricCore::Variant options, float value = 0.0);
+std::string getStringOption(const char * key, FabricCore::Variant options, std::string value = "");
+
 #endif

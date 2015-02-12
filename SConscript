@@ -11,14 +11,29 @@ Import(
   'STAGE_DIR',
   'FABRIC_BUILD_OS',
   'FABRIC_BUILD_TYPE',
+  'MAYA_BIN_DIR',
   'MAYA_INCLUDE_DIR',
   'MAYA_LIB_DIR',
   'MAYA_VERSION',
   'sharedCapiFlags',
   'spliceFlags',
+  'ADDITIONAL_FLAGS',
+  'commandsFlags',
+  'dfgWrapperFlags',
+  'astWrapperFlags',
+  'legacyBoostFlags',
+  'codeCompletionFlags'
   )
 
 env = parentEnv.Clone()
+
+qtMOCBuilder = Builder(
+  action = [[os.path.join(MAYA_BIN_DIR, 'moc'), '-o', '$TARGET', '$SOURCE']],
+  prefix = 'moc_',
+  suffix = '.cc',
+  src_suffix = '.h',
+)
+env.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 
 mayaFlags = {
   'CPPPATH': [
@@ -48,10 +63,40 @@ if FABRIC_BUILD_OS == 'Darwin':
     ])
 
 env.MergeFlags(mayaFlags)
+
+# # build the ui libraries for splice
+uiLibs = SConscript('#/Native/UI/SConscript', exports = {
+  'parentEnv': env, 
+  'uiLibPrefix': 'uiMaya', 
+  'qtDir': os.path.join(MAYA_INCLUDE_DIR, 'Qt'),
+  'qtMOC': os.path.join(MAYA_BIN_DIR, 'moc')
+  }, 
+  variant_dir = env.Dir('UI')
+  )
+
+# import the maya specific libraries
+Import('uiMayaGraphViewFlags', 'uiMayaTreeViewFlags', 'uiMayaKLEditorFlags', 'uiMayaValueEditorFlags', 'uiMayaKLEditorFlags', 'uiMayaDFGFlags')
+
+# services flags
+env.MergeFlags(commandsFlags)
+env.MergeFlags(dfgWrapperFlags)
+env.MergeFlags(astWrapperFlags)
+env.MergeFlags(legacyBoostFlags)
+env.MergeFlags(codeCompletionFlags)
+
+# ui flags
+env.MergeFlags(uiMayaGraphViewFlags)
+env.MergeFlags(uiMayaTreeViewFlags)
+env.MergeFlags(uiMayaKLEditorFlags)
+env.MergeFlags(uiMayaValueEditorFlags)
+env.MergeFlags(uiMayaKLEditorFlags)
+env.MergeFlags(uiMayaDFGFlags)
+
 env.Append(CPPDEFINES = ["_SPLICE_MAYA_VERSION="+str(MAYA_VERSION[:4])])
 
 env.MergeFlags(sharedCapiFlags)
 env.MergeFlags(spliceFlags)
+env.MergeFlags(ADDITIONAL_FLAGS)
 
 if FABRIC_BUILD_OS == 'Linux':
   env.Append(LIBS=['boost_filesystem', 'boost_system'])
@@ -60,6 +105,7 @@ target = 'FabricSpliceMaya'
 
 mayaModule = None
 sources = env.Glob('*.cpp')
+sources += env.QTMOC(env.File('FabricDFGWidget.h'))
 
 if FABRIC_BUILD_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
@@ -120,11 +166,11 @@ mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
 mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), os.path.join('Module', 'plug-ins', 'FabricSpliceManipulation.py')))
 
-for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties']:
+for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
-for script in ['AEspliceMayaNodeTemplate']:
+for script in ['AEspliceMayaNodeTemplate', 'AEdfgMayaNodeTemplate']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.py')))
-for ui in ['FabricSpliceEditor']:
+for ui in ['FabricSpliceEditor', 'FabricDFGWidget']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'ui'), os.path.join('Module', 'ui', ui+'.ui')))
 for png in ['FE_logo']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'ui'), os.path.join('Module', 'ui', png+'.png')))

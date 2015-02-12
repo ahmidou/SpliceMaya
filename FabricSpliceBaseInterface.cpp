@@ -310,7 +310,7 @@ void FabricSpliceBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affect
   }
 }
 
-float getScalarOption(const char * key, FabricCore::Variant options, float value = 0.0) {
+float getScalarOption(const char * key, FabricCore::Variant options, float value) {
   if(options.isNull())
     return value;
   if(!options.isDict())
@@ -341,7 +341,7 @@ float getScalarOption(const char * key, FabricCore::Variant options, float value
   return value;
 } 
 
-std::string getStringOption(const char * key, FabricCore::Variant options, std::string value = "") {
+std::string getStringOption(const char * key, FabricCore::Variant options, std::string value) {
   if(options.isNull())
     return value;
   if(!options.isDict())

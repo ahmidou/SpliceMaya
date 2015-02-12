@@ -28,7 +28,7 @@ MStatus ProceedToNextSceneCommand::doIt(const MArgList &args)
   boost::filesystem::path currentSample = sceneFileName.asChar();
   boost::filesystem::path samplesDir = currentSample.parent_path();
 
-#if BOOST_VERSION == 105500
+#if BOOST_VERSION >= 105500
   while(samplesDir.stem().string() != "Samples" && samplesDir.stem().string() != "Splice") {
 #else
   while(samplesDir.stem() != "Samples" && samplesDir.stem() != "Splice") {
@@ -57,7 +57,7 @@ MStatus ProceedToNextSceneCommand::doIt(const MArgList &args)
       {
         folders.push_back(dir_iter->path());
       }
-#if BOOST_VERSION == 105500
+#if BOOST_VERSION >= 105500
       else if(dir_iter->path().extension().string() == ".ma" || 
         dir_iter->path().extension().string() == ".MA" ||
         dir_iter->path().extension().string() == ".mb" ||
@@ -89,7 +89,7 @@ MStatus ProceedToNextSceneCommand::doIt(const MArgList &args)
 
   if(!nextSample.empty()) {
 
-#if BOOST_VERSION == 105500
+#if BOOST_VERSION >= 105500
     std::string nextSampleStr = nextSample.make_preferred().string();
 #else
     std::string nextSampleStr = nextSample.string();

@@ -27,6 +27,5 @@ typedef void(*SplicePortToPlugFunc)(FabricSplice::DGPort & port, MPlug &plug, MD
 
 SplicePlugToPortFunc getSplicePlugToPortFunc(const std::string & dataType, const FabricSplice::DGPort * port = NULL);
 SplicePortToPlugFunc getSplicePortToPlugFunc(const std::string & dataType, const FabricSplice::DGPort * port = NULL);
-MString getSpliceDataTypeFromMPlug(const MPlug &plug);
 
 #endif

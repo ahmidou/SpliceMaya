@@ -15,7 +15,7 @@ if 'clean' in COMMAND_LINE_TARGETS:
   Return()
 
 # check environment variables
-for var in ['FABRIC_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BUILD_ARCH', 'FABRIC_BUILD_TYPE', 'BOOST_DIR', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR', 'MAYA_VERSION']:
+for var in ['FABRIC_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BUILD_ARCH', 'FABRIC_BUILD_TYPE', 'BOOST_DIR', 'MAYA_BIN_DIR', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR', 'MAYA_VERSION']:
   if not os.environ.has_key(var):
     print 'The environment variable %s is not defined.' % var
     exit(0)
@@ -68,9 +68,11 @@ else:
     'FABRIC_BUILD_ARCH': os.environ['FABRIC_BUILD_ARCH'],
     'STAGE_DIR': spliceEnv.Dir('.stage').Dir('SpliceIntegrations').Dir('FabricSpliceMaya'+os.environ['MAYA_VERSION']),
     'BOOST_DIR': os.environ['BOOST_DIR'],
+    'MAYA_BIN_DIR': os.environ['MAYA_BIN_DIR'],
     'MAYA_INCLUDE_DIR': os.environ['MAYA_INCLUDE_DIR'],
     'MAYA_LIB_DIR': os.environ['MAYA_LIB_DIR'],
-    'MAYA_VERSION': os.environ['MAYA_VERSION']
+    'MAYA_VERSION': os.environ['MAYA_VERSION'],
+    'ADDITIONAL_FLAGS': {}
   },
   variant_dir = spliceEnv.Dir('.build').Dir(os.environ['MAYA_VERSION'])
 )

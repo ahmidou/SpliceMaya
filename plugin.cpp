@@ -25,6 +25,10 @@
 #include "FabricSpliceToolContext.h"
 #include "FabricSpliceRenderCallback.h"
 #include "ProceedToNextSceneCommand.h"
+#include "FabricDFGWidgetCommand.h"
+#include "FabricDFGWidget.h"
+#include "FabricDFGMayaNode.h"
+#include "FabricDFGCommands.h"
 
 #ifdef _MSC_VER
   #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
@@ -39,6 +43,7 @@ const MTypeId gFirstValidNodeID(0x0011AE40);
 // FabricSpliceInlineGeometry 0x0011AE43 /* no longer in use, but not available */
 // FabricSpliceMayaDebugger 0x0011AE44 /* no longer in use, but not available */
 // FabricSpliceMayaData 0x0011AE45
+// FabricDFGMayaNode 0x0011AE46
 const MTypeId gLastValidNodeID(0x0011AE49);
 
 MCallbackId gOnSceneNewCallbackId;
@@ -91,6 +96,8 @@ void onSceneSave(void *userData){
     FabricSpliceBaseInterface *node = instances[i];
     node->storePersistenceData(gLastLoadedScene, &status);
   }
+
+  FabricDFGBaseInterface::allStorePersistenceData(gLastLoadedScene, &status);
 }
 
 void onSceneNew(void *userData){
@@ -98,11 +105,15 @@ void onSceneNew(void *userData){
   MGlobal::executeCommandOnIdle("loadPlugin \"FabricSpliceManipulation.py\";");
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
+  FabricDFGCommandStack::getStack()->clear();
   FabricSplice::DestroyClient();
 }
 
 void onSceneLoad(void *userData){
-  onSceneNew(userData);
+  MGlobal::executeCommandOnIdle("unloadPlugin \"FabricSpliceManipulation.py\";");
+  MGlobal::executeCommandOnIdle("loadPlugin \"FabricSpliceManipulation.py\";");
+  FabricSpliceEditorWidget::postClearAll();
+  FabricSpliceRenderCallback::sDrawContext.invalidate(); 
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
     FabricSplice::Logging::enableTimers();
@@ -121,6 +132,8 @@ void onSceneLoad(void *userData){
       return;
   }
   FabricSpliceEditorWidget::postClearAll();
+
+  FabricDFGBaseInterface::allRestoreFromPersistenceData(gLastLoadedScene, &status);
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
   {
@@ -142,6 +155,8 @@ void onMayaExiting(void *userData){
     FabricSpliceBaseInterface *node = instances[i];
     node->resetInternalData();
   }
+
+  FabricDFGBaseInterface::allResetInternalData();
 
   FabricSplice::DestroyClient(true);
 }
@@ -263,6 +278,27 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   MQtUtil::registerUIType("FabricSpliceEditor", FabricSpliceEditorWidget::creator, "fabricSpliceEditor");
 
+  plugin.registerCommand("fabricDFG", FabricDFGWidgetCommand::creator, FabricDFGWidgetCommand::newSyntax);
+  MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
+  plugin.registerNode("dfgMayaNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
+
+  plugin.registerCommand("dfgAddNode", FabricDFGAddNodeCommand::creator, FabricDFGAddNodeCommand::newSyntax);
+  plugin.registerCommand("dfgRemoveNode", FabricDFGRemoveNodeCommand::creator, FabricDFGRemoveNodeCommand::newSyntax);
+  plugin.registerCommand("dfgRenameNode", FabricDFGRenameNodeCommand::creator, FabricDFGRenameNodeCommand::newSyntax);
+  plugin.registerCommand("dfgAddEmptyFunc", FabricDFGAddEmptyFuncCommand::creator, FabricDFGAddEmptyFuncCommand::newSyntax);
+  plugin.registerCommand("dfgAddEmptyGraph", FabricDFGAddEmptyGraphCommand::creator, FabricDFGAddEmptyGraphCommand::newSyntax);
+  plugin.registerCommand("dfgAddConnection", FabricDFGAddConnectionCommand::creator, FabricDFGAddConnectionCommand::newSyntax);
+  plugin.registerCommand("dfgRemoveConnection", FabricDFGRemoveConnectionCommand::creator, FabricDFGRemoveConnectionCommand::newSyntax);
+  plugin.registerCommand("dfgAddPort", FabricDFGAddPortCommand::creator, FabricDFGAddPortCommand::newSyntax);
+  plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);
+  plugin.registerCommand("dfgRenamePort", FabricDFGRenamePortCommand::creator, FabricDFGRenamePortCommand::newSyntax);
+  plugin.registerCommand("dfgSetArg", FabricDFGSetArgCommand::creator, FabricDFGSetArgCommand::newSyntax);
+  plugin.registerCommand("dfgSetDefaultValue", FabricDFGSetDefaultValueCommand::creator, FabricDFGSetDefaultValueCommand::newSyntax);
+  plugin.registerCommand("dfgSetCode", FabricDFGSetCodeCommand::creator, FabricDFGSetCodeCommand::newSyntax);
+  plugin.registerCommand("dfgGetDesc", FabricDFGGetDescCommand::creator, FabricDFGGetDescCommand::newSyntax);
+  plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
+  plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
+
   initModuleFolder(plugin);
 
   FabricSplice::Initialize();
@@ -274,6 +310,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   // FabricSplice::SceneManagement::setManipulationFunc(FabricSpliceBaseInterface::manipulationCallback);
 
   MGlobal::executePythonCommandOnIdle("import AEspliceMayaNodeTemplate", true);
+  MGlobal::executePythonCommandOnIdle("import AEdfgMayaNodeTemplate", true);
 
   return status;
 }
@@ -314,6 +351,27 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MQtUtil::deregisterUIType("FabricSpliceEditor");
 
   plugin.deregisterContextCommand("FabricSpliceToolContext", "FabricSpliceToolCommand");
+
+  plugin.deregisterCommand("fabricDFG");
+  MQtUtil::deregisterUIType("FabricDFGWidget");
+  plugin.deregisterNode(FabricDFGMayaNode::id);
+
+  plugin.deregisterCommand("dfgAddNode");
+  plugin.deregisterCommand("dfgRemoveNode");
+  plugin.deregisterCommand("dfgRenameNode");
+  plugin.deregisterCommand("dfgAddEmptyFunc");
+  plugin.deregisterCommand("dfgAddEmptyGraph");
+  plugin.deregisterCommand("dfgAddConnection");
+  plugin.deregisterCommand("dfgRemoveConnection");
+  plugin.deregisterCommand("dfgAddPort");
+  plugin.deregisterCommand("dfgRemovePort");
+  plugin.deregisterCommand("dfgRenamePort");
+  plugin.deregisterCommand("dfgSetArg");
+  plugin.deregisterCommand("dfgSetDefaultValue");
+  plugin.deregisterCommand("dfgSetCode");
+  plugin.deregisterCommand("dfgGetDesc");
+  plugin.deregisterCommand("dfgImportJSON");
+  plugin.deregisterCommand("dfgExportJSON");
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by

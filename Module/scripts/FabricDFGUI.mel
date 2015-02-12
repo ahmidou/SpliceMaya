@@ -1,0 +1,19 @@
+global proc showDFGWidget(string $pluginName)
+{
+  string $layOut1 = `paneLayout -configuration "single"`;
+  string $mayaVersion = `about -version`;
+  $mayaVersion = `substring $mayaVersion 1 4`;
+  string $uiDirectory;
+  if($mayaVersion == "2012")
+  {
+    string $pluginPath = `pluginInfo -q -path $pluginName`;
+    string $pluginDir = `dirname $pluginPath`;
+    string $parentDir = `dirname $pluginDir`;
+    $uiDirectory = $parentDir+"/ui"; 
+  }
+  else
+    $uiDirectory = `getModulePath -moduleName $pluginName` + "/ui";
+  string $widget = `loadUI -uiFile ($uiDirectory+"/FabricDFGWidget.ui")`;
+  dockControl -allowedArea "all" -area "bottom" -floating on -content $layOut1 -label "DFG Editor" -width 1000 -height 500;
+  control -e -parent $layOut1 $widget;
+}
