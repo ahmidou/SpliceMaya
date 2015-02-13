@@ -101,8 +101,6 @@ void onSceneSave(void *userData){
 }
 
 void onSceneNew(void *userData){
-  MGlobal::executeCommandOnIdle("unloadPlugin \"FabricSpliceManipulation.py\";");
-  MGlobal::executeCommandOnIdle("loadPlugin \"FabricSpliceManipulation.py\";");
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
   FabricDFGCommandStack::getStack()->clear();
@@ -240,7 +238,7 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
-  MFnPlugin plugin(obj, getPluginName().asChar(), "1.0", "Any");
+  MFnPlugin plugin(obj, getPluginName().asChar(), FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status;
 
   status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );

@@ -90,6 +90,35 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
 
         inlineCamera.callMethod("", "setFromMat44", 1, &cameraMat);
       }
+
+      bool isOrthographic = camera.isOrtho();
+      FabricCore::RTVal param = FabricSplice::constructBooleanRTVal(isOrthographic);
+      inlineCamera.callMethod("", "setOrthographic", 1, &param);
+
+      if(isOrthographic){
+        double windowAspect = width/height;
+        double left;
+        double right;
+        double bottom;
+        double top;
+        bool  applyOverscan;
+        bool  applySqueeze;
+        bool  applyPanZoom;
+        camera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
+        param = FabricSplice::constructFloat64RTVal(top-bottom);
+        inlineCamera.callMethod("", "setOrthographicFrustumHeight", 1, &param);
+      }
+      else{
+        double fovX, fovY;
+        camera.getPortFieldOfView(view.portWidth(), view.portHeight(), fovX, fovY);    
+        param = FabricSplice::constructFloat64RTVal(fovY);
+        inlineCamera.callMethod("", "setFovY", 1, &param);
+      }
+
+      param = FabricSplice::constructFloat64RTVal(camera.nearClippingPlane());
+      inlineCamera.callMethod("", "setNearDistance", 1, &param);
+      param = FabricSplice::constructFloat64RTVal(camera.farClippingPlane());
+      inlineCamera.callMethod("", "setFarDistance", 1, &param);
     }
     catch (FabricCore::Exception e)
     {
@@ -126,6 +155,7 @@ void FabricSpliceRenderCallback::draw(const MString &str, void *clientData){
   // draw all gizmos
   try
   {
+    FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()");
     FabricSplice::SceneManagement::drawOpenGL(getDrawContext(view));
   }
   catch(FabricSplice::Exception e)

@@ -44,6 +44,7 @@ FabricSpliceBaseInterface::FabricSpliceBaseInterface(){
   _portObjectsDestroyed = false;
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
+  _nameInitialized = false;
 
   FabricSplice::setDCCOperatorSourceCodeCallback(&FabricSpliceEditorWidget::getSourceCodeForOperator);
 
@@ -80,9 +81,11 @@ void FabricSpliceBaseInterface::constructBaseInterface(){
   }
 #endif
 
-  FabricSplice::Logging::AutoTimer timer("Maya::FabricSpliceBaseInterface()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::FabricSpliceBaseInterface()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::FabricSpliceBaseInterface()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
-  _spliceGraph = FabricSplice::DGGraph("mayaGraph");
+  _spliceGraph = FabricSplice::DGGraph("MayaGraph");
   _spliceGraph.constructDGNode("DGNode");
 
   MAYASPLICE_CATCH_END(&stat);
@@ -114,9 +117,18 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
   if(_isTransferingInputs)
     return false;
 
+  if(!_nameInitialized)
+  {
+    MFnDependencyNode thisNode(getThisMObject());
+    _spliceGraph.setName(thisNode.name().asChar());
+    _nameInitialized = true;
+  }
+
   managePortObjectValues(false); // recreate objects if not there yet
 
-  FabricSplice::Logging::AutoTimer timer("Maya::transferInputValuesToSplice()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::transferInputValuesToSplice()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::transferInputValuesToSplice()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   _isTransferingInputs = true;
 
@@ -156,7 +168,9 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
 void FabricSpliceBaseInterface::evaluate(){
   MFnDependencyNode thisNode(getThisMObject());
 
-  FabricSplice::Logging::AutoTimer timer("Maya::evaluate()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::evaluate()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::evaluate()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
   managePortObjectValues(false); // recreate objects if not there yet
 
   if(_spliceGraph.usesEvalContext())
@@ -204,7 +218,9 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
 
   managePortObjectValues(false); // recreate objects if not there yet
 
-  FabricSplice::Logging::AutoTimer timer("Maya::transferOutputValuesToMaya()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::transferOutputValuesToMaya()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::transferOutputValuesToMaya()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
   
   MFnDependencyNode thisNode(getThisMObject());
 
@@ -234,7 +250,6 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
         } else {
           SplicePortToPlugFunc func = getSplicePortToPlugFunc(portDataType, &port);
           if(func != NULL) {
-            FabricSplice::Logging::AutoTimer timer("Maya::transferOutputValuesToMaya::conversionFunc()");
             (*func)(port, plug, data);
             data.setClean(plug);
           }
@@ -246,7 +261,9 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
 
 void FabricSpliceBaseInterface::collectDirtyPlug(MPlug const &inPlug){
 
-  FabricSplice::Logging::AutoTimer timer("Maya::collectDirtyPlug()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::collectDirtyPlug()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::collectDirtyPlug()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   MStatus stat;
   MString name;
@@ -358,7 +375,9 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
 {
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::addMayaAttribute()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::addMayaAttribute()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::addMayaAttribute()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
   MObject newAttribute;
 
   MString dataTypeOverride = dataType;
@@ -911,7 +930,9 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(MString portName, Fabr
 {
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::setupMayaAttributeAffects()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::setupMayaAttributeAffects()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setupMayaAttributeAffects()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   MFnDependencyNode thisNode(getThisMObject());
   MPxNode * userNode = thisNode.userNode();
@@ -962,7 +983,9 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(MString portName, Fabr
 void FabricSpliceBaseInterface::addPort(const MString &portName, const MString &dataType, const FabricSplice::Port_Mode &portMode, const MString & dgNode, bool autoInitObjects, const MString & extension, const FabricCore::Variant & defaultValue, MStatus *stat){
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::addPort()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::addPort()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::addPort()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   _spliceGraph.addDGNodeMember(portName.asChar(), dataType.asChar(), defaultValue, dgNode.asChar(), extension.asChar());
   _spliceGraph.addDGPort(portName.asChar(), portName.asChar(), portMode, dgNode.asChar(), autoInitObjects);
@@ -1011,7 +1034,9 @@ void FabricSpliceBaseInterface::removePort(const MString &portName, MStatus *sta
 void FabricSpliceBaseInterface::addKLOperator(const MString &operatorName, const MString &operatorCode, const MString &operatorEntry, const MString &dgNode, const FabricCore::Variant & portMap, MStatus *stat){
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::addKLOperator()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::addKLOperator()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::addKLOperator()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   _spliceGraph.constructKLOperator(operatorName.asChar(), operatorCode.asChar(), operatorEntry.asChar(), dgNode.asChar(), portMap);
   invalidateNode();
@@ -1022,7 +1047,9 @@ void FabricSpliceBaseInterface::addKLOperator(const MString &operatorName, const
 void FabricSpliceBaseInterface::setKLOperatorEntry(const MString &operatorName, const MString &operatorEntry, MStatus *stat){
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::setKLOperatorEntry()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::setKLOperatorEntry()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setKLOperatorEntry()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   _spliceGraph.setKLOperatorEntry(operatorName.asChar(), operatorEntry.asChar());
   invalidateNode();
@@ -1034,7 +1061,9 @@ void FabricSpliceBaseInterface::setKLOperatorIndex(const MString &operatorName, 
 {
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::setKLOperatorIndex()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::setKLOperatorIndex()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setKLOperatorIndex()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   _spliceGraph.setKLOperatorIndex(operatorName.asChar(), operatorIndex);
   invalidateNode();
@@ -1045,7 +1074,9 @@ void FabricSpliceBaseInterface::setKLOperatorIndex(const MString &operatorName, 
 void FabricSpliceBaseInterface::setKLOperatorCode(const MString &operatorName, const MString &operatorCode, const MString &operatorEntry, MStatus *stat){
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::setKLOperatorCode()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::setKLOperatorCode()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setKLOperatorCode()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   _spliceGraph.setKLOperatorSourceCode(operatorName.asChar(), operatorCode.asChar(), operatorEntry.asChar());
   invalidateNode();
@@ -1065,7 +1096,9 @@ std::string FabricSpliceBaseInterface::getKLOperatorCode(const MString &operator
 void FabricSpliceBaseInterface::setKLOperatorFile(const MString &operatorName, const MString &filename, const MString &entry, MStatus *stat){
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::setKLOperatorFile()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::setKLOperatorFile()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setKLOperatorFile()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   _spliceGraph.setKLOperatorFilePath(operatorName.asChar(), filename.asChar(), entry.asChar());
   invalidateNode();
@@ -1076,7 +1109,9 @@ void FabricSpliceBaseInterface::setKLOperatorFile(const MString &operatorName, c
 void FabricSpliceBaseInterface::removeKLOperator(const MString &operatorName, const MString & dgNode, MStatus *stat){
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::removeKLOperator()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::removeKLOperator()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::removeKLOperator()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   _spliceGraph.removeKLOperator(operatorName.asChar(), dgNode.asChar());
   invalidateNode();
@@ -1087,7 +1122,9 @@ void FabricSpliceBaseInterface::removeKLOperator(const MString &operatorName, co
 void FabricSpliceBaseInterface::storePersistenceData(MString file, MStatus *stat){
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::storePersistenceData()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::storePersistenceData()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::storePersistenceData()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   MPlug saveDataPlug = getSaveDataPlug();
 
@@ -1109,7 +1146,9 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
 
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::restoreFromPersistenceData()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::restoreFromPersistenceData()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::restoreFromPersistenceData()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   FabricSplice::PersistenceInfo info;
   info.hostAppName = FabricCore::Variant::CreateString("Maya");
@@ -1129,7 +1168,7 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
     return;
   }
   FabricCore::Variant dictData = FabricCore::Variant::CreateFromJSON(dictString);
-  bool dataRestored = _spliceGraph.setFromPersistenceDataDict(dictData, &info);
+  bool dataRestored = _spliceGraph.setFromPersistenceDataDict(dictData, &info, file.asChar());
 
   if(dataRestored){
     // const FabricCore::Variant * manipulationCommandVar = dictData.getDictValue("manipulationCommand");
@@ -1140,6 +1179,22 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
   }
 
   _restoredFromPersistenceData = true;
+
+  // update all attributes, and eventually add new ones!
+  if(_spliceGraph.isReferenced())
+  {
+    MFnDependencyNode thisNode(getThisMObject());
+    for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+      std::string portName = _spliceGraph.getDGPortName(i);
+      FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.c_str());
+
+      MPlug plug = thisNode.findPlug(portName.c_str());
+      if(plug.isNull())
+      {
+        createAttributeForPort(port);
+      }
+    }
+  }
 
   invalidateNode();
 
@@ -1172,7 +1227,9 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
 void FabricSpliceBaseInterface::resetInternalData(MStatus *stat){
   MAYASPLICE_CATCH_BEGIN(stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::resetInternalData()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::resetInternalData()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::resetInternalData()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   _spliceGraph.clear();
 
@@ -1201,13 +1258,52 @@ void FabricSpliceBaseInterface::invalidatePlug(MPlug & plug)
   }
 
   MGlobal::executeCommandOnIdle(command+plugName);
+
+  if(plugName.index('.') > -1)
+  {
+    plugName = plugName.substring(plugName.index('.')+1, plugName.length());
+  	if(plugName.index('[') > -1)
+	   plugName = plugName.substring(0, plugName.index('[')-1);
+
+    FabricSplice::DGPort port = getPort(plugName.asChar());
+    if(port.isValid())
+    {
+      std::string dataType = port.getDataType();
+      if(dataType.substr(0, 8) == "Compound")
+      {
+        // ensure to set the attribute values one more time
+        // to guarantee that the values are reflected within KL
+        MStringArray cmds;
+        plug.getSetAttrCmds(cmds);
+        for(unsigned int i=0;i<cmds.length();i++)
+        {
+          // strip
+          while(cmds[i].asChar()[0] == ' ' || cmds[i].asChar()[0] == '\t')
+            cmds[i] = cmds[i].substring(1, cmds[i].length());
+
+          // ensure to only use direct setAttr's
+          if(cmds[i].substring(0, 9) == "setAttr \".")
+          {
+            MFnDependencyNode node(plug.node());
+            MString cmdPlugName = cmds[i].substring(9, cmds[i].length());
+            cmdPlugName = cmdPlugName.substring(0, cmdPlugName.index('"')-1);
+            MString condition = "if(size(`listConnections -d no \"" + node.name() + cmdPlugName +"\"`) == 0)";
+            cmds[i] = condition + "{ setAttr \"" + node.name() + cmds[i].substring(9, cmds[i].length()) + " }";
+            MGlobal::executeCommandOnIdle(cmds[i]);
+          }
+        }
+      }
+    }
+  }
 }
 
 void FabricSpliceBaseInterface::invalidateNode()
 {
   if(!_dgDirtyEnabled)
     return;
-  FabricSplice::Logging::AutoTimer timer("Maya::invalidateNode()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::invalidateNode()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::invalidateNode()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   MFnDependencyNode thisNode(getThisMObject());
 
@@ -1255,6 +1351,8 @@ void FabricSpliceBaseInterface::invalidateNode()
       else
       {
         invalidatePlug(plug);
+        if(mode == FabricSplice::Port_Mode_IO)
+          collectDirtyPlug(plug);
 
         MPlugArray plugs;
         affectChildPlugs(plug, plugs);
@@ -1305,7 +1403,9 @@ FabricSplice::DGPort FabricSpliceBaseInterface::getPort(MString name)
 
 void FabricSpliceBaseInterface::saveToFile(MString fileName)
 {
-  FabricSplice::Logging::AutoTimer timer("Maya::saveToFile()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::saveToFile()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::saveToFile()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   FabricSplice::PersistenceInfo info;
   info.hostAppName = FabricCore::Variant::CreateString("Maya");
@@ -1315,19 +1415,21 @@ void FabricSpliceBaseInterface::saveToFile(MString fileName)
   _spliceGraph.saveToFile(fileName.asChar(), &info);
 }
 
-MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName)
+MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName, bool asReferenced)
 {
   MStatus loadStatus;
   MAYASPLICE_CATCH_BEGIN(&loadStatus);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::loadFromFile()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::loadFromFile()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::loadFromFile()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   FabricSplice::PersistenceInfo info;
   info.hostAppName = FabricCore::Variant::CreateString("Maya");
   info.hostAppVersion = FabricCore::Variant::CreateString(MGlobal::mayaVersion().asChar());
   info.filePath = FabricCore::Variant::CreateString(fileName.asChar());
 
-  _spliceGraph.loadFromFile(fileName.asChar());
+  _spliceGraph.loadFromFile(fileName.asChar(), &info, asReferenced);
 
   // create all relevant maya attributes
   for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
@@ -1335,100 +1437,223 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName)
     FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.c_str());
     if(!port.isValid())
       continue;
-
-    MString dataType = port.getDataType();
-    if(port.hasOption("opaque")) {
-      if(port.getOption("opaque").getBoolean())
-        dataType = "SpliceMayaData";
-    }
-
-    bool isArray = port.isArray();
-    FabricSplice::Port_Mode portMode = port.getMode();
-
-    MString arrayType = "Single Value";
-    if(isArray)
-      arrayType = "Array (Multi)";
-
-    bool addMayaAttr = true;
-    if(port.hasOption("internal")) {
-      if(port.getOption("internal").getBoolean())
-        addMayaAttr = false;
-    }
-
-    if(port.hasOption("nativeArray")) {
-      if(port.getOption("nativeArray").getBoolean())
-        arrayType = "Array (Native)";
-    }
-
-    FabricCore::Variant compoundStructure;
-    if(port.hasOption("compoundStructure")) {
-      compoundStructure = port.getOption("compoundStructure");
-    }
-
-    if(addMayaAttr)
-    {
-      MStatus portStatus;
-      addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, false, compoundStructure, &portStatus);
-      if(portStatus != MS::kSuccess)
-        return portStatus;
-
-      if(portMode != FabricSplice::Port_Mode_OUT)
-      {
-        MFnDependencyNode thisNode(getThisMObject());
-        MPlug plug = thisNode.findPlug(portName.c_str());
-        if(!plug.isNull())
-        {
-          FabricCore::Variant variant = port.getDefault();
-          if(variant.isString())
-            plug.setString(variant.getStringData());
-          else if(variant.isBoolean())
-            plug.setBool(variant.getBoolean());
-          else if(variant.isNull())
-            continue;
-          else if(variant.isArray())
-            continue;
-          else if(variant.isDict())
-            continue;
-          else
-          {
-            float value = 0.0;
-            if(variant.isSInt8())
-              value = (float)variant.getSInt8();
-            else if(variant.isSInt16())
-              value = (float)variant.getSInt16();
-            else if(variant.isSInt32())
-              value = (float)variant.getSInt32();
-            else if(variant.isSInt64())
-              value = (float)variant.getSInt64();
-            else if(variant.isUInt8())
-              value = (float)variant.getUInt8();
-            else if(variant.isUInt16())
-              value = (float)variant.getUInt16();
-            else if(variant.isUInt32())
-              value = (float)variant.getUInt32();
-            else if(variant.isUInt64())
-              value = (float)variant.getUInt64();
-            else if(variant.isFloat32())
-              value = (float)variant.getFloat32();
-            else if(variant.isFloat64())
-              value = (float)variant.getFloat64();
-            MDataHandle handle = plug.asMDataHandle();
-            if(handle.numericType() == MFnNumericData::kFloat)
-              plug.setFloat(value);
-            else if(handle.numericType() == MFnNumericData::kDouble)
-              plug.setDouble(value);
-            else if(handle.numericType() == MFnNumericData::kInt)
-              plug.setInt((int)value);
-          }
-        }
-      }
-    }
+    createAttributeForPort(port);
   }
 
   invalidateNode();
 
   MAYASPLICE_CATCH_END(&loadStatus);
   return loadStatus;
+}
+
+MStatus FabricSpliceBaseInterface::reloadFromFile()
+{
+  MStatus reloadStatus;
+  MAYASPLICE_CATCH_BEGIN(&reloadStatus);
+
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::loadFromFile()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::loadFromFile()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
+
+  FabricSplice::PersistenceInfo info;
+  info.hostAppName = FabricCore::Variant::CreateString("Maya");
+  info.hostAppVersion = FabricCore::Variant::CreateString(MGlobal::mayaVersion().asChar());
+  info.filePath = FabricCore::Variant::CreateString(_spliceGraph.getReferencedFilePath());
+
+  _spliceGraph.reloadFromFile(&info);
+
+  // create all relevant maya attributes
+  for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+    std::string portName = _spliceGraph.getDGPortName(i);
+    FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.c_str());
+    if(!port.isValid())
+      continue;
+    createAttributeForPort(port);
+  }
+
+  invalidateNode();
+
+  MAYASPLICE_CATCH_END(&reloadStatus);
+  return reloadStatus;
+}
+
+float createAttributeForPort_getFloatFromVariant(const FabricCore::Variant * variant)
+{
+  float value = 0.0;
+  if(variant->isSInt8())
+    value = (float)variant->getSInt8();
+  else if(variant->isSInt16())
+    value = (float)variant->getSInt16();
+  else if(variant->isSInt32())
+    value = (float)variant->getSInt32();
+  else if(variant->isSInt64())
+    value = (float)variant->getSInt64();
+  else if(variant->isUInt8())
+    value = (float)variant->getUInt8();
+  else if(variant->isUInt16())
+    value = (float)variant->getUInt16();
+  else if(variant->isUInt32())
+    value = (float)variant->getUInt32();
+  else if(variant->isUInt64())
+    value = (float)variant->getUInt64();
+  else if(variant->isFloat32())
+    value = (float)variant->getFloat32();
+  else if(variant->isFloat64())
+    value = (float)variant->getFloat64();
+  return value;  
+}
+
+void createAttributeForPort_setFloatOnPlug(MPlug & plug, float value)
+{
+  MDataHandle handle = plug.asMDataHandle();
+  if(handle.numericType() == MFnNumericData::kFloat)
+    plug.setFloat(value);
+  else if(handle.numericType() == MFnNumericData::kDouble)
+    plug.setDouble(value);
+  else if(handle.numericType() == MFnNumericData::kInt)
+    plug.setInt((int)value);
+}
+
+MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort port)
+{
+  MStatus portStatus;
+  MAYASPLICE_CATCH_BEGIN(&portStatus);
+
+  std::string portName = port.getName();
+
+  MString dataType = port.getDataType();
+  if(port.hasOption("opaque")) {
+    if(port.getOption("opaque").getBoolean())
+      dataType = "SpliceMayaData";
+  }
+
+  bool isArray = port.isArray();
+  FabricSplice::Port_Mode portMode = port.getMode();
+
+  MString arrayType = "Single Value";
+  if(isArray)
+    arrayType = "Array (Multi)";
+
+  bool addMayaAttr = true;
+  if(port.hasOption("internal")) {
+    if(port.getOption("internal").getBoolean())
+      addMayaAttr = false;
+  }
+
+  if(port.hasOption("nativeArray")) {
+    if(port.getOption("nativeArray").getBoolean())
+      arrayType = "Array (Native)";
+  }
+
+  FabricCore::Variant compoundStructure;
+  if(port.hasOption("compoundStructure")) {
+    compoundStructure = port.getOption("compoundStructure");
+  }
+
+  if(addMayaAttr && !isArray)
+  {
+    MFnDependencyNode thisNode(getThisMObject());
+    MPlug plug = thisNode.findPlug(portName.c_str());
+    if(!plug.isNull())
+      return portStatus;
+
+    MStatus attributeStatus;
+    addMayaAttribute(portName.c_str(), dataType, arrayType, portMode, false, compoundStructure, &attributeStatus);
+    if(attributeStatus != MS::kSuccess)
+      return attributeStatus;
+
+    if(portMode != FabricSplice::Port_Mode_OUT)
+    {
+      MFnDependencyNode thisNode(getThisMObject());
+      MPlug plug = thisNode.findPlug(portName.c_str());
+      if(!plug.isNull())
+      {
+        FabricCore::Variant variant = port.getDefault();
+        if(variant.isString())
+          plug.setString(variant.getStringData());
+        else if(variant.isBoolean())
+          plug.setBool(variant.getBoolean());
+        else if(variant.isNull())
+          return MStatus::kSuccess;
+        else if(variant.isArray())
+          return MStatus::kSuccess;
+        else if(variant.isDict())
+        {
+          if(dataType == "Vec3")
+          {
+            MPlug x = plug.child(0);
+            MPlug y = plug.child(1);
+            MPlug z = plug.child(2);
+            if(!x.isNull() && !x.isNull() && !z.isNull())
+            {
+              const FabricCore::Variant * xVar = variant.getDictValue("x");
+              const FabricCore::Variant * yVar = variant.getDictValue("y");
+              const FabricCore::Variant * zVar = variant.getDictValue("z");
+              if(xVar && yVar && zVar)
+              {
+                createAttributeForPort_setFloatOnPlug(x, createAttributeForPort_getFloatFromVariant(xVar));
+                createAttributeForPort_setFloatOnPlug(y, createAttributeForPort_getFloatFromVariant(yVar));
+                createAttributeForPort_setFloatOnPlug(z, createAttributeForPort_getFloatFromVariant(zVar));
+              }
+            }
+          }
+          else if(dataType == "Euler")
+          {
+            MPlug x = plug.child(0);
+            MPlug y = plug.child(1);
+            MPlug z = plug.child(2);
+            if(!x.isNull() && !x.isNull() && !z.isNull())
+            {
+              const FabricCore::Variant * xVar = variant.getDictValue("x");
+              const FabricCore::Variant * yVar = variant.getDictValue("y");
+              const FabricCore::Variant * zVar = variant.getDictValue("z");
+              if(xVar && yVar && zVar)
+              {
+                MAngle xangle(createAttributeForPort_getFloatFromVariant(xVar), MAngle::kRadians);
+                x.setMAngle(xangle);
+                MAngle yangle(createAttributeForPort_getFloatFromVariant(yVar), MAngle::kRadians);
+                y.setMAngle(yangle);
+                MAngle zangle(createAttributeForPort_getFloatFromVariant(zVar), MAngle::kRadians);
+                z.setMAngle(zangle);
+              }
+            }
+          }
+          else if(dataType == "Color")
+          {
+            const FabricCore::Variant * rVar = variant.getDictValue("r");
+            const FabricCore::Variant * gVar = variant.getDictValue("g");
+            const FabricCore::Variant * bVar = variant.getDictValue("b");
+            if(rVar && gVar && bVar)
+            {
+              MDataHandle handle = plug.asMDataHandle();
+              if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
+                handle.setMFloatVector(MFloatVector(
+                  createAttributeForPort_getFloatFromVariant(rVar),
+                  createAttributeForPort_getFloatFromVariant(gVar),
+                  createAttributeForPort_getFloatFromVariant(bVar)
+                ));
+              }else{
+                handle.setMVector(MVector(
+                  createAttributeForPort_getFloatFromVariant(rVar),
+                  createAttributeForPort_getFloatFromVariant(gVar),
+                  createAttributeForPort_getFloatFromVariant(bVar)
+                ));
+              }
+            }
+          }
+        }
+        else
+        {
+          float value = createAttributeForPort_getFloatFromVariant(&variant);
+          createAttributeForPort_setFloatOnPlug(plug, value);
+        }
+      }
+    }
+  }
+
+  MAYASPLICE_CATCH_END(&portStatus);  
+
+  return portStatus;
 }
 
 bool FabricSpliceBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
@@ -1447,7 +1672,9 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
 
   MFnDependencyNode thisNode(thisMObject);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty()");
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::setDependentsDirty()");
+  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setDependentsDirty()").c_str();
+  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
@@ -1457,8 +1684,6 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
 
   if(_affectedPlugsDirty)
   {
-    FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty() _affectedPlugsDirty");
-
     if(_affectedPlugs.length() > 0)
       affectedPlugs.setSizeIncrement(_affectedPlugs.length());
     
@@ -1483,10 +1708,7 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
     _affectedPlugsDirty = false;
   }
 
-  {
-    FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty() copying _affectedPlugs");
-    affectedPlugs = _affectedPlugs;
-  }
+  affectedPlugs = _affectedPlugs;
 
   _outputsDirtied = true;
 }

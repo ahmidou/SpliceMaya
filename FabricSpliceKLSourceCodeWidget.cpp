@@ -40,7 +40,7 @@ void FabricSpliceKLLineNumberWidget::paintEvent ( QPaintEvent * event )
   int height = event->rect().height();
   int offset = lineHeight;
   if(mLineOffset == 0)
-    offset += 4;
+    offset += 2;
   else
     offset -= 0;
 

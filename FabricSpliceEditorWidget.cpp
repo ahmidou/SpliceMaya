@@ -251,6 +251,41 @@ FabricSpliceBaseInterface * FabricSpliceEditorWidget::getCurrentBaseInterface()
   return node;
 }
 
+void FabricSpliceEditorWidget::performReferencedCheck()
+{
+  std::string nodeName = getCurrentNodeName();
+  if(nodeName.length() == 0)
+    return;
+  FabricSpliceBaseInterface * node = FabricSpliceBaseInterface::getInstanceByName(nodeName);
+  if(node == NULL)
+    return;
+
+  if(node->getSpliceGraph().isReferenced())
+  {
+    mSourceCode->setEnabled(false);
+    mAttrList->setEnabled(false);
+    mOperatorList->setEnabled(false);
+    mAddAttrButton->setEnabled(false);
+    mRemoveAttrButton->setEnabled(false);
+    mAddOpButton->setEnabled(false);
+    mEditOpButton->setEnabled(false);
+    mRemoveOpButton->setEnabled(false);
+    mCompileButton->setEnabled(false);
+  }
+  else
+  {
+    mSourceCode->setEnabled(!node->getSpliceGraph().isKLOperatorFileBased(mOpName.c_str()));
+    mAttrList->setEnabled(true);
+    mOperatorList->setEnabled(true);
+    mAddAttrButton->setEnabled(true);
+    mRemoveAttrButton->setEnabled(true);
+    mAddOpButton->setEnabled(true);
+    mEditOpButton->setEnabled(true);
+    mRemoveOpButton->setEnabled(true);
+    mCompileButton->setEnabled(true);
+  }
+}
+
 void FabricSpliceEditorWidget::onNodeChanged(void * userData)
 {
   MStatus status;
@@ -314,6 +349,8 @@ void FabricSpliceEditorWidget::onNodeChanged(void * userData)
     }
   }
 
+  editor->performReferencedCheck();
+
   MAYASPLICE_CATCH_END(&status);
 }
 
@@ -331,9 +368,15 @@ void FabricSpliceEditorWidget::onOperatorChanged(void * userData)
   if(interf != NULL && opName.length() > 0)
     code = interf->getSpliceGraph().getKLOperatorSourceCode(opName.c_str());
   editor->mSourceCode->setSourceCode(opName, code);
-  editor->mSourceCode->setEnabled(true);
+
+  if(interf != NULL)
+    editor->mSourceCode->setEnabled(!interf->getSpliceGraph().isKLOperatorFileBased(opName.c_str()));
+  else
+    editor->mSourceCode->setEnabled(false);
   editor->mErrorLog->setText("");
   editor->mErrorLog->hide();
+
+  editor->performReferencedCheck();
 
   MAYASPLICE_CATCH_END(&status);
 }
@@ -526,6 +569,7 @@ void FabricSpliceEditorWidget::addOpPressed(void * userData)
       MAYASPLICE_CATCH_BEGIN(&status);
         code = node->getSpliceGraph().getKLOperatorSourceCode(name.c_str());
         editor->mSourceCode->setSourceCode(name, code);
+        editor->mSourceCode->setEnabled(!node->getSpliceGraph().isKLOperatorFileBased(name.c_str()));
       MAYASPLICE_CATCH_END(&status);
 
       editor->update();

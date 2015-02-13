@@ -445,15 +445,20 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             args[0] = childNameRTVal;
             childRTVal = FabricSplice::constructObjectRTVal("SInt32ArrayParam", 1, &args[0]);
 
-            MIntArray arrayValues = MFnIntArrayData(handle.data()).array();
-            unsigned int numArrayValues = arrayValues.length();
-            args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
-            childRTVal.callMethod("", "resize", 1, &args[0]);
+            MStatus arrayStat;
+            MFnIntArrayData arrayData(childHandle.data(), &arrayStat);
+            if(arrayStat == MStatus::kSuccess)
+            {
+              MIntArray arrayValues = arrayData.array();
+              unsigned int numArrayValues = arrayValues.length();
+              args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
+              childRTVal.callMethod("", "resize", 1, &args[0]);
 
-            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
-            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
-            void * data = dataRTVal.getData();
-            memcpy(data, &arrayValues[0], sizeof(int32_t) * numArrayValues);
+              FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+              FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+              void * data = dataRTVal.getData();
+              memcpy(data, &arrayValues[0], sizeof(int32_t) * numArrayValues);
+            }
           }
           else
           {
@@ -468,15 +473,20 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             args[0] = childNameRTVal;
             childRTVal = FabricSplice::constructObjectRTVal("Float64ArrayParam", 1, &args[0]);
 
-            MDoubleArray arrayValues = MFnDoubleArrayData(handle.data()).array();
-            unsigned int numArrayValues = arrayValues.length();
-            args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
-            childRTVal.callMethod("", "resize", 1, &args[0]);
+            MStatus arrayStat;
+            MFnDoubleArrayData arrayData(childHandle.data(), &arrayStat);
+            if(arrayStat == MStatus::kSuccess)
+            {
+              MDoubleArray arrayValues = arrayData.array();
+              unsigned int numArrayValues = arrayValues.length();
+              args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
+              childRTVal.callMethod("", "resize", 1, &args[0]);
 
-            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
-            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
-            void * data = dataRTVal.getData();
-            memcpy(data, &arrayValues[0], sizeof(double) * numArrayValues);
+              FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+              FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+              void * data = dataRTVal.getData();
+              memcpy(data, &arrayValues[0], sizeof(double) * numArrayValues);
+            }
           }
           else
           {
@@ -491,15 +501,20 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             args[0] = childNameRTVal;
             childRTVal = FabricSplice::constructObjectRTVal("Vec3ArrayParam", 1, &args[0]);
 
-            MVectorArray arrayValues = MFnVectorArrayData(handle.data()).array();
-            unsigned int numArrayValues = arrayValues.length();
-            args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
-            childRTVal.callMethod("", "resize", 1, &args[0]);
+            MStatus arrayStat;
+            MFnVectorArrayData arrayData(childHandle.data(), &arrayStat);
+            if(arrayStat == MStatus::kSuccess)
+            {
+              MVectorArray arrayValues = arrayData.array();
+              unsigned int numArrayValues = arrayValues.length();
+              args[0] = FabricSplice::constructUInt32RTVal(numArrayValues);
+              childRTVal.callMethod("", "resize", 1, &args[0]);
 
-            FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
-            FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
-            float * data = (float*)dataRTVal.getData();
-            arrayValues.get((floatVec*)data);
+              FabricCore::RTVal valuesRTVal = childRTVal.maybeGetMember("values");
+              FabricCore::RTVal dataRTVal = valuesRTVal.callMethod("Data", "data", 0, 0);
+              float * data = (float*)dataRTVal.getData();
+              arrayValues.get((floatVec*)data);
+            }
           }
           else
           {
@@ -576,6 +591,8 @@ void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
     FabricCore::RTVal numElements = FabricSplice::constructUInt32RTVal(plug.numElements());
     compoundVals.callMethod("", "resize", 1, &numElements);
 
+    FabricCore::RTVal paramsArray = compoundVals.maybeGetMember("params");
+
     for(unsigned int j=0;j<plug.numElements();j++) {
 
       MPlug element = plug.elementByPhysicalIndex(j);
@@ -584,7 +601,14 @@ void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
 
       FabricCore::RTVal compoundVal = FabricSplice::constructObjectRTVal("CompoundParam");
       plugToPort_compound_convertCompound(compound, handle, compoundVal);
-      compoundVals.callMethod("", "addParam", 1, &compoundVal);
+
+      if(j == 0)
+        compoundVals.callMethod("", "addParam", 1, &compoundVal);
+      else
+      {
+        FabricCore::RTVal paramArray = paramsArray.getArrayElement(j);
+        paramArray.setArrayElement(0, compoundVal);
+      }
     }
     port.setRTVal(compoundVals);
   }
@@ -2784,32 +2808,35 @@ void portToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtM
 
     if(rtMesh.callMethod("Boolean", "hasUVs", 0, 0).getBoolean())
     {
-      MFloatArray values(nbSamples*2);
-      std::vector<FabricCore::RTVal> args(2);
-      args[0] = FabricSplice::constructExternalArrayRTVal("Float32", values.length(), &values[0]);
-      args[1] = FabricSplice::constructUInt32RTVal(2); // components
-      rtMesh.callMethod("", "getUVsAsExternalArray", 2, &args[0]);
+      FabricCore::RTVal packedIndicesVal = FabricSplice::constructRTVal("UInt32[]");
+      FabricCore::RTVal packedUVsVal = rtMesh.callMethod("Vec2[]", "getUVsAsPackedArray", 1, &packedIndicesVal);
 
-      MFloatArray u, v;
-      u.setLength(nbSamples);      
-      v.setLength(nbSamples);      
-      unsigned int offset = 0;
-      for(unsigned int i=0;i<u.length();i++)
+      if(packedUVsVal.getArraySize() > 0)
       {
-        u[i] = values[offset++];
-        v[i] = values[offset++];
+        uint32_t * packedIndices = (uint32_t *)packedIndicesVal.callMethod("Data", "data", 0, 0).getData();
+        float * packedValues = (float *)packedUVsVal.callMethod("Data", "data", 0, 0).getData();
+
+        MFloatArray u, v;
+        u.setLength(packedUVsVal.getArraySize());      
+        v.setLength(packedUVsVal.getArraySize());      
+        unsigned int offset = 0;
+        for(unsigned int i=0;i<u.length();i++)
+        {
+          u[i] = packedValues[offset++];
+          v[i] = packedValues[offset++];
+        }
+        
+        MIntArray mayaPackedIndices;
+        mayaPackedIndices.setLength(packedIndicesVal.getArraySize());
+        for(unsigned int i=0;i<mayaPackedIndices.length();i++)
+          mayaPackedIndices[i] = (int)packedIndices[i];
+
+        MString setName("map1");
+        mesh.createUVSet(setName);
+        mesh.setCurrentUVSetName(setName);
+        mesh.setUVs(u, v);
+        mesh.assignUVs(mayaCounts, mayaPackedIndices);
       }
-      values.clear();
-      MString setName("map1");
-      mesh.createUVSet(setName);
-      mesh.setCurrentUVSetName(setName);
-
-      mesh.setUVs(u, v);
-
-      MIntArray indices(nbSamples);
-      for(unsigned int i=0;i<nbSamples;i++)
-        indices[i] = i;
-      mesh.assignUVs(mayaCounts, indices);
     }
 
     if(rtMesh.callMethod("Boolean", "hasVertexColors", 0, 0).getBoolean())
