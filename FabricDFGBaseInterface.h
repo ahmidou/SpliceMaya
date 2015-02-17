@@ -1,6 +1,8 @@
 #ifndef _FABRICDFGBASEINTERFACE_H_
 #define _FABRICDFGBASEINTERFACE_H_
 
+#include <DFG/DFGUI.h>
+
 #include "FabricSpliceConversion.h"
 #include "plugin.h"
 
@@ -15,7 +17,6 @@
 #include <maya/MFnCompoundAttribute.h>
 
 #include <FabricSplice.h>
-#include <DFG/DFGUI.h>
 #include <DFG/DFGValueEditor.h>
 #include <Commands/CommandStack.h>
 #include <DFGWrapper/DFGWrapper.h>
