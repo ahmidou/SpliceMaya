@@ -48,6 +48,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
       m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
       m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_F, Qt::NoModifier, "frameSelected");
       m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_A, Qt::NoModifier, "frameAll");
+      m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
 
       QObject::connect(m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)), this, SLOT(onValueChanged()));
       QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
@@ -141,6 +142,10 @@ void FabricDFGWidget::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers,
   else if(hotkey == "frameAll")
   {
     m_dfgWidget->getUIController()->frameAllNodes();
+  }
+  else if(hotkey == "tabSearch")
+  {
+    m_dfgWidget->getTabSearchWidget()->showForSearch();
   }
 }
 
