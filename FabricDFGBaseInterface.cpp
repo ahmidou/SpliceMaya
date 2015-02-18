@@ -145,6 +145,11 @@ FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceById(unsigned int id
   return NULL;
 }
 
+unsigned int FabricDFGBaseInterface::getNumInstances()
+{
+  return (unsigned int)_instances.size();
+}
+
 unsigned int FabricDFGBaseInterface::getId() const
 {
   return m_id;

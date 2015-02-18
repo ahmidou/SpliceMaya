@@ -2,6 +2,7 @@
 
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceBaseInterface.h"
+#include "FabricDFGBaseInterface.h"
 #include "FabricSpliceToolContext.h"
 
 #include <maya/MGlobal.h>
@@ -136,7 +137,7 @@ void FabricSpliceRenderCallback::draw(const MString &str, void *clientData){
 
   try
   {
-    if(!FabricSplice::SceneManagement::hasRenderableContent())
+    if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
       return;
   }
   catch(FabricCore::Exception e)

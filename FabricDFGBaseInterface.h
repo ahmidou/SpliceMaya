@@ -46,6 +46,7 @@ public:
 
   static FabricDFGBaseInterface * getInstanceByName(const std::string & name);
   static FabricDFGBaseInterface * getInstanceById(unsigned int id);
+  static unsigned int getNumInstances();
 
   virtual MObject getThisMObject() = 0;
   virtual MPlug getSaveDataPlug() = 0;
