@@ -3,4 +3,4 @@ FABRIC_DIR := ../..
 FABRIC_EXTS_PATH +:= ../../Exts
 FABRIC_DFG_PATH +:= ../../Presets/DFG
 PYTHONPATH +:= python/{{PYTHON_VERSION}}
-PATH +:= plug-ins
+PATH +:= ../../bin
