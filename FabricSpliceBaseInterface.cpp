@@ -1550,7 +1550,7 @@ MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort p
     compoundStructure = port.getOption("compoundStructure");
   }
 
-  if(addMayaAttr && !isArray)
+  if(addMayaAttr)
   {
     MFnDependencyNode thisNode(getThisMObject());
     MPlug plug = thisNode.findPlug(portName.c_str());
@@ -1562,7 +1562,7 @@ MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort p
     if(attributeStatus != MS::kSuccess)
       return attributeStatus;
 
-    if(portMode != FabricSplice::Port_Mode_OUT)
+    if(portMode != FabricSplice::Port_Mode_OUT && !isArray)
     {
       MFnDependencyNode thisNode(getThisMObject());
       MPlug plug = thisNode.findPlug(portName.c_str());
