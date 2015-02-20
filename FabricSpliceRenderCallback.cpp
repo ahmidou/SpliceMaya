@@ -1,8 +1,6 @@
-#include <QtCore/QtCore>
-
+#include "FabricDFGBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceBaseInterface.h"
-#include "FabricDFGBaseInterface.h"
 #include "FabricSpliceToolContext.h"
 
 #include <maya/MGlobal.h>
