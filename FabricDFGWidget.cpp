@@ -53,6 +53,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
       QObject::connect(m_dfgValueEditor, SIGNAL(valueChanged(ValueItem*)), this, SLOT(onValueChanged()));
       QObject::connect(m_dfgWidget->getUIController(), SIGNAL(structureChanged()), this, SLOT(onStructureChanged()));
       QObject::connect(m_dfgWidget->getUIController(), SIGNAL(recompiled()), this, SLOT(onRecompilation()));
+      QObject::connect(m_dfgWidget->getUIController(), SIGNAL(portRenamed(QString, QString)), this, SLOT(onPortRenamed(QString, QString)));
       QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)), 
         this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
       QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(nodeDoubleClicked(FabricUI::GraphView::Node*)), 
@@ -123,6 +124,27 @@ void FabricDFGWidget::onRecompilation()
   {
     interf->invalidateNode();
   }
+}
+
+void FabricDFGWidget::onPortRenamed(QString path, QString newName)
+{
+  // ignore ports which are not args
+  if(path.indexOf('.') > 0)
+    return;
+
+  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(m_baseInterfaceName.c_str());
+  if(!interf)
+    return;
+
+  MFnDependencyNode thisNode(interf->getThisMObject());
+  MPlug plug = thisNode.findPlug(path.toUtf8().constData());
+  if(plug.isNull())
+    return;
+
+  MString cmdStr = "renameAttr \"";
+  cmdStr += thisNode.name() + "." + MString(path.toUtf8().constData());
+  cmdStr += "\" \"" + MString(newName.toUtf8().constData()) + "\";";
+  MGlobal::executeCommandOnIdle(cmdStr, false);
 }
 
 void FabricDFGWidget::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QString hotkey)

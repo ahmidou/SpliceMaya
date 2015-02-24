@@ -39,6 +39,7 @@ public slots:
   void onValueChanged();
   void onStructureChanged();
   void onRecompilation();
+  void onPortRenamed(QString path, QString newName);
   void hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString);
   void onNodeDoubleClicked(FabricUI::GraphView::Node * node);
 
