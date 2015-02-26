@@ -207,17 +207,21 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
         continue;
       if(port.getPortType() != FabricCore::DFGPortType_Out){
 
-        std::string dataType = port.getDataType();
+        std::string portDataType = port.getDataType();
+
+        if(portDataType.substr(portDataType.length()-2, 2) == "[]")
+          portDataType = portDataType.substr(0, portDataType.length()-2);
+
         for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
         {
           if(mSpliceMayaDataOverride[j] == plugName.asChar())
           {
-            dataType = "SpliceMayaData";
+            portDataType = "SpliceMayaData";
             break;
           }
         }
         
-        DFGPlugToPortFunc func = getDFGPlugToPortFunc(dataType, &port);
+        DFGPlugToPortFunc func = getDFGPlugToPortFunc(portDataType, &port);
         if(func != NULL)
           (*func)(plug, data, port);
       }
@@ -295,6 +299,9 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
       
       std::string portName = ports[i].getName();
       std::string portDataType = ports[i].getDataType();
+
+      if(portDataType.substr(portDataType.length()-2, 2) == "[]")
+        portDataType = portDataType.substr(0, portDataType.length()-2);
 
       MPlug plug = thisNode.findPlug(portName.c_str());
       if(!plug.isNull()){
