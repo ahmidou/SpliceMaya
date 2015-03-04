@@ -75,8 +75,11 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 
   resize(1000, 500);
   QList<int> s = sizes();
-  s[0] = 200;
-  s[1] = 800;
+  // s[0] = 200;
+  // s[1] = 800;
+  // s[2] = 0;
+  s[0] = 0;
+  s[1] = 1000;
   s[2] = 0;
   setSizes(s);
 }

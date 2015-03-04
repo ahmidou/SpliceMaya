@@ -861,7 +861,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Integer" || dataTypeOverride == "SInt32")
+  else if(dataTypeOverride == "Integer" || dataTypeOverride == "SInt32" || dataTypeOverride == "UInt32")
   {
     if(arrayType == "Single Value")
     {
@@ -903,7 +903,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     //   }
     // }
   }
-  else if(dataTypeOverride == "Scalar" || dataTypeOverride == "Float32")
+  else if(dataTypeOverride == "Scalar" || dataTypeOverride == "Float32" || dataTypeOverride == "Float64")
   {
     bool isUnitAttr = true;
     // std::string scalarUnit = getStringOption("scalarUnit", compoundStructure);

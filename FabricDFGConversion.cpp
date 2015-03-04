@@ -3052,7 +3052,7 @@ DFGPlugToPortFunc getDFGPlugToPortFunc(const std::string & dataType, const Fabri
     return dfgPlugToPort_compoundArray;
   if(dataType == "Boolean")
     return dfgPlugToPort_bool;
-  if(dataType == "Integer" || dataType == "SInt32")
+  if(dataType == "Integer" || dataType == "SInt32" || dataType == "UInt32")
     return dfgPlugToPort_integer;
   if(dataType == "Scalar" || dataType == "Float32" || dataType == "Float64")
     return dfgPlugToPort_scalar;
@@ -3084,7 +3084,7 @@ DFGPortToPlugFunc getDFGPortToPlugFunc(const std::string & dataType, const Fabri
     return dfgPortToPlug_compound;
   if(dataType == "Boolean")
     return dfgPortToPlug_bool;
-  if(dataType == "Integer" || dataType == "SInt32")
+  if(dataType == "Integer" || dataType == "SInt32" || dataType == "UInt32")
     return dfgPortToPlug_integer;
   if(dataType == "Scalar" || dataType == "Float32" || dataType == "Float64")
     return dfgPortToPlug_scalar;
