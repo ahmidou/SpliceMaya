@@ -1005,3 +1005,60 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
 
   return MS::kSuccess;
 }
+
+MSyntax FabricDFGSetNodeCacheRuleCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
+  syntax.addFlag("-p", "-path", MSyntax::kString);
+  syntax.addFlag("-r", "-cacheRule", MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGSetNodeCacheRuleCommand::creator()
+{
+  return new FabricDFGSetNodeCacheRuleCommand;
+}
+
+MStatus FabricDFGSetNodeCacheRuleCommand::doIt(const MArgList &args)
+{
+  MStatus baseStatus = FabricDFGBaseCommand::doIt(args);
+  if(baseStatus != MS::kSuccess)
+    return baseStatus;
+  if(m_cmdInfo.id != UINT_MAX)
+    return MS::kSuccess;
+  FabricDFGBaseInterface * interf = getInterf();
+  if(!interf)
+    return MS::kNotFound;
+
+  MStatus status;
+  MArgParser argData(syntax(), args, &status);
+  if(!argData.isFlagSet("path"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Path (-p, -path) not provided.");
+    return mayaErrorOccured();
+  }
+  if(!argData.isFlagSet("cacheRule"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": CacheRule (-r, -cacheRule) not provided.");
+    return mayaErrorOccured();
+  }
+
+  MString path = argData.flagArgumentString("path", 0);
+  MString cacheRuleName = argData.flagArgumentString("cacheRule", 0);
+
+  FEC_DFGCacheRule cacheRule = FEC_DFGCacheRule_Unspecified;
+  if(cacheRuleName ==  "Always")
+    cacheRule = FEC_DFGCacheRule_Always;
+  if(cacheRuleName == "Never")
+    cacheRule = FEC_DFGCacheRule_Never;
+  
+  FabricDFGCommandStack::enableMayaCommands(false);
+  interf->getDFGController()->setNodeCacheRule(path.asChar(), cacheRule);
+  FabricDFGCommandStack::enableMayaCommands(true);
+  m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+
+  return MS::kSuccess;
+}

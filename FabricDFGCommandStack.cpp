@@ -15,6 +15,7 @@
 #include <DFG/Commands/DFGSetArgCommand.h>
 #include <DFG/Commands/DFGSetDefaultValueCommand.h>
 #include <DFG/Commands/DFGSetCodeCommand.h>
+#include <DFG/Commands/DFGSetNodeCacheRuleCommand.h>
 
 using namespace FabricServices;
 using namespace FabricUI;
@@ -344,6 +345,23 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString cmdStr = "dfgSetCode -node \""+nodeName+"\"";
       cmdStr += " -path \""+path+"\"";
       cmdStr += " -code \""+MString(escapeString(code).c_str())+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgSetNodeCacheRule")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGSetNodeCacheRuleCommand * cmd = (DFG::DFGSetNodeCacheRuleCommand*)genericCommand;
+      MString nodeName = getNodeNameFromCommand(cmd);
+      MString path = cmd->getPath().toUtf8().constData();
+      MString cacheRule = cmd->getRuleName().toUtf8().constData();
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgSetNodeCacheRule -node \""+nodeName+"\"";
+      cmdStr += " -path \""+path+"\"";
+      cmdStr += " -cacheRule \""+cacheRule+"\"";
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
   }

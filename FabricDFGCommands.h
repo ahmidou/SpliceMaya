@@ -191,4 +191,14 @@ public:
   virtual MStatus doIt(const MArgList &args);
 };
 
+class FabricDFGSetNodeCacheRuleCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgSetNodeCacheRule"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
 #endif 
