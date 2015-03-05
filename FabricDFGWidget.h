@@ -46,6 +46,7 @@ public slots:
 private:
 
   FabricCore::Client m_client;
+  ASTWrapper::KLASTManager * m_manager;
   DFGWrapper::Host * m_host;
   DFG::PresetTreeWidget * m_treeWidget;
   DFG::DFGWidget * m_dfgWidget;

@@ -14,6 +14,7 @@ std::string FabricDFGWidget::s_currentUINodeName;
 FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 :QSplitter(parent)
 {
+  m_manager = NULL;
   m_host = NULL;
   m_treeWidget = NULL;
   m_dfgWidget = NULL;
@@ -27,6 +28,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
     if(interf)
     {
       m_client = interf->getCoreClient();
+      m_manager = interf->getASTManager();
       m_host = interf->getDFGHost();
 
       DFGWrapper::Binding binding = interf->getDFGBinding();
@@ -35,7 +37,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
       DFGWrapper::GraphExecutable subGraph = binding.getGraph();
 
       m_treeWidget = new DFG::PresetTreeWidget(this, m_host, config);
-      m_dfgWidget = new DFG::DFGWidget(this, &m_client, m_host, binding, subGraph, FabricDFGCommandStack::getStack(), config, GraphView::GraphConfig(), false);
+      m_dfgWidget = new DFG::DFGWidget(this, &m_client, m_manager, m_host, binding, subGraph, FabricDFGCommandStack::getStack(), config, GraphView::GraphConfig(), false);
       m_dfgValueEditor = new DFG::DFGValueEditor(this, m_dfgWidget->getUIController(), config);
       m_dfgWidget->getUIController()->setLogFunc(&FabricDFGWidget::log);
 

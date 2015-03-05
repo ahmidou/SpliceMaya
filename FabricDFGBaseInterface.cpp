@@ -103,6 +103,7 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   FabricSplice::Logging::AutoTimer timer("Maya::FabricDFGBaseInterface()");
 
   m_client = FabricSplice::ConstructClient();
+  m_manager = ASTWrapper::KLASTManager::retainGlobalManager(&m_client);
   m_host = new DFGWrapper::Host(m_client);
   m_binding = m_host->createBindingToNewGraph();
   m_binding.setNotificationCallback(bindingNotificationCallback, this);
@@ -158,6 +159,11 @@ unsigned int FabricDFGBaseInterface::getId() const
 FabricCore::Client FabricDFGBaseInterface::getCoreClient()
 {
   return m_client;
+}
+
+ASTWrapper::KLASTManager * FabricDFGBaseInterface::getASTManager()
+{
+  return m_manager;
 }
 
 DFGWrapper::Host * FabricDFGBaseInterface::getDFGHost()

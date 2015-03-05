@@ -53,6 +53,7 @@ public:
 
   unsigned int getId() const;
   FabricCore::Client getCoreClient();
+  ASTWrapper::KLASTManager * getASTManager();
   DFGWrapper::Host * getDFGHost();
   DFGWrapper::Binding getDFGBinding();
   DFG::DFGView * getDFGView();
@@ -116,6 +117,7 @@ protected:
   static std::vector<FabricDFGBaseInterface*> _instances;
 
   FabricCore::Client m_client;
+  FabricServices::ASTWrapper::KLASTManager * m_manager;
   DFGWrapper::Host * m_host;
   DFG::DFGView * m_view;
   FabricUI::DFG::DFGController * m_ctrl;
