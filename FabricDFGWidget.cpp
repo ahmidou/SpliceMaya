@@ -60,8 +60,8 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
         this, SLOT(hotkeyPressed(Qt::Key, Qt::KeyboardModifier, QString)));
       QObject::connect(m_dfgWidget->getUIGraph(), SIGNAL(nodeDoubleClicked(FabricUI::GraphView::Node*)), 
         this, SLOT(onNodeDoubleClicked(FabricUI::GraphView::Node*)));
-      QObject::connect(m_dfgWidget, SIGNAL(funcEditRequested(QString)), 
-        this, SLOT(onFuncEditRequested(QString)));
+      // QObject::connect(m_dfgWidget, SIGNAL(nodeEditRequested(QString)), 
+      //   this, SLOT(onNodeEditRequested(QString)));
     }
   }
   catch(FabricCore::Exception e)
