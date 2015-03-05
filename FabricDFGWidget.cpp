@@ -48,6 +48,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
       addWidget(m_dfgValueEditor);
 
       m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Delete, Qt::NoModifier, "delete");
+      m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Backspace, Qt::NoModifier, "delete2");
       m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_F, Qt::NoModifier, "frameSelected");
       m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_A, Qt::NoModifier, "frameAll");
       m_dfgWidget->getUIGraph()->defineHotkey(Qt::Key_Tab, Qt::NoModifier, "tabSearch");
@@ -154,7 +155,7 @@ void FabricDFGWidget::onPortRenamed(QString path, QString newName)
 
 void FabricDFGWidget::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers, QString hotkey)
 {
-  if(hotkey == "delete")
+  if(hotkey == "delete" || hotkey == "delete2")
   {
     std::vector<GraphView::Node *> nodes = m_dfgWidget->getUIGraph()->selectedNodes();
     m_dfgWidget->getUIController()->beginInteraction();
