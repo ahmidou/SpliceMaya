@@ -63,6 +63,7 @@ private:
   std::string mName;
   std::string mOpName;
   std::string mLastSourceCode;
+  bool m_nodeIsChanging;
   static widgetMap gWidgets;
   static bool gUpdatePosted;
 
