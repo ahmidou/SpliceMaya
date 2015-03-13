@@ -72,6 +72,8 @@ FabricSpliceEditorWidget::FabricSpliceEditorWidget(QWidget * parent, const QStri
   if(gWidgets.find(mName) == gWidgets.end())
     gWidgets.insert(widgetPair(mName, this));
 
+  m_nodeIsChanging = false;
+
   setMinimumWidth(250);
   setMinimumHeight(250);
   resize(380, 250);
@@ -288,10 +290,15 @@ void FabricSpliceEditorWidget::performReferencedCheck()
 
 void FabricSpliceEditorWidget::onNodeChanged(void * userData)
 {
+  FabricSpliceEditorWidget * editor = (FabricSpliceEditorWidget*)userData;
+  if(editor->m_nodeIsChanging)
+    return;
+
   MStatus status;
   MAYASPLICE_CATCH_BEGIN(&status);
 
-  FabricSpliceEditorWidget * editor = (FabricSpliceEditorWidget*)userData;
+  editor->m_nodeIsChanging = true;
+
   editor->mAttrList->clear();
   editor->mOperatorList->clear();
 
@@ -304,6 +311,8 @@ void FabricSpliceEditorWidget::onNodeChanged(void * userData)
   editor->mEditOpButton->setEnabled(interf != NULL);
   editor->mRemoveOpButton->setEnabled(interf != NULL);
   editor->mCompileButton->setEnabled(interf != NULL);
+
+  editor->m_nodeIsChanging = false;
 
   if(interf == NULL)
   {

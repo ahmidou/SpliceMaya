@@ -880,7 +880,8 @@ void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
     MAYASPLICE_MEMORY_FREE();
   }else{
     MDataHandle handle = data.inputValue(plug);
-    if(handle.type() == MFnData::kVectorArray){
+    MFnTypedAttribute tAttr(plug.attribute());
+    if(handle.type() == MFnData::kVectorArray || tAttr.attrType() == MFnData::kVectorArray){
       MVectorArray arrayValues = MFnVectorArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
       MAYASPLICE_MEMORY_ALLOCATE(float, elements * 3);
@@ -894,7 +895,7 @@ void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
 
       MAYASPLICE_MEMORY_SETPORT(port);
       MAYASPLICE_MEMORY_FREE();
-    }else if(handle.type() == MFnData::kPointArray){
+    }else if(handle.type() == MFnData::kPointArray || tAttr.attrType() == MFnData::kPointArray){
       MPointArray arrayValues = MFnPointArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
       MAYASPLICE_MEMORY_ALLOCATE(float, elements * 3);
@@ -2479,7 +2480,8 @@ void portToPlug_vec3(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data)
   }
   else{
     MDataHandle handle = data.outputValue(plug);
-    if(handle.type() == MFnData::kVectorArray) {
+    MFnTypedAttribute tAttr(plug.attribute());
+    if(handle.type() == MFnData::kVectorArray || tAttr.attrType() == MFnData::kVectorArray) {
       unsigned int elements = port.getArrayCount();
 
       MVectorArray arrayValues;
@@ -2497,7 +2499,7 @@ void portToPlug_vec3(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data)
 
       MAYASPLICE_MEMORY_FREE();
       handle.set(MFnVectorArrayData().create(arrayValues));
-    }else if(handle.type() == MFnData::kPointArray) {
+    }else if(handle.type() == MFnData::kPointArray || tAttr.attrType() == MFnData::kPointArray) {
       unsigned int elements = port.getArrayCount();
 
       MPointArray arrayValues;
