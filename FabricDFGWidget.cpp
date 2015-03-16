@@ -173,7 +173,9 @@ void FabricDFGWidget::hotkeyPressed(Qt::Key key, Qt::KeyboardModifier modifiers,
   }
   else if(hotkey == "tabSearch")
   {
-    m_dfgWidget->getTabSearchWidget()->showForSearch();
+    QPoint pos = m_dfgWidget->getGraphViewWidget()->lastEventPos();
+    pos = m_dfgWidget->getGraphViewWidget()->mapToGlobal(pos);
+    m_dfgWidget->getTabSearchWidget()->showForSearch(pos);
   }
 }
 
