@@ -65,17 +65,18 @@ if FABRIC_BUILD_OS == 'Darwin':
 env.MergeFlags(mayaFlags)
 
 # # build the ui libraries for splice
-uiLibs = SConscript('#/Native/UI/SConscript', exports = {
+uiLibs = SConscript('#/Native/FabricUI/SConscript', exports = {
   'parentEnv': env, 
   'uiLibPrefix': 'uiMaya', 
   'qtDir': os.path.join(MAYA_INCLUDE_DIR, 'Qt'),
-  'qtMOC': os.path.join(MAYA_BIN_DIR, 'moc')
+  'qtMOC': os.path.join(MAYA_BIN_DIR, 'moc'),
+  'fabricFlags': sharedCapiFlags
   }, 
   variant_dir = env.Dir('UI')
   )
 
 # import the maya specific libraries
-Import('uiMayaGraphViewFlags', 'uiMayaTreeViewFlags', 'uiMayaKLEditorFlags', 'uiMayaValueEditorFlags', 'uiMayaKLEditorFlags', 'uiMayaDFGFlags')
+Import('uiFlags')
 
 # services flags
 env.MergeFlags(commandsFlags)
@@ -85,12 +86,7 @@ env.MergeFlags(legacyBoostFlags)
 env.MergeFlags(codeCompletionFlags)
 
 # ui flags
-env.MergeFlags(uiMayaGraphViewFlags)
-env.MergeFlags(uiMayaTreeViewFlags)
-env.MergeFlags(uiMayaKLEditorFlags)
-env.MergeFlags(uiMayaValueEditorFlags)
-env.MergeFlags(uiMayaKLEditorFlags)
-env.MergeFlags(uiMayaDFGFlags)
+env.MergeFlags(uiFlags)
 
 env.Append(CPPDEFINES = ["_SPLICE_MAYA_VERSION="+str(MAYA_VERSION[:4])])
 
