@@ -28,8 +28,6 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
     DFGWrapper::GraphExecutable graph = binding.getGraph();
 
     init(&m_mayaClient, manager, host, binding, graph, FabricDFGCommandStack::getStack(), false);
-
-    setLogFunc(&mayaLog);
   }
 }
 

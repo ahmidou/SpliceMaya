@@ -167,6 +167,7 @@ bool isDestroyingScene()
 void mayaLogFunc(const MString & message)
 {
   MGlobal::displayInfo(MString("[Splice] ")+message);
+  FabricUI::DFG::DFGLogWidget::log(message.asChar());
 }
 
 void mayaLogFunc(const char * message, unsigned int length)
@@ -185,7 +186,10 @@ void mayaLogErrorFunc(const MString & message)
 {
   if(!gErrorEnabled)
     return;
-  MGlobal::displayError(MString("[Splice] ")+message);
+  MString composed = MString("[Splice] ")+message;
+  MGlobal::displayError(composed);
+  FabricUI::DFG::DFGLogWidget::log(composed.asChar());
+
   gErrorOccured = true;
 }
 
@@ -210,20 +214,26 @@ MStatus mayaErrorOccured()
 
 void mayaKLReportFunc(const char * message, unsigned int length)
 {
-  MGlobal::displayInfo(MString("[KL]: ")+MString(message));
+  MString composed = MString("[KL]: ")+MString(message);
+  MGlobal::displayInfo(composed);
+  FabricUI::DFG::DFGLogWidget::log(composed.asChar());
 }
 
 void mayaCompilerErrorFunc(unsigned int row, unsigned int col, const char * file, const char * level, const char * desc)
 {
   MString line;
   line.set(row);
-  MGlobal::displayInfo("[KL Compiler "+MString(level)+"]: line "+line+", op '"+MString(file)+"': "+MString(desc));
+  MString composed = "[KL Compiler "+MString(level)+"]: line "+line+", op '"+MString(file)+"': "+MString(desc);
+  MGlobal::displayInfo(composed);
   FabricSpliceEditorWidget::reportAllCompilerError(row, col, file, level, desc);
+  FabricUI::DFG::DFGLogWidget::log(composed.asChar());
 }
 
 void mayaKLStatusFunc(const char * topic, unsigned int topicLength,  const char * message, unsigned int messageLength)
 {
-  MGlobal::displayInfo(MString("[KL Status]: ")+MString(message));
+  MString composed = MString("[KL Status]: ")+MString(message);
+  MGlobal::displayInfo(composed);
+  FabricUI::DFG::DFGLogWidget::log(composed.asChar());
 }
 
 void mayaRefreshFunc()
