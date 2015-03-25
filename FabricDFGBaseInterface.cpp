@@ -110,7 +110,7 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_view = new DFG::DFGView(m_binding.getGraph());
   m_ctrl = new DFG::DFGController(NULL, FabricDFGCommandStack::getStack(), &m_client, m_host, false);
   m_ctrl->setView(m_view);
-  m_ctrl->setLogFunc(&FabricDFGWidget::log);
+  m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
   MString idStr; idStr.set(m_id);
   m_binding.getGraph().setMetadata("maya_id", idStr.asChar(), false);
   MAYADFG_CATCH_END(&stat);
