@@ -11,6 +11,7 @@ Import(
   'STAGE_DIR',
   'FABRIC_BUILD_OS',
   'FABRIC_BUILD_TYPE',
+  'FABRIC_BUILD_ARCH',
   'MAYA_BIN_DIR',
   'MAYA_INCLUDE_DIR',
   'MAYA_LIB_DIR',
@@ -65,20 +66,48 @@ if FABRIC_BUILD_OS == 'Darwin':
 env.MergeFlags(mayaFlags)
 
 # services flags
-env.MergeFlags(commandsFlags)
-env.MergeFlags(dfgWrapperFlags)
-env.MergeFlags(astWrapperFlags)
-env.MergeFlags(legacyBoostFlags)
-env.MergeFlags(codeCompletionFlags)
+if len(commandsFlags.keys()) > 0:
+  env.MergeFlags(commandsFlags)
+  env.MergeFlags(dfgWrapperFlags)
+  env.MergeFlags(astWrapperFlags)
+  env.MergeFlags(legacyBoostFlags)
+  env.MergeFlags(codeCompletionFlags)
+else:
+  if FABRIC_BUILD_OS == 'Windows':
+    env.Append(LIBS = ['FabricServices-MSVC-'+env['MSVC_VERSION']])
+  else:
+    env.Append(LIBS = ['FabricServices'])
+  env.Append(LIBS = ['FabricSplitSearch'])
+
 
 # build the ui libraries for splice
 uiLibPrefix = 'uiMaya'+str(MAYA_VERSION)
-uiLibs = SConscript('#/Native/FabricUI/SConscript', exports = {
+
+uiDir = env.Dir('#').Dir('Native').Dir('FabricUI')
+if os.environ.has_key('FABRIC_UI_DIR'):
+  uiDir = env.Dir(os.environ['FABRIC_UI_DIR'])
+uiSconscript = uiDir.File('SConscript')
+if not os.path.exists(uiSconscript.abspath):
+  print "Error: You need to have FabricUI checked out to "+uiSconscript.dir.abspath
+
+env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
+env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
+env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
+env.Append(CPPPATH = [uiSconscript.dir])
+
+uiLibs = SConscript(uiSconscript, exports = {
   'parentEnv': env, 
   'uiLibPrefix': uiLibPrefix, 
   'qtDir': os.path.join(MAYA_INCLUDE_DIR, 'Qt'),
   'qtMOC': os.path.join(MAYA_BIN_DIR, 'moc'),
-  'fabricFlags': sharedCapiFlags
+  'qtFlags': {
+
+  },
+  'fabricFlags': sharedCapiFlags,
+  'buildType': FABRIC_BUILD_TYPE,
+  'buildOS': FABRIC_BUILD_OS,
+  'buildArch': FABRIC_BUILD_ARCH,
+  'stageDir': env.Dir('#').Dir('stage').Dir('lib'),
   }, 
   variant_dir = env.Dir('FabricUI')
   )

@@ -15,7 +15,7 @@ if 'clean' in COMMAND_LINE_TARGETS:
   Return()
 
 # check environment variables
-for var in ['FABRIC_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BUILD_ARCH', 'FABRIC_BUILD_TYPE', 'BOOST_DIR', 'MAYA_BIN_DIR', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR', 'MAYA_VERSION']:
+for var in ['FABRIC_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BUILD_ARCH', 'FABRIC_BUILD_TYPE', 'BOOST_DIR', 'MAYA_BIN_DIR', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR', 'MAYA_VERSION', 'FABRIC_UI_DIR']:
   if not os.environ.has_key(var):
     print 'The environment variable %s is not defined.' % var
     exit(0)
@@ -23,6 +23,17 @@ for var in ['FABRIC_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BU
     if not os.path.exists(os.environ[var]):
       print 'The path for environment variable %s does not exist.' % var
       exit(0)
+
+
+FTL_INCLUDE_DIR = os.path.join(os.environ['FABRIC_DIR'], 'include', 'FTL')
+Export('FTL_INCLUDE_DIR')
+commandsFlags = {}
+dfgWrapperFlags = {}
+astWrapperFlags = {}
+astWrapperFlags = {}
+codeCompletionFlags = {}
+legacyBoostFlags = {}
+Export('commandsFlags', 'dfgWrapperFlags', 'astWrapperFlags', 'legacyBoostFlags', 'codeCompletionFlags')
 
 spliceEnv = Environment()
 
