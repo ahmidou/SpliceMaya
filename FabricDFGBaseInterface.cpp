@@ -214,7 +214,7 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
         continue;
       if(!port->isValid())
         continue;
-      if(port->getEndPointType() != FabricCore::DFGPortType_Out){
+      if(port->getPortType() != FabricCore::DFGPortType_Out){
 
         std::string portDataType = port->getResolvedType();
 
@@ -268,7 +268,7 @@ void FabricDFGBaseInterface::evaluate(){
   //         portName = portName.substring(0, periodPos-1);
   //       FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
   //       if(port->isValid()){
-  //         if(port->getEndPointType() != FabricCore::DFGPortType_Out)
+  //         if(port->getPortType() != FabricCore::DFGPortType_Out)
   //         {
   //           std::vector<FabricCore::RTVal> args(1);
   //           args[0] = FabricSplice::constructStringRTVal(name.asChar());
@@ -303,7 +303,7 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
   for(int i = 0; i < ports.size(); ++i){
     if(!ports[i]->isValid())
       continue;
-    FabricCore::DFGPortType portType = ports[i]->getEndPointType();
+    FabricCore::DFGPortType portType = ports[i]->getPortType();
     if(portType != FabricCore::DFGPortType_In){
       
       std::string portName = ports[i]->getName();
@@ -685,7 +685,7 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
       if(!ports[i]->isValid())
         continue;
       FabricCore::DFGPortType portType = ports[i]->getEndPointType();
-      if(portType != FabricCore::DFGPortType_In){
+      if(portType != FabricCore::DFGPortType_Out){
         MPlug outPlug = thisNode.findPlug(ports[i]->getName());
         if(!outPlug.isNull()){
           if(!plugInArray(outPlug, _affectedPlugs)){

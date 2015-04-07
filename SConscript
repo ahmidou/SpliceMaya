@@ -95,6 +95,10 @@ env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
 env.Append(CPPPATH = [uiSconscript.dir])
 
+if FABRIC_BUILD_TYPE == 'Debug':
+  env.Append(CPPDEFINES = ['_DEBUG'])
+  env.Append(CPPDEFINES = ['_ITERATOR_DEBUG_LEVEL=2'])
+
 uiLibs = SConscript(uiSconscript, exports = {
   'parentEnv': env, 
   'uiLibPrefix': uiLibPrefix, 

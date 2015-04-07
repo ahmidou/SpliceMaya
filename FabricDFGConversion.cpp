@@ -1109,7 +1109,7 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricServices::DF
     {
       handles.push_back(data.inputValue(plug));
 
-      if(port->getEndPointType() == FabricCore::DFGPortType_IO)
+      if(port->getPortType() == FabricCore::DFGPortType_IO)
         portRTVal = port->getArgValue();
       if(!portRTVal.isValid() || portRTVal.isNullObject())
         portRTVal = FabricSplice::constructObjectRTVal("PolygonMesh");
@@ -1290,7 +1290,7 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapp
     {
       handles.push_back(data.inputValue(plug));
 
-      if(port->getEndPointType() == FabricCore::DFGPortType_IO)
+      if(port->getPortType() == FabricCore::DFGPortType_IO)
         portRTVal = port->getArgValue();
       if(!portRTVal.isValid() || portRTVal.isNullObject())
         portRTVal = FabricSplice::constructObjectRTVal("Lines");
