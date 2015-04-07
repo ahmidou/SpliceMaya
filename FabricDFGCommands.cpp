@@ -465,6 +465,58 @@ MStatus FabricDFGRemoveConnectionCommand::doIt(const MArgList &args)
   return MS::kSuccess;
 }
 
+MSyntax FabricDFGRemoveAllConnectionsCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
+  syntax.addFlag("-p", "-path", MSyntax::kString);
+  syntax.addFlag("-i", "-isPin", MSyntax::kLong);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGRemoveAllConnectionsCommand::creator()
+{
+  return new FabricDFGRemoveAllConnectionsCommand;
+}
+
+MStatus FabricDFGRemoveAllConnectionsCommand::doIt(const MArgList &args)
+{
+  MStatus baseStatus = FabricDFGBaseCommand::doIt(args);
+  if(baseStatus != MS::kSuccess)
+    return baseStatus;
+  if(m_cmdInfo.id != UINT_MAX)
+    return MS::kSuccess;
+  FabricDFGBaseInterface * interf = getInterf();
+  if(!interf)
+    return MS::kNotFound;
+
+  MStatus status;
+  MArgParser argData(syntax(), args, &status);
+  if(!argData.isFlagSet("path"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Source path (-p, -path) not provided.");
+    return mayaErrorOccured();
+  }
+
+  MString path = argData.flagArgumentString("path", 0);
+
+  MStringArray pathParts;
+  path.split('.', pathParts);
+
+  bool isPin = pathParts.length() <= pathParts.length();
+  if(argData.isFlagSet("isPin"))
+    isPin = argData.flagArgumentInt("isPin", 0) != 0;
+
+  FabricDFGCommandStack::enableMayaCommands(false);
+  interf->getDFGController()->removeAllConnections(path.asChar(), isPin);
+  FabricDFGCommandStack::enableMayaCommands(true);
+  m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+
+  return MS::kSuccess;
+}
+
 MSyntax FabricDFGAddPortCommand::newSyntax()
 {
   MSyntax syntax;
@@ -812,7 +864,7 @@ MSyntax FabricDFGGetDescCommand::newSyntax()
   MSyntax syntax;
   syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
   syntax.addFlag("-p", "-path", MSyntax::kString);
-  syntax.addFlag("-i", "-instance", MSyntax::kLong);
+  syntax.addFlag("-a", "-asnode", MSyntax::kLong);
   syntax.enableQuery(false);
   syntax.enableEdit(false);
   return syntax;
@@ -840,18 +892,26 @@ MStatus FabricDFGGetDescCommand::doIt(const MArgList &args)
   MString path;
   if(argData.isFlagSet("path"))
     path = argData.flagArgumentString("path", 0);
-  bool instance = false;
-  if(argData.isFlagSet("instance"))
-    instance = argData.flagArgumentInt("instance", 0) > 0;
+  bool asnode = false;
+  if(argData.isFlagSet("asnode"))
+    asnode = argData.flagArgumentInt("asnode", 0) > 0;
 
   FabricDFGCommandStack::enableMayaCommands(false);
 
   FabricCore::DFGBinding binding = interf->getDFGController()->getBinding().getWrappedCoreBinding();
   MString result;
-  if(instance)
-    result = binding.getInstanceDesc(path.asChar()).getCString();
+  if(asnode)
+  {
+    DFGWrapper::NodePtr node = interf->getDFGController()->getNodeFromPath(path.asChar());
+    if(node)
+      result = node->getDesc().c_str();
+  }
   else
-    result = binding.getDesc(path.asChar()).getCString();
+  {
+    DFGWrapper::ExecutablePtr exec = interf->getDFGController()->getExecFromPath(path.asChar());
+    if(exec)
+      result = exec->getDesc().c_str();
+  }
 
   FabricDFGCommandStack::enableMayaCommands(true);
   

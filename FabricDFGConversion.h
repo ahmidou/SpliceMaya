@@ -16,10 +16,10 @@
 #include <FabricCore.h>
 #include <DFGWrapper/DFGWrapper.h>
 
-typedef void(*DFGPlugToPortFunc)(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::Port & port);
-typedef void(*DFGPortToPlugFunc)(FabricServices::DFGWrapper::Port & port, MPlug &plug, MDataBlock &data);
+typedef void(*DFGPlugToPortFunc)(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port);
+typedef void(*DFGPortToPlugFunc)(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data);
 
-DFGPlugToPortFunc getDFGPlugToPortFunc(const std::string & dataType, const FabricServices::DFGWrapper::Port * port = NULL);
-DFGPortToPlugFunc getDFGPortToPlugFunc(const std::string & dataType, const FabricServices::DFGWrapper::Port * port = NULL);
+DFGPlugToPortFunc getDFGPlugToPortFunc(const std::string & dataType, const FabricServices::DFGWrapper::PortPtr port = NULL);
+DFGPortToPlugFunc getDFGPortToPlugFunc(const std::string & dataType, const FabricServices::DFGWrapper::PortPtr port = NULL);
 
 #endif

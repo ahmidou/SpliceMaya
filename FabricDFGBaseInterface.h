@@ -58,7 +58,7 @@ public:
   DFGWrapper::Binding getDFGBinding();
   DFG::DFGView * getDFGView();
   DFG::DFGController * getDFGController();
-  DFGWrapper::GraphExecutable getDFGGraph();
+  DFGWrapper::GraphExecutablePtr getDFGGraph();
 
   void storePersistenceData(MString file, MStatus *stat = 0);
   void restoreFromPersistenceData(MString file, MStatus *stat = 0);

@@ -380,7 +380,7 @@ FabricDFGCommandStack * FabricDFGCommandStack::getStack()
 
 MString FabricDFGCommandStack::getNodeNameFromCommand(DFG::DFGCommand * command)
 {
-  MString interfIdStr = ((DFG::DFGController*)command->controller())->getBinding().getGraph().getMetadata("maya_id").c_str();
+  MString interfIdStr = ((DFG::DFGController*)command->controller())->getBinding().getExecutable()->getMetadata("maya_id");
   if(interfIdStr.length() == 0)
     return "";
   unsigned int interfId = (unsigned int)interfIdStr.asInt();

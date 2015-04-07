@@ -101,6 +101,16 @@ public:
   virtual MStatus doIt(const MArgList &args);
 };
 
+class FabricDFGRemoveAllConnectionsCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgRemoveAllConnections"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
 class FabricDFGAddPortCommand: public FabricDFGBaseCommand
 {
 public:

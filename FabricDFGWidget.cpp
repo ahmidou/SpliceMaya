@@ -25,7 +25,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
     FabricServices::DFGWrapper::Host * host = interf->getDFGHost();
 
     DFGWrapper::Binding binding = interf->getDFGBinding();
-    DFGWrapper::GraphExecutable graph = binding.getGraph();
+    DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
 
     init(&m_mayaClient, manager, host, binding, graph, FabricDFGCommandStack::getStack(), false);
   }
