@@ -16,6 +16,8 @@
 #include <DFG/Commands/DFGSetDefaultValueCommand.h>
 #include <DFG/Commands/DFGSetCodeCommand.h>
 #include <DFG/Commands/DFGSetNodeCacheRuleCommand.h>
+#include <DFG/Commands/DFGCopyCommand.h>
+#include <DFG/Commands/DFGPasteCommand.h>
 
 using namespace FabricServices;
 using namespace FabricUI;
@@ -362,6 +364,36 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString cmdStr = "dfgSetNodeCacheRule -node \""+nodeName+"\"";
       cmdStr += " -path \""+path+"\"";
       cmdStr += " -cacheRule \""+cacheRule+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgCopy")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGCopyCommand * cmd = (DFG::DFGCopyCommand*)genericCommand;
+      MString nodeName = getNodeNameFromCommand(cmd);
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgCopy -node \""+nodeName+"\"";
+      // cmdStr += " -path \""+path+"\"";
+      // cmdStr += " -cacheRule \""+cacheRule+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgPaste")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGPasteCommand * cmd = (DFG::DFGPasteCommand*)genericCommand;
+      MString nodeName = getNodeNameFromCommand(cmd);
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgPaste -node \""+nodeName+"\"";
+      // cmdStr += " -path \""+path+"\"";
+      // cmdStr += " -cacheRule \""+cacheRule+"\"";
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
   }

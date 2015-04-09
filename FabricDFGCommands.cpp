@@ -1122,3 +1122,73 @@ MStatus FabricDFGSetNodeCacheRuleCommand::doIt(const MArgList &args)
 
   return MS::kSuccess;
 }
+
+MSyntax FabricDFGCopyCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGCopyCommand::creator()
+{
+  return new FabricDFGCopyCommand;
+}
+
+MStatus FabricDFGCopyCommand::doIt(const MArgList &args)
+{
+  MStatus baseStatus = FabricDFGBaseCommand::doIt(args);
+  if(baseStatus != MS::kSuccess)
+    return baseStatus;
+  if(m_cmdInfo.id != UINT_MAX)
+    return MS::kSuccess;
+  FabricDFGBaseInterface * interf = getInterf();
+  if(!interf)
+    return MS::kNotFound;
+
+  MStatus status;
+  
+  FabricDFGCommandStack::enableMayaCommands(false);
+  interf->getDFGController()->copy();
+  FabricDFGCommandStack::enableMayaCommands(true);
+  m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+
+  return MS::kSuccess;
+}
+
+MSyntax FabricDFGPasteCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGPasteCommand::creator()
+{
+  return new FabricDFGPasteCommand;
+}
+
+MStatus FabricDFGPasteCommand::doIt(const MArgList &args)
+{
+  MStatus baseStatus = FabricDFGBaseCommand::doIt(args);
+  if(baseStatus != MS::kSuccess)
+    return baseStatus;
+  if(m_cmdInfo.id != UINT_MAX)
+    return MS::kSuccess;
+  FabricDFGBaseInterface * interf = getInterf();
+  if(!interf)
+    return MS::kNotFound;
+
+  MStatus status;
+  
+  FabricDFGCommandStack::enableMayaCommands(false);
+  interf->getDFGController()->paste();
+  FabricDFGCommandStack::enableMayaCommands(true);
+  m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+
+  return MS::kSuccess;
+}

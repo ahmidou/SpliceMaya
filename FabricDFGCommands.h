@@ -211,4 +211,24 @@ public:
   virtual MStatus doIt(const MArgList &args);
 };
 
+class FabricDFGCopyCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgCopy"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
+class FabricDFGPasteCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgPaste"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
 #endif 
