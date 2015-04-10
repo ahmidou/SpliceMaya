@@ -18,6 +18,7 @@
 #include <DFG/Commands/DFGSetNodeCacheRuleCommand.h>
 #include <DFG/Commands/DFGCopyCommand.h>
 #include <DFG/Commands/DFGPasteCommand.h>
+#include <DFG/Commands/DFGImplodeNodesCommand.h>
 
 using namespace FabricServices;
 using namespace FabricUI;
@@ -377,7 +378,15 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgCopy -node \""+nodeName+"\"";
-      // cmdStr += " -path \""+path+"\"";
+      std::vector<std::string> paths = cmd->getNodePaths();
+      cmdStr += " -paths \"";
+      for(unsigned int i=0;i<paths.size();i++)
+      {
+        if(i > 0)
+          cmdStr += ",";
+        cmdStr += paths[i].c_str();
+      }
+      cmdStr += "\"";
       // cmdStr += " -cacheRule \""+cacheRule+"\"";
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
@@ -397,7 +406,31 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
   }
-  else
+  else if(commandName == "dfgImplodeNodes")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGImplodeNodesCommand * cmd = (DFG::DFGImplodeNodesCommand*)genericCommand;
+      MString nodeName = getNodeNameFromCommand(cmd);
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgImplodeNodes -node \""+nodeName+"\"";
+      MString name = cmd->getDesiredName().c_str();
+      std::vector<std::string> paths = cmd->getNodePaths();
+      cmdStr += " -name \""+name+"\"";
+      cmdStr += " -paths \"";
+      for(unsigned int i=0;i<paths.size();i++)
+      {
+        if(i > 0)
+          cmdStr += ",";
+        cmdStr += paths[i].c_str();
+      }
+      cmdStr += "\"";
+      // cmdStr += " -cacheRule \""+cacheRule+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }  else
   {
     mayaLogErrorFunc(MString("FabricDFGCommandStack:: unknown DFG command ")+genericCommand->getName());
     result = false;

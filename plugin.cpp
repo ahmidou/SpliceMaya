@@ -309,6 +309,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("dfgSetNodeCacheRule", FabricDFGSetNodeCacheRuleCommand::creator, FabricDFGSetNodeCacheRuleCommand::newSyntax);
   plugin.registerCommand("dfgCopy", FabricDFGCopyCommand::creator, FabricDFGCopyCommand::newSyntax);
   plugin.registerCommand("dfgPaste", FabricDFGPasteCommand::creator, FabricDFGPasteCommand::newSyntax);
+  plugin.registerCommand("dfgImplodeNodes", FabricDFGImplodeNodesCommand::creator, FabricDFGImplodeNodesCommand::newSyntax);
 
   initModuleFolder(plugin);
 
@@ -386,6 +387,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand("dfgSetNodeCacheRule");
   plugin.deregisterCommand("dfgCopy");
   plugin.deregisterCommand("dfgPaste");
+  plugin.deregisterCommand("dfgImplodeNodes");
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by

@@ -1127,6 +1127,7 @@ MSyntax FabricDFGCopyCommand::newSyntax()
 {
   MSyntax syntax;
   syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
+  syntax.addFlag("-p", "-paths", MSyntax::kString);
   syntax.enableQuery(false);
   syntax.enableEdit(false);
   return syntax;
@@ -1149,9 +1150,17 @@ MStatus FabricDFGCopyCommand::doIt(const MArgList &args)
     return MS::kNotFound;
 
   MStatus status;
+  MArgParser argData(syntax(), args, &status);
+  if(!argData.isFlagSet("paths"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Paths (-p, -paths) not provided.");
+    return mayaErrorOccured();
+  }
+
+  QString paths = argData.flagArgumentString("paths", 0).asChar();
   
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->copy();
+  interf->getDFGController()->copy(paths.split('.'));
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -1187,6 +1196,57 @@ MStatus FabricDFGPasteCommand::doIt(const MArgList &args)
   
   FabricDFGCommandStack::enableMayaCommands(false);
   interf->getDFGController()->paste();
+  FabricDFGCommandStack::enableMayaCommands(true);
+  m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+
+  return MS::kSuccess;
+}
+
+MSyntax FabricDFGImplodeNodesCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
+  syntax.addFlag("-n", "-name", MSyntax::kString);
+  syntax.addFlag("-p", "-paths", MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGImplodeNodesCommand::creator()
+{
+  return new FabricDFGImplodeNodesCommand;
+}
+
+MStatus FabricDFGImplodeNodesCommand::doIt(const MArgList &args)
+{
+  MStatus baseStatus = FabricDFGBaseCommand::doIt(args);
+  if(baseStatus != MS::kSuccess)
+    return baseStatus;
+  if(m_cmdInfo.id != UINT_MAX)
+    return MS::kSuccess;
+  FabricDFGBaseInterface * interf = getInterf();
+  if(!interf)
+    return MS::kNotFound;
+
+  MStatus status;
+  MArgParser argData(syntax(), args, &status);
+  if(!argData.isFlagSet("name"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Desired name (-n, -name) not provided.");
+    return mayaErrorOccured();
+  }
+  if(!argData.isFlagSet("paths"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Paths (-p, -paths) not provided.");
+    return mayaErrorOccured();
+  }
+
+  QString name = argData.flagArgumentString("name", 0).asChar();
+  QString paths = argData.flagArgumentString("paths", 0).asChar();
+  
+  FabricDFGCommandStack::enableMayaCommands(false);
+  interf->getDFGController()->implodeNodes(name, paths.split('.'));
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
