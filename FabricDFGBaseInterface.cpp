@@ -409,7 +409,7 @@ void FabricDFGBaseInterface::storePersistenceData(MString file, MStatus *stat){
 
   FabricSplice::Logging::AutoTimer timer("Maya::storePersistenceData()");
 
-  std::string json = getDFGGraph()->exportJSON();
+  std::string json = m_binding.exportJSON();
   MPlug saveDataPlug = getSaveDataPlug();
   saveDataPlug.setString(json.c_str());
 
