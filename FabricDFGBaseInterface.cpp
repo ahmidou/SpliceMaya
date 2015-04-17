@@ -57,7 +57,7 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface(){
   // m_binding = DFGWrapper::Binding();
 
   FabricDFGWidget::closeWidgetsForBaseInterface(this);
-  
+
   if(m_ctrl)
   {
     delete(m_ctrl);
@@ -107,7 +107,8 @@ void FabricDFGBaseInterface::constructBaseInterface(){
 
   m_client = FabricSplice::ConstructClient();
   m_manager = ASTWrapper::KLASTManager::retainGlobalManager(&m_client);
-  m_manager->loadAllExtensionsFromExtsPath();
+  // FE-4147
+  // m_manager->loadAllExtensionsFromExtsPath();
   m_host = new DFGWrapper::Host(m_client);
   m_binding = m_host->createBindingToNewGraph();
   m_binding.setNotificationCallback(bindingNotificationCallback, this);
