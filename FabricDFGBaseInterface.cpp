@@ -110,7 +110,7 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_binding.setNotificationCallback(bindingNotificationCallback, this);
   DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(m_binding.getExecutable());
   m_view = new DFG::DFGView(graph);
-  m_ctrl = new DFG::DFGController(NULL, FabricDFGCommandStack::getStack(), &m_client, m_host, false);
+  m_ctrl = new DFG::DFGController(NULL, FabricDFGCommandStack::getStack(), &m_client, m_host, m_manager, false);
   m_ctrl->setView(m_view);
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
   MString idStr; idStr.set(m_id);
