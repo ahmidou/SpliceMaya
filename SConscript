@@ -112,7 +112,8 @@ uiLibs = SConscript(uiSconscript, exports = {
   'buildOS': FABRIC_BUILD_OS,
   'buildArch': FABRIC_BUILD_ARCH,
   'stageDir': env.Dir('#').Dir('stage').Dir('lib'),
-  }, 
+  },
+  duplicate=0,
   variant_dir = env.Dir('FabricUI')
   )
 

@@ -58,6 +58,7 @@ if os.path.exists(spliceApiDir.abspath):
       'STAGE_DIR': spliceEnv.Dir('.stage'),
       'BOOST_DIR': os.environ['BOOST_DIR']
     },
+    duplicate=0,
     variant_dir = spliceEnv.Dir('.build').Dir('SpliceAPI')
   )
   
@@ -85,6 +86,7 @@ else:
     'MAYA_VERSION': os.environ['MAYA_VERSION'],
     'ADDITIONAL_FLAGS': {}
   },
+  duplicate=0,
   variant_dir = spliceEnv.Dir('.build').Dir(os.environ['MAYA_VERSION'])
 )
 
