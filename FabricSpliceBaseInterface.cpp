@@ -44,7 +44,6 @@ FabricSpliceBaseInterface::FabricSpliceBaseInterface(){
   _portObjectsDestroyed = false;
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
-  _nameInitialized = false;
 
   FabricSplice::setDCCOperatorSourceCodeCallback(&FabricSpliceEditorWidget::getSourceCodeForOperator);
 
@@ -116,13 +115,6 @@ FabricSpliceBaseInterface * FabricSpliceBaseInterface::getInstanceByName(const s
 bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
   if(_isTransferingInputs)
     return false;
-
-  if(!_nameInitialized)
-  {
-    MFnDependencyNode thisNode(getThisMObject());
-    _spliceGraph.setName(thisNode.name().asChar());
-    _nameInitialized = true;
-  }
 
   managePortObjectValues(false); // recreate objects if not there yet
 

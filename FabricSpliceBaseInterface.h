@@ -95,7 +95,6 @@ protected:
   std::vector<std::string> mSpliceMayaDataOverride;
   bool _isTransferingInputs;
   bool _portObjectsDestroyed;
-  bool _nameInitialized;
 
   bool transferInputValuesToSplice(MDataBlock& data);
   void evaluate();
