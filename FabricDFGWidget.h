@@ -19,6 +19,8 @@
 using namespace FabricServices;
 using namespace FabricUI;
 
+class FabricDFGBaseInterface;
+
 class FabricDFGWidget : public DFG::DFGCombinedWidget {
 
   Q_OBJECT
@@ -31,6 +33,7 @@ public:
   
   static void setCurrentUINodeName(const char * node);
   static void mayaLog(const char * message);
+  static void closeWidgetsForBaseInterface(FabricDFGBaseInterface * interf);
 
 public slots:
   virtual void onRecompilation();
@@ -41,6 +44,7 @@ private:
   FabricCore::Client m_mayaClient;
   std::string m_baseInterfaceName;
   static std::string s_currentUINodeName;
+  static std::map<FabricDFGWidget*, FabricDFGBaseInterface*> s_widgets;
 };
 
 #endif 

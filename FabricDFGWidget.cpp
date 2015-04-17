@@ -10,6 +10,7 @@
 #include <maya/MGlobal.h>
 
 std::string FabricDFGWidget::s_currentUINodeName;
+std::map<FabricDFGWidget*, FabricDFGBaseInterface*> FabricDFGWidget::s_widgets;
 
 FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 :DFG::DFGCombinedWidget(parent)
@@ -20,6 +21,8 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 
   if(interf)
   {
+    s_widgets.insert(std::pair<FabricDFGWidget*, FabricDFGBaseInterface*>(this, interf));
+
     m_mayaClient = interf->getCoreClient();
     FabricServices::ASTWrapper::KLASTManager * manager = interf->getASTManager();
     FabricServices::DFGWrapper::Host * host = interf->getDFGHost();
@@ -44,6 +47,35 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
 {
   if(node)
     s_currentUINodeName = node;
+}
+
+void FabricDFGWidget::closeWidgetsForBaseInterface(FabricDFGBaseInterface * interf)
+{
+  std::map<FabricDFGWidget*, FabricDFGBaseInterface*>::iterator it;
+  for(it = s_widgets.begin(); it != s_widgets.end(); it++)
+  {
+    if(it->second == interf)
+    {
+      s_widgets.erase(it);
+
+      QWidget * parent = (QWidget*)it->first->parent();
+
+      // layout widget
+      if(parent)
+        parent = (QWidget*)parent->parent();
+
+      // dock widget
+      if(parent)
+        parent = (QWidget*)parent->parent();
+
+      if(parent)
+      {
+        parent->close();
+        parent->deleteLater();
+      }
+      break;
+    }
+  }
 }
 
 void FabricDFGWidget::onRecompilation()

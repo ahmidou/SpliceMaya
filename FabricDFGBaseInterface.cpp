@@ -55,6 +55,9 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(){
 FabricDFGBaseInterface::~FabricDFGBaseInterface(){
   // todo: eventually destroy the binding
   // m_binding = DFGWrapper::Binding();
+
+  FabricDFGWidget::closeWidgetsForBaseInterface(this);
+  
   if(m_ctrl)
   {
     delete(m_ctrl);
