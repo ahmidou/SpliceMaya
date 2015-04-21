@@ -1455,7 +1455,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
     return;
   FabricDFGBaseInterface * interf = (FabricDFGBaseInterface *)userData;
 
-  // MGlobal::displayInfo(jsonCString);
+  MGlobal::displayInfo(jsonCString);
 
   FabricCore::Variant notificationVar = FabricCore::Variant::CreateFromJSON(jsonCString, jsonLength);
 
