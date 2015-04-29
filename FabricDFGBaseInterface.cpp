@@ -358,6 +358,10 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   if(bracketPos > -1)
     name = name.substring(0, bracketPos-1);
 
+  // filter out savedata
+  if(name == "saveData")
+    return;
+
   // if(_spliceGraph.usesEvalContext())
   // {
   //   _evalContextPlugNames.append(name);
