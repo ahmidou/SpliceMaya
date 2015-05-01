@@ -241,4 +241,14 @@ public:
   virtual MStatus doIt(const MArgList &args);
 };
 
+class FabricDFGExplodeNodeCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgExplodeNode"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
 #endif 

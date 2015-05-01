@@ -1252,3 +1252,47 @@ MStatus FabricDFGImplodeNodesCommand::doIt(const MArgList &args)
 
   return MS::kSuccess;
 }
+
+MSyntax FabricDFGExplodeNodeCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
+  syntax.addFlag("-p", "-path", MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGExplodeNodeCommand::creator()
+{
+  return new FabricDFGExplodeNodeCommand;
+}
+
+MStatus FabricDFGExplodeNodeCommand::doIt(const MArgList &args)
+{
+  MStatus baseStatus = FabricDFGBaseCommand::doIt(args);
+  if(baseStatus != MS::kSuccess)
+    return baseStatus;
+  if(m_cmdInfo.id != UINT_MAX)
+    return MS::kSuccess;
+  FabricDFGBaseInterface * interf = getInterf();
+  if(!interf)
+    return MS::kNotFound;
+
+  MStatus status;
+  MArgParser argData(syntax(), args, &status);
+  if(!argData.isFlagSet("path"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Path (-p, -path) not provided.");
+    return mayaErrorOccured();
+  }
+
+  QString path = argData.flagArgumentString("paths", 0).asChar();
+  
+  FabricDFGCommandStack::enableMayaCommands(false);
+  interf->getDFGController()->explodeNode(path);
+  FabricDFGCommandStack::enableMayaCommands(true);
+  m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+
+  return MS::kSuccess;
+}

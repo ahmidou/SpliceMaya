@@ -19,6 +19,7 @@
 #include <DFG/Commands/DFGCopyCommand.h>
 #include <DFG/Commands/DFGPasteCommand.h>
 #include <DFG/Commands/DFGImplodeNodesCommand.h>
+#include <DFG/Commands/DFGExplodeNodeCommand.h>
 
 using namespace FabricServices;
 using namespace FabricUI;
@@ -428,6 +429,21 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       }
       cmdStr += "\"";
       // cmdStr += " -cacheRule \""+cacheRule+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgExplodeNode")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGExplodeNodeCommand * cmd = (DFG::DFGExplodeNodeCommand*)genericCommand;
+      MString nodeName = getNodeNameFromCommand(cmd);
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgExplodeNode -node \""+nodeName+"\"";
+      MString path = cmd->getNodePath().c_str();
+      cmdStr += " -path \""+path+"\"";
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
   }  else
