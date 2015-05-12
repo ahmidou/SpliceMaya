@@ -138,7 +138,7 @@ target = 'FabricSpliceMaya'
 
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
-libSources += env.QTMOC(env.File('FabricDFGWidget.h'))
+libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 
 libFabricSpliceMaya = env.StaticLibrary('libFabricSpliceMaya', libSources)
 env.Append(LIBS = [libFabricSpliceMaya])
