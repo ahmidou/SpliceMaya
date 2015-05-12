@@ -39,7 +39,9 @@ env.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 mayaFlags = {
   'CPPPATH': [
       MAYA_INCLUDE_DIR,
-      os.path.join(MAYA_INCLUDE_DIR, 'Qt')
+      os.path.join(MAYA_INCLUDE_DIR, 'Qt'),
+      env.Dir('lib'),
+      env.Dir('plugin')
     ],
   'LIBPATH': [
     MAYA_LIB_DIR
@@ -135,8 +137,13 @@ if FABRIC_BUILD_OS == 'Linux':
 target = 'FabricSpliceMaya'
 
 mayaModule = None
-sources = env.Glob('*.cpp')
-sources += env.QTMOC(env.File('FabricDFGWidget.h'))
+libSources = env.Glob('lib/*.cpp')
+libSources += env.QTMOC(env.File('FabricDFGWidget.h'))
+
+libFabricSpliceMaya = env.StaticLibrary('libFabricSpliceMaya', libSources)
+env.Append(LIBS = [libFabricSpliceMaya])
+
+pluginSources = env.Glob('plugin/*.cpp')
 
 if FABRIC_BUILD_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
@@ -151,7 +158,7 @@ if FABRIC_BUILD_OS == 'Darwin':
     '-install_name',
     '@rpath/Splice/Applications/'+spliceAppName+'/plugins/'+spliceAppName+".bundle"
     ]))
-  mayaModule = env.LoadableModule(target = target, source = sources)
+  mayaModule = env.LoadableModule(target = target, source = pluginSources)
 else:
   libSuffix = '.so'
   if FABRIC_BUILD_OS == 'Windows':
@@ -160,7 +167,7 @@ else:
     exportsFile = env.File('Linux.exports').srcnode()
     env.Append(SHLINKFLAGS = ['-Wl,--version-script='+str(exportsFile)])
     env[ '_LIBFLAGS' ] = '-Wl,--start-group ' + env['_LIBFLAGS'] + ' -Wl,--end-group'
-  mayaModule = env.SharedLibrary(target = target, source = sources, SHLIBSUFFIX=libSuffix, SHLIBPREFIX='')
+  mayaModule = env.SharedLibrary(target = target, source = pluginSources, SHLIBSUFFIX=libSuffix, SHLIBPREFIX='')
 
 sedCmd = 'sed'
 if FABRIC_BUILD_OS == 'Windows':  
@@ -196,6 +203,7 @@ mayaModuleFile = env.SubstMayaModuleFile(
 
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
+mayaFiles.append(env.Install(STAGE_DIR, libFabricSpliceMaya))
 
 for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
