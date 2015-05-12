@@ -2712,94 +2712,15 @@ void portToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtM
     int vertex = 0;
     int offset = 0;
 
-    if(mayaCounts[face] != 3 && mayaCounts[face] != 4)
-    {
-      MString mayaCountStr;
-      mayaCountStr.set(mayaCounts[face]);
-      mayaLogErrorFunc("PolygonMesh: Polygon with "+mayaCountStr+" vertices not supported.");
-      return;
-    }
-
     for(unsigned int i=0;i<mayaIndices.length();i++) {
       normalFace[i] = face;
       normalVertex[i] = mayaIndices[offset + vertex];
-
-      if(vertex == 0)
-      {
-        int v0 = mayaIndices[offset];
-        int v1 = mayaIndices[offset+1];
-        int v2 = mayaIndices[offset+2];
-        if(v0 >= mayaPoints.length())
-        {
-          MString indexStr;
-          indexStr.set(v0);
-          mayaLogErrorFunc("PolygonMesh: Point "+indexStr+" out of range.");
-          return;
-        }
-        if(v1 >= mayaPoints.length())
-        {
-          MString indexStr;
-          indexStr.set(v1);
-          mayaLogErrorFunc("PolygonMesh: Point "+indexStr+" out of range.");
-          return;
-        }
-        if(v2 >= mayaPoints.length())
-        {
-          MString indexStr;
-          indexStr.set(v2);
-          mayaLogErrorFunc("PolygonMesh: Point "+indexStr+" out of range.");
-          return;
-        }
-        if(v0 == v1 || v0 == v2 || v1 == v2)
-        {
-          MString indexStr;
-          indexStr.set(face);
-          mayaLogErrorFunc("PolygonMesh: Polygon corrupt polygon ["+indexStr+"].");
-          return;
-        }
-        if(mayaCounts[face] > 3)
-        {
-          int v3 = mayaIndices[offset+3];
-          if(v3 >= mayaPoints.length())
-          {
-            MString indexStr;
-            indexStr.set(v3);
-            mayaLogErrorFunc("PolygonMesh: Point "+indexStr+" out of range.");
-            return;
-          }
-          if(v3 == v0 || v3 == v1 || v3 == v2)
-          {
-            MString indexStr;
-            indexStr.set(face);
-            mayaLogErrorFunc("PolygonMesh: Polygon corrupt polygon ["+indexStr+"].");
-            return;
-          }
-        }
-      }
-
       vertex++;
 
-      if(vertex == mayaCounts[face])
-      {
+      if( vertex == mayaCounts[face] ) {
         offset += mayaCounts[face];
         face++;
         vertex = 0;
-
-        if(face == mayaCounts.length())
-        {
-          if(i != mayaIndices.length() - 1)
-          {
-            mayaLogErrorFunc("PolygonMesh: Corrupt mayaCounts vs mayaIndices.");
-            return;
-          }
-        }
-        else if(mayaCounts[face] != 3 && mayaCounts[face] != 4)
-        {
-          MString mayaCountStr;
-          mayaCountStr.set(mayaCounts[face]);
-          mayaLogErrorFunc("PolygonMesh: Polygon with "+mayaCountStr+" vertices not supported.");
-          return;
-        }
       }
     }
   
