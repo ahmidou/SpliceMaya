@@ -475,7 +475,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
         dataType = "SpliceMayaData";
     }
 
-    FabricServices::CodeCompletion::KLTypeDesc typeDesc(dataType);
+    FabricServices::DFGWrapper::KLTypeDesc typeDesc(dataType);
 
     std::string arrayType = "Single Value";
     if(typeDesc.isArray())
