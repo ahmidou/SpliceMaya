@@ -212,9 +212,10 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   DFGWrapper::GraphExecutablePtr graph = getDFGGraph();
   for(int i = 0; i < _dirtyPlugs.length(); ++i){
     MString plugName = _dirtyPlugs[i];
+    MString portName = getPortName(plugName);
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull()){
-      DFGWrapper::PortPtr port = graph->getPort(plugName.asChar());
+      DFGWrapper::PortPtr port = graph->getPort(portName.asChar());
       if(!port)
         continue;
       if(!port->isValid())
@@ -228,7 +229,7 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
 
         for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
         {
-          if(mSpliceMayaDataOverride[j] == plugName.asChar())
+          if(mSpliceMayaDataOverride[j] == portName.asChar())
           {
             portDataType = "SpliceMayaData";
             break;
@@ -312,12 +313,13 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
     if(portType != FabricCore::DFGPortType_In){
       
       std::string portName = ports[i]->getName();
+      std::string plugName = getPlugName(portName.c_str()).asChar();
       std::string portDataType = ports[i]->getResolvedType();
 
       if(portDataType.substr(portDataType.length()-2, 2) == "[]")
         portDataType = portDataType.substr(0, portDataType.length()-2);
 
-      MPlug plug = thisNode.findPlug(portName.c_str());
+      MPlug plug = thisNode.findPlug(plugName.c_str());
       if(!plug.isNull()){
         for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
         {
@@ -460,7 +462,8 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   for(int i = 0; i < ports.size(); ++i){
     std::string portName = ports[i]->getName();
-    MPlug plug = thisNode.findPlug(portName.c_str());
+    MString plugName = getPlugName(portName.c_str());
+    MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
       continue;
 
@@ -492,7 +495,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     if(portType != FabricCore::DFGPortType_Out)
     {
       MFnDependencyNode thisNode(getThisMObject());
-      MPlug plug = thisNode.findPlug(portName.c_str());
+      MPlug plug = thisNode.findPlug(plugName);
       if(!plug.isNull())
       {
         FabricCore::RTVal value = ports[i]->getArgValue();
@@ -545,7 +548,8 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   for(int i = 0; i < ports.size(); ++i){
     std::string portName = ports[i]->getName();
-    MPlug plug = thisNode.findPlug(portName.c_str());
+    MString plugName = getPlugName(portName.c_str());
+    MPlug plug = thisNode.findPlug(plugName);
     if(plug.isNull())
       continue;
 
@@ -557,7 +561,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     if(portType != FabricCore::DFGPortType_Out)
     {
       MString command("dgeval ");
-      MGlobal::executeCommandOnIdle(command+thisNode.name()+"."+portName.c_str());
+      MGlobal::executeCommandOnIdle(command+thisNode.name()+"."+plugName);
       break;
     }
   }
@@ -565,6 +569,24 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   // todo... set values?
 
   MAYADFG_CATCH_END(stat);
+}
+
+MString FabricDFGBaseInterface::getPlugName(MString portName)
+{
+  if(portName == "message")
+    return "dfg_message";
+  else if(portName == "saveData")
+    return "dfg_saveData";
+  return portName;
+}
+
+MString FabricDFGBaseInterface::getPortName(MString plugName)
+{
+  if(plugName == "dfg_message")
+    return "message";
+  else if(plugName == "dfg_saveData")
+    return "saveData";
+  return plugName;
 }
 
 void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
@@ -610,7 +632,8 @@ void FabricDFGBaseInterface::invalidateNode()
     // if(ports[i]->isManipulatable())
     //   continue;
     std::string portName = ports[i]->getName();
-    MPlug plug = thisNode.findPlug(portName.c_str());
+    MString plugName = getPortName(portName.c_str());
+    MPlug plug = thisNode.findPlug(plugName);
     MObject attrObj = plug.attribute();
     if(attrObj.apiType() == MFn::kTypedAttribute)
     {
@@ -624,8 +647,8 @@ void FabricDFGBaseInterface::invalidateNode()
   // ensure that the node is invalidated
   for(int i = 0; i < ports.size(); ++i){
     std::string portName = ports[i]->getName();
-    
-    MPlug plug = thisNode.findPlug(portName.c_str());
+    MString plugName = getPortName(portName.c_str());
+    MPlug plug = thisNode.findPlug(plugName);
 
     if(!ports[i]->isValid())
       continue;
@@ -695,7 +718,8 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
         continue;
       FabricCore::DFGPortType portType = ports[i]->getEndPointType();
       if(portType != FabricCore::DFGPortType_Out){
-        MPlug outPlug = thisNode.findPlug(ports[i]->getName());
+        MString plugName = getPlugName(ports[i]->getName());
+        MPlug outPlug = thisNode.findPlug(plugName);
         if(!outPlug.isNull()){
           if(!plugInArray(outPlug, _affectedPlugs)){
             _affectedPlugs.append(outPlug);
@@ -766,7 +790,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     arrayType = "Single Value";
 
   MFnDependencyNode thisNode(getThisMObject());
-  MPlug plug = thisNode.findPlug(portName);
+  MString plugName = getPlugName(portName);
+  MPlug plug = thisNode.findPlug(plugName);
   if(!plug.isNull()){
     mayaLogFunc("Attribute '"+portName+"' already exists on node '"+thisNode.name()+"'.");
     return newAttribute;
@@ -840,7 +865,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   //     }
 
   //     /// now create the compound attribute
-  //     newAttribute = cAttr.create(portName, portName);
+  //     newAttribute = cAttr.create(plugName, plugName);
   //     if(arrayType == "Array (Multi)")
   //     {
   //       cAttr.setArray(true);
@@ -865,11 +890,11 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = nAttr.create(portName, portName, MFnNumericData::kBoolean);
+      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kBoolean);
     }
     else if(arrayType == "Array (Multi)")
     {
-      newAttribute = nAttr.create(portName, portName, MFnNumericData::kBoolean);
+      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kBoolean);
       nAttr.setArray(true);
       nAttr.setUsesArrayDataBuilder(true);
     }
@@ -883,17 +908,17 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = nAttr.create(portName, portName, MFnNumericData::kInt);
+      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt);
     }
     else if(arrayType == "Array (Multi)")
     {
-      newAttribute = nAttr.create(portName, portName, MFnNumericData::kInt);
+      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt);
       nAttr.setArray(true);
       nAttr.setUsesArrayDataBuilder(true);
     }
     else if(arrayType == "Array (Native)")
     {
-      newAttribute = tAttr.create(portName, portName, MFnData::kIntArray);
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kIntArray);
     }
     else
     {
@@ -929,14 +954,14 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if(arrayType == "Single Value" || arrayType == "Array (Multi)")
     {
       if(scalarUnit == "time")
-        newAttribute = uAttr.create(portName, portName, MFnUnitAttribute::kTime);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kTime);
       else if(scalarUnit == "angle")
-        newAttribute = uAttr.create(portName, portName, MFnUnitAttribute::kAngle);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kAngle);
       else if(scalarUnit == "distance")
-        newAttribute = uAttr.create(portName, portName, MFnUnitAttribute::kDistance);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kDistance);
       else
       {
-        newAttribute = nAttr.create(portName, portName, MFnNumericData::kDouble);
+        newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kDouble);
         isUnitAttr = false;
       }
 
@@ -956,7 +981,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     }
     else if(arrayType == "Array (Native)")
     {
-      newAttribute = tAttr.create(portName, portName, MFnData::kDoubleArray);
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kDoubleArray);
     }
     else
     {
@@ -1012,10 +1037,10 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = tAttr.create(portName, portName, MFnData::kString, emptyStringObject);
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kString, emptyStringObject);
     }
     else if(arrayType == "Array (Multi)"){
-      newAttribute = tAttr.create(portName, portName, MFnData::kString, emptyStringObject);
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kString, emptyStringObject);
       tAttr.setArray(true);
       tAttr.setUsesArrayDataBuilder(true);
     }
@@ -1029,11 +1054,11 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = nAttr.createColor(portName, portName);
+      newAttribute = nAttr.createColor(plugName, plugName);
     }
     else if(arrayType == "Array (Multi)")
     {
-      newAttribute = nAttr.createColor(portName, portName);
+      newAttribute = nAttr.createColor(plugName, plugName);
       nAttr.setArray(true);
       nAttr.setUsesArrayDataBuilder(true);
     }
@@ -1047,32 +1072,32 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      MObject x = nAttr.create(portName+"_x", portName+"_x", MFnNumericData::kDouble);
+      MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
-      MObject y = nAttr.create(portName+"_y", portName+"_y", MFnNumericData::kDouble);
+      MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
-      MObject z = nAttr.create(portName+"_z", portName+"_z", MFnNumericData::kDouble);
+      MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
-      newAttribute = cAttr.create(portName, portName);
+      newAttribute = cAttr.create(plugName, plugName);
       cAttr.addChild(x);
       cAttr.addChild(y);
       cAttr.addChild(z);
     }
     else if(arrayType == "Array (Multi)")
     {
-      MObject x = nAttr.create(portName+"_x", portName+"_x", MFnNumericData::kDouble);
+      MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
-      MObject y = nAttr.create(portName+"_y", portName+"_y", MFnNumericData::kDouble);
+      MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
-      MObject z = nAttr.create(portName+"_z", portName+"_z", MFnNumericData::kDouble);
+      MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
-      newAttribute = cAttr.create(portName, portName);
+      newAttribute = cAttr.create(plugName, plugName);
       cAttr.addChild(x);
       cAttr.addChild(y);
       cAttr.addChild(z);
@@ -1081,7 +1106,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     }
     else if(arrayType == "Array (Native)")
     {
-      newAttribute = tAttr.create(portName, portName, MFnData::kVectorArray);
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kVectorArray);
     }
     else
     {
@@ -1093,29 +1118,29 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      MObject x = uAttr.create(portName+"_x", portName+"_x", MFnUnitAttribute::kAngle);
+      MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
       uAttr.setStorable(true);
       uAttr.setKeyable(true);
-      MObject y = uAttr.create(portName+"_y", portName+"_y", MFnUnitAttribute::kAngle);
+      MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
       uAttr.setStorable(true);
       uAttr.setKeyable(true);
-      MObject z = uAttr.create(portName+"_z", portName+"_z", MFnUnitAttribute::kAngle);
+      MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
       uAttr.setStorable(true);
       uAttr.setKeyable(true);
-      newAttribute = cAttr.create(portName, portName);
+      newAttribute = cAttr.create(plugName, plugName);
       cAttr.addChild(x);
       cAttr.addChild(y);
       cAttr.addChild(z);
     }
     else if(arrayType == "Array (Multi)")
     {
-      MObject x = uAttr.create(portName+"_x", portName+"_x", MFnUnitAttribute::kAngle);
+      MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
       uAttr.setStorable(true);
-      MObject y = uAttr.create(portName+"_y", portName+"_y", MFnUnitAttribute::kAngle);
+      MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
       uAttr.setStorable(true);
-      MObject z = uAttr.create(portName+"_z", portName+"_z", MFnUnitAttribute::kAngle);
+      MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
       uAttr.setStorable(true);
-      newAttribute = cAttr.create(portName, portName);
+      newAttribute = cAttr.create(plugName, plugName);
       cAttr.addChild(x);
       cAttr.addChild(y);
       cAttr.addChild(z);
@@ -1132,11 +1157,11 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = mAttr.create(portName, portName);
+      newAttribute = mAttr.create(plugName, plugName);
     }
     else if(arrayType == "Array (Multi)")
     {
-      newAttribute = mAttr.create(portName, portName);
+      newAttribute = mAttr.create(plugName, plugName);
       mAttr.setArray(true);
       mAttr.setUsesArrayDataBuilder(true);
     }
@@ -1150,12 +1175,12 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = tAttr.create(portName, portName, MFnData::kMesh);
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kMesh);
       storable = false;
     }
     else if(arrayType == "Array (Multi)")
     {
-      newAttribute = tAttr.create(portName, portName, MFnData::kMesh);
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kMesh);
       storable = false;
       tAttr.setArray(true);
       tAttr.setUsesArrayDataBuilder(true);
@@ -1170,12 +1195,12 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = tAttr.create(portName, portName, MFnData::kNurbsCurve);
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kNurbsCurve);
       storable = false;
     }
     else if(arrayType == "Array (Multi)")
     {
-      newAttribute = tAttr.create(portName, portName, MFnData::kNurbsCurve);
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kNurbsCurve);
       storable = false;
       tAttr.setArray(true);
       tAttr.setUsesArrayDataBuilder(true);
@@ -1191,7 +1216,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if(arrayType == "Single Value")
     {
       if(getDFGGraph()->getPort(portName.asChar())){
-        newAttribute = pAttr.create(portName, portName);
+        newAttribute = pAttr.create(plugName, plugName);
         pAttr.setStorable(true);
         pAttr.setKeyable(true);
         pAttr.setCached(false);
@@ -1204,7 +1229,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     else
     {
       if(getDFGGraph()->getPort(portName.asChar())){
-        newAttribute = pAttr.create(portName, portName);
+        newAttribute = pAttr.create(plugName, plugName);
         pAttr.setStorable(true);
         pAttr.setKeyable(true);
         pAttr.setArray(true);
@@ -1221,7 +1246,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if(arrayType == "Single Value")
     {
       if(getDFGGraph()->getPort(portName.asChar())){
-        newAttribute = tAttr.create(portName, portName, FabricSpliceMayaData::id);
+        newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
       }
@@ -1233,7 +1258,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     else
     {
       if(getDFGGraph()->getPort(portName.asChar())){
-        newAttribute = tAttr.create(portName, portName, FabricSpliceMayaData::id);
+        newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
         tAttr.setArray(true);
@@ -1309,10 +1334,11 @@ void FabricDFGBaseInterface::removeMayaAttribute(MString portName, MStatus * sta
   MAYASPLICE_CATCH_BEGIN(stat);
 
   MFnDependencyNode thisNode(getThisMObject());
-  MPlug plug = thisNode.findPlug(portName);
+  MString plugName = getPlugName(portName);
+  MPlug plug = thisNode.findPlug(plugName);
   if(!plug.isNull())
   {
-    MString command = "deleteAttr "+thisNode.name()+"."+portName;
+    MString command = "deleteAttr "+thisNode.name()+"."+plugName;
     MGlobal::executeCommandOnIdle(command); 
     // in Maya 2015 this is causing a crash in Qt due to a bug in Maya.
     // thisNode.removeAttribute(plug.attribute());
@@ -1345,7 +1371,8 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
           continue;
         if(ports[i]->getEndPointType() != FabricCore::DFGPortType_In)
           continue;
-        MPlug plug = thisNode.findPlug(otherPortName.c_str());
+        MString otherPlugName = getPlugName(otherPortName.c_str());
+        MPlug plug = thisNode.findPlug(otherPlugName);
         if(plug.isNull())
           continue;
         userNode->attributeAffects(plug.attribute(), newAttribute);
@@ -1365,7 +1392,8 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
           continue;
         if(ports[i]->getEndPointType() == FabricCore::DFGPortType_In)
           continue;
-        MPlug plug = thisNode.findPlug(otherPortName.c_str());
+        MString otherPlugName = getPlugName(otherPortName.c_str());
+        MPlug plug = thisNode.findPlug(otherPlugName);
         if(plug.isNull())
           continue;
         userNode->attributeAffects(newAttribute, plug.attribute());
@@ -1470,13 +1498,14 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
   {
     const FabricCore::Variant * nameVar = notificationVar.getDictValue("name");
     std::string nameStr = nameVar->getStringData();
+    MString plugName = interf->getPlugName(nameStr.c_str());
     const FabricCore::Variant * newTypeVar = notificationVar.getDictValue("newType");
     std::string newTypeStr = newTypeVar->getStringData();
 
     MFnDependencyNode thisNode(interf->getThisMObject());
 
     // remove existing attributes if types don't match
-    MPlug plug = thisNode.findPlug(nameStr.c_str());
+    MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
     {
       return;
@@ -1499,11 +1528,12 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
   {
     const FabricCore::Variant * nameVar = notificationVar.getDictValue("name");
     std::string nameStr = nameVar->getStringData();
+    MString plugName = interf->getPlugName(nameStr.c_str());
 
     MFnDependencyNode thisNode(interf->getThisMObject());
 
     // remove existing attributes if types match
-    MPlug plug = thisNode.findPlug(nameStr.c_str());
+    MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
       interf->removeMayaAttribute(nameStr.c_str());
   }
@@ -1513,12 +1543,14 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
     const FabricCore::Variant * newNameVar = notificationVar.getDictValue("newName");
     std::string oldNameStr = oldNameVar->getStringData();
     std::string newNameStr = newNameVar->getStringData();
+    MString oldPlugName = interf->getPlugName(oldNameStr.c_str());
+    MString newPlugName = interf->getPlugName(newNameStr.c_str());
 
     MFnDependencyNode thisNode(interf->getThisMObject());
 
     // remove existing attributes if types match
-    MPlug plug = thisNode.findPlug(oldNameStr.c_str());
-    interf->renamePlug(plug, oldNameStr.c_str(), newNameStr.c_str());
+    MPlug plug = thisNode.findPlug(oldPlugName);
+    interf->renamePlug(plug, oldPlugName, newPlugName);
   }
 }
 

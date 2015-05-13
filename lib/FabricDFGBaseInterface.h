@@ -78,6 +78,8 @@ public:
   virtual void invalidateNode();
 
 protected:
+  MString getPlugName(MString portName);
+  MString getPortName(MString plugName);
   void invalidatePlug(MPlug & plug);
   void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
 
