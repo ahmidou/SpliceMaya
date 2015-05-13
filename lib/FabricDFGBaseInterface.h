@@ -127,6 +127,7 @@ protected:
 private:
   static void bindingNotificationCallback(void * userData, char const *jsonCString, uint32_t jsonLength);
   bool plugInArray(const MPlug &plug, const MPlugArray &array);
+  void renamePlug(const MPlug &plug, MString oldName, MString newName);
 
   unsigned int m_id;
   static unsigned int s_maxID;

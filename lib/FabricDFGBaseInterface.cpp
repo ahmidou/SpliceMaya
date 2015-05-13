@@ -1459,7 +1459,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
     return;
   FabricDFGBaseInterface * interf = (FabricDFGBaseInterface *)userData;
 
-  MGlobal::displayInfo(jsonCString);
+  // MGlobal::displayInfo(jsonCString);
 
   FabricCore::Variant notificationVar = FabricCore::Variant::CreateFromJSON(jsonCString, jsonLength);
 
@@ -1506,5 +1506,38 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
     MPlug plug = thisNode.findPlug(nameStr.c_str());
     if(!plug.isNull())
       interf->removeMayaAttribute(nameStr.c_str());
+  }
+  else if(descStr == "argRenamed")
+  {
+    const FabricCore::Variant * oldNameVar = notificationVar.getDictValue("oldName");
+    const FabricCore::Variant * newNameVar = notificationVar.getDictValue("newName");
+    std::string oldNameStr = oldNameVar->getStringData();
+    std::string newNameStr = newNameVar->getStringData();
+
+    MFnDependencyNode thisNode(interf->getThisMObject());
+
+    // remove existing attributes if types match
+    MPlug plug = thisNode.findPlug(oldNameStr.c_str());
+    interf->renamePlug(plug, oldNameStr.c_str(), newNameStr.c_str());
+  }
+}
+
+void FabricDFGBaseInterface::renamePlug(const MPlug &plug, MString oldName, MString newName)
+{
+  if(plug.isNull())
+    return;
+
+  MFnDependencyNode thisNode(getThisMObject());
+
+  MString newPlugName = newName + plug.partialName().substring(oldName.length(), plug.partialName().length());
+  MString cmdStr = "renameAttr \"";
+  cmdStr += thisNode.name() + "." + plug.partialName();
+  cmdStr += "\" \"" + newPlugName + "\";";
+  MGlobal::executeCommandOnIdle(cmdStr, false);
+  // MGlobal::displayInfo(cmdStr);
+
+  for(unsigned int i=0;i<plug.numChildren();i++)
+  {
+    renamePlug(plug.child(i), oldName, newName);
   }
 }
