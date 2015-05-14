@@ -25,12 +25,16 @@ void enableRTRPass(bool enable)
   gRTRPassEnabled = enable;
 }
 
-FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
+FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(const MString &str, M3dView & view)
 {
-  if(!sDrawContext.isValid())
+  if(!sDrawContext.isValid()) {
     sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
-  else if(sDrawContext.isObject() && sDrawContext.isNullObject())
+    sDrawContext = sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+  }
+  else if(sDrawContext.isObject() && sDrawContext.isNullObject()) {
     sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+    sDrawContext = sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+  }
 
   // sync the time
   sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
@@ -45,6 +49,9 @@ FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(M3dView & view)
   args[1] = FabricSplice::constructFloat64RTVal(width);
   args[2] = FabricSplice::constructFloat64RTVal(height);
   inlineViewport.callMethod("", "resize", 3, &args[0]);
+
+  FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(str.asChar());
+  inlineViewport.callMethod("", "setName", 1, &panelNameVal);
 
   {
     FabricCore::RTVal inlineCamera = inlineViewport.callMethod("InlineCamera", "getCamera", 0, 0);
@@ -155,7 +162,7 @@ void FabricSpliceRenderCallback::draw(const MString &str, void *clientData){
   try
   {
     FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()");
-    FabricSplice::SceneManagement::drawOpenGL(getDrawContext(view));
+    FabricSplice::SceneManagement::drawOpenGL(getDrawContext(str, view));
   }
   catch(FabricSplice::Exception e)
   {
