@@ -14,7 +14,7 @@ class FabricSpliceRenderCallback
 {
 public:
   static void draw(const MString &str, void *clientData);
-  static FabricCore::RTVal & getDrawContext(M3dView & view);
+  static FabricCore::RTVal & getDrawContext(const MString &str, M3dView & view);
   static FabricCore::RTVal sDrawContext;
 };
 
