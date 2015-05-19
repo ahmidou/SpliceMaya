@@ -29,6 +29,7 @@
 #include "FabricDFGWidget.h"
 #include "FabricDFGMayaNode.h"
 #include "FabricDFGCommands.h"
+#include "FabricSpliceHelpers.h"
 
 #ifdef _MSC_VER
   #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
@@ -63,38 +64,18 @@ MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
 MCallbackId gBeforeSceneOpenCallbackId;
 
-
-MString gLastLoadedScene;
-MString mayaGetLastLoadedScene()
-{
-  return gLastLoadedScene;
-}
-
-MString gModuleFolder;
-void initModuleFolder(MFnPlugin &plugin){
-  MString pluginPath = plugin.loadPath();
-  MString lastFolder("plug-ins");
-
-  gModuleFolder = pluginPath.substring(0, pluginPath.length() - lastFolder.length() - 2);
-}
-
-MString getModuleFolder()
-{
-  return gModuleFolder;
-}
-
 void onSceneSave(void *userData){
 
   MStatus status = MS::kSuccess;
-  gLastLoadedScene = MFileIO::beforeSaveFilename(&status);
-  if(gLastLoadedScene.length() == 0) // this happens during copy & paste
+  mayaSetLastLoadedScene(MFileIO::beforeSaveFilename(&status));
+  if(mayaGetLastLoadedScene().length() == 0) // this happens during copy & paste
     return;
 
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
   for(int i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
-    node->storePersistenceData(gLastLoadedScene, &status);
+    node->storePersistenceData(mayaGetLastLoadedScene(), &status);
   }
 
   FabricDFGBaseInterface::allStorePersistenceData(gLastLoadedScene, &status);
@@ -117,7 +98,7 @@ void onSceneLoad(void *userData){
     FabricSplice::Logging::enableTimers();
 
   MStatus status = MS::kSuccess;
-  gLastLoadedScene = MFileIO::currentFile();
+  mayaSetLastLoadedScene(MFileIO::currentFile());
 
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
@@ -125,7 +106,7 @@ void onSceneLoad(void *userData){
   FabricSplice::Logging::AutoTimer persistenceTimer("Maya::onSceneLoad");
   for(int i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
-    node->restoreFromPersistenceData(gLastLoadedScene, &status); 
+    node->restoreFromPersistenceData(mayaGetLastLoadedScene(), &status); 
     if( status != MS::kSuccess)
       return;
   }
@@ -164,91 +145,12 @@ bool isDestroyingScene()
   return gSceneIsDestroying;
 }
 
-void mayaLogFunc(const MString & message)
-{
-  MGlobal::displayInfo(MString("[Splice] ")+message);
-  FabricUI::DFG::DFGLogWidget::log(message.asChar());
-}
-
-void mayaLogFunc(const char * message, unsigned int length)
-{
-  mayaLogFunc(MString(message));
-}
-
-bool gErrorEnabled = true;
-void mayaErrorLogEnable(bool enable)
-{
-  gErrorEnabled = enable;
-}
-
-bool gErrorOccured = false;
-void mayaLogErrorFunc(const MString & message)
-{
-  if(!gErrorEnabled)
-    return;
-  MString composed = MString("[Splice] ")+message;
-  MGlobal::displayError(composed);
-  FabricUI::DFG::DFGLogWidget::log(composed.asChar());
-
-  gErrorOccured = true;
-}
-
-void mayaLogErrorFunc(const char * message, unsigned int length)
-{
-  mayaLogErrorFunc(MString(message));
-}
-
-void mayaClearError()
-{
-  gErrorOccured = false;
-}
-
-MStatus mayaErrorOccured()
-{
-  MStatus result = MS::kSuccess;
-  if(gErrorOccured)
-    result = MS::kFailure;
-  gErrorOccured = false;
-  return result;
-}
-
-void mayaKLReportFunc(const char * message, unsigned int length)
-{
-  MString composed = MString("[KL]: ")+MString(message);
-  MGlobal::displayInfo(composed);
-  FabricUI::DFG::DFGLogWidget::log(composed.asChar());
-}
-
-void mayaCompilerErrorFunc(unsigned int row, unsigned int col, const char * file, const char * level, const char * desc)
-{
-  MString line;
-  line.set(row);
-  MString composed = "[KL Compiler "+MString(level)+"]: line "+line+", op '"+MString(file)+"': "+MString(desc);
-  MGlobal::displayInfo(composed);
-  FabricSpliceEditorWidget::reportAllCompilerError(row, col, file, level, desc);
-  FabricUI::DFG::DFGLogWidget::log(composed.asChar());
-}
-
-void mayaKLStatusFunc(const char * topic, unsigned int topicLength,  const char * message, unsigned int messageLength)
-{
-  MString composed = MString("[KL Status]: ")+MString(message);
-  MGlobal::displayInfo(composed);
-  FabricUI::DFG::DFGLogWidget::log(composed.asChar());
-}
-
-void mayaRefreshFunc()
-{
-  MGlobal::executeCommandOnIdle("refresh");
-}
-
-
-
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
-  MFnPlugin plugin(obj, getPluginName().asChar(), FabricSplice::GetFabricVersionStr(), "Any");
+  MFnPlugin plugin(obj, "FabricSpliceMaya", FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status;
 
   status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
@@ -312,7 +214,10 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("dfgImplodeNodes", FabricDFGImplodeNodesCommand::creator, FabricDFGImplodeNodesCommand::newSyntax);
   plugin.registerCommand("dfgExplodeNode", FabricDFGExplodeNodeCommand::creator, FabricDFGExplodeNodeCommand::newSyntax);
 
-  initModuleFolder(plugin);
+  MString pluginPath = plugin.loadPath();
+  MString lastFolder("plug-ins");
+  MString moduleFolder = pluginPath.substring(0, pluginPath.length() - lastFolder.length() - 2);
+  initModuleFolder(moduleFolder);
 
   FabricSplice::Initialize();
   FabricSplice::Logging::setLogFunc(mayaLogFunc);
@@ -402,15 +307,10 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   return status;
 }
 
-MString getPluginName()
-{
-  return "FabricSpliceMaya";
-}
-
 void loadMenu()
 {
   MString cmd = "source \"FabricSpliceMenu.mel\"; FabricSpliceLoadMenu(\"";
-  cmd += getPluginName();
+  cmd += "FabricSpliceMaya";
   cmd += "\");";
   MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
   if (commandStatus != MStatus::kSuccess)

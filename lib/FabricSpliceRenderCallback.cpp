@@ -2,6 +2,7 @@
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceToolContext.h"
+#include "FabricSpliceHelpers.h"
 
 #include <maya/MGlobal.h>
 #include <maya/M3dView.h>

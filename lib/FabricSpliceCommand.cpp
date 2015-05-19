@@ -24,6 +24,7 @@
 #include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceLicenseDialog.h"
+#include "FabricSpliceHelpers.h"
 
 #define kActionFlag "-a"
 #define kActionFlagLong "-action"

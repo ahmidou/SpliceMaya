@@ -2,7 +2,7 @@
 #include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceMayaData.h"
-// #include "plugin.h"
+#include "FabricSpliceHelpers.h"
 
 #include <string>
 #include <fstream>

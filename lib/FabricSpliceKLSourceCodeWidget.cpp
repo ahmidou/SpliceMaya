@@ -6,7 +6,7 @@
 #include <QtGui/QToolTip>
 
 #include "FabricSpliceKLSourceCodeWidget.h"
-#include "plugin.h"
+#include "FabricSpliceHelpers.h"
 
 #include <maya/MString.h>
 #include <maya/MGlobal.h>
