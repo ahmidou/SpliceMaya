@@ -5,7 +5,6 @@
 #include <QtCore/QEvent>
 
 #include "Foundation.h"
-#include "plugin.h"
 #include <FabricSplice.h>
 #include "FabricSpliceBaseInterface.h"
 

@@ -3,7 +3,6 @@
 
 
 #include "Foundation.h"
-#include "plugin.h"
 #include <FabricCore.h>
 #include <maya/M3dView.h>
 

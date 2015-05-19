@@ -1,6 +1,7 @@
 
 #include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceMayaNode.h"
+#include "FabricSpliceHelpers.h"
 
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>

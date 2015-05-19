@@ -2,7 +2,6 @@
 #define _FabricSpliceBaseInterface_H_
 
 #include "FabricSpliceConversion.h"
-#include "plugin.h"
 
 #include <vector>
 

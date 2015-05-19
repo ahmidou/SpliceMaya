@@ -2,7 +2,7 @@
 #include "FabricSpliceEditorCmd.h"
 #include "FabricSpliceKLSourceCodeWidget.h"
 #include "FabricSpliceEditorWidget.h"
-#include "plugin.h"
+#include "FabricSpliceHelpers.h"
 
 #include <FabricSplice.h>
 

@@ -6,7 +6,7 @@
 #include "FabricSpliceLicenseDialog.h"
 #include "FabricSpliceButtonWidget.h"
 #include "FabricSpliceLogoWidget.h"
-#include "plugin.h"
+#include "FabricSpliceHelpers.h"
 #include <FabricSplice.h>
 
 #include <maya/MGlobal.h>

@@ -6,6 +6,7 @@
 #include "FabricSpliceToolContext.h"
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
+#include "FabricSpliceHelpers.h"
 #include <FabricSplice.h>
 #include <maya/MCursor.h>
 #include <maya/MDagPath.h>

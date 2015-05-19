@@ -16,7 +16,7 @@
 #include "FabricSpliceAddOpDialog.h"
 #include "FabricSpliceConfirmDialog.h"
 #include "FabricSplicePortDialog.h"
-#include "plugin.h"
+#include "FabricSpliceHelpers.h"
 #include <FabricSplice.h>
 
 #include <maya/MGlobal.h>
@@ -220,7 +220,7 @@ FabricSpliceEditorWidget * FabricSpliceEditorWidget::getFirstOrOpen(bool onIdle)
   if(widget == NULL)
   {
     MString cmd = "source \"FabricSpliceUI.mel\"; showSpliceEditor(\"";
-    cmd += getPluginName();
+    cmd += "FabricSpliceMaya";
     cmd += "\");";
     MStatus commandStatus;
     if(onIdle)
