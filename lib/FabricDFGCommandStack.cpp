@@ -68,6 +68,8 @@ void FabricDFGCommandStack::enableMayaCommands(bool state)
 bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * genericCommand, unsigned int id, bool undoable, FabricServices::Commands::Command * lastCommand)
 {
   bool result = true;
+  FabricDFGBaseInterface * interf = NULL;
+
   MString commandName = genericCommand->getName();
 
   // in case of a compound, undoable only if 
@@ -88,6 +90,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGAddNodeCommand * cmd = (DFG::DFGAddNodeCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath().c_str();
       MString preset = cmd->getPreset().c_str();
@@ -111,6 +114,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGRemoveNodeCommand * cmd = (DFG::DFGRemoveNodeCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getNodePath().toUtf8().constData();
       DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
@@ -126,6 +130,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGRenameNodeCommand * cmd = (DFG::DFGRenameNodeCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath().toUtf8().constData();
       MString name = cmd->getTitle().toUtf8().constData();
@@ -143,6 +148,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGAddEmptyFuncCommand * cmd = (DFG::DFGAddEmptyFuncCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath().c_str();
       MString name = cmd->getTitle().c_str();
@@ -166,6 +172,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGAddEmptyGraphCommand * cmd = (DFG::DFGAddEmptyGraphCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath().c_str();
       MString name = cmd->getTitle().c_str();
@@ -189,6 +196,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGAddConnectionCommand * cmd = (DFG::DFGAddConnectionCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString srcPath = cmd->getSrcPath();
       MString dstPath = cmd->getDstPath();
@@ -216,6 +224,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGRemoveConnectionCommand * cmd = (DFG::DFGRemoveConnectionCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString srcPath = cmd->getSrcPath();
       MString dstPath = cmd->getDstPath();
@@ -243,6 +252,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGAddPortCommand * cmd = (DFG::DFGAddPortCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getExecPath();
       MString name = cmd->getPortName();
@@ -268,6 +278,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGRemovePortCommand * cmd = (DFG::DFGRemovePortCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getExecPath();
       MString name = cmd->getPortName();
@@ -285,6 +296,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGRenamePortCommand * cmd = (DFG::DFGRenamePortCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath();
       MString name = cmd->getPortName();
@@ -302,6 +314,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGSetArgCommand * cmd = (DFG::DFGSetArgCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getArgName();
       MString dataType = cmd->getDataType();
@@ -321,6 +334,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGSetDefaultValueCommand * cmd = (DFG::DFGSetDefaultValueCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath();
       MString dataType = cmd->getDataType();
@@ -340,6 +354,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGSetCodeCommand * cmd = (DFG::DFGSetCodeCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath().c_str();
       std::string code = cmd->getCode();
@@ -358,6 +373,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGSetNodeCacheRuleCommand * cmd = (DFG::DFGSetNodeCacheRuleCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath().toUtf8().constData();
       MString cacheRule = cmd->getRuleName().toUtf8().constData();
@@ -375,6 +391,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGCopyCommand * cmd = (DFG::DFGCopyCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
@@ -398,6 +415,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGPasteCommand * cmd = (DFG::DFGPasteCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
@@ -413,6 +431,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGImplodeNodesCommand * cmd = (DFG::DFGImplodeNodesCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
@@ -438,6 +457,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     if(s_mayaCommandsEnabled)
     {
       DFG::DFGExplodeNodeCommand * cmd = (DFG::DFGExplodeNodeCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
@@ -451,6 +471,11 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     mayaLogErrorFunc(MString("FabricDFGCommandStack:: unknown DFG command ")+genericCommand->getName());
     result = false;
   }
+
+  // increment the eval id
+  if(interf)
+    interf->incrementEvalID();
+
   return result;
 }
 
@@ -459,13 +484,19 @@ FabricDFGCommandStack * FabricDFGCommandStack::getStack()
   return &g_stack;
 }
 
-MString FabricDFGCommandStack::getNodeNameFromCommand(DFG::DFGCommand * command)
+FabricDFGBaseInterface * FabricDFGCommandStack::getInterfaceFromCommand(FabricUI::DFG::DFGCommand * command)
 {
   MString interfIdStr = ((DFG::DFGController*)command->controller())->getBinding().getExecutable()->getMetadata("maya_id");
   if(interfIdStr.length() == 0)
-    return "";
+    return NULL;
   unsigned int interfId = (unsigned int)interfIdStr.asInt();
   FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceById(interfId);
+  return interf;
+}
+
+MString FabricDFGCommandStack::getNodeNameFromCommand(DFG::DFGCommand * command)
+{
+  FabricDFGBaseInterface * interf = getInterfaceFromCommand(command);
   if(interf == NULL)
     return "";
   MFnDependencyNode thisNode(interf->getThisMObject());

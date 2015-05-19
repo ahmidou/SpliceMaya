@@ -76,6 +76,8 @@ public:
 
   virtual void invalidateNode();
 
+  virtual void incrementEvalID();
+
 protected:
   MString getPlugName(MString portName);
   MString getPortName(MString plugName);

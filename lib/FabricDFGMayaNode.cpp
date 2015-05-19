@@ -9,6 +9,7 @@
 
 MTypeId FabricDFGMayaNode::id(0x0011AE46);
 MObject FabricDFGMayaNode::saveData;
+MObject FabricDFGMayaNode::evalID;
 
 FabricDFGMayaNode::FabricDFGMayaNode()
 : FabricDFGBaseInterface()
@@ -29,11 +30,15 @@ void* FabricDFGMayaNode::creator(){
 
 MStatus FabricDFGMayaNode::initialize(){
   MFnTypedAttribute typedAttr;
-  MFnNumericAttribute numericAttr;
+  MFnNumericAttribute nAttr;
 
   saveData = typedAttr.create("saveData", "svd", MFnData::kString);
   typedAttr.setHidden(true);
   addAttribute(saveData);
+
+  evalID = nAttr.create("evalID", "evalID", MFnNumericData::kInt);
+  nAttr.setHidden(true);
+  addAttribute(evalID);
 
   return MS::kSuccess;
 }

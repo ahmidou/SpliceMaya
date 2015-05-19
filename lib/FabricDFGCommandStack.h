@@ -5,6 +5,7 @@
 #include <Commands/CommandStack.h>
 #include <DFG/Commands/DFGCommand.h>
 #include <maya/MString.h>
+#include "FabricDFGBaseInterface.h"
 
 class FabricDFGCommandStack: public FabricServices::Commands::CommandStack
 {
@@ -35,6 +36,7 @@ public:
   static void addCommandToIgnore(const std::string & name, unsigned id, bool undoable);
   static Info consumeCommandToIgnore(const std::string & name);
   static FabricDFGCommandStack * getStack();
+  static FabricDFGBaseInterface * getInterfaceFromCommand(FabricUI::DFG::DFGCommand * command);
   static MString getNodeNameFromCommand(FabricUI::DFG::DFGCommand * command);
   static void enableMayaCommands(bool state);
 

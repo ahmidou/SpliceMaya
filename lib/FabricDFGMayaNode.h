@@ -34,6 +34,7 @@ public:
   // node attributes
   static MTypeId id;
   static MObject saveData;
+  static MObject evalID;
 };
 
 #endif

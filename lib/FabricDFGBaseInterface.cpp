@@ -679,6 +679,20 @@ void FabricDFGBaseInterface::invalidateNode()
   _outputsDirtied = false;
 }
 
+void FabricDFGBaseInterface::incrementEvalID()
+{
+  MFnDependencyNode thisNode(getThisMObject());
+  MPlug evalIDPlug = thisNode.findPlug("evalID");
+  if(evalIDPlug.isNull())
+    return;
+
+  int id = evalIDPlug.asInt();
+  evalIDPlug.setValue(id+1);
+
+  MString idStr;
+  idStr.set(id);
+}
+
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
   bool found = false;
   for(int i = 0; i < array.length(); ++i){
@@ -1378,10 +1392,6 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
           continue;
         userNode->attributeAffects(plug.attribute(), newAttribute);
       }
-
-      MPlug evalIDPlug = thisNode.findPlug("evalID");
-      if(!evalIDPlug.isNull())
-        userNode->attributeAffects(evalIDPlug.attribute(), newAttribute);
     }
     else
     {
