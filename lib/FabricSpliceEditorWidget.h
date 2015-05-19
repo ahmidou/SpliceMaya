@@ -2,6 +2,7 @@
 #ifndef _CREATIONSPLICEEDITORWIDGET_H_
 #define _CREATIONSPLICEEDITORWIDGET_H_
 
+#include <QtCore/QDataStream>
 #include <QtGui/QTabWidget>
 #include <QtGui/QTextEdit>
 #include <QtCore/QEvent>

@@ -1,3 +1,5 @@
+#include <QtGui/QFileDialog>  // [pzion 20150519] Must include first since something below defines macros that mess it up
+
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
 
@@ -5,7 +7,6 @@
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
 #include <maya/MQtUtil.h>
-#include <QtGui/QFileDialog>
 
 #define kNodeFlag "-n"
 #define kNodeFlagLong "-node"

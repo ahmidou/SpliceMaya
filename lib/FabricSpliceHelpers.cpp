@@ -1,5 +1,5 @@
+#include "FabricSpliceEditorWidget.h" // [pzion 20150519] Must come first because of some stupid macro definition somewhere
 #include "FabricSpliceHelpers.h"
-#include "FabricSpliceEditorWidget.h"
 #include <DFG/DFGLogWidget.h>
 #include <DFG/DFGCombinedWidget.h>
 
