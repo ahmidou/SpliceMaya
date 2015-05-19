@@ -5,6 +5,7 @@
 #include "FabricSpliceMayaData.h"
 #include "FabricDFGWidget.h"
 #include "FabricDFGCommandStack.h"
+#include "FabricSpliceHelpers.h"
 
 #include <string>
 #include <fstream>

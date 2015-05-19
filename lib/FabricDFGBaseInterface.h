@@ -4,7 +4,6 @@
 #include <DFG/DFGUI.h>
 
 #include "FabricSpliceConversion.h"
-#include "plugin.h"
 
 #include <vector>
 

@@ -1,6 +1,6 @@
 #include "FabricDFGWidgetCommand.h"
 #include "FabricDFGWidget.h"
-#include "plugin.h"
+#include "FabricSpliceHelpers.h"
 
 #include <maya/MStringArray.h>
 #include <maya/MSyntax.h>
@@ -60,7 +60,7 @@ MStatus FabricDFGWidgetCommand::doIt(const MArgList &args)
 
     // use mel to open a floating window
     MString cmd = "source \"FabricDFGUI.mel\"; showDFGWidget(\"";
-    cmd += getPluginName();
+    cmd += "FabricSpliceMaya";
     cmd += "\");";
     MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
     if (commandStatus != MStatus::kSuccess)

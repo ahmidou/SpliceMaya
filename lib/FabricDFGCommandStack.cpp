@@ -1,6 +1,6 @@
 #include "FabricDFGCommandStack.h"
 #include "FabricDFGBaseInterface.h"
-#include "plugin.h"
+#include "FabricSpliceHelpers.h"
 
 #include <DFG/Commands/DFGAddNodeCommand.h>
 #include <DFG/Commands/DFGRemoveNodeCommand.h>

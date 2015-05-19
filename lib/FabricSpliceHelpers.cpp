@@ -1,5 +1,7 @@
 #include "FabricSpliceHelpers.h"
 #include "FabricSpliceEditorWidget.h"
+#include <DFG/DFGLogWidget.h>
+#include <DFG/DFGCombinedWidget.h>
 
 #include <maya/MGlobal.h>
 

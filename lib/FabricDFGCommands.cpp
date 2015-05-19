@@ -1,5 +1,5 @@
 #include "FabricDFGCommands.h"
-#include "plugin.h"
+#include "FabricSpliceHelpers.h"
 
 #include <maya/MStringArray.h>
 #include <maya/MSyntax.h>

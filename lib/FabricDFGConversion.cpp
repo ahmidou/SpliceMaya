@@ -1,7 +1,7 @@
 
 #include "FabricDFGConversion.h"
 #include "FabricSpliceMayaData.h"
-#include "plugin.h"
+#include "FabricSpliceHelpers.h"
 
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>

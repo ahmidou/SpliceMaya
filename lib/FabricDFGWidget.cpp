@@ -5,7 +5,7 @@
 
 #include "FabricDFGWidget.h"
 #include "FabricDFGBaseInterface.h"
-#include "plugin.h"
+#include "FabricSpliceHelpers.h"
 
 #include <maya/MGlobal.h>
 

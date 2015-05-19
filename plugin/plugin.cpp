@@ -78,7 +78,7 @@ void onSceneSave(void *userData){
     node->storePersistenceData(mayaGetLastLoadedScene(), &status);
   }
 
-  FabricDFGBaseInterface::allStorePersistenceData(gLastLoadedScene, &status);
+  FabricDFGBaseInterface::allStorePersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
 void onSceneNew(void *userData){
@@ -112,7 +112,7 @@ void onSceneLoad(void *userData){
   }
   FabricSpliceEditorWidget::postClearAll();
 
-  FabricDFGBaseInterface::allRestoreFromPersistenceData(gLastLoadedScene, &status);
+  FabricDFGBaseInterface::allRestoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
   {
