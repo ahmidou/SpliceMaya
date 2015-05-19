@@ -5,6 +5,7 @@
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
 #include <maya/MQtUtil.h>
+#include <QtGui/QFileDialog>
 
 #define kNodeFlag "-n"
 #define kNodeFlagLong "-node"
@@ -965,6 +966,24 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
   if(argData.isFlagSet("filePath"))
   {
     MString filePath = argData.flagArgumentString("filePath", 0);
+    if(filePath.length() == 0)
+    {
+      QString qFileName = QFileDialog::getOpenFileName( 
+        MQtUtil::mainWindow(), 
+        "Choose DFG file", 
+        QDir::currentPath(), 
+        "DFG files (*.dfg.json);;All files (*.*)"
+      );
+
+      if(qFileName.isNull())
+      {
+        mayaLogErrorFunc("No filename specified.");
+        return mayaErrorOccured();
+      }
+
+      filePath = qFileName.toUtf8().constData();      
+    }
+
     FILE * file = fopen(filePath.asChar(), "rb");
     if(!file)
     {
@@ -1037,7 +1056,26 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
     path = argData.flagArgumentString("path", 0);
   MString filePath;
   if(argData.isFlagSet("filePath"))
+  {
     filePath = argData.flagArgumentString("filePath", 0);
+    if(filePath.length() == 0)
+    {
+      QString qFileName = QFileDialog::getSaveFileName( 
+        MQtUtil::mainWindow(), 
+        "Choose DFG file", 
+        QDir::currentPath(), 
+        "DFG files (*.dfg.json);;All files (*.*)"
+      );
+
+      if(qFileName.isNull())
+      {
+        mayaLogErrorFunc("No filename specified.");
+        return mayaErrorOccured();
+      }
+      
+      filePath = qFileName.toUtf8().constData();      
+    }
+  }
 
   FabricDFGCommandStack::enableMayaCommands(false);
   MString json = interf->getDFGController()->exportJSON(path.asChar()).toUtf8().constData();

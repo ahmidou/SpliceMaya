@@ -45,6 +45,9 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   // menu items
   menuItem -p $fabricSpliceMenu -l "Create DFG Node" -c ("createNode \"dfgMayaNode\";");
   menuItem -p $fabricSpliceMenu -divider true;
+  menuItem -p $fabricSpliceMenu -l "Export DFG Node" -c ("source \"FabricDFGTool.mel\"; fabricSaveDFG();");
+  menuItem -p $fabricSpliceMenu -l "Import DFG Node" -c ("source \"FabricDFGTool.mel\"; fabricLoadDFG();");
+  menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Splice Editor (legacy)" -c ("source \"FabricSpliceUI.mel\"; showSpliceEditor(\"" + $pluginName + "\");");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Create Splice Node (legacy)" -c ("createNode \"spliceMayaNode\";");
