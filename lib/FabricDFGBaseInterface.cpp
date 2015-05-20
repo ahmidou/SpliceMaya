@@ -213,6 +213,9 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   DFGWrapper::GraphExecutablePtr graph = getDFGGraph();
   for(int i = 0; i < _dirtyPlugs.length(); ++i){
     MString plugName = _dirtyPlugs[i];
+    if(plugName == "evalID" || plugName == "saveData")
+      continue;
+
     MString portName = getPortName(plugName);
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull()){
