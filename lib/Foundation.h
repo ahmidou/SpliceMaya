@@ -1,9 +1,16 @@
 #ifndef _FOUNDATION_H_
 #define _FOUNDATION_H_
 
-// [andrew 20140609] these defines override Qt enums
+// [andrew 20150520] these Qt headers need to be included before X11 due to
+// conflicting #defines
 #if defined(__linux__)
+# include <QtCore/qcoreevent.h>
+# include <QtCore/qdatastream.h>
+# include <QtCore/qmetatype.h>
+# include <QtCore/qvariant.h>
+# include <QtGui/qstyleoption.h>
 # include <X11/Xlib.h>
+# undef CursorShape
 # undef KeyPress
 # undef KeyRelease
 #endif
