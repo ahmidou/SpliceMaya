@@ -450,6 +450,18 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   m_binding = m_host->createBindingFromJSON(json.asChar());
   m_binding.setNotificationCallback(bindingNotificationCallback, this);
 
+  DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(m_binding.getExecutable());
+
+  if(m_view)
+    delete(m_view);
+  if(m_ctrl)
+    delete(m_ctrl);
+
+  m_view = new DFG::DFGView(graph);
+  m_ctrl = new DFG::DFGController(NULL, FabricDFGCommandStack::getStack(), &m_client, m_host, m_manager, false);
+  m_ctrl->setView(m_view);
+  m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
+
   MString idStr; idStr.set(m_id);
   m_binding.getExecutable()->setMetadata("maya_id", idStr.asChar(), false);
 
@@ -461,7 +473,6 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   MFnDependencyNode thisNode(getThisMObject());
 
-  DFGWrapper::GraphExecutablePtr graph = getDFGGraph();
   DFGWrapper::PortList ports = graph->getPorts();
 
   for(int i = 0; i < ports.size(); ++i){
