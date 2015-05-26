@@ -308,7 +308,7 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
   MFnDependencyNode thisNode(getThisMObject());
 
   DFGWrapper::GraphExecutablePtr graph = getDFGGraph();
-  DFGWrapper::PortList ports = graph->getPorts();
+  DFGWrapper::ExecPortList ports = graph->getPorts();
 
   for(int i = 0; i < ports.size(); ++i){
     if(!ports[i]->isValid())
@@ -473,7 +473,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   MFnDependencyNode thisNode(getThisMObject());
 
-  DFGWrapper::PortList ports = graph->getPorts();
+  DFGWrapper::ExecPortList ports = graph->getPorts();
 
   for(int i = 0; i < ports.size(); ++i){
     std::string portName = ports[i]->getName();
@@ -637,7 +637,7 @@ void FabricDFGBaseInterface::invalidateNode()
   MFnDependencyNode thisNode(getThisMObject());
 
   DFGWrapper::GraphExecutablePtr graph = getDFGGraph();
-  DFGWrapper::PortList ports = graph->getPorts();
+  DFGWrapper::ExecPortList ports = graph->getPorts();
 
   // ensure we setup the mayaSpliceData overrides first
   mSpliceMayaDataOverride.resize(0);
@@ -740,7 +740,7 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
     _affectedPlugs.clear();
 
     // todo: performance considerations
-    DFGWrapper::PortList ports = getDFGGraph()->getPorts();
+    DFGWrapper::ExecPortList ports = getDFGGraph()->getPorts();
     for(unsigned int i = 0; i < ports.size(); i++) 
     {
       if(!ports[i]->isValid())
@@ -1388,7 +1388,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
   if(userNode != NULL)
   {
     DFGWrapper::GraphExecutablePtr graph = getDFGGraph();
-    DFGWrapper::PortList ports = graph->getPorts();
+    DFGWrapper::ExecPortList ports = graph->getPorts();
   
     if(portType != FabricCore::DFGPortType_In)
     {
