@@ -51,17 +51,19 @@ mayaFlags = {
 mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
-  mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4'])
+  mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4', 'QtOpenGL4'])
 if FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
-  mayaFlags['LIBS'].extend(['QtCore', 'QtGui'])
+  mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
 if FABRIC_BUILD_OS == 'Darwin':
   mayaFlags['CPPDEFINES'] = ['OSMac_']
   qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
   qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
+  qtOpenGLLib = File(os.path.join(MAYA_LIB_DIR, 'QtOpenGL'))
   mayaFlags['LIBS'].extend([
     qtCoreLib,
     qtGuiLib,
+    qtOpenGLLib,
     File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
     ])
 
