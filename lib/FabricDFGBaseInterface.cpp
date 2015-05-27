@@ -485,7 +485,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     if(!ports[i]->isValid())
       continue;
 
-    FabricCore::DFGPortType portType = ports[i]->getEndPointType();
+    FabricCore::DFGPortType portType = ports[i]->getPortType();
     std::string dataType = ports[i]->getResolvedType();
 
     if(ports[i]->hasOption("opaque")) {
@@ -572,7 +572,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       continue;
 
     // force an execution of the node    
-    FabricCore::DFGPortType portType = ports[i]->getEndPointType();
+    FabricCore::DFGPortType portType = ports[i]->getPortType();
     if(portType != FabricCore::DFGPortType_Out)
     {
       MString command("dgeval ");
@@ -668,7 +668,7 @@ void FabricDFGBaseInterface::invalidateNode()
     if(!ports[i]->isValid())
       continue;
     
-    FabricCore::DFGPortType portType = ports[i]->getEndPointType();
+    FabricCore::DFGPortType portType = ports[i]->getPortType();
     if(!plug.isNull()){
       if(portType == FabricCore::DFGPortType_In)
       {
@@ -745,7 +745,7 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
     {
       if(!ports[i]->isValid())
         continue;
-      FabricCore::DFGPortType portType = ports[i]->getEndPointType();
+      FabricCore::DFGPortType portType = ports[i]->getPortType();
       if(portType != FabricCore::DFGPortType_Out){
         MString plugName = getPlugName(ports[i]->getName());
         MPlug outPlug = thisNode.findPlug(plugName);
@@ -1398,7 +1398,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
           continue;
         if(!ports[i]->isValid())
           continue;
-        if(ports[i]->getEndPointType() != FabricCore::DFGPortType_In)
+        if(ports[i]->getPortType() != FabricCore::DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -1415,7 +1415,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
           continue;
         if(!ports[i]->isValid())
           continue;
-        if(ports[i]->getEndPointType() == FabricCore::DFGPortType_In)
+        if(ports[i]->getPortType() == FabricCore::DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -1545,7 +1545,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
     }
 
     DFGWrapper::ExecPortPtr port = interf->getDFGGraph()->getPort(nameStr.c_str());
-    FabricCore::DFGPortType portType = port->getEndPointType();
+    FabricCore::DFGPortType portType = port->getPortType();
     interf->addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
     interf->_argTypes.insert(std::pair<std::string, std::string>(nameStr, newTypeStr));
   }
