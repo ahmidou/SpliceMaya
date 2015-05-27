@@ -337,7 +337,7 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
         if(isDeformer && portDataType == "PolygonMesh") {
           data.setClean(plug);
         } else {
-          DFGPortToPlugFunc func = getDFGPortToPlugFunc(portDataType, ports[i]);
+          DFGExecPortToPlugFunc func = getDFGExecPortToPlugFunc(portDataType, ports[i]);
           if(func != NULL) {
             FabricSplice::Logging::AutoTimer timer("Maya::transferOutputValuesToMaya::conversionFunc()");
             (*func)(ports[i], plug, data);

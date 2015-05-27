@@ -17,9 +17,9 @@
 #include <DFGWrapper/DFGWrapper.h>
 
 typedef void(*DFGPlugToPortFunc)(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port);
-typedef void(*DFGPortToPlugFunc)(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data);
+typedef void(*DFGExecPortToPlugFunc)(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data);
 
 DFGPlugToPortFunc getDFGPlugToPortFunc(const std::string & dataType, const FabricServices::DFGWrapper::PortPtr port = NULL);
-DFGPortToPlugFunc getDFGPortToPlugFunc(const std::string & dataType, const FabricServices::DFGWrapper::PortPtr port = NULL);
+DFGExecPortToPlugFunc getDFGExecPortToPlugFunc(const std::string & dataType, const FabricServices::DFGWrapper::PortPtr port = NULL);
 
 #endif

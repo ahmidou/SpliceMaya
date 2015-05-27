@@ -38,9 +38,9 @@
   }
 
 typedef std::map<std::string, DFGPlugToPortFunc> DFGPlugToPortFuncMap;
-typedef std::map<std::string, DFGPortToPlugFunc> DFGPortToPlugFuncMap;
+typedef std::map<std::string, DFGExecPortToPlugFunc> DFGExecPortToPlugFuncMap;
 typedef DFGPlugToPortFuncMap::iterator DFGPlugToPortFuncIt;
-typedef DFGPortToPlugFuncMap::iterator DFGPortToPlugFuncIt;
+typedef DFGExecPortToPlugFuncMap::iterator DFGExecPortToPlugFuncIt;
 
 struct KLEuler{
   float x;
@@ -3080,7 +3080,7 @@ DFGPlugToPortFunc getDFGPlugToPortFunc(const std::string & dataType, const Fabri
   return NULL;  
 }
 
-DFGPortToPlugFunc getDFGPortToPlugFunc(const std::string & dataType, const FabricServices::DFGWrapper::PortPtr port)
+DFGExecPortToPlugFunc getDFGExecPortToPlugFunc(const std::string & dataType, const FabricServices::DFGWrapper::PortPtr port)
 {
   if(dataType == "CompoundParam")
     return dfgPortToPlug_compound;
