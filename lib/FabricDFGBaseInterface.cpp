@@ -224,7 +224,7 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
         continue;
       if(!port->isValid())
         continue;
-      if(port->getPortType() != FabricCore::DFGPortType_Out){
+      if(port->getOutsidePortType() != FabricCore::DFGPortType_Out){
 
         std::string portDataType = port->getResolvedType();
 
@@ -278,7 +278,7 @@ void FabricDFGBaseInterface::evaluate(){
   //         portName = portName.substring(0, periodPos-1);
   //       FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
   //       if(port->isValid()){
-  //         if(port->getPortType() != FabricCore::DFGPortType_Out)
+  //         if(port->getOutsidePortType() != FabricCore::DFGPortType_Out)
   //         {
   //           std::vector<FabricCore::RTVal> args(1);
   //           args[0] = FabricSplice::constructStringRTVal(name.asChar());
@@ -313,7 +313,7 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
   for(int i = 0; i < ports.size(); ++i){
     if(!ports[i]->isValid())
       continue;
-    FabricCore::DFGPortType portType = ports[i]->getPortType();
+    FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
     if(portType != FabricCore::DFGPortType_In){
       
       std::string portName = ports[i]->getName();
@@ -485,7 +485,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     if(!ports[i]->isValid())
       continue;
 
-    FabricCore::DFGPortType portType = ports[i]->getPortType();
+    FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
     std::string dataType = ports[i]->getResolvedType();
 
     if(ports[i]->hasOption("opaque")) {
@@ -572,7 +572,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       continue;
 
     // force an execution of the node    
-    FabricCore::DFGPortType portType = ports[i]->getPortType();
+    FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
     if(portType != FabricCore::DFGPortType_Out)
     {
       MString command("dgeval ");
@@ -668,7 +668,7 @@ void FabricDFGBaseInterface::invalidateNode()
     if(!ports[i]->isValid())
       continue;
     
-    FabricCore::DFGPortType portType = ports[i]->getPortType();
+    FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
     if(!plug.isNull()){
       if(portType == FabricCore::DFGPortType_In)
       {
@@ -745,7 +745,7 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
     {
       if(!ports[i]->isValid())
         continue;
-      FabricCore::DFGPortType portType = ports[i]->getPortType();
+      FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
       if(portType != FabricCore::DFGPortType_Out){
         MString plugName = getPlugName(ports[i]->getName());
         MPlug outPlug = thisNode.findPlug(plugName);
@@ -1398,7 +1398,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
           continue;
         if(!ports[i]->isValid())
           continue;
-        if(ports[i]->getPortType() != FabricCore::DFGPortType_In)
+        if(ports[i]->getOutsidePortType() != FabricCore::DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -1415,7 +1415,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
           continue;
         if(!ports[i]->isValid())
           continue;
-        if(ports[i]->getPortType() == FabricCore::DFGPortType_In)
+        if(ports[i]->getOutsidePortType() == FabricCore::DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -1545,7 +1545,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
     }
 
     DFGWrapper::ExecPortPtr port = interf->getDFGGraph()->getPort(nameStr.c_str());
-    FabricCore::DFGPortType portType = port->getPortType();
+    FabricCore::DFGPortType portType = port->getOutsidePortType();
     interf->addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
     interf->_argTypes.insert(std::pair<std::string, std::string>(nameStr, newTypeStr));
   }
