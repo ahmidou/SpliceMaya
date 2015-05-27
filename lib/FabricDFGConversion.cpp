@@ -568,7 +568,7 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
 }
 
 
-void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
@@ -594,7 +594,7 @@ void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricServices::
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   if(plug.isArray()){
     FabricCore::RTVal compoundVals = FabricSplice::constructObjectRTVal("CompoundParam[]");
     compoundVals.setArraySize(plug.numElements());
@@ -620,7 +620,7 @@ void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data, FabricServices::DFGWr
   }
 }
 
-void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -644,7 +644,7 @@ void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data, FabricServices::DFGWrappe
   }
 }
 
-void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -687,7 +687,7 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, FabricServices::DFGWra
   }
 }
 
-void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
 
   std::string scalarUnit = port->getMetadata("scalarUnit");
   if(plug.isArray()){
@@ -755,7 +755,7 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricServices::DFGWrap
   }
 }
 
-void dfgPlugToPort_string(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_string(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
@@ -784,7 +784,7 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data, FabricServices::DFGWrap
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_color(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_color(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
@@ -842,7 +842,7 @@ void dfgPlugToPort_color(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapp
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -928,7 +928,7 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricServices::DFGWrappe
   }
 }
 
-void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
@@ -984,7 +984,7 @@ void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapp
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -1059,7 +1059,7 @@ void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapp
   }
 }
 
-void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
 
   std::vector<MDataHandle> handles;
   std::vector<FabricCore::RTVal> rtVals;
@@ -1249,7 +1249,7 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricServices::DF
   }
 }
 
-void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
 
   std::vector<MDataHandle> handles;
   std::vector<FabricCore::RTVal> rtVals;
@@ -1472,7 +1472,7 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   if(!plug.isArray()){
     
     MPlugArray plugs;
@@ -1529,7 +1529,7 @@ void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricServices::
   }
 }
 
-void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::PortPtr & port){
+void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port){
   try{
     if(!plug.isArray()){
       MDataHandle handle = data.inputValue(plug);
@@ -2217,7 +2217,7 @@ void dfgPortToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDa
   CORE_CATCH_END;
 }
 
-void dfgPortToPlug_compound(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_compound(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   if(plug.isArray())
     return;
 
@@ -2228,7 +2228,7 @@ void dfgPortToPlug_compound(FabricServices::DFGWrapper::PortPtr & port, MPlug &p
   handle.setClean();
 }
 
-void dfgPortToPlug_bool(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_bool(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2255,7 +2255,7 @@ void dfgPortToPlug_bool(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug,
   }
 }
 
-void dfgPortToPlug_integer(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_integer(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2303,7 +2303,7 @@ void dfgPortToPlug_integer(FabricServices::DFGWrapper::PortPtr & port, MPlug &pl
   }
 }
 
-void dfgPortToPlug_scalar(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_scalar(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   CORE_CATCH_BEGIN;
 
   std::string scalarUnit = port->getMetadata("scalarUnit");
@@ -2379,7 +2379,7 @@ void dfgPortToPlug_scalar(FabricServices::DFGWrapper::PortPtr & port, MPlug &plu
   CORE_CATCH_END;
 }
 
-void dfgPortToPlug_string(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_string(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2400,7 +2400,7 @@ void dfgPortToPlug_string(FabricServices::DFGWrapper::PortPtr & port, MPlug &plu
   }
 }
 
-void dfgPortToPlug_color(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_color(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2450,7 +2450,7 @@ void dfgPortToPlug_color(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug
   }
 }
 
-void dfgPortToPlug_vec3(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_vec3(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2544,7 +2544,7 @@ void dfgPortToPlug_vec3(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug,
   }
 }
 
-void dfgPortToPlug_euler(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_euler(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2592,7 +2592,7 @@ void dfgPortToPlug_euler(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug
   }
 }
 
-void dfgPortToPlug_mat44(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_mat44(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2880,7 +2880,7 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
   CORE_CATCH_END;
 }
 
-void dfgPortToPlug_PolygonMesh(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_PolygonMesh(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   try
   {
     if(plug.isArray())
@@ -2971,7 +2971,7 @@ void dfgPortToPlug_Lines_singleLines(MDataHandle handle, FabricCore::RTVal rtVal
   CORE_CATCH_END;
 }
 
-void dfgPortToPlug_Lines(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_Lines(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   try
   {
     if(plug.isArray())
@@ -3005,7 +3005,7 @@ void dfgPortToPlug_Lines(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug
   }
 }
 
-void dfgPortToPlug_spliceMayaData(FabricServices::DFGWrapper::PortPtr & port, MPlug &plug, MDataBlock &data){
+void dfgPortToPlug_spliceMayaData(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data){
   MStatus status;
   try{
     if(!plug.isArray()){
@@ -3046,7 +3046,7 @@ void dfgPortToPlug_spliceMayaData(FabricServices::DFGWrapper::PortPtr & port, MP
   }
 }
 
-DFGPlugToPortFunc getDFGPlugToPortFunc(const std::string & dataType, const FabricServices::DFGWrapper::PortPtr port)
+DFGPlugToPortFunc getDFGPlugToPortFunc(const std::string & dataType, const FabricServices::DFGWrapper::ExecPortPtr port)
 {
   if(dataType == "CompoundParam")
     return dfgPlugToPort_compound;
@@ -3080,7 +3080,7 @@ DFGPlugToPortFunc getDFGPlugToPortFunc(const std::string & dataType, const Fabri
   return NULL;  
 }
 
-DFGExecPortToPlugFunc getDFGExecPortToPlugFunc(const std::string & dataType, const FabricServices::DFGWrapper::PortPtr port)
+DFGExecPortToPlugFunc getDFGExecPortToPlugFunc(const std::string & dataType, const FabricServices::DFGWrapper::ExecPortPtr port)
 {
   if(dataType == "CompoundParam")
     return dfgPortToPlug_compound;

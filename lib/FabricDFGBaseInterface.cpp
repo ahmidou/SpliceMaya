@@ -219,7 +219,7 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
     MString portName = getPortName(plugName);
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull()){
-      DFGWrapper::PortPtr port = graph->getPort(portName.asChar());
+      DFGWrapper::ExecPortPtr port = graph->getPort(portName.asChar());
       if(!port)
         continue;
       if(!port->isValid())
@@ -1544,7 +1544,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
       // interf->_argTypes.erase(it);
     }
 
-    DFGWrapper::PortPtr port = interf->getDFGGraph()->getPort(nameStr.c_str());
+    DFGWrapper::ExecPortPtr port = interf->getDFGGraph()->getPort(nameStr.c_str());
     FabricCore::DFGPortType portType = port->getEndPointType();
     interf->addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
     interf->_argTypes.insert(std::pair<std::string, std::string>(nameStr, newTypeStr));
