@@ -30,7 +30,9 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
     DFGWrapper::Binding binding = interf->getDFGBinding();
     DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
 
-    init(&m_mayaClient, manager, host, binding, graph, FabricDFGCommandStack::getStack(), false);
+    DFG::DFGConfig config;
+    config.graphConfig.useOpenGL = false;
+    init(&m_mayaClient, manager, host, binding, graph, FabricDFGCommandStack::getStack(), false, config);
   }
 }
 
