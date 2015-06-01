@@ -219,12 +219,12 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
     MString portName = getPortName(plugName);
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull()){
-      DFGWrapper::ExecPortPtr port = graph->getPort(portName.asChar());
+      DFGWrapper::ExecPortPtr port = graph->getExecPort(portName.asChar());
       if(!port)
         continue;
       if(!port->isValid())
         continue;
-      if(port->getOutsidePortType() != FabricCore::DFGPortType_Out){
+      if(port->getExecPortType() != FabricCore::DFGPortType_Out){
 
         std::string portDataType = port->getResolvedType();
 
@@ -278,7 +278,7 @@ void FabricDFGBaseInterface::evaluate(){
   //         portName = portName.substring(0, periodPos-1);
   //       FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
   //       if(port->isValid()){
-  //         if(port->getOutsidePortType() != FabricCore::DFGPortType_Out)
+  //         if(port->getExecPortType() != FabricCore::DFGPortType_Out)
   //         {
   //           std::vector<FabricCore::RTVal> args(1);
   //           args[0] = FabricSplice::constructStringRTVal(name.asChar());
@@ -308,15 +308,15 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
   MFnDependencyNode thisNode(getThisMObject());
 
   DFGWrapper::GraphExecutablePtr graph = getDFGGraph();
-  DFGWrapper::ExecPortList ports = graph->getPorts();
+  DFGWrapper::ExecPortList ports = graph->getExecPorts();
 
   for(int i = 0; i < ports.size(); ++i){
     if(!ports[i]->isValid())
       continue;
-    FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
+    FabricCore::DFGPortType portType = ports[i]->getExecPortType();
     if(portType != FabricCore::DFGPortType_In){
       
-      std::string portName = ports[i]->getName();
+      std::string portName = ports[i]->getPortName();
       std::string plugName = getPlugName(portName.c_str()).asChar();
       std::string portDataType = ports[i]->getResolvedType();
 
@@ -473,10 +473,10 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   MFnDependencyNode thisNode(getThisMObject());
 
-  DFGWrapper::ExecPortList ports = graph->getPorts();
+  DFGWrapper::ExecPortList ports = graph->getExecPorts();
 
   for(int i = 0; i < ports.size(); ++i){
-    std::string portName = ports[i]->getName();
+    std::string portName = ports[i]->getPortName();
     MString plugName = getPlugName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
@@ -485,7 +485,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     if(!ports[i]->isValid())
       continue;
 
-    FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
+    FabricCore::DFGPortType portType = ports[i]->getExecPortType();
     std::string dataType = ports[i]->getResolvedType();
 
     if(ports[i]->hasOption("opaque")) {
@@ -562,7 +562,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   }
 
   for(int i = 0; i < ports.size(); ++i){
-    std::string portName = ports[i]->getName();
+    std::string portName = ports[i]->getPortName();
     MString plugName = getPlugName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
     if(plug.isNull())
@@ -572,7 +572,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       continue;
 
     // force an execution of the node    
-    FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
+    FabricCore::DFGPortType portType = ports[i]->getExecPortType();
     if(portType != FabricCore::DFGPortType_Out)
     {
       MString command("dgeval ");
@@ -637,7 +637,7 @@ void FabricDFGBaseInterface::invalidateNode()
   MFnDependencyNode thisNode(getThisMObject());
 
   DFGWrapper::GraphExecutablePtr graph = getDFGGraph();
-  DFGWrapper::ExecPortList ports = graph->getPorts();
+  DFGWrapper::ExecPortList ports = graph->getExecPorts();
 
   // ensure we setup the mayaSpliceData overrides first
   mSpliceMayaDataOverride.resize(0);
@@ -646,7 +646,7 @@ void FabricDFGBaseInterface::invalidateNode()
       continue;
     // if(ports[i]->isManipulatable())
     //   continue;
-    std::string portName = ports[i]->getName();
+    std::string portName = ports[i]->getPortName();
     MString plugName = getPortName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
     MObject attrObj = plug.attribute();
@@ -655,20 +655,20 @@ void FabricDFGBaseInterface::invalidateNode()
       MFnTypedAttribute attr(attrObj);
       MFnData::Type type = attr.attrType();
       if(type == MFnData::kPlugin || type == MFnData::kInvalid)
-        mSpliceMayaDataOverride.push_back(ports[i]->getName());
+        mSpliceMayaDataOverride.push_back(ports[i]->getPortName());
     }
   }
 
   // ensure that the node is invalidated
   for(int i = 0; i < ports.size(); ++i){
-    std::string portName = ports[i]->getName();
+    std::string portName = ports[i]->getPortName();
     MString plugName = getPortName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
 
     if(!ports[i]->isValid())
       continue;
     
-    FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
+    FabricCore::DFGPortType portType = ports[i]->getExecPortType();
     if(!plug.isNull()){
       if(portType == FabricCore::DFGPortType_In)
       {
@@ -740,14 +740,14 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
     _affectedPlugs.clear();
 
     // todo: performance considerations
-    DFGWrapper::ExecPortList ports = getDFGGraph()->getPorts();
+    DFGWrapper::ExecPortList ports = getDFGGraph()->getExecPorts();
     for(unsigned int i = 0; i < ports.size(); i++) 
     {
       if(!ports[i]->isValid())
         continue;
-      FabricCore::DFGPortType portType = ports[i]->getOutsidePortType();
+      FabricCore::DFGPortType portType = ports[i]->getExecPortType();
       if(portType != FabricCore::DFGPortType_Out){
-        MString plugName = getPlugName(ports[i]->getName());
+        MString plugName = getPlugName(ports[i]->getPortName());
         MPlug outPlug = thisNode.findPlug(plugName);
         if(!outPlug.isNull()){
           if(!plugInArray(outPlug, _affectedPlugs)){
@@ -1244,7 +1244,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     
     if(arrayType == "Single Value")
     {
-      if(getDFGGraph()->getPort(portName.asChar())){
+      if(getDFGGraph()->getExecPort(portName.asChar())){
         newAttribute = pAttr.create(plugName, plugName);
         pAttr.setStorable(true);
         pAttr.setKeyable(true);
@@ -1257,7 +1257,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     }
     else
     {
-      if(getDFGGraph()->getPort(portName.asChar())){
+      if(getDFGGraph()->getExecPort(portName.asChar())){
         newAttribute = pAttr.create(plugName, plugName);
         pAttr.setStorable(true);
         pAttr.setKeyable(true);
@@ -1274,7 +1274,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     
     if(arrayType == "Single Value")
     {
-      if(getDFGGraph()->getPort(portName.asChar())){
+      if(getDFGGraph()->getExecPort(portName.asChar())){
         newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
@@ -1286,7 +1286,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     }
     else
     {
-      if(getDFGGraph()->getPort(portName.asChar())){
+      if(getDFGGraph()->getExecPort(portName.asChar())){
         newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
@@ -1388,17 +1388,17 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
   if(userNode != NULL)
   {
     DFGWrapper::GraphExecutablePtr graph = getDFGGraph();
-    DFGWrapper::ExecPortList ports = graph->getPorts();
+    DFGWrapper::ExecPortList ports = graph->getExecPorts();
   
     if(portType != FabricCore::DFGPortType_In)
     {
       for(int i = 0; i < ports.size(); ++i) {
-        std::string otherPortName = ports[i]->getName();
+        std::string otherPortName = ports[i]->getPortName();
         if(otherPortName == portName.asChar() && portType != FabricCore::DFGPortType_IO)
           continue;
         if(!ports[i]->isValid())
           continue;
-        if(ports[i]->getOutsidePortType() != FabricCore::DFGPortType_In)
+        if(ports[i]->getExecPortType() != FabricCore::DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -1410,12 +1410,12 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
     else
     {
       for(int i = 0; i < ports.size(); ++i) {
-        std::string otherPortName = ports[i]->getName();
+        std::string otherPortName = ports[i]->getPortName();
         if(otherPortName == portName.asChar() && portType != FabricCore::DFGPortType_IO)
           continue;
         if(!ports[i]->isValid())
           continue;
-        if(ports[i]->getOutsidePortType() == FabricCore::DFGPortType_In)
+        if(ports[i]->getExecPortType() == FabricCore::DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -1544,8 +1544,8 @@ void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char c
       // interf->_argTypes.erase(it);
     }
 
-    DFGWrapper::ExecPortPtr port = interf->getDFGGraph()->getPort(nameStr.c_str());
-    FabricCore::DFGPortType portType = port->getOutsidePortType();
+    DFGWrapper::ExecPortPtr port = interf->getDFGGraph()->getExecPort(nameStr.c_str());
+    FabricCore::DFGPortType portType = port->getExecPortType();
     interf->addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
     interf->_argTypes.insert(std::pair<std::string, std::string>(nameStr, newTypeStr));
   }
