@@ -746,7 +746,7 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
       if(!ports[i]->isValid())
         continue;
       FabricCore::DFGPortType portType = ports[i]->getExecPortType();
-      if(portType != FabricCore::DFGPortType_Out){
+      if(portType != FabricCore::DFGPortType_In){
         MString plugName = getPlugName(ports[i]->getPortName());
         MPlug outPlug = thisNode.findPlug(plugName);
         if(!outPlug.isNull()){
