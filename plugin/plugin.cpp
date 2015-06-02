@@ -89,8 +89,6 @@ void onSceneNew(void *userData){
 }
 
 void onSceneLoad(void *userData){
-  MGlobal::executeCommandOnIdle("unloadPlugin \"FabricSpliceManipulation.py\";");
-  MGlobal::executeCommandOnIdle("loadPlugin \"FabricSpliceManipulation.py\";");
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
 
