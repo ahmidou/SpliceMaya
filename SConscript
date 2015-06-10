@@ -20,7 +20,6 @@ Import(
   'spliceFlags',
   'ADDITIONAL_FLAGS',
   'commandsFlags',
-  'dfgWrapperFlags',
   'astWrapperFlags',
   'legacyBoostFlags',
   'codeCompletionFlags'
@@ -72,8 +71,6 @@ env.MergeFlags(mayaFlags)
 # services flags
 if len(commandsFlags.keys()) > 0:
   env.MergeFlags(commandsFlags)
-  env.MergeFlags(dfgWrapperFlags)
-  env.MergeFlags(astWrapperFlags)
   env.MergeFlags(legacyBoostFlags)
   env.MergeFlags(codeCompletionFlags)
 else:

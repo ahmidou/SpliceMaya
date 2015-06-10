@@ -28,12 +28,11 @@ for var in ['FABRIC_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BU
 FTL_INCLUDE_DIR = os.path.join(os.environ['FABRIC_DIR'], 'include', 'FTL')
 Export('FTL_INCLUDE_DIR')
 commandsFlags = {}
-dfgWrapperFlags = {}
 astWrapperFlags = {}
 astWrapperFlags = {}
 codeCompletionFlags = {}
 legacyBoostFlags = {}
-Export('commandsFlags', 'dfgWrapperFlags', 'astWrapperFlags', 'legacyBoostFlags', 'codeCompletionFlags')
+Export('commandsFlags', 'astWrapperFlags', 'legacyBoostFlags', 'codeCompletionFlags')
 
 spliceEnv = Environment()
 

@@ -114,7 +114,7 @@ MStatus FabricDFGAddNodeCommand::doIt(const MArgList &args)
     y = (float)argData.flagArgumentDouble("y", 0);
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString result = interf->getDFGController()->addNodeFromPreset(path.asChar(), preset.asChar(), QPointF(x, y)).toUtf8().constData();
+  MString result = interf->getDFGController()->addDFGNodeFromPreset(preset.asChar(), QPointF(x, y)).c_str();
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -270,7 +270,7 @@ MStatus FabricDFGAddEmptyFuncCommand::doIt(const MArgList &args)
     y = (float)argData.flagArgumentDouble("y", 0);
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString result = interf->getDFGController()->addEmptyFunc(path.asChar(), name.asChar(), QPointF(x, y)).toUtf8().constData();
+  MString result = interf->getDFGController()->addEmptyFunc(name.asChar(), QPointF(x, y)).c_str();;
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -331,7 +331,7 @@ MStatus FabricDFGAddEmptyGraphCommand::doIt(const MArgList &args)
     y = (float)argData.flagArgumentDouble("y", 0);
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString result = interf->getDFGController()->addEmptyGraph(path.asChar(), name.asChar(), QPointF(x, y)).toUtf8().constData();
+  MString result = interf->getDFGController()->addEmptyGraph(name.asChar(), QPointF(x, y)).c_str();
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -345,8 +345,6 @@ MSyntax FabricDFGAddConnectionCommand::newSyntax()
   syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
   syntax.addFlag("-s", "-srcPath", MSyntax::kString);
   syntax.addFlag("-d", "-dstPath", MSyntax::kString);
-  syntax.addFlag("-ps", "-srcIsPin", MSyntax::kLong);
-  syntax.addFlag("-pd", "-dstIsPin", MSyntax::kLong);
   syntax.enableQuery(false);
   syntax.enableEdit(false);
   return syntax;
@@ -388,15 +386,8 @@ MStatus FabricDFGAddConnectionCommand::doIt(const MArgList &args)
   srcPath.split('.', srcPathParts);
   dstPath.split('.', dstPathParts);
 
-  bool srcIsPin = srcPathParts.length() <= dstPathParts.length();
-  bool dstIsPin = srcPathParts.length() >= dstPathParts.length();
-  if(argData.isFlagSet("srcIsPin"))
-    srcIsPin = argData.flagArgumentInt("srcIsPin", 0) != 0;
-  if(argData.isFlagSet("dstIsPin"))
-    dstIsPin = argData.flagArgumentInt("dstIsPin", 0) != 0;
-
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->addConnection(srcPath.asChar(), dstPath.asChar(), srcIsPin, dstIsPin);
+  interf->getDFGController()->addConnection(srcPath.asChar(), dstPath.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -409,8 +400,6 @@ MSyntax FabricDFGRemoveConnectionCommand::newSyntax()
   syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
   syntax.addFlag("-s", "-srcPath", MSyntax::kString);
   syntax.addFlag("-d", "-dstPath", MSyntax::kString);
-  syntax.addFlag("-ps", "-srcIsPin", MSyntax::kLong);
-  syntax.addFlag("-pd", "-dstIsPin", MSyntax::kLong);
   syntax.enableQuery(false);
   syntax.enableEdit(false);
   return syntax;
@@ -452,15 +441,8 @@ MStatus FabricDFGRemoveConnectionCommand::doIt(const MArgList &args)
   srcPath.split('.', srcPathParts);
   dstPath.split('.', dstPathParts);
 
-  bool srcIsPin = srcPathParts.length() <= dstPathParts.length();
-  bool dstIsPin = srcPathParts.length() >= dstPathParts.length();
-  if(argData.isFlagSet("srcIsPin"))
-    srcIsPin = argData.flagArgumentInt("srcIsPin", 0) != 0;
-  if(argData.isFlagSet("dstIsPin"))
-    dstIsPin = argData.flagArgumentInt("dstIsPin", 0) != 0;
-
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->removeConnection(srcPath.asChar(), dstPath.asChar(), srcIsPin, dstIsPin);
+  interf->getDFGController()->removeConnection(srcPath.asChar(), dstPath.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -512,7 +494,7 @@ MStatus FabricDFGRemoveAllConnectionsCommand::doIt(const MArgList &args)
     isPin = argData.flagArgumentInt("isPin", 0) != 0;
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->removeAllConnections(path.asChar(), isPin);
+  interf->getDFGController()->removeAllConnections(path.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -583,7 +565,7 @@ MStatus FabricDFGAddPortCommand::doIt(const MArgList &args)
     portType = GraphView::PortType_IO;
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString result = interf->getDFGController()->addPort(path.asChar(), name.asChar(), portType, dataType.asChar()).toUtf8().constData();
+  MString result = interf->getDFGController()->addPort(name.asChar(), portType, dataType.asChar()).c_str();
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -635,7 +617,7 @@ MStatus FabricDFGRemovePortCommand::doIt(const MArgList &args)
   MString name = argData.flagArgumentString("name", 0);
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->removePort(path.asChar(), name.asChar());
+  interf->getDFGController()->removePort(name.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -686,7 +668,7 @@ MStatus FabricDFGRenamePortCommand::doIt(const MArgList &args)
   MString name = argData.flagArgumentString("name", 0);
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString result = interf->getDFGController()->renamePort(path.asChar(), name.asChar()).toUtf8().constData();
+  MString result = interf->getDFGController()->renamePort(path.asChar(), name.asChar()).c_str();
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -865,8 +847,6 @@ MSyntax FabricDFGGetDescCommand::newSyntax()
 {
   MSyntax syntax;
   syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
-  syntax.addFlag("-p", "-path", MSyntax::kString);
-  syntax.addFlag("-a", "-asnode", MSyntax::kLong);
   syntax.enableQuery(false);
   syntax.enableEdit(false);
   return syntax;
@@ -891,29 +871,12 @@ MStatus FabricDFGGetDescCommand::doIt(const MArgList &args)
   MStatus status;
   MArgParser argData(syntax(), args, &status);
 
-  MString path;
-  if(argData.isFlagSet("path"))
-    path = argData.flagArgumentString("path", 0);
-  bool asnode = false;
-  if(argData.isFlagSet("asnode"))
-    asnode = argData.flagArgumentInt("asnode", 0) > 0;
-
   FabricDFGCommandStack::enableMayaCommands(false);
 
-  FabricCore::DFGBinding binding = interf->getDFGController()->getBinding().getWrappedCoreBinding();
-  MString result;
-  if(asnode)
-  {
-    DFGWrapper::NodePtr node = interf->getDFGController()->getNodeFromPath(path.asChar());
-    if(node)
-      result = node->getDesc().c_str();
-  }
-  else
-  {
-    DFGWrapper::ExecutablePtr exec = interf->getDFGController()->getExecFromPath(path.asChar());
-    if(exec)
-      result = exec->getDesc().c_str();
-  }
+  FabricCore::DFGBinding binding = interf->getDFGController()->getCoreDFGBinding();
+  FabricCore::DFGExec exec = binding.getExec();
+
+  MString result = exec.getDesc().getCString();
 
   FabricDFGCommandStack::enableMayaCommands(true);
   
@@ -1079,7 +1042,7 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
   }
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString json = interf->getDFGController()->exportJSON(path.asChar()).toUtf8().constData();
+  MString json = interf->getDFGController()->exportJSON(path.asChar()).c_str();
   FabricDFGCommandStack::enableMayaCommands(true);
   
   // this command isn't issued through the UI
@@ -1281,11 +1244,11 @@ MStatus FabricDFGImplodeNodesCommand::doIt(const MArgList &args)
     return mayaErrorOccured();
   }
 
-  QString name = argData.flagArgumentString("name", 0).asChar();
+  MString name = argData.flagArgumentString("name", 0);
   QString paths = argData.flagArgumentString("paths", 0).asChar();
   
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->implodeNodes(name, paths.split('.'));
+  interf->getDFGController()->implodeNodes(name.asChar(), paths.split('.'));
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -1326,10 +1289,10 @@ MStatus FabricDFGExplodeNodeCommand::doIt(const MArgList &args)
     return mayaErrorOccured();
   }
 
-  QString path = argData.flagArgumentString("paths", 0).asChar();
+  MString path = argData.flagArgumentString("paths", 0).asChar();
   
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->explodeNode(path);
+  interf->getDFGController()->explodeNode(path.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 

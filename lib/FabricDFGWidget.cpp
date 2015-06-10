@@ -25,14 +25,13 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 
     m_mayaClient = interf->getCoreClient();
     FabricServices::ASTWrapper::KLASTManager * manager = interf->getASTManager();
-    FabricServices::DFGWrapper::Host * host = interf->getDFGHost();
-
-    DFGWrapper::Binding binding = interf->getDFGBinding();
-    DFGWrapper::GraphExecutablePtr graph = DFGWrapper::GraphExecutablePtr::StaticCast(binding.getExecutable());
+    FabricCore::DFGHost host = interf->getDFGHost();
+    FabricCore::DFGBinding binding = interf->getDFGBinding();
+    FabricCore::DFGExec exec = binding.getExec();
 
     DFG::DFGConfig config;
     config.graphConfig.useOpenGL = false;
-    init(&m_mayaClient, manager, host, binding, graph, FabricDFGCommandStack::getStack(), false, config);
+    init(m_mayaClient, manager, host, binding, exec, FabricDFGCommandStack::getStack(), false, config);
   }
 }
 

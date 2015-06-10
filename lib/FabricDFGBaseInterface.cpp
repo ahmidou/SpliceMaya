@@ -219,7 +219,7 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull()){
 
-      if(!exec.hasExecPort(portName.asChar()))
+      if(!exec.haveExecPort(portName.asChar()))
         continue;
 
       if(exec.getExecPortType(portName.asChar()) != FabricCore::DFGPortType_Out){
@@ -1222,7 +1222,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     
     if(arrayType == "Single Value")
     {
-      if(getDFGGraph().hasExecPort(portName.asChar())) {
+      if(getDFGGraph().haveExecPort(portName.asChar())) {
         newAttribute = pAttr.create(plugName, plugName);
         pAttr.setStorable(true);
         pAttr.setKeyable(true);
@@ -1235,7 +1235,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     }
     else
     {
-      if(getDFGGraph().hasExecPort(portName.asChar())) {
+      if(getDFGGraph().haveExecPort(portName.asChar())) {
         newAttribute = pAttr.create(plugName, plugName);
         pAttr.setStorable(true);
         pAttr.setKeyable(true);
@@ -1252,7 +1252,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     
     if(arrayType == "Single Value")
     {
-      if(getDFGGraph().hasExecPort(portName.asChar())) {
+      if(getDFGGraph().haveExecPort(portName.asChar())) {
         newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
@@ -1264,7 +1264,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     }
     else
     {
-      if(getDFGGraph().hasExecPort(portName.asChar())) {
+      if(getDFGGraph().haveExecPort(portName.asChar())) {
         newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;

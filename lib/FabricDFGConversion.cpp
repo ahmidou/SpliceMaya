@@ -586,7 +586,7 @@ void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricCore::DFGB
       dfgPlugToPort_compound_convertCompound(compound, handle, compoundVal);
       compoundVals.callMethod("", "addParam", 1, &compoundVal);
     }
-    port->setArgValue(compoundVals);
+    binding.setArgValue(argName, compoundVals);
   }
   else{
   }
@@ -609,14 +609,14 @@ void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data, FabricCore::DFGBindin
       dfgPlugToPort_compound_convertCompound(compound, handle, compoundVal);
       compoundVals.setArrayElement(j, compoundVal);
     }
-    port->setArgValue(compoundVals);
+    binding.setArgValue(argName, compoundVals);
   }
   else{
     MDataHandle handle = data.inputValue(plug);
     FabricCore::RTVal rtVal = FabricSplice::constructObjectRTVal("CompoundParam");
     MFnCompoundAttribute compound(plug.attribute());
     dfgPlugToPort_compound_convertCompound(compound, handle, rtVal);
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
   }
 }
 
@@ -625,7 +625,7 @@ void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
     unsigned int elements = arrayHandle.elementCount();
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     rtVal.setArraySize(elements);
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
     bool * values = (bool*)dataRtVal.getData();
@@ -636,11 +636,11 @@ void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
       values[i] = handle.asBool();
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
   }
   else{
     MDataHandle handle = data.inputValue(plug);
-    port->setArgValue(FabricSplice::constructBooleanRTVal(handle.asBool()));
+    binding.setArgValue(argName, FabricSplice::constructBooleanRTVal(handle.asBool()));
   }
 }
 
@@ -650,7 +650,7 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding
 
     unsigned int elements = arrayHandle.elementCount();
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     rtVal.setArraySize(elements);
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
     int32_t * values = (int32_t*)dataRtVal.getData();
@@ -661,7 +661,7 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding
       values[i] = handle.asLong();
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
   }else{
     MDataHandle handle = data.inputValue(plug);
 
@@ -669,7 +669,7 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding
       MIntArray arrayValues = MFnIntArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
 
-      FabricCore::RTVal rtVal = port->getArgValue();
+      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       rtVal.setArraySize(elements);
       FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
       int32_t * values = (int32_t*)dataRtVal.getData();
@@ -678,24 +678,24 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding
         values[i] = arrayValues[i];
       }
 
-      port->setArgValue(rtVal);
+      binding.setArgValue(argName, rtVal);
     }else{
-      FabricCore::RTVal rtVal = port->getArgValue();
+      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       if(!rtVal.isArray())
-        port->setArgValue(FabricSplice::constructSInt32RTVal(handle.asLong()));
+        binding.setArgValue(argName, FabricSplice::constructSInt32RTVal(handle.asLong()));
     }
   }
 }
 
 void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & binding, char const * argName){
 
-  std::string scalarUnit = port->getMetadata("scalarUnit");
+  MString scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
     unsigned int elements = arrayHandle.elementCount();
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     rtVal.setArraySize(elements);
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
     float * values = (float*)dataRtVal.getData();
@@ -720,10 +720,10 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding 
       }
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
   }else{
     MDataHandle handle = data.inputValue(plug);
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray()){
       MDoubleArray arrayValues = MFnDoubleArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
@@ -736,20 +736,20 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding 
         values[i] = arrayValues[i];
       }
 
-      port->setArgValue(rtVal);
+      binding.setArgValue(argName, rtVal);
     }else{
       if(scalarUnit == "time")
-        port->setArgValue(FabricSplice::constructFloat64RTVal(handle.asTime().as(MTime::kSeconds)));
+        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asTime().as(MTime::kSeconds)));
       else if(scalarUnit == "angle")
-        port->setArgValue(FabricSplice::constructFloat64RTVal(handle.asAngle().as(MAngle::kRadians)));
+        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asAngle().as(MAngle::kRadians)));
       else if(scalarUnit == "distance")
-        port->setArgValue(FabricSplice::constructFloat64RTVal(handle.asDistance().as(MDistance::kMillimeters)));
+        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asDistance().as(MDistance::kMillimeters)));
       else
       {
         if(handle.numericType() == MFnNumericData::kFloat)
-          port->setArgValue(FabricSplice::constructFloat32RTVal(handle.asFloat()));
+          binding.setArgValue(argName, FabricSplice::constructFloat32RTVal(handle.asFloat()));
         else
-          port->setArgValue(FabricSplice::constructFloat64RTVal(handle.asDouble()));
+          binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asDouble()));
       }
     }
   }
@@ -771,14 +771,14 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding 
       stringArrayVal.setArrayElement(i, FabricSplice::constructStringRTVal(stringVal.asChar()));
     }
 
-    port->setArgValue(stringArrayVal);
+    binding.setArgValue(argName, stringArrayVal);
   }
   else{
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray())
       return;
     MDataHandle handle = data.inputValue(plug);
-    port->setArgValue(FabricSplice::constructStringRTVal(handle.asString().asChar()));
+    binding.setArgValue(argName, FabricSplice::constructStringRTVal(handle.asString().asChar()));
   }
 
   CORE_CATCH_END;
@@ -814,10 +814,10 @@ void dfgPlugToPort_color(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       arrayVal.setArrayElement(i, color);
     }
 
-    port->setArgValue(arrayVal);
+    binding.setArgValue(argName, arrayVal);
   }
   else {
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray())
       return;
     MDataHandle handle = data.inputValue(plug);
@@ -836,7 +836,7 @@ void dfgPlugToPort_color(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
     }
     color.setMember("a", FabricSplice::constructFloat64RTVal(1.0));
 
-    port->setArgValue(color);
+    binding.setArgValue(argName, color);
   }
 
   CORE_CATCH_END;
@@ -848,7 +848,7 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
 
     unsigned int elements = arrayHandle.elementCount();
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     rtVal.setArraySize(elements);
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
     float * values = (float*)dataRtVal.getData();
@@ -870,14 +870,14 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
       }
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
   }else{
     MDataHandle handle = data.inputValue(plug);
     if(handle.type() == MFnData::kVectorArray){
       MVectorArray arrayValues = MFnVectorArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
 
-      FabricCore::RTVal rtVal = port->getArgValue();
+      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       rtVal.setArraySize(elements);
       FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
       float * values = (float*)dataRtVal.getData();
@@ -889,12 +889,12 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
         values[offset++] = (float)arrayValues[i].z;
       }
 
-      port->setArgValue(rtVal);
+      binding.setArgValue(argName, rtVal);
     }else if(handle.type() == MFnData::kPointArray){
       MPointArray arrayValues = MFnPointArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
 
-      FabricCore::RTVal rtVal = port->getArgValue();
+      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       rtVal.setArraySize(elements);
       FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
       float * values = (float*)dataRtVal.getData();
@@ -906,9 +906,9 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
         values[offset++] = (float)arrayValues[i].z;
       }
 
-      port->setArgValue(rtVal);
+      binding.setArgValue(argName, rtVal);
     }else{
-      FabricCore::RTVal rtVal = port->getArgValue();
+      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       if(rtVal.isArray())
         return;
       FabricCore::RTVal spliceVec = FabricSplice::constructRTVal("Vec3");
@@ -923,7 +923,7 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
         spliceVec.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
         spliceVec.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
       }
-      port->setArgValue(spliceVec);
+      binding.setArgValue(argName, spliceVec);
     }
   }
 }
@@ -957,10 +957,10 @@ void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       arrayVal.setArrayElement(i, euler);
     }
 
-    port->setArgValue(arrayVal);
+    binding.setArgValue(argName, arrayVal);
   }
   else {
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray())
       return;
     MDataHandle handle = data.inputValue(plug);
@@ -978,7 +978,7 @@ void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       euler.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
     }
 
-    port->setArgValue(euler);
+    binding.setArgValue(argName, euler);
   }
 
   CORE_CATCH_END;
@@ -990,7 +990,7 @@ void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
 
     unsigned int elements = arrayHandle.elementCount();
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     rtVal.setArraySize(elements);
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
     float * values = (float*)dataRtVal.getData();
@@ -1019,10 +1019,10 @@ void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       values[offset++] = (float)mayaMat[3][3];
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
   }
   else{
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray())
       return;
     MDataHandle handle = data.inputValue(plug);
@@ -1055,7 +1055,7 @@ void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
     spliceMatRow.setMember("t", FabricSplice::constructFloat64RTVal(mayaMat.matrix[3][3]));
     spliceMat.setMember("row3", spliceMatRow);
 
-    port->setArgValue(spliceMat);
+    binding.setArgValue(argName, spliceMat);
   }
 }
 
@@ -1069,7 +1069,7 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricCore::DFGBin
   {
     if(plug.isArray())
     {
-      portRTVal = port->getArgValue();
+      portRTVal = binding.getArgValue(argName);
 
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -1109,8 +1109,8 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricCore::DFGBin
     {
       handles.push_back(data.inputValue(plug));
 
-      if(port->getExecPortType() == FabricCore::DFGPortType_IO)
-        portRTVal = port->getArgValue();
+      if(binding.getExec().getExecPortType(argName) == FabricCore::DFGPortType_IO)
+        portRTVal = binding.getArgValue(argName);
       if(!portRTVal.isValid() || portRTVal.isNullObject())
         portRTVal = FabricSplice::constructObjectRTVal("PolygonMesh");
       rtVals.push_back(portRTVal);
@@ -1235,7 +1235,7 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricCore::DFGBin
       mayaIndices.clear();
     }
 
-    port->setArgValue(portRTVal);
+    binding.setArgValue(argName, portRTVal);
   }
   catch(FabricCore::Exception e)
   {
@@ -1259,7 +1259,7 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
   {
     if(plug.isArray())
     {
-      portRTVal = port->getArgValue();
+      portRTVal = binding.getArgValue(argName);
 
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -1290,8 +1290,8 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
     {
       handles.push_back(data.inputValue(plug));
 
-      if(port->getExecPortType() == FabricCore::DFGPortType_IO)
-        portRTVal = port->getArgValue();
+      if(binding.getExec().getExecPortType(argName) == FabricCore::DFGPortType_IO)
+        portRTVal = binding.getArgValue(argName);
       if(!portRTVal.isValid() || portRTVal.isNullObject())
         portRTVal = FabricSplice::constructObjectRTVal("Lines");
       rtVals.push_back(portRTVal);
@@ -1339,7 +1339,7 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       rtVal.callMethod("", "_setTopologyFromExternalArray", 1, &mayaIndicesVal);
     }
 
-    port->setArgValue(portRTVal);
+    binding.setArgValue(argName, portRTVal);
   }
   catch(FabricCore::Exception e)
   {
@@ -1493,7 +1493,7 @@ void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricCore::DFGB
 
     FabricCore::RTVal trackVal;
     dfgPlugToPort_KeyframeTrack_helper(curve, trackVal);
-    port->setArgValue(trackVal);
+    binding.setArgValue(argName, trackVal);
   } else {
 
     FabricCore::RTVal trackVals = FabricSplice::constructRTVal("KeyframeTrack[]");
@@ -1525,7 +1525,7 @@ void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricCore::DFGB
       trackVals.setArrayElement(j, trackVal);
     }
 
-    port->setArgValue(trackVals);
+    binding.setArgValue(argName, trackVals);
   }
 }
 
@@ -1539,12 +1539,12 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricCore::DFG
       if(!spliceMayaData)
         return;
 
-      port->setArgValue(spliceMayaData->getRTVal());
+      binding.setArgValue(argName, spliceMayaData->getRTVal());
     }else{
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
       unsigned int elements = arrayHandle.elementCount();
 
-      FabricCore::RTVal value = port->getArgValue();
+      FabricCore::RTVal value = binding.getArgValue(argName);
       if(!value.isArray())
         return;
       value.setArraySize(elements);
@@ -1562,7 +1562,7 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricCore::DFG
         value.setArrayElement(i, spliceMayaData->getRTVal());
       }
 
-      port->setArgValue(value);
+      binding.setArgValue(argName, value);
     }
   }
   catch(FabricCore::Exception e)
@@ -2222,7 +2222,7 @@ void dfgPortToPlug_compound(FabricCore::DFGBinding & binding, char const * argNa
     return;
 
   MDataHandle handle = data.outputValue(plug);
-  FabricCore::RTVal rtVal = port->getArgValue();
+  FabricCore::RTVal rtVal = binding.getArgValue(argName);
   MFnCompoundAttribute compound(plug.attribute());
   dfgPortToPlug_compound_convertCompound(compound, handle, rtVal);
   handle.setClean();
@@ -2233,7 +2233,7 @@ void dfgPortToPlug_bool(FabricCore::DFGBinding & binding, char const * argName, 
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     unsigned int elements = rtVal.getArraySize();
 
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
@@ -2244,14 +2244,14 @@ void dfgPortToPlug_bool(FabricCore::DFGBinding & binding, char const * argName, 
       handle.setBool(values[i]);
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
   }
   else{
     MDataHandle handle = data.outputValue(plug);
-    handle.setBool(port->getArgValue().getBoolean());
+    handle.setBool(binding.getArgValue(argName).getBoolean());
   }
 }
 
@@ -2260,7 +2260,7 @@ void dfgPortToPlug_integer(FabricCore::DFGBinding & binding, char const * argNam
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     unsigned int elements = rtVal.getArraySize();
 
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
@@ -2272,7 +2272,7 @@ void dfgPortToPlug_integer(FabricCore::DFGBinding & binding, char const * argNam
       handle.setInt(values[i]);
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
@@ -2281,7 +2281,7 @@ void dfgPortToPlug_integer(FabricCore::DFGBinding & binding, char const * argNam
 
     if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {
 
-      FabricCore::RTVal rtVal = port->getArgValue();
+      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       unsigned int elements = rtVal.getArraySize();
 
       MIntArray arrayValues;
@@ -2294,10 +2294,10 @@ void dfgPortToPlug_integer(FabricCore::DFGBinding & binding, char const * argNam
         arrayValues[i] = values[i];
       }
 
-      port->setArgValue(rtVal);
+      binding.setArgValue(argName, rtVal);
       handle.set(MFnIntArrayData().create(arrayValues));
     }else{
-      FabricCore::RTVal rtVal = port->getArgValue();
+      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       handle.setInt((int)dfgGetFloat64FromRTVal(rtVal));
     }
   }
@@ -2306,12 +2306,12 @@ void dfgPortToPlug_integer(FabricCore::DFGBinding & binding, char const * argNam
 void dfgPortToPlug_scalar(FabricCore::DFGBinding & binding, char const * argName, MPlug &plug, MDataBlock &data){
   CORE_CATCH_BEGIN;
 
-  std::string scalarUnit = port->getMetadata("scalarUnit");
+  MString scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     unsigned int elements = rtVal.getArraySize();
 
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
@@ -2335,14 +2335,14 @@ void dfgPortToPlug_scalar(FabricCore::DFGBinding & binding, char const * argName
       }
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
   }
   else{
     MDataHandle handle = data.outputValue(plug);
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray()) {
 
       FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
@@ -2384,7 +2384,7 @@ void dfgPortToPlug_string(FabricCore::DFGBinding & binding, char const * argName
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal arrayVal = port->getArgValue();
+    FabricCore::RTVal arrayVal = binding.getArgValue(argName);
     unsigned int elements = arrayVal.getArraySize();
     for(unsigned int i = 0; i < elements; ++i){
       MDataHandle handle = arraybuilder.addElement(i);
@@ -2396,7 +2396,7 @@ void dfgPortToPlug_string(FabricCore::DFGBinding & binding, char const * argName
   }
   else{
     MDataHandle handle = data.outputValue(plug);
-    handle.setString(MString(port->getArgValue().getStringCString()));
+    handle.setString(MString(binding.getArgValue(argName).getStringCString()));
   }
 }
 
@@ -2405,7 +2405,7 @@ void dfgPortToPlug_color(FabricCore::DFGBinding & binding, char const * argName,
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal arrayVal = port->getArgValue();
+    FabricCore::RTVal arrayVal = binding.getArgValue(argName);
     unsigned int elements = arrayVal.getArraySize();
     for(unsigned int i = 0; i < elements; ++i){
       MDataHandle handle = arraybuilder.addElement(i);
@@ -2431,7 +2431,7 @@ void dfgPortToPlug_color(FabricCore::DFGBinding & binding, char const * argName,
   else{
     MDataHandle handle = data.outputValue(plug);
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
       MFloatVector v(
         (float)dfgGetFloat64FromRTVal(rtVal.maybeGetMember("r")),
@@ -2455,7 +2455,7 @@ void dfgPortToPlug_vec3(FabricCore::DFGBinding & binding, char const * argName, 
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     unsigned int elements = rtVal.getArraySize();
 
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
@@ -2481,14 +2481,14 @@ void dfgPortToPlug_vec3(FabricCore::DFGBinding & binding, char const * argName, 
       offset+=3;
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
   }
   else{
     MDataHandle handle = data.outputValue(plug);
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(handle.type() == MFnData::kVectorArray) {
       unsigned int elements = rtVal.getArraySize();
 
@@ -2505,7 +2505,7 @@ void dfgPortToPlug_vec3(FabricCore::DFGBinding & binding, char const * argName, 
         arrayValues[i].z = values[offset++];
       }
 
-      port->setArgValue(rtVal);
+      binding.setArgValue(argName, rtVal);
       handle.set(MFnVectorArrayData().create(arrayValues));
     }else if(handle.type() == MFnData::kPointArray) {
       unsigned int elements = rtVal.getArraySize();
@@ -2523,10 +2523,10 @@ void dfgPortToPlug_vec3(FabricCore::DFGBinding & binding, char const * argName, 
         arrayValues[i].z = values[offset++];
       }
 
-      port->setArgValue(rtVal);
+      binding.setArgValue(argName, rtVal);
       handle.set(MFnPointArrayData().create(arrayValues));
     }else{
-      FabricCore::RTVal rtVal = port->getArgValue();
+      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
         handle.set3Float(
           dfgGetFloat64FromRTVal(rtVal.maybeGetMember("x")),
@@ -2549,7 +2549,7 @@ void dfgPortToPlug_euler(FabricCore::DFGBinding & binding, char const * argName,
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal arrayVal = port->getArgValue();
+    FabricCore::RTVal arrayVal = binding.getArgValue(argName);
     unsigned int elements = arrayVal.getArraySize();
     for(unsigned int i = 0; i < elements; ++i){
       MDataHandle handle = arraybuilder.addElement(i);
@@ -2575,7 +2575,7 @@ void dfgPortToPlug_euler(FabricCore::DFGBinding & binding, char const * argName,
   else{
     MDataHandle handle = data.outputValue(plug);
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
       handle.set3Float(
         dfgGetFloat64FromRTVal(rtVal.maybeGetMember("x")),
@@ -2597,7 +2597,7 @@ void dfgPortToPlug_mat44(FabricCore::DFGBinding & binding, char const * argName,
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     unsigned int elements = rtVal.getArraySize();
 
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
@@ -2619,7 +2619,7 @@ void dfgPortToPlug_mat44(FabricCore::DFGBinding & binding, char const * argName,
       handle.setMMatrix(mayaMat);
     }
 
-    port->setArgValue(rtVal);
+    binding.setArgValue(argName, rtVal);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
@@ -2627,7 +2627,7 @@ void dfgPortToPlug_mat44(FabricCore::DFGBinding & binding, char const * argName,
   else{
     MDataHandle handle = data.outputValue(plug);
 
-    FabricCore::RTVal rtVal = port->getArgValue();
+    FabricCore::RTVal rtVal = binding.getArgValue(argName);
     FabricCore::RTVal row0 = rtVal.maybeGetMember("row0");
     FabricCore::RTVal row1 = rtVal.maybeGetMember("row1");
     FabricCore::RTVal row2 = rtVal.maybeGetMember("row2");
@@ -2888,7 +2888,7 @@ void dfgPortToPlug_PolygonMesh(FabricCore::DFGBinding & binding, char const * ar
       MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
       MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-      FabricCore::RTVal polygonMeshArray = port->getArgValue();
+      FabricCore::RTVal polygonMeshArray = binding.getArgValue(argName);
       unsigned int elements = polygonMeshArray.getArraySize();
       for(unsigned int i = 0; i < elements; ++i)
         dfgPortToPlug_PolygonMesh_singleMesh(arraybuilder.addElement(i), polygonMeshArray.getArrayElement(i));
@@ -2899,7 +2899,7 @@ void dfgPortToPlug_PolygonMesh(FabricCore::DFGBinding & binding, char const * ar
     else
     {
       MDataHandle handle = data.outputValue(plug.attribute());
-      dfgPortToPlug_PolygonMesh_singleMesh(handle, port->getArgValue());
+      dfgPortToPlug_PolygonMesh_singleMesh(handle, binding.getArgValue(argName));
     }
   }
   catch(FabricCore::Exception e)
@@ -2979,7 +2979,7 @@ void dfgPortToPlug_Lines(FabricCore::DFGBinding & binding, char const * argName,
       MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
       MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-      FabricCore::RTVal rtVal = port->getArgValue();
+      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       unsigned int elements = rtVal.getArraySize();
       for(unsigned int i = 0; i < elements; ++i)
         dfgPortToPlug_Lines_singleLines(arraybuilder.addElement(i), rtVal.getArrayElement(i));
@@ -2990,7 +2990,7 @@ void dfgPortToPlug_Lines(FabricCore::DFGBinding & binding, char const * argName,
     else
     {
       MDataHandle handle = data.outputValue(plug.attribute());
-      dfgPortToPlug_Lines_singleLines(handle, port->getArgValue());
+      dfgPortToPlug_Lines_singleLines(handle, binding.getArgValue(argName));
     }
   }
   catch(FabricCore::Exception e)
@@ -3012,12 +3012,12 @@ void dfgPortToPlug_spliceMayaData(FabricCore::DFGBinding & binding, char const *
       MFnFabricSpliceMayaData mfnpd;
       MObject spliceMayaDataObj = mfnpd.create(&status);
       FabricSpliceMayaData *spliceMayaData =(FabricSpliceMayaData *)mfnpd.data();
-      spliceMayaData->setRTVal(port->getArgValue());
+      spliceMayaData->setRTVal(binding.getArgValue(argName));
 
       MDataHandle handle = data.outputValue(plug);
       handle.set(spliceMayaDataObj);
     } else {
-      FabricCore::RTVal value = port->getArgValue();
+      FabricCore::RTVal value = binding.getArgValue(argName);
       if(!value.isArray())
         return;
 
