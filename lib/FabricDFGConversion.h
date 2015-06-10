@@ -14,12 +14,11 @@
 #include <maya/MDataHandle.h>
 
 #include <FabricCore.h>
-#include <DFGWrapper/DFGWrapper.h>
 
-typedef void(*DFGPlugToPortFunc)(MPlug &plug, MDataBlock &data, FabricServices::DFGWrapper::ExecPortPtr & port);
-typedef void(*DFGExecPortToPlugFunc)(FabricServices::DFGWrapper::ExecPortPtr & port, MPlug &plug, MDataBlock &data);
+typedef void(*DFGPlugToArgFunc)(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & binding, char const * argName);
+typedef void(*DFGArgToPlugFunc)(FabricCore::DFGBinding & binding, char const * argName, MPlug &plug, MDataBlock &data);
 
-DFGPlugToPortFunc getDFGPlugToPortFunc(const std::string & dataType, const FabricServices::DFGWrapper::ExecPortPtr port = NULL);
-DFGExecPortToPlugFunc getDFGExecPortToPlugFunc(const std::string & dataType, const FabricServices::DFGWrapper::ExecPortPtr port = NULL);
+DFGPlugToArgFunc getDFGPlugToArgFunc(const std::string & dataType);
+DFGArgToPlugFunc getDFGArgToPlugFunc(const std::string & dataType);
 
 #endif

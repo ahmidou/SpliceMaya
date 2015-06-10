@@ -18,7 +18,6 @@
 #include <FabricSplice.h>
 #include <DFG/DFGValueEditor.h>
 #include <Commands/CommandStack.h>
-#include <DFGWrapper/DFGWrapper.h>
 
 using namespace FabricServices;
 using namespace FabricUI;
@@ -53,11 +52,11 @@ public:
   unsigned int getId() const;
   FabricCore::Client getCoreClient();
   ASTWrapper::KLASTManager * getASTManager();
-  DFGWrapper::Host * getDFGHost();
-  DFGWrapper::Binding getDFGBinding();
-  DFG::DFGView * getDFGView();
+  FabricCore::DFGHost getDFGHost();
+  FabricCore::DFGBinding getDFGBinding();
+  FabricCore::DFGExec getDFGGraph();
+  DFG::DFGNotificationRouter * getDFGRouter();
   DFG::DFGController * getDFGController();
-  DFGWrapper::GraphExecutablePtr getDFGGraph();
 
   void storePersistenceData(MString file, MStatus *stat = 0);
   void restoreFromPersistenceData(MString file, MStatus *stat = 0);
@@ -121,10 +120,10 @@ protected:
 
   FabricCore::Client m_client;
   FabricServices::ASTWrapper::KLASTManager * m_manager;
-  DFGWrapper::Host * m_host;
-  DFG::DFGView * m_view;
+  FabricCore::DFGHost m_host;
+  FabricCore::DFGBinding m_binding;
+  DFG::DFGNotificationRouter * m_router;
   FabricUI::DFG::DFGController * m_ctrl;
-  DFGWrapper::Binding m_binding;
   std::map<std::string, std::string> _argTypes;
 
 private:
