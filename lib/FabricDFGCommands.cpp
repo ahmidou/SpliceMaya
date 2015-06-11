@@ -11,6 +11,74 @@
 #define kNodeFlag "-n"
 #define kNodeFlagLong "-node"
 
+MSyntax FabricDFGGetContextIDCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGGetContextIDCommand::creator()
+{
+  return new FabricDFGGetContextIDCommand;
+}
+
+MStatus FabricDFGGetContextIDCommand::doIt(const MArgList &args)
+{
+  MString result;
+  try
+  {
+    FabricCore::Client client = FabricSplice::ConstructClient();
+    result = client.getContextID();
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    return mayaErrorOccured();
+  }
+
+  setResult(result);
+  return MS::kSuccess;
+}
+
+MSyntax FabricDFGGetBindingIDCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGGetBindingIDCommand::creator()
+{
+  return new FabricDFGGetBindingIDCommand;
+}
+
+MStatus FabricDFGGetBindingIDCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argData(syntax(), args, &status);
+  if(!argData.isFlagSet("node"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Node (-n, -node) not provided.");
+    return mayaErrorOccured();
+  }
+
+  MString node = argData.flagArgumentString("node", 0);
+  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(node.asChar());
+  if(!interf)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Node '"+node+"' not found.");
+    return mayaErrorOccured();
+  }
+
+  int result = interf->getDFGBinding().getBindingID();
+  setResult(result);
+  return MS::kSuccess;
+}
+
 FabricDFGBaseCommand::~FabricDFGBaseCommand()
 {
 }

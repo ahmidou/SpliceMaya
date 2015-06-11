@@ -11,6 +11,28 @@
 #include "FabricDFGBaseInterface.h"
 #include <DFG/DFGController.h>
 
+class FabricDFGGetContextIDCommand: public MPxCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgGetContextID"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+  virtual bool isUndoable() const { return false; }
+};
+
+class FabricDFGGetBindingIDCommand: public MPxCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgGetBindingID"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+  virtual bool isUndoable() const { return false; }
+};
+
 class FabricDFGBaseCommand: public MPxCommand
 {
 public:

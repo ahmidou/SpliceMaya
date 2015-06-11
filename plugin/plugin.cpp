@@ -190,6 +190,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
   plugin.registerNode("dfgMayaNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
 
+  plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
+  plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
   plugin.registerCommand("dfgAddNode", FabricDFGAddNodeCommand::creator, FabricDFGAddNodeCommand::newSyntax);
   plugin.registerCommand("dfgRemoveNode", FabricDFGRemoveNodeCommand::creator, FabricDFGRemoveNodeCommand::newSyntax);
   plugin.registerCommand("dfgRenameNode", FabricDFGRenameNodeCommand::creator, FabricDFGRenameNodeCommand::newSyntax);
@@ -272,6 +274,8 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MQtUtil::deregisterUIType("FabricDFGWidget");
   plugin.deregisterNode(FabricDFGMayaNode::id);
 
+  plugin.deregisterCommand("dfgGetContextID");
+  plugin.deregisterCommand("dfgGetBindingID");
   plugin.deregisterCommand("dfgAddNode");
   plugin.deregisterCommand("dfgRemoveNode");
   plugin.deregisterCommand("dfgRenameNode");
