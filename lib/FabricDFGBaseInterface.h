@@ -4,6 +4,7 @@
 #include <DFG/DFGUI.h>
 
 #include "FabricSpliceConversion.h"
+#include "DFGUICmdHandler_Maya.h"
 
 #include <vector>
 
@@ -77,6 +78,9 @@ public:
 
   virtual void incrementEvalID();
 
+  DFGUICmdHandler_Maya *getCmdHandler()
+    { return &m_cmdHandler; }
+
 protected:
   MString getPlugName(MString portName);
   MString getPortName(MString plugName);
@@ -125,6 +129,7 @@ protected:
   DFG::DFGNotificationRouter * m_router;
   FabricUI::DFG::DFGController * m_ctrl;
   std::map<std::string, std::string> _argTypes;
+  DFGUICmdHandler_Maya m_cmdHandler;
 
 private:
   static void bindingNotificationCallback(void * userData, char const *jsonCString, uint32_t jsonLength);

@@ -17,7 +17,8 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 {
   m_baseInterfaceName = s_currentUINodeName;
   
-  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(m_baseInterfaceName.c_str());
+  FabricDFGBaseInterface * interf =
+    FabricDFGBaseInterface::getInstanceByName(m_baseInterfaceName.c_str());
 
   if(interf)
   {
@@ -31,7 +32,18 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 
     DFG::DFGConfig config;
     config.graphConfig.useOpenGL = false;
-    init(m_mayaClient, manager, host, binding, exec, FabricDFGCommandStack::getStack(), false, config);
+    init(
+      m_mayaClient,
+      manager,
+      host,
+      binding,
+      FTL::StrRef(),
+      exec,
+      interf->getCmdHandler(),
+      FabricDFGCommandStack::getStack(),
+      false,
+      config
+      );
   }
 }
 

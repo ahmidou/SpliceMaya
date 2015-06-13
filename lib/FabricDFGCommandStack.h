@@ -3,7 +3,7 @@
 #define _FABRICDFGCOMMANDSTACK_H_
 
 #include <Commands/CommandStack.h>
-#include <DFG/Commands/DFGCommand.h>
+#include <FabricUI/DFG/DFGUICmd_QUndo/DFGCommand.h>
 #include <maya/MString.h>
 #include "FabricDFGBaseInterface.h"
 

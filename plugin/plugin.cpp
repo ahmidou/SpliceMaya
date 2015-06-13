@@ -190,15 +190,18 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
   plugin.registerNode("dfgMayaNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
 
+  plugin.registerCommand("canvasAddInstFromPreset", FabricDFGAddInstFromPresetCommand::creator, FabricDFGAddInstFromPresetCommand::newSyntax);
+  plugin.registerCommand("canvasAddInstWithEmptyFunc", FabricDFGAddInstWithEmptyFuncCommand::creator, FabricDFGAddInstWithEmptyFuncCommand::newSyntax);
+  plugin.registerCommand("canvasAddInstWithEmptyGraph", FabricDFGAddInstWithEmptyGraphCommand::creator, FabricDFGAddInstWithEmptyGraphCommand::newSyntax);
+  plugin.registerCommand("canvasAddVar", FabricDFGAddVarCommand::creator, FabricDFGAddVarCommand::newSyntax);
+  plugin.registerCommand("canvasAddGet", FabricDFGAddGetCommand::creator, FabricDFGAddGetCommand::newSyntax);
+  plugin.registerCommand("canvasAddSet", FabricDFGAddSetCommand::creator, FabricDFGAddSetCommand::newSyntax);
+  plugin.registerCommand("canvasConnect", FabricDFGConnectCommand::creator, FabricDFGConnectCommand::newSyntax);
+  plugin.registerCommand("canvasDisconnect", FabricDFGDisconnectCommand::creator, FabricDFGDisconnectCommand::newSyntax);
+  plugin.registerCommand("canvasRemoveNodes", FabricDFGRemoveNodesCommand::creator, FabricDFGRemoveNodesCommand::newSyntax);
   plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
-  plugin.registerCommand("dfgAddNode", FabricDFGAddNodeCommand::creator, FabricDFGAddNodeCommand::newSyntax);
-  plugin.registerCommand("dfgRemoveNode", FabricDFGRemoveNodeCommand::creator, FabricDFGRemoveNodeCommand::newSyntax);
   plugin.registerCommand("dfgRenameNode", FabricDFGRenameNodeCommand::creator, FabricDFGRenameNodeCommand::newSyntax);
-  plugin.registerCommand("dfgAddEmptyFunc", FabricDFGAddEmptyFuncCommand::creator, FabricDFGAddEmptyFuncCommand::newSyntax);
-  plugin.registerCommand("dfgAddEmptyGraph", FabricDFGAddEmptyGraphCommand::creator, FabricDFGAddEmptyGraphCommand::newSyntax);
-  plugin.registerCommand("dfgAddConnection", FabricDFGAddConnectionCommand::creator, FabricDFGAddConnectionCommand::newSyntax);
-  plugin.registerCommand("dfgRemoveConnection", FabricDFGRemoveConnectionCommand::creator, FabricDFGRemoveConnectionCommand::newSyntax);
   plugin.registerCommand("dfgAddPort", FabricDFGAddPortCommand::creator, FabricDFGAddPortCommand::newSyntax);
   plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);
   plugin.registerCommand("dfgRenamePort", FabricDFGRenamePortCommand::creator, FabricDFGRenamePortCommand::newSyntax);

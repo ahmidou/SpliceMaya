@@ -7,6 +7,7 @@
 #include <iostream>
 #include <maya/MPxCommand.h>
 #include <maya/MArgList.h>
+#include <maya/MArgParser.h>
 #include "FabricDFGCommandStack.h"
 #include "FabricDFGBaseInterface.h"
 #include <DFG/DFGController.h>
@@ -53,81 +54,11 @@ protected:
   FabricDFGCommandStack::Info m_cmdInfo;
 };
 
-class FabricDFGAddNodeCommand: public FabricDFGBaseCommand
-{
-public:
-
-  virtual const char * getName() { return "dfgAddNode"; }
-  static void* creator();
-  static MSyntax newSyntax();
-  virtual MStatus doIt(const MArgList &args);
-};
-
-class FabricDFGRemoveNodeCommand: public FabricDFGBaseCommand
-{
-public:
-
-  virtual const char * getName() { return "dfgRemoveNode"; }
-  static void* creator();
-  static MSyntax newSyntax();
-  virtual MStatus doIt(const MArgList &args);
-};
-
 class FabricDFGRenameNodeCommand: public FabricDFGBaseCommand
 {
 public:
 
   virtual const char * getName() { return "dfgRenameNode"; }
-  static void* creator();
-  static MSyntax newSyntax();
-  virtual MStatus doIt(const MArgList &args);
-};
-
-class FabricDFGAddEmptyFuncCommand: public FabricDFGBaseCommand
-{
-public:
-
-  virtual const char * getName() { return "dfgAddEmptyFunc"; }
-  static void* creator();
-  static MSyntax newSyntax();
-  virtual MStatus doIt(const MArgList &args);
-};
-
-class FabricDFGAddEmptyGraphCommand: public FabricDFGBaseCommand
-{
-public:
-
-  virtual const char * getName() { return "dfgAddEmptyGraph"; }
-  static void* creator();
-  static MSyntax newSyntax();
-  virtual MStatus doIt(const MArgList &args);
-};
-
-class FabricDFGAddConnectionCommand: public FabricDFGBaseCommand
-{
-public:
-
-  virtual const char * getName() { return "dfgAddConnection"; }
-  static void* creator();
-  static MSyntax newSyntax();
-  virtual MStatus doIt(const MArgList &args);
-};
-
-class FabricDFGRemoveConnectionCommand: public FabricDFGBaseCommand
-{
-public:
-
-  virtual const char * getName() { return "dfgRemoveConnection"; }
-  static void* creator();
-  static MSyntax newSyntax();
-  virtual MStatus doIt(const MArgList &args);
-};
-
-class FabricDFGRemoveAllConnectionsCommand: public FabricDFGBaseCommand
-{
-public:
-
-  virtual const char * getName() { return "dfgRemoveAllConnections"; }
   static void* creator();
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);
@@ -271,6 +202,261 @@ public:
   static void* creator();
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);
+};
+
+class FabricNewDFGBaseCommand: public MPxCommand
+{
+public:
+
+  virtual MString getName() = 0;
+
+  virtual MStatus doIt( const MArgList &args );
+  virtual MStatus undoIt();
+  virtual MStatus redoIt();
+
+  virtual bool isUndoable() const
+    { return true; }
+
+protected:
+
+  FabricNewDFGBaseCommand()
+    : m_coreUndoCount( 0 )
+    {}
+
+  void incCoreUndoCount()
+    { ++m_coreUndoCount; }
+
+  FabricCore::DFGBinding &getBinding()
+    { return m_binding; }
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGBinding &binding
+    ) = 0;
+
+  void logError( MString const &desc )
+    { displayError( getName() + ": " + desc, true ); }
+
+  static void addSyntax( MSyntax &syntax );
+
+private:
+
+  unsigned m_coreUndoCount;
+  FabricCore::DFGBinding m_binding;
+};
+
+class FabricDFGExecCommand : public FabricNewDFGBaseCommand
+{
+  typedef FabricNewDFGBaseCommand Parent;
+
+protected:
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGBinding &binding
+    );
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    ) = 0;
+
+  static void addSyntax( MSyntax &syntax );
+};
+
+class FabricDFGConnectCommand : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString("canvasConnect"); }
+
+  static void* creator()
+    { return new FabricDFGConnectCommand; }
+
+  static MSyntax newSyntax();
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    );
+};
+
+class FabricDFGDisconnectCommand : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString("canvasDisconnect"); }
+
+  static void* creator()
+    { return new FabricDFGDisconnectCommand; }
+
+  static MSyntax newSyntax();
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    );
+};
+
+class FabricDFGRemoveNodesCommand : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString("canvasRemoveNodes"); }
+
+  static void* creator()
+    { return new FabricDFGRemoveNodesCommand; }
+
+  static MSyntax newSyntax();
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    );
+};
+
+class FabricDFGAddNodeCommand : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void addSyntax( MSyntax &syntax );
+
+  void setPos(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec,
+    FTL::CStrRef nodeName
+    );
+};
+
+class FabricDFGAddInstFromPresetCommand : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString("canvasAddInstFromPreset"); }
+
+  static void* creator()
+    { return new FabricDFGAddInstFromPresetCommand; }
+
+  static MSyntax newSyntax();
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    );
+};
+
+class FabricDFGAddInstWithEmptyGraphCommand : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString("canvasAddInstWithEmptyGraph"); }
+
+  static void* creator()
+    { return new FabricDFGAddInstWithEmptyGraphCommand; }
+
+  static MSyntax newSyntax();
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    );
+};
+
+class FabricDFGAddInstWithEmptyFuncCommand : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString("canvasAddInstWithEmptyFunc"); }
+
+  static void* creator()
+    { return new FabricDFGAddInstWithEmptyFuncCommand; }
+
+  static MSyntax newSyntax();
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    );
+};
+
+class FabricDFGAddVarCommand : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString("canvasAddVar"); }
+
+  static void* creator()
+    { return new FabricDFGAddVarCommand; }
+
+  static MSyntax newSyntax();
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    );
+};
+
+class FabricDFGAddGetCommand : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString("canvasAddGet"); }
+
+  static void* creator()
+    { return new FabricDFGAddGetCommand; }
+
+  static MSyntax newSyntax();
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    );
+};
+
+class FabricDFGAddSetCommand : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString("canvasAddSet"); }
+
+  static void* creator()
+    { return new FabricDFGAddSetCommand; }
+
+  static MSyntax newSyntax();
+
+  virtual MStatus invoke(
+    MArgParser &argParser,
+    FabricCore::DFGExec &exec
+    );
 };
 
 class FabricDFGAddVarCommand: public FabricDFGBaseCommand

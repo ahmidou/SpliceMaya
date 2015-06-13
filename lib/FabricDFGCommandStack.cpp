@@ -2,28 +2,18 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
 
-#include <DFG/Commands/DFGAddNodeCommand.h>
-#include <DFG/Commands/DFGRemoveNodeCommand.h>
-#include <DFG/Commands/DFGRenameNodeCommand.h>
-#include <DFG/Commands/DFGAddEmptyFuncCommand.h>
-#include <DFG/Commands/DFGAddEmptyGraphCommand.h>
-#include <DFG/Commands/DFGAddConnectionCommand.h>
-#include <DFG/Commands/DFGRemoveConnectionCommand.h>
-#include <DFG/Commands/DFGAddPortCommand.h>
-#include <DFG/Commands/DFGRemovePortCommand.h>
-#include <DFG/Commands/DFGRenamePortCommand.h>
-#include <DFG/Commands/DFGSetArgCommand.h>
-#include <DFG/Commands/DFGSetDefaultValueCommand.h>
-#include <DFG/Commands/DFGSetCodeCommand.h>
-#include <DFG/Commands/DFGSetNodeCacheRuleCommand.h>
-#include <DFG/Commands/DFGCopyCommand.h>
-#include <DFG/Commands/DFGPasteCommand.h>
-#include <DFG/Commands/DFGImplodeNodesCommand.h>
-#include <DFG/Commands/DFGExplodeNodeCommand.h>
-#include <DFG/Commands/DFGAddVarCommand.h>
-#include <DFG/Commands/DFGAddGetCommand.h>
-#include <DFG/Commands/DFGAddSetCommand.h>
-#include <DFG/Commands/DFGSetRefVarPathCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGRenameNodeCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGAddPortCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGRemovePortCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGRenamePortCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGSetArgCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGSetDefaultValueCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGSetCodeCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGSetNodeCacheRuleCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGCopyCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGPasteCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGImplodeNodesCommand.h>
+#include <DFG/DFGUICmd_QUndo/DFGExplodeNodeCommand.h>
 
 using namespace FabricServices;
 using namespace FabricUI;
@@ -88,46 +78,22 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     for(unsigned int i=0;i<cmd->getNbCommands();i++)
       result = result && logMayaCommand(cmd->getCommand(i), id, undoable, lastCommand);
   }
-  else if(commandName == "dfgAddNode")
-  {
-    addCommandToIgnore(commandName.asChar(), id, undoable);
-    if(s_mayaCommandsEnabled)
-    {
-      DFG::DFGAddNodeCommand * cmd = (DFG::DFGAddNodeCommand*)genericCommand;
-      interf = getInterfaceFromCommand(cmd);
-      MString nodeName = getNodeNameFromCommand(cmd);
-      MString path = cmd->getInstPath();
-      MString preset = cmd->getPreset();
-      QPointF pos = cmd->getPos();
-      MString x, y;
-      x.set(pos.x());
-      y.set(pos.y());
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  // else if(commandName == "dfgRemoveNode")
+  // {
+  //   addCommandToIgnore(commandName.asChar(), id, undoable);
+  //   if(s_mayaCommandsEnabled)
+  //   {
+  //     DFG::DFGRemoveNodeCommand * cmd = (DFG::DFGRemoveNodeCommand*)genericCommand;
+  //     interf = getInterfaceFromCommand(cmd);
+  //     MString nodeName = getNodeNameFromCommand(cmd);
+  //     MString path = cmd->getNodePath();
+  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
-      MString cmdStr = "dfgAddNode -node \""+nodeName+"\"";
-      cmdStr += " -path \""+path+"\"";
-      cmdStr += " -preset \""+preset+"\"";
-      cmdStr += " -xpos "+x;
-      cmdStr += " -ypos "+y;
-      MGlobal::executeCommandOnIdle(cmdStr+";", true);
-    }
-  }
-  else if(commandName == "dfgRemoveNode")
-  {
-    addCommandToIgnore(commandName.asChar(), id, undoable);
-    if(s_mayaCommandsEnabled)
-    {
-      DFG::DFGRemoveNodeCommand * cmd = (DFG::DFGRemoveNodeCommand*)genericCommand;
-      interf = getInterfaceFromCommand(cmd);
-      MString nodeName = getNodeNameFromCommand(cmd);
-      MString path = cmd->getNodePath();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
-  
-      MString cmdStr = "dfgRemoveNode -node \""+nodeName+"\"";
-      cmdStr += " -path \""+path+"\"";
-      MGlobal::executeCommandOnIdle(cmdStr+";", true);
-    }
-  }
+  //     MString cmdStr = "dfgRemoveNode -node \""+nodeName+"\"";
+  //     cmdStr += " -path \""+path+"\"";
+  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
+  //   }
+  // }
   else if(commandName == "dfgRenameNode")
   {
     addCommandToIgnore(commandName.asChar(), id, undoable);
@@ -146,90 +112,90 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
   }
-  else if(commandName == "dfgAddEmptyFunc")
-  {
-    addCommandToIgnore(commandName.asChar(), id, undoable);
-    if(s_mayaCommandsEnabled)
-    {
-      DFG::DFGAddEmptyFuncCommand * cmd = (DFG::DFGAddEmptyFuncCommand*)genericCommand;
-      interf = getInterfaceFromCommand(cmd);
-      MString nodeName = getNodeNameFromCommand(cmd);
-      MString path = cmd->getInstPath();
-      MString name = cmd->getTitle();
-      QPointF pos = cmd->getPos();
-      MString x, y;
-      x.set(pos.x());
-      y.set(pos.y());
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  // else if(commandName == "dfgAddEmptyFunc")
+  // {
+  //   addCommandToIgnore(commandName.asChar(), id, undoable);
+  //   if(s_mayaCommandsEnabled)
+  //   {
+  //     DFG::DFGAddEmptyFuncCommand * cmd = (DFG::DFGAddEmptyFuncCommand*)genericCommand;
+  //     interf = getInterfaceFromCommand(cmd);
+  //     MString nodeName = getNodeNameFromCommand(cmd);
+  //     MString path = cmd->getInstPath();
+  //     MString name = cmd->getTitle();
+  //     QPointF pos = cmd->getPos();
+  //     MString x, y;
+  //     x.set(pos.x());
+  //     y.set(pos.y());
+  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
-      MString cmdStr = "dfgAddEmptyFunc -node \""+nodeName+"\"";
-      cmdStr += " -path \""+path+"\"";
-      cmdStr += " -name \""+name+"\"";
-      cmdStr += " -xpos "+x;
-      cmdStr += " -ypos "+y;
-      MGlobal::executeCommandOnIdle(cmdStr+";", true);
-    }
-  }
-  else if(commandName == "dfgAddEmptyGraph")
-  {
-    addCommandToIgnore(commandName.asChar(), id, undoable);
-    if(s_mayaCommandsEnabled)
-    {
-      DFG::DFGAddEmptyGraphCommand * cmd = (DFG::DFGAddEmptyGraphCommand*)genericCommand;
-      interf = getInterfaceFromCommand(cmd);
-      MString nodeName = getNodeNameFromCommand(cmd);
-      MString path = cmd->getInstPath();
-      MString name = cmd->getTitle();
-      QPointF pos = cmd->getPos();
-      MString x, y;
-      x.set(pos.x());
-      y.set(pos.y());
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  //     MString cmdStr = "dfgAddEmptyFunc -node \""+nodeName+"\"";
+  //     cmdStr += " -path \""+path+"\"";
+  //     cmdStr += " -name \""+name+"\"";
+  //     cmdStr += " -xpos "+x;
+  //     cmdStr += " -ypos "+y;
+  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
+  //   }
+  // }
+  // else if(commandName == "dfgAddEmptyGraph")
+  // {
+  //   addCommandToIgnore(commandName.asChar(), id, undoable);
+  //   if(s_mayaCommandsEnabled)
+  //   {
+  //     DFG::DFGAddEmptyGraphCommand * cmd = (DFG::DFGAddEmptyGraphCommand*)genericCommand;
+  //     interf = getInterfaceFromCommand(cmd);
+  //     MString nodeName = getNodeNameFromCommand(cmd);
+  //     MString path = cmd->getInstPath();
+  //     MString name = cmd->getTitle();
+  //     QPointF pos = cmd->getPos();
+  //     MString x, y;
+  //     x.set(pos.x());
+  //     y.set(pos.y());
+  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
-      MString cmdStr = "dfgAddEmptyGraph -node \""+nodeName+"\"";
-      cmdStr += " -path \""+path+"\"";
-      cmdStr += " -name \""+name+"\"";
-      cmdStr += " -xpos "+x;
-      cmdStr += " -ypos "+y;
-      MGlobal::executeCommandOnIdle(cmdStr+";", true);
-    }
-  }
-  else if(commandName == "dfgAddConnection")
-  {
-    addCommandToIgnore(commandName.asChar(), id, undoable);
-    if(s_mayaCommandsEnabled)
-    {
-      DFG::DFGAddConnectionCommand * cmd = (DFG::DFGAddConnectionCommand*)genericCommand;
-      interf = getInterfaceFromCommand(cmd);
-      MString nodeName = getNodeNameFromCommand(cmd);
-      MString srcPath = cmd->getSrcPath();
-      MString dstPath = cmd->getDstPath();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  //     MString cmdStr = "dfgAddEmptyGraph -node \""+nodeName+"\"";
+  //     cmdStr += " -path \""+path+"\"";
+  //     cmdStr += " -name \""+name+"\"";
+  //     cmdStr += " -xpos "+x;
+  //     cmdStr += " -ypos "+y;
+  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
+  //   }
+  // }
+  // else if(commandName == "dfgAddConnection")
+  // {
+  //   addCommandToIgnore(commandName.asChar(), id, undoable);
+  //   if(s_mayaCommandsEnabled)
+  //   {
+  //     DFG::DFGAddConnectionCommand * cmd = (DFG::DFGAddConnectionCommand*)genericCommand;
+  //     interf = getInterfaceFromCommand(cmd);
+  //     MString nodeName = getNodeNameFromCommand(cmd);
+  //     MString srcPath = cmd->getSrcPath();
+  //     MString dstPath = cmd->getDstPath();
+  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
-      MString cmdStr = "dfgAddConnection -node \""+nodeName+"\"";
-      cmdStr += " -srcPath \""+srcPath+"\"";
-      cmdStr += " -dstPath \""+dstPath+"\"";
-      MGlobal::executeCommandOnIdle(cmdStr+";", true);
-    }
-  }
-  else if(commandName == "dfgRemoveConnection")
-  {
-    addCommandToIgnore(commandName.asChar(), id, undoable);
-    if(s_mayaCommandsEnabled)
-    {
-      DFG::DFGRemoveConnectionCommand * cmd = (DFG::DFGRemoveConnectionCommand*)genericCommand;
-      interf = getInterfaceFromCommand(cmd);
-      MString nodeName = getNodeNameFromCommand(cmd);
-      MString srcPath = cmd->getSrcPath();
-      MString dstPath = cmd->getDstPath();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  //     MString cmdStr = "dfgAddConnection -node \""+nodeName+"\"";
+  //     cmdStr += " -srcPath \""+srcPath+"\"";
+  //     cmdStr += " -dstPath \""+dstPath+"\"";
+  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
+  //   }
+  // }
+  // else if(commandName == "dfgRemoveConnection")
+  // {
+  //   addCommandToIgnore(commandName.asChar(), id, undoable);
+  //   if(s_mayaCommandsEnabled)
+  //   {
+  //     DFG::DFGRemoveConnectionCommand * cmd = (DFG::DFGRemoveConnectionCommand*)genericCommand;
+  //     interf = getInterfaceFromCommand(cmd);
+  //     MString nodeName = getNodeNameFromCommand(cmd);
+  //     MString srcPath = cmd->getSrcPath();
+  //     MString dstPath = cmd->getDstPath();
+  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
-      MString cmdStr = "dfgRemoveConnection -node \""+nodeName+"\"";
-      cmdStr += " -srcPath \""+srcPath+"\"";
-      cmdStr += " -dstPath \""+dstPath+"\"";
-      MGlobal::executeCommandOnIdle(cmdStr+";", true);
-    }
-  }
+  //     MString cmdStr = "dfgRemoveConnection -node \""+nodeName+"\"";
+  //     cmdStr += " -srcPath \""+srcPath+"\"";
+  //     cmdStr += " -dstPath \""+dstPath+"\"";
+  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
+  //   }
+  // }
   else if(commandName == "dfgAddPort")
   {
     addCommandToIgnore(commandName.asChar(), id, undoable);
@@ -546,7 +512,7 @@ FabricDFGCommandStack * FabricDFGCommandStack::getStack()
 
 FabricDFGBaseInterface * FabricDFGCommandStack::getInterfaceFromCommand(FabricUI::DFG::DFGCommand * command)
 {
-  MString interfIdStr = ((DFG::DFGController*)command->controller())->getCoreDFGBinding().getExec().getMetadata("maya_id");
+  MString interfIdStr = ((DFG::DFGController*)command->controller())->getBinding().getExec().getMetadata("maya_id");
   if(interfIdStr.length() == 0)
     return NULL;
   unsigned int interfId = (unsigned int)interfIdStr.asInt();

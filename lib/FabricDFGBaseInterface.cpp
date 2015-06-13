@@ -112,13 +112,23 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_host = m_client.getDFGHost();
   m_binding = m_host.createBindingToNewGraph();
   m_binding.setNotificationCallback(bindingNotificationCallback, this);
-  FabricCore::DFGExec graph = m_binding.getExec();
-  m_router = new DFG::DFGNotificationRouter(m_binding, graph);
-  m_ctrl = new DFG::DFGController(NULL, m_client, m_manager, m_host, m_binding, graph, FabricDFGCommandStack::getStack(), false);
+  FTL::StrRef execPath;
+  FabricCore::DFGExec exec = m_binding.getExec();
+  m_router = new DFG::DFGNotificationRouter(m_binding, execPath, exec);
+  m_ctrl = new DFG::DFGController(
+    NULL,
+    m_client,
+    m_manager,
+    m_host,
+    m_binding,
+    &m_cmdHandler,
+    FabricDFGCommandStack::getStack(),
+    false
+    );
   m_ctrl->setRouter(m_router);
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
   MString idStr; idStr.set(m_id);
-  graph.setMetadata("maya_id", idStr.asChar(), false);
+  exec.setMetadata("maya_id", idStr.asChar(), false);
   MAYADFG_CATCH_END(&stat);
 
 }
@@ -446,20 +456,30 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   m_binding = m_host.createBindingFromJSON(json.asChar());
   m_binding.setNotificationCallback(bindingNotificationCallback, this);
 
-  FabricCore::DFGExec graph = m_binding.getExec();
+  FTL::StrRef execPath;
+  FabricCore::DFGExec exec = m_binding.getExec();
 
   if(m_router)
     delete(m_router);
   if(m_ctrl)
     delete(m_ctrl);
 
-  m_router = new DFG::DFGNotificationRouter(m_binding, graph);
-  m_ctrl = new DFG::DFGController(NULL, m_client, m_manager, m_host, m_binding, graph, FabricDFGCommandStack::getStack(), false);
+  m_router = new DFG::DFGNotificationRouter( m_binding, execPath, exec );
+  m_ctrl = new DFG::DFGController(
+    NULL,
+    m_client,
+    m_manager,
+    m_host,
+    m_binding,
+    &m_cmdHandler,
+    FabricDFGCommandStack::getStack(),
+    false
+    );
   m_ctrl->setRouter(m_router);
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
 
   MString idStr; idStr.set(m_id);
-  graph.setMetadata("maya_id", idStr.asChar(), false);
+  exec.setMetadata("maya_id", idStr.asChar(), false);
 
   // todo: update UI
 
@@ -469,17 +489,17 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   MFnDependencyNode thisNode(getThisMObject());
 
-  for(int i = 0; i < graph.getExecPortCount(); ++i){
-    std::string portName = graph.getExecPortName(i);
+  for(int i = 0; i < exec.getExecPortCount(); ++i){
+    std::string portName = exec.getExecPortName(i);
     MString plugName = getPlugName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
       continue;
 
-    FabricCore::DFGPortType portType = graph.getExecPortType(i);
-    std::string dataType = graph.getExecPortResolvedType(i);
+    FabricCore::DFGPortType portType = exec.getExecPortType(i);
+    std::string dataType = exec.getExecPortResolvedType(i);
 
-    FTL::StrRef opaque = graph.getExecPortMetadata(portName.c_str(), "opaque");
+    FTL::StrRef opaque = exec.getExecPortMetadata(portName.c_str(), "opaque");
     if(opaque == "true")
       dataType = "SpliceMayaData";
 
@@ -489,7 +509,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     if(typeDesc.isArray())
     {
       arrayType = "Array (Multi)";
-      FTL::StrRef nativeArray = graph.getExecPortMetadata(portName.c_str(), "nativeArray");
+      FTL::StrRef nativeArray = exec.getExecPortMetadata(portName.c_str(), "nativeArray");
       if(nativeArray == "true")
         arrayType = "Array (Native)";
     }
@@ -550,15 +570,15 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     }
   }
 
-  for(int i = 0; i < graph.getExecPortCount(); ++i){
-    std::string portName = graph.getExecPortName(i);
+  for(int i = 0; i < exec.getExecPortCount(); ++i){
+    std::string portName = exec.getExecPortName(i);
     MString plugName = getPlugName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
     if(plug.isNull())
       continue;
 
     // force an execution of the node    
-    FabricCore::DFGPortType portType = graph.getExecPortType(i);
+    FabricCore::DFGPortType portType = exec.getExecPortType(i);
     if(portType != FabricCore::DFGPortType_Out)
     {
       MString command("dgeval ");
