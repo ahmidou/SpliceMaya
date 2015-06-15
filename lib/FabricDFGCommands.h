@@ -273,4 +273,44 @@ public:
   virtual MStatus doIt(const MArgList &args);
 };
 
+class FabricDFGAddVarCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgAddVar"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
+class FabricDFGAddGetCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgAddGet"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
+class FabricDFGAddSetCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgAddSet"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
+class FabricDFGSetRefVarPathCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgSetRefVarPath"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
 #endif 

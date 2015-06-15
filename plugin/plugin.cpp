@@ -213,6 +213,10 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("dfgPaste", FabricDFGPasteCommand::creator, FabricDFGPasteCommand::newSyntax);
   plugin.registerCommand("dfgImplodeNodes", FabricDFGImplodeNodesCommand::creator, FabricDFGImplodeNodesCommand::newSyntax);
   plugin.registerCommand("dfgExplodeNode", FabricDFGExplodeNodeCommand::creator, FabricDFGExplodeNodeCommand::newSyntax);
+  plugin.registerCommand("dfgAddVar", FabricDFGAddVarCommand::creator, FabricDFGAddVarCommand::newSyntax);
+  plugin.registerCommand("dfgAddGet", FabricDFGAddGetCommand::creator, FabricDFGAddGetCommand::newSyntax);
+  plugin.registerCommand("dfgAddSet", FabricDFGAddSetCommand::creator, FabricDFGAddSetCommand::newSyntax);
+  plugin.registerCommand("dfgSetRefVarPath", FabricDFGSetRefVarPathCommand::creator, FabricDFGSetRefVarPathCommand::newSyntax);
 
   MString pluginPath = plugin.loadPath();
   MString lastFolder("plug-ins");
@@ -297,6 +301,10 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand("dfgPaste");
   plugin.deregisterCommand("dfgImplodeNodes");
   plugin.deregisterCommand("dfgExplodeNode");
+  plugin.deregisterCommand("dfgAddVar");
+  plugin.deregisterCommand("dfgAddGet");
+  plugin.deregisterCommand("dfgAddSet");
+  plugin.deregisterCommand("dfgSetRefVarPath");
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by

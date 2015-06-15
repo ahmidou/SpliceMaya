@@ -20,6 +20,10 @@
 #include <DFG/Commands/DFGPasteCommand.h>
 #include <DFG/Commands/DFGImplodeNodesCommand.h>
 #include <DFG/Commands/DFGExplodeNodeCommand.h>
+#include <DFG/Commands/DFGAddVarCommand.h>
+#include <DFG/Commands/DFGAddGetCommand.h>
+#include <DFG/Commands/DFGAddSetCommand.h>
+#include <DFG/Commands/DFGSetRefVarPathCommand.h>
 
 using namespace FabricServices;
 using namespace FabricUI;
@@ -446,7 +450,83 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       cmdStr += " -path \""+path+"\"";
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
-  }  else
+  }
+  else if(commandName == "dfgAddVar")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGAddVarCommand * cmd = (DFG::DFGAddVarCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgAddVar -node \""+nodeName+"\"";
+      MString varName = cmd->getVarName();
+      MString dataType = cmd->getDataType();
+      MString extDep = cmd->getExtDep();
+
+      cmdStr += " -varName \""+varName+"\"";
+      cmdStr += " -dataType \""+dataType+"\"";
+      if(extDep.length() > 0)
+        cmdStr += " -extension \""+extDep+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgAddGet")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGAddGetCommand * cmd = (DFG::DFGAddGetCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgAddGet -node \""+nodeName+"\"";
+      MString varPath = cmd->getVarPath();
+      cmdStr += " -varPath \""+varPath+"\"";
+
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgAddSet")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGAddSetCommand * cmd = (DFG::DFGAddSetCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgAddSet -node \""+nodeName+"\"";
+      MString varPath = cmd->getVarPath();
+      cmdStr += " -varPath \""+varPath+"\"";
+
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgSetRefVarPath")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGSetRefVarPathCommand * cmd = (DFG::DFGSetRefVarPathCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgSetRefVarPath -node \""+nodeName+"\"";
+      MString path = cmd->getPath();
+      MString varPath = cmd->getVarPath();
+      cmdStr += " -path \""+path+"\"";
+      cmdStr += " -varPath \""+varPath+"\"";
+
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else
   {
     mayaLogErrorFunc(MString("FabricDFGCommandStack:: unknown DFG command ")+genericCommand->getName());
     result = false;
