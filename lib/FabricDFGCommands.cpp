@@ -450,10 +450,6 @@ MStatus FabricDFGAddConnectionCommand::doIt(const MArgList &args)
   MString srcPath = argData.flagArgumentString("srcPath", 0);
   MString dstPath = argData.flagArgumentString("dstPath", 0);
 
-  MStringArray srcPathParts, dstPathParts;
-  srcPath.split('.', srcPathParts);
-  dstPath.split('.', dstPathParts);
-
   FabricDFGCommandStack::enableMayaCommands(false);
   interf->getDFGController()->addConnection(srcPath.asChar(), dstPath.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
@@ -522,7 +518,6 @@ MSyntax FabricDFGRemoveAllConnectionsCommand::newSyntax()
   MSyntax syntax;
   syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
   syntax.addFlag("-p", "-path", MSyntax::kString);
-  syntax.addFlag("-i", "-isPin", MSyntax::kLong);
   syntax.enableQuery(false);
   syntax.enableEdit(false);
   return syntax;
@@ -553,13 +548,6 @@ MStatus FabricDFGRemoveAllConnectionsCommand::doIt(const MArgList &args)
   }
 
   MString path = argData.flagArgumentString("path", 0);
-
-  MStringArray pathParts;
-  path.split('.', pathParts);
-
-  bool isPin = pathParts.length() <= pathParts.length();
-  if(argData.isFlagSet("isPin"))
-    isPin = argData.flagArgumentInt("isPin", 0) != 0;
 
   FabricDFGCommandStack::enableMayaCommands(false);
   interf->getDFGController()->removeAllConnections(path.asChar());
@@ -633,7 +621,7 @@ MStatus FabricDFGAddPortCommand::doIt(const MArgList &args)
     portType = GraphView::PortType_IO;
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString result = interf->getDFGController()->addPort(name.asChar(), portType, dataType.asChar()).c_str();
+  MString result = interf->getDFGController()->addPort(path.asChar(), name.asChar(), portType, dataType.asChar()).c_str();
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 

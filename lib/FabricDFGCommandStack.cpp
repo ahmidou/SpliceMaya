@@ -9,6 +9,7 @@
 #include <DFG/Commands/DFGAddEmptyGraphCommand.h>
 #include <DFG/Commands/DFGAddConnectionCommand.h>
 #include <DFG/Commands/DFGRemoveConnectionCommand.h>
+#include <DFG/Commands/DFGRemoveAllConnectionsCommand.h>
 #include <DFG/Commands/DFGAddPortCommand.h>
 #include <DFG/Commands/DFGRemovePortCommand.h>
 #include <DFG/Commands/DFGRenamePortCommand.h>
@@ -227,6 +228,22 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString cmdStr = "dfgRemoveConnection -node \""+nodeName+"\"";
       cmdStr += " -srcPath \""+srcPath+"\"";
       cmdStr += " -dstPath \""+dstPath+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgRemoveAllConnections")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGRemoveAllConnectionsCommand * cmd = (DFG::DFGRemoveAllConnectionsCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      MString path = cmd->getPath();
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgRemoveAllConnections -node \""+nodeName+"\"";
+      cmdStr += " -path \""+path+"\"";
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
   }
