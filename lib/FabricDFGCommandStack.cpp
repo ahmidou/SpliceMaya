@@ -9,6 +9,7 @@
 #include <DFG/Commands/DFGAddEmptyGraphCommand.h>
 #include <DFG/Commands/DFGAddConnectionCommand.h>
 #include <DFG/Commands/DFGRemoveConnectionCommand.h>
+#include <DFG/Commands/DFGRemoveAllConnectionsCommand.h>
 #include <DFG/Commands/DFGAddPortCommand.h>
 #include <DFG/Commands/DFGRemovePortCommand.h>
 #include <DFG/Commands/DFGRenamePortCommand.h>
@@ -230,6 +231,22 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
   }
+  else if(commandName == "dfgRemoveAllConnections")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGRemoveAllConnectionsCommand * cmd = (DFG::DFGRemoveAllConnectionsCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      MString path = cmd->getPath();
+      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  
+      MString cmdStr = "dfgRemoveAllConnections -node \""+nodeName+"\"";
+      cmdStr += " -path \""+path+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
   else if(commandName == "dfgAddPort")
   {
     addCommandToIgnore(commandName.asChar(), id, undoable);
@@ -238,7 +255,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGAddPortCommand * cmd = (DFG::DFGAddPortCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      MString path = cmd->getPortPath();
+      MString execPath = cmd->getExecPath();
       MString name = cmd->getPortName();
       MString portType = "In";
       if(cmd->getPortType() == GraphView::PortType_Input)
@@ -249,7 +266,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgAddPort -node \""+nodeName+"\"";
-      cmdStr += " -path \""+path+"\"";
+      cmdStr += " -execPath \""+execPath+"\"";
       cmdStr += " -name \""+name+"\"";
       cmdStr += " -portType \""+portType+"\"";
       cmdStr += " -dataType \""+dataType+"\"";
