@@ -11,6 +11,7 @@
 #include <maya/MString.h>
 
 #include <DFG/DFGCombinedWidget.h>
+#include <DFG/Dialogs/DFGBaseDialog.h>
 
 #include <FabricSplice.h>
 
@@ -37,6 +38,10 @@ public:
 
 public slots:
   virtual void onRecompilation();
+
+private slots:
+  void onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog * dialog);
+  void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog);
 
 private:
 
