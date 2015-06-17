@@ -118,7 +118,7 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_ctrl->setRouter(m_router);
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
   MString idStr; idStr.set(m_id);
-  graph.setMetadata("maya_id", idStr.asChar(), false);
+  m_binding.setMetadata("maya_id", idStr.asChar(), false);
   MAYADFG_CATCH_END(&stat);
 
 }
@@ -459,7 +459,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
 
   MString idStr; idStr.set(m_id);
-  graph.setMetadata("maya_id", idStr.asChar(), false);
+  m_binding.setMetadata("maya_id", idStr.asChar(), false);
 
   // todo: update UI
 

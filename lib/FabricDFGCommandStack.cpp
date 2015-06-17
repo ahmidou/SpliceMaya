@@ -546,7 +546,8 @@ FabricDFGCommandStack * FabricDFGCommandStack::getStack()
 
 FabricDFGBaseInterface * FabricDFGCommandStack::getInterfaceFromCommand(FabricUI::DFG::DFGCommand * command)
 {
-  MString interfIdStr = ((DFG::DFGController*)command->controller())->getCoreDFGBinding().getExec().getMetadata("maya_id");
+  FabricCore::DFGBinding binding = ((DFG::DFGController*)command->controller())->getCoreDFGBinding();
+  MString interfIdStr = binding.getMetadata("maya_id");
   if(interfIdStr.length() == 0)
     return NULL;
   unsigned int interfId = (unsigned int)interfIdStr.asInt();
