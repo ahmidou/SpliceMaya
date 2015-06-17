@@ -491,7 +491,10 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       arrayType = "Array (Multi)";
       FTL::StrRef nativeArray = graph.getExecPortMetadata(portName.c_str(), "nativeArray");
       if(nativeArray == "true")
+      {
         arrayType = "Array (Native)";
+        graph.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false);
+      }
     }
 
     addMayaAttribute(portName.c_str(), dataType.c_str(), portType, arrayType.c_str());
@@ -790,7 +793,18 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   if(splitBuffer.length()){
     dataTypeOverride = splitBuffer[0];
     if(splitBuffer.length() > 1 && arrayType.length() == 0)
-      arrayType = "Array (Multi)";
+    {
+      if(m_useNativeArrayForNextAttribute)
+      {
+        m_useNativeArrayForNextAttribute = false;
+        arrayType = "Array (Native)";
+
+        FabricCore::DFGExec graph = m_binding.getExec();
+        graph.setExecPortMetadata(portName.asChar(), "nativeArray", "true", false);
+      }
+      else
+        arrayType = "Array (Multi)";
+    }
   }
 
   if(arrayType.length() == 0)
