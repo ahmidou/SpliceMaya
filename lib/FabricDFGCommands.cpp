@@ -561,7 +561,7 @@ MSyntax FabricDFGAddPortCommand::newSyntax()
 {
   MSyntax syntax;
   syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
-  syntax.addFlag("-p", "-path", MSyntax::kString);
+  syntax.addFlag("-p", "-execPath", MSyntax::kString);
   syntax.addFlag("-n", "-name", MSyntax::kString);
   syntax.addFlag("-d", "-dataType", MSyntax::kString);
   syntax.addFlag("-t", "-portType", MSyntax::kString);
@@ -588,9 +588,9 @@ MStatus FabricDFGAddPortCommand::doIt(const MArgList &args)
 
   MStatus status;
   MArgParser argData(syntax(), args, &status);
-  if(!argData.isFlagSet("path"))
+  if(!argData.isFlagSet("execPath"))
   {
-    mayaLogErrorFunc(MString(getName()) + ": Path (-p, -path) not provided.");
+    mayaLogErrorFunc(MString(getName()) + ": Path (-p, -execPath) not provided.");
     return mayaErrorOccured();
   }
   if(!argData.isFlagSet("name"))
@@ -609,7 +609,7 @@ MStatus FabricDFGAddPortCommand::doIt(const MArgList &args)
     return mayaErrorOccured();
   }
 
-  MString path = argData.flagArgumentString("path", 0);
+  MString execPath = argData.flagArgumentString("execPath", 0);
   MString name = argData.flagArgumentString("name", 0);
   MString dataType = argData.flagArgumentString("dataType", 0);
   MString portTypeStr = argData.flagArgumentString("portType", 0).toLowerCase();
@@ -621,7 +621,7 @@ MStatus FabricDFGAddPortCommand::doIt(const MArgList &args)
     portType = GraphView::PortType_IO;
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString result = interf->getDFGController()->addPort(path.asChar(), name.asChar(), portType, dataType.asChar()).c_str();
+  MString result = interf->getDFGController()->addPort(execPath.asChar(), name.asChar(), portType, dataType.asChar()).c_str();
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 

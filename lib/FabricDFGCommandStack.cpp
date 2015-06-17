@@ -255,7 +255,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGAddPortCommand * cmd = (DFG::DFGAddPortCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      MString path = cmd->getPortPath();
+      MString execPath = cmd->getExecPath();
       MString name = cmd->getPortName();
       MString portType = "In";
       if(cmd->getPortType() == GraphView::PortType_Input)
@@ -266,7 +266,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgAddPort -node \""+nodeName+"\"";
-      cmdStr += " -path \""+path+"\"";
+      cmdStr += " -execPath \""+execPath+"\"";
       cmdStr += " -name \""+name+"\"";
       cmdStr += " -portType \""+portType+"\"";
       cmdStr += " -dataType \""+dataType+"\"";
