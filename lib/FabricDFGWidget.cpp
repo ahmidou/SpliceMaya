@@ -110,12 +110,16 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
   DFG::DFGEditPortDialog * editPortDialog = (DFG::DFGEditPortDialog *)dialog;
   QString title = editPortDialog->title();
   bool native = false;
+  bool opaque = false;
   bool enabled = true;
   if(title.length() > 0)
   {
     FabricCore::DFGExec exec = controller->getCoreDFGExec();
     QString nativeSetting = exec.getExecPortMetadata(title.toUtf8().constData(), "nativeArray");
     if(nativeSetting == "true")
+      native = true;
+    QString opaqueSetting = exec.getExecPortMetadata(title.toUtf8().constData(), "opaque");
+    if(opaqueSetting == "true")
       native = true;
     enabled = false;
   }
@@ -124,6 +128,11 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
   nativeCheckBox->setCheckState(native ? Qt::Checked : Qt::Unchecked);
   nativeCheckBox->setEnabled(enabled);
   dialog->addInput(nativeCheckBox, "native DCC array");
+
+  QCheckBox * opaqueCheckBox = new QCheckBox();
+  opaqueCheckBox->setCheckState(opaque ? Qt::Checked : Qt::Unchecked);
+  opaqueCheckBox->setEnabled(enabled);
+  dialog->addInput(opaqueCheckBox, "opaque in DCC");
 }
 
 void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog)
@@ -137,5 +146,7 @@ void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog)
   {
     QCheckBox * nativeCheckBox = (QCheckBox *)dialog->input("native DCC array");
     interf->setUseNativeArrayForNextAttribute(nativeCheckBox->checkState() == Qt::Checked);
+    QCheckBox * opaqueCheckBox = (QCheckBox *)dialog->input("opaque in DCC");
+    interf->setUseOpaqueForNextAttribute(opaqueCheckBox->checkState() == Qt::Checked);
   }
 }

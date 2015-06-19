@@ -45,6 +45,8 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(){
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
   _instances.push_back(this);
+  m_useNativeArrayForNextAttribute = false;
+  m_useOpaqueForNextAttribute = false;
 
   m_host = NULL;
   m_router = NULL;
@@ -787,6 +789,14 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
 
   MString dataTypeOverride = dataType;
 
+  if(m_useOpaqueForNextAttribute)
+  {
+    dataTypeOverride = "SpliceMayaData";
+    FabricCore::DFGExec graph = m_binding.getExec();
+    graph.setExecPortMetadata(portName.asChar(), "opaque", "true", false);
+    m_useOpaqueForNextAttribute = false;
+  }
+
   // remove []
   MStringArray splitBuffer;
   dataTypeOverride.split('[', splitBuffer);
@@ -1293,7 +1303,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   }
   else
   {
-    mayaLogErrorFunc("DataType '"+dataType+"' not supported.");
+    // mayaLogErrorFunc("DataType '"+dataType+"' not supported.");
     return newAttribute;
   }
 

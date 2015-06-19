@@ -78,6 +78,7 @@ public:
   virtual void incrementEvalID();
 
   void setUseNativeArrayForNextAttribute(bool state) { m_useNativeArrayForNextAttribute = state; }
+  void setUseOpaqueForNextAttribute(bool state) { m_useOpaqueForNextAttribute = state; }
 
 protected:
   MString getPlugName(MString portName);
@@ -136,6 +137,7 @@ private:
   unsigned int m_id;
   static unsigned int s_maxID;
   bool m_useNativeArrayForNextAttribute;
+  bool m_useOpaqueForNextAttribute;
 };
 
 #endif
