@@ -948,6 +948,7 @@ MSyntax FabricDFGImportJSONCommand::newSyntax()
   syntax.addFlag("-p", "-path", MSyntax::kString);
   syntax.addFlag("-f", "-filePath", MSyntax::kString);
   syntax.addFlag("-j", "-json", MSyntax::kString);
+  syntax.addFlag("-r", "-referenced", MSyntax::kBoolean);
   syntax.enableQuery(false);
   syntax.enableEdit(false);
   return syntax;
@@ -982,10 +983,16 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
     return MS::kNotFound;
   }
 
+  bool asReferenced = false;
+  MString filePath;
+
   MString json;
   if(argData.isFlagSet("filePath"))
   {
-    MString filePath = argData.flagArgumentString("filePath", 0);
+    if(argData.isFlagSet("referenced"))
+      asReferenced = argData.flagArgumentBool("referenced", 0);
+
+    filePath = argData.flagArgumentString("filePath", 0);
     if(filePath.length() == 0)
     {
       QString qFileName = QFileDialog::getOpenFileName( 
@@ -1033,6 +1040,8 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
 
   FabricDFGCommandStack::enableMayaCommands(false);
   interf->restoreFromJSON(json);
+  if(asReferenced)
+    interf->setReferencedFilePath(filePath);
   FabricDFGCommandStack::enableMayaCommands(true);
   
   // this command isn't issued through the UI
@@ -1120,6 +1129,38 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
       fclose(file);
     }
   }
+
+  return MS::kSuccess;
+}
+
+MSyntax FabricDFGReloadJSONCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag(kNodeFlag, kNodeFlagLong, MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGReloadJSONCommand::creator()
+{
+  return new FabricDFGReloadJSONCommand;
+}
+
+MStatus FabricDFGReloadJSONCommand::doIt(const MArgList &args)
+{
+  MStatus baseStatus = FabricDFGBaseCommand::doIt(args);
+  if(baseStatus != MS::kSuccess)
+    return baseStatus;
+  if(m_cmdInfo.id != UINT_MAX)
+    return MS::kSuccess;
+  FabricDFGBaseInterface * interf = getInterf();
+  if(!interf)
+    return MS::kNotFound;
+
+  FabricDFGCommandStack::enableMayaCommands(false);
+  interf->reloadFromReferencedFilePath();
+  FabricDFGCommandStack::enableMayaCommands(true);
 
   return MS::kSuccess;
 }

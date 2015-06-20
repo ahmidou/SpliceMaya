@@ -22,6 +22,7 @@ public:
   // implement pure virtual functions
   virtual MObject getThisMObject() { return thisMObject(); }
   virtual MPlug getSaveDataPlug() { return MPlug(thisMObject(), saveData); }
+  virtual MPlug getRefFilePathPlug() { return MPlug(thisMObject(), refFilePath); }
 
   MStatus compute(const MPlug& plug, MDataBlock& data);
   MStatus setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs);
@@ -35,6 +36,7 @@ public:
   static MTypeId id;
   static MObject saveData;
   static MObject evalID;
+  static MObject refFilePath;
 };
 
 #endif

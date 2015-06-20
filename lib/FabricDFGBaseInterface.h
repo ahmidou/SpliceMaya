@@ -48,6 +48,7 @@ public:
 
   virtual MObject getThisMObject() = 0;
   virtual MPlug getSaveDataPlug() = 0;
+  virtual MPlug getRefFilePathPlug() = 0;
 
   unsigned int getId() const;
   FabricCore::Client getCoreClient();
@@ -61,6 +62,8 @@ public:
   void storePersistenceData(MString file, MStatus *stat = 0);
   void restoreFromPersistenceData(MString file, MStatus *stat = 0);
   void restoreFromJSON(MString json, MStatus *stat = 0);
+  void setReferencedFilePath(MString filePath);
+  void reloadFromReferencedFilePath();
 
   // FabricSplice::DGGraph & getSpliceGraph() { return _spliceGraph; }
   void setDgDirtyEnabled(bool enabled) { _dgDirtyEnabled = enabled; }

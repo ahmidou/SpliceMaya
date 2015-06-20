@@ -10,6 +10,7 @@
 MTypeId FabricDFGMayaNode::id(0x0011AE46);
 MObject FabricDFGMayaNode::saveData;
 MObject FabricDFGMayaNode::evalID;
+MObject FabricDFGMayaNode::refFilePath;
 
 FabricDFGMayaNode::FabricDFGMayaNode()
 : FabricDFGBaseInterface()
@@ -39,6 +40,10 @@ MStatus FabricDFGMayaNode::initialize(){
   evalID = nAttr.create("evalID", "evalID", MFnNumericData::kInt);
   nAttr.setHidden(true);
   addAttribute(evalID);
+
+  refFilePath = typedAttr.create("refFilePath", "rfp", MFnData::kString);
+  typedAttr.setHidden(true);
+  addAttribute(refFilePath);
 
   return MS::kSuccess;
 }

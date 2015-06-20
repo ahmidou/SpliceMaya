@@ -25,6 +25,19 @@ global proc reloadReferencedSpliceNode()
   fabricSplice("reloadSplice", $sel[0], "{}");
 }
 
+global proc createReferencedDFGNode()
+{
+  $node = `createNode "dfgMayaNode"`;
+  dfgImportJSON -n $node -f "" -r true;
+}
+
+global proc reloadReferencedDFGNode()
+{
+  string $sel[];
+  $sel = `ls -selection`;
+  dfgReloadJSON -n $sel[0];
+}
+
 global proc FabricSpliceLoadMenu(string $pluginName)
 {
   global string $fabricSpliceMenu;
@@ -47,6 +60,9 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Export DFG Node" -c ("source \"FabricDFGTool.mel\"; fabricSaveDFG();");
   menuItem -p $fabricSpliceMenu -l "Import DFG Node" -c ("source \"FabricDFGTool.mel\"; fabricLoadDFG();");
+  menuItem -p $fabricSpliceMenu -divider true;
+  menuItem -p $fabricSpliceMenu -l "Create referenced DFG Node" -c ("createReferencedDFGNode();");
+  menuItem -p $fabricSpliceMenu -l "Reload referenced DFG Node" -c ("reloadReferencedDFGNode();");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Splice Editor (legacy)" -c ("source \"FabricSpliceUI.mel\"; showSpliceEditor(\"" + $pluginName + "\");");
   menuItem -p $fabricSpliceMenu -divider true;

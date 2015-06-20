@@ -214,7 +214,7 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   FabricCore::DFGExec exec = getDFGGraph();
   for(int i = 0; i < _dirtyPlugs.length(); ++i){
     MString plugName = _dirtyPlugs[i];
-    if(plugName == "evalID" || plugName == "saveData")
+    if(plugName == "evalID" || plugName == "saveData" || plugName == "refFilePath")
       continue;
 
     MString portName = getPortName(plugName);
@@ -363,7 +363,7 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
     name = name.substring(0, bracketPos-1);
 
   // filter out savedata
-  if(name == "saveData")
+  if(name == "saveData" || name == "refFilePath")
     return;
 
   // if(_spliceGraph.usesEvalContext())
@@ -577,12 +577,30 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   MAYADFG_CATCH_END(stat);
 }
 
+void FabricDFGBaseInterface::setReferencedFilePath(MString filePath)
+{
+  MPlug plug = getRefFilePathPlug();
+  plug.setString(filePath);
+  if(m_binding.isValid())
+    m_binding.setMetadata("editable", "false", false);
+}
+
+void FabricDFGBaseInterface::reloadFromReferencedFilePath()
+{
+  MPlug plug = getRefFilePathPlug();
+  MString filePath = plug.asString();
+  
+
+}
+
 MString FabricDFGBaseInterface::getPlugName(MString portName)
 {
   if(portName == "message")
     return "dfg_message";
   else if(portName == "saveData")
     return "dfg_saveData";
+  else if(portName == "refFilePath")
+    return "dfg_refFilePath";
   return portName;
 }
 
@@ -592,6 +610,8 @@ MString FabricDFGBaseInterface::getPortName(MString plugName)
     return "message";
   else if(plugName == "dfg_saveData")
     return "saveData";
+  else if(plugName == "dfg_refFilePath")
+    return "refFilePath";
   return plugName;
 }
 
