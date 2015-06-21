@@ -117,6 +117,7 @@ protected:
   bool _dgDirtyEnabled;
   bool _affectedPlugsDirty;
   bool _outputsDirtied;
+  bool _isReferenced;
   MPlugArray _affectedPlugs;
 
 #if _SPLICE_MAYA_VERSION < 2013
@@ -136,6 +137,7 @@ private:
   static void bindingNotificationCallback(void * userData, char const *jsonCString, uint32_t jsonLength);
   bool plugInArray(const MPlug &plug, const MPlugArray &array);
   void renamePlug(const MPlug &plug, MString oldName, MString newName);
+  static MString resolveEnvironmentVariables(const MString & filePath);
 
   unsigned int m_id;
   static unsigned int s_maxID;

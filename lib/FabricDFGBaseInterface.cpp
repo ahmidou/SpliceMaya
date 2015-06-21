@@ -44,6 +44,7 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(){
   _portObjectsDestroyed = false;
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
+  _isReferenced = false;
   _instances.push_back(this);
   m_useNativeArrayForNextAttribute = false;
   m_useOpaqueForNextAttribute = false;
@@ -434,7 +435,45 @@ void FabricDFGBaseInterface::restoreFromPersistenceData(MString file, MStatus *s
     return;
 
   MPlug saveDataPlug = getSaveDataPlug();
-  restoreFromJSON(saveDataPlug.asString(), stat);
+  MString json = saveDataPlug.asString();
+  MPlug refFilePathPlug = getRefFilePathPlug();
+
+  _isReferenced = false;
+
+  MString refFilePath = refFilePathPlug.asString();
+  if(refFilePath.length() > 0)
+  {
+    MString resolvedRefFilePath = resolveEnvironmentVariables(refFilePath);
+    if(resolvedRefFilePath != refFilePath)
+      mayaLogFunc("Referenced file path '"+refFilePath+"' resolved to '"+resolvedRefFilePath+"'.");
+
+    FILE * file = fopen(resolvedRefFilePath.asChar(), "rb");
+    if(!file)
+    {
+      mayaLogErrorFunc("Referenced file path '"+refFilePath+"' cannot be opened, falling back to locally saved json.");
+    }
+    else
+    {
+      fseek( file, 0, SEEK_END );
+      int fileSize = ftell( file );
+      rewind( file );
+
+      char * buffer = (char*) malloc(fileSize + 1);
+      buffer[fileSize] = '\0';
+
+      size_t readBytes = fread(buffer, 1, fileSize, file);
+      assert(readBytes == fileSize);
+
+      fclose(file);
+
+      json = buffer;
+      free(buffer);
+
+      _isReferenced = true;
+    }
+  }
+
+  restoreFromJSON(json, stat);
 }
 
 void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
@@ -582,15 +621,22 @@ void FabricDFGBaseInterface::setReferencedFilePath(MString filePath)
   MPlug plug = getRefFilePathPlug();
   plug.setString(filePath);
   if(m_binding.isValid())
+  {
     m_binding.setMetadata("editable", "false", false);
+    _isReferenced = true;
+  }
 }
 
 void FabricDFGBaseInterface::reloadFromReferencedFilePath()
 {
   MPlug plug = getRefFilePathPlug();
   MString filePath = plug.asString();
-  
+  if(filePath.length() == 0)
+    return;
 
+  _restoredFromPersistenceData = false;
+  MStatus status;
+  restoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
 MString FabricDFGBaseInterface::getPlugName(MString portName)
@@ -844,6 +890,9 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   MString plugName = getPlugName(portName);
   MPlug plug = thisNode.findPlug(plugName);
   if(!plug.isNull()){
+    if(_isReferenced)
+      return plug.attribute();
+
     mayaLogFunc("Attribute '"+portName+"' already exists on node '"+thisNode.name()+"'.");
     return newAttribute;
   }
@@ -1613,4 +1662,36 @@ void FabricDFGBaseInterface::renamePlug(const MPlug &plug, MString oldName, MStr
   {
     renamePlug(plug.child(i), oldName, newName);
   }
+}
+
+MString FabricDFGBaseInterface::resolveEnvironmentVariables(const MString & filePath)
+{
+  std::string text = filePath.asChar();
+  std::string output;
+  for(unsigned int i=0;i<text.length()-1;i++)
+  {
+    if(text[i] == '$' && text[i+1] == '{')
+    {
+      int closePos = text.find('}', i);
+      if(closePos != std::string::npos)
+      {
+        std::string envVarName = text.substr(i+2, closePos - i - 2);
+        const char * envVarValue = getenv(envVarName.c_str());
+        if(envVarValue != NULL)
+        {
+          output += envVarValue;
+          i = (unsigned int)closePos;
+          continue;
+        }
+      }
+    }
+    output += text[i];
+  }
+
+  if(text.length() > 0)
+  {
+    if(text[text.length()-1] != '}')
+      output += text[text.length()-1];
+  }
+  return output.c_str();
 }
