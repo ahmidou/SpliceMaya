@@ -24,6 +24,10 @@
 #include <maya/MFnPluginData.h>
 #include <maya/MAnimControl.h>
 
+#if _SPLICE_MAYA_VERSION >= 2016
+# include <maya/MEvaluationNode.h>
+#endif
+
 std::vector<FabricSpliceBaseInterface*> FabricSpliceBaseInterface::_instances;
 #if _SPLICE_MAYA_VERSION < 2013
   std::map<std::string, int> FabricSpliceBaseInterface::_nodeCreatorCounts;
@@ -868,24 +872,22 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
   // set the mode
   if(!newAttribute.isNull())
   {
-    if(portMode != FabricSplice::Port_Mode_IN)
-    {
-      nAttr.setReadable(true);
-      tAttr.setReadable(true);
-      mAttr.setReadable(true);
-      uAttr.setReadable(true);
-      cAttr.setReadable(true);
-      pAttr.setReadable(true);
-    }
-    if(portMode != FabricSplice::Port_Mode_OUT)
-    {
-      nAttr.setWritable(true);
-      tAttr.setWritable(true);
-      mAttr.setWritable(true);
-      uAttr.setWritable(true);
-      cAttr.setWritable(true);
-      pAttr.setWritable(true);
-    }
+    bool readable = portMode != FabricSplice::Port_Mode_IN;
+    nAttr.setReadable(readable);
+    tAttr.setReadable(readable);
+    mAttr.setReadable(readable);
+    uAttr.setReadable(readable);
+    cAttr.setReadable(readable);
+    pAttr.setReadable(readable);
+
+    bool writable = portMode != FabricSplice::Port_Mode_OUT;
+    nAttr.setWritable(writable);
+    tAttr.setWritable(writable);
+    mAttr.setWritable(writable);
+    uAttr.setWritable(writable);
+    cAttr.setWritable(writable);
+    pAttr.setWritable(writable);
+
     if(portMode == FabricSplice::Port_Mode_IN && storable)
     {
       nAttr.setKeyable(true);
@@ -1660,7 +1662,7 @@ bool FabricSpliceBaseInterface::plugInArray(const MPlug &plug, const MPlugArray 
   return found;
 }
 
-void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
+MStatus FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
 
   MFnDependencyNode thisNode(thisMObject);
 
@@ -1668,11 +1670,15 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
   std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setDependentsDirty()").c_str();
   FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
+  // [andrew 20150616] in 2016 this needs to happen in preEvaluation because
+  // setDependentsDirty isn't called in Serial or Parallel eval mode
+#if _SPLICE_MAYA_VERSION < 2016
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
+#endif
 
   if(_outputsDirtied)
-    return;
+    return MS::kSuccess;
 
   if(_affectedPlugsDirty)
   {
@@ -1681,19 +1687,20 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
     
     _affectedPlugs.clear();
 
-    for(unsigned int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
-      FabricSplice::DGPort port = _spliceGraph.getDGPort(i);
-      if(!port.isValid())
+    for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
+      MFnAttribute attrib(thisNode.attribute(i));
+      if(attrib.isHidden())
         continue;
-      int portMode = (int)port.getMode();
-      
-      if(port.getMode() != FabricSplice::Port_Mode_IN){
-        MPlug outPlug = thisNode.findPlug(port.getName());
-        if(!outPlug.isNull()){
-          if(!plugInArray(outPlug, _affectedPlugs)){
-            _affectedPlugs.append(outPlug);
-            affectChildPlugs(outPlug, _affectedPlugs);
-          }
+      if(!attrib.isDynamic())
+        continue;
+      if(!attrib.isReadable())
+        continue;
+
+      MPlug outPlug = thisNode.findPlug(attrib.name());
+      if(!outPlug.isNull()){
+        if(!plugInArray(outPlug, _affectedPlugs)){
+          _affectedPlugs.append(outPlug);
+          affectChildPlugs(outPlug, _affectedPlugs);
         }
       }
     }
@@ -1703,6 +1710,8 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
   affectedPlugs = _affectedPlugs;
 
   _outputsDirtied = true;
+
+  return MS::kSuccess;
 }
 
 void FabricSpliceBaseInterface::copyInternalData(MPxNode *node){
@@ -1782,3 +1791,20 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
 
   _portObjectsDestroyed = destroy;
 }
+
+#if _SPLICE_MAYA_VERSION >= 2016
+MStatus FabricSpliceBaseInterface::preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode)
+{
+  MStatus status;
+  if(!context.isNormal()) 
+    return MStatus::kFailure;
+
+  for (MEvaluationNodeIterator dirtyIt = evaluationNode.iterator();
+      !dirtyIt.isDone(); dirtyIt.next())
+  {
+    collectDirtyPlug(dirtyIt.plug());
+  }
+  return MS::kSuccess;
+}
+#endif
+
