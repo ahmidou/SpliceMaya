@@ -2879,9 +2879,16 @@ void dfgPortToPlug_Lines_singleLines(MDataHandle handle, FabricCore::RTVal rtVal
   MFnNurbsCurve curve;
   curveObject = curveDataFn.create();
 
+  MFnNurbsCurve::Form form = MFnNurbsCurve::kOpen;
+  if(mayaIndices.size() > 1)
+  {
+    if(mayaIndices[0] == mayaIndices[mayaIndices.size()-1])
+      form = MFnNurbsCurve::kClosed; 
+  }
+
   curve.create(
     mayaPoints, mayaKnots, 1, 
-    mayaIndices[0] == mayaIndices[mayaIndices.size()-1] ? MFnNurbsCurve::kClosed : MFnNurbsCurve::kOpen, 
+    form,
     false,
     false,
     curveObject);
