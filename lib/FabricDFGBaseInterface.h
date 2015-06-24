@@ -129,6 +129,7 @@ protected:
   FabricServices::ASTWrapper::KLASTManager * m_manager;
   FabricCore::DFGHost m_host;
   FabricCore::DFGBinding m_binding;
+  FabricCore::RTVal m_evalContext;
   DFG::DFGNotificationRouter * m_router;
   FabricUI::DFG::DFGController * m_ctrl;
   std::map<std::string, std::string> _argTypes;
