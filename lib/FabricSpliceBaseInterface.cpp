@@ -1670,21 +1670,14 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug
   std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setDependentsDirty()").c_str();
   FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
-  // [andrew 20150616] in 2016 this needs to happen in preEvaluation because
-  // setDependentsDirty isn't called in Serial or Parallel eval mode
-#if _SPLICE_MAYA_VERSION < 2016
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
-#endif
 
   if(_outputsDirtied)
     return MS::kSuccess;
 
   if(_affectedPlugsDirty)
   {
-    if(_affectedPlugs.length() > 0)
-      affectedPlugs.setSizeIncrement(_affectedPlugs.length());
-    
     _affectedPlugs.clear();
 
     for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
@@ -1799,6 +1792,8 @@ MStatus FabricSpliceBaseInterface::preEvaluation(MObject thisMObject, const MDGC
   if(!context.isNormal()) 
     return MStatus::kFailure;
 
+  // [andrew 20150616] in 2016 this needs to also happen here because
+  // setDependentsDirty isn't called in Serial or Parallel eval mode
   for (MEvaluationNodeIterator dirtyIt = evaluationNode.iterator();
       !dirtyIt.isDone(); dirtyIt.next())
   {
