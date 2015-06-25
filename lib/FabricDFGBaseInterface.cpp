@@ -27,6 +27,10 @@
 #include <maya/MFnPluginData.h>
 #include <maya/MAnimControl.h>
 
+#if _SPLICE_MAYA_VERSION >= 2016
+# include <maya/MEvaluationNode.h>
+#endif
+
 std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
 #if _SPLICE_MAYA_VERSION < 2013
   std::map<std::string, int> FabricDFGBaseInterface::_nodeCreatorCounts;
@@ -796,7 +800,7 @@ bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &ar
   return found;
 }
 
-void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
+MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
 
   MFnDependencyNode thisNode(thisMObject);
 
@@ -806,30 +810,29 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
   collectDirtyPlug(inPlug);
 
   if(_outputsDirtied)
-    return;
+    return MS::kSuccess;
 
   if(_affectedPlugsDirty)
   {
     FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty() _affectedPlugsDirty");
-
-    if(_affectedPlugs.length() > 0)
-      affectedPlugs.setSizeIncrement(_affectedPlugs.length());
     
     _affectedPlugs.clear();
 
     // todo: performance considerations
-    FabricCore::DFGExec graph = getDFGGraph();
-    for(unsigned int i = 0; i < graph.getExecPortCount(); i++) 
-    {
-      FabricCore::DFGPortType portType = graph.getExecPortType(i);
-      if(portType != FabricCore::DFGPortType_In){
-        MString plugName = getPlugName(graph.getExecPortName(i));
-        MPlug outPlug = thisNode.findPlug(plugName);
-        if(!outPlug.isNull()){
-          if(!plugInArray(outPlug, _affectedPlugs)){
-            _affectedPlugs.append(outPlug);
-            affectChildPlugs(outPlug, _affectedPlugs);
-          }
+    for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
+      MFnAttribute attrib(thisNode.attribute(i));
+      if(attrib.isHidden())
+        continue;
+      if(!attrib.isDynamic())
+        continue;
+      if(!attrib.isReadable())
+        continue;
+
+      MPlug outPlug = thisNode.findPlug(attrib.name());
+      if(!outPlug.isNull()){
+        if(!plugInArray(outPlug, _affectedPlugs)){
+          _affectedPlugs.append(outPlug);
+          affectChildPlugs(outPlug, _affectedPlugs);
         }
       }
     }
@@ -843,6 +846,8 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
   }
 
   _outputsDirtied = true;
+
+  return MS::kSuccess;
 }
 
 void FabricDFGBaseInterface::copyInternalData(MPxNode *node){
@@ -1722,3 +1727,22 @@ MString FabricDFGBaseInterface::resolveEnvironmentVariables(const MString & file
   }
   return output.c_str();
 }
+
+#if _SPLICE_MAYA_VERSION >= 2016
+MStatus FabricDFGBaseInterface::preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode)
+{
+  MStatus status;
+  if(!context.isNormal()) 
+    return MStatus::kFailure;
+
+  // [andrew 20150616] in 2016 this needs to also happen here because
+  // setDependentsDirty isn't called in Serial or Parallel eval mode
+  for (MEvaluationNodeIterator dirtyIt = evaluationNode.iterator();
+      !dirtyIt.isDone(); dirtyIt.next())
+  {
+    collectDirtyPlug(dirtyIt.plug());
+  }
+  return MS::kSuccess;
+}
+#endif
+
