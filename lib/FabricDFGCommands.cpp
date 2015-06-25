@@ -1,5 +1,6 @@
 #include <QtGui/QFileDialog>  // [pzion 20150519] Must include first since something below defines macros that mess it up
 
+#include "Foundation.h"
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
 

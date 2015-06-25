@@ -1,7 +1,8 @@
-
+\
 #ifndef _FABRICDFGWIDGET_H_
 #define _FABRICDFGWIDGET_H_
 
+#include "Foundation.h"
 #include <QtGui/QWidget>
 #include <QtGui/QSplitter>
 
