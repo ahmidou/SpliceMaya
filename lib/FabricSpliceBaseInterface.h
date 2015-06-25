@@ -100,9 +100,13 @@ protected:
   void transferOutputValuesToMaya(MDataBlock& data, bool isDeformer = false);
   void collectDirtyPlug(MPlug const &inPlug);
   void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
-  void setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
   void copyInternalData(MPxNode *node);
   void onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made);
+  MStatus setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
+
+#if _SPLICE_MAYA_VERSION >= 2016
+  MStatus preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode);
+#endif
 
   // static MString sManipulationCommand;
   // MString _manipulationCommand;
