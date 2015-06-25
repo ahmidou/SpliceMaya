@@ -18,6 +18,16 @@ global proc createReferencedSpliceNode()
   fabricSplice("loadSplice", $node, "{\"asReferenced\": true}");
 }
 
+global proc createReferencedSpliceDeformer()
+{
+  string $sel[];
+  $sel = `ls -selection -exactType transform`;
+  $node=`deformer -type "spliceMayaDeformer"`;
+  select -r $node;
+  fabricSplice("addIOPort", $node, "{\"portName\":\""+("meshes")+"\", \"dataType\":\"PolygonMesh[]\", \"addSpliceMayaAttr\":true}");
+  fabricSplice("loadSplice", $node, "{\"asReferenced\": true}");
+}
+
 global proc reloadReferencedSpliceNode()
 {
   string $sel[];
@@ -74,6 +84,7 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -l "Import Splice Node (legacy)" -c ("source \"FabricSpliceTool.mel\"; fabricSpliceLoadSplice();");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Create referenced Splice Node" -c ("createReferencedSpliceNode();");
+  menuItem -p $fabricSpliceMenu -l "Create referenced Splice Deformer" -c ("createReferencedSpliceDeformer();");
   menuItem -p $fabricSpliceMenu -l "Reload referenced Splice Node" -c ("reloadReferencedSpliceNode();");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Enable Tool" -c $toolCmd;
