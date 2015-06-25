@@ -23,7 +23,6 @@
 #include "FabricSpliceEditorCmd.h"
 #include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceRenderCallback.h"
-#include "FabricSpliceLicenseDialog.h"
 #include "FabricSpliceHelpers.h"
 
 #define kActionFlag "-a"
@@ -88,8 +87,9 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
 
       MStatus stat;
       MAYASPLICE_CATCH_BEGIN(&stat);
-      FabricSpliceLicenseDialog dialog(MQtUtil::mainWindow());
-      dialog.exec();
+      // FIXME [andrew 20150623]
+      // FabricSpliceLicenseDialog dialog(MQtUtil::mainWindow());
+      // dialog.exec();
       MAYASPLICE_CATCH_END(&stat);
 
       return mayaErrorOccured();
