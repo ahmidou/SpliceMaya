@@ -12,6 +12,7 @@
 #include <maya/MSceneMessage.h>
 #include <maya/MDGMessage.h>
 #include <maya/MUiMessage.h>
+#include <maya/MEventMessage.h>
 #include <maya/MQtUtil.h>
 #include <maya/MCommandResult.h>
 #include <maya/MFileIO.h>
@@ -50,14 +51,14 @@ MCallbackId gOnSceneImportCallbackId;
 MCallbackId gOnSceneExportCallbackId;
 MCallbackId gOnSceneReferenceCallbackId;
 MCallbackId gOnSceneImportReferenceCallbackId;
-MCallbackId gRenderCallback0;
-MCallbackId gRenderCallback1;
-MCallbackId gRenderCallback2;
-MCallbackId gRenderCallback3;
-MCallbackId gRenderCallback4;
+#define gRenderCallbackCount 32
+MCallbackId gRenderCallbacks[gRenderCallbackCount];
+// bool gRenderCallbackUsed[gRenderCallbackCount];
+// MString gRenderCallbackPanelName[gRenderCallbackCount];
 MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
 MCallbackId gBeforeSceneOpenCallbackId;
+MCallbackId gOnModelPanelSetFocusCallbackId;
 
 void onSceneSave(void *userData){
 
@@ -130,6 +131,79 @@ bool isDestroyingScene()
   return gSceneIsDestroying;
 }
 
+void onModelPanelSetFocus(void * client)
+{
+  MString panelName;
+  MGlobal::executeCommand("getPanel -wf;", panelName, false);
+
+  if(panelName == "modelPanel0")
+    gRenderCallbacks[0] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel0", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel1")
+    gRenderCallbacks[1] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel1", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel2")
+    gRenderCallbacks[2] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel2", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel3")
+    gRenderCallbacks[3] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel3", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel4")
+    gRenderCallbacks[4] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel4", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel5")
+    gRenderCallbacks[5] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel5", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel6")
+    gRenderCallbacks[6] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel6", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel7")
+    gRenderCallbacks[7] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel7", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel8")
+    gRenderCallbacks[8] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel8", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel9")
+    gRenderCallbacks[9] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel9", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel10")
+    gRenderCallbacks[10] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel10", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel11")
+    gRenderCallbacks[11] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel11", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel12")
+    gRenderCallbacks[12] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel12", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel13")
+    gRenderCallbacks[13] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel13", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel14")
+    gRenderCallbacks[14] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel14", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel15")
+    gRenderCallbacks[15] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel15", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel16")
+    gRenderCallbacks[16] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel16", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel17")
+    gRenderCallbacks[17] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel17", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel18")
+    gRenderCallbacks[18] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel18", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel19")
+    gRenderCallbacks[19] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel19", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel20")
+    gRenderCallbacks[20] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel20", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel21")
+    gRenderCallbacks[21] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel21", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel22")
+    gRenderCallbacks[22] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel22", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel23")
+    gRenderCallbacks[23] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel23", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel24")
+    gRenderCallbacks[24] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel24", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel25")
+    gRenderCallbacks[25] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel25", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel26")
+    gRenderCallbacks[26] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel26", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel27")
+    gRenderCallbacks[27] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel27", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel28")
+    gRenderCallbacks[28] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel28", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel29")
+    gRenderCallbacks[29] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel29", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel30")
+    gRenderCallbacks[30] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel30", FabricSpliceRenderCallback::draw);
+  else if(panelName == "modelPanel31")
+    gRenderCallbacks[31] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel31", FabricSpliceRenderCallback::draw);
+
+  MGlobal::executeCommandOnIdle("refresh;", false);
+}
+
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
 #endif
@@ -151,13 +225,14 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnSceneImportCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImport, onSceneLoad);
   gOnSceneReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterLoadReference, onSceneLoad);
   gOnSceneImportReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImportReference, onSceneLoad);
-  gRenderCallback0 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel0", FabricSpliceRenderCallback::draw);
-  gRenderCallback1 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel1", FabricSpliceRenderCallback::draw);
-  gRenderCallback2 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel2", FabricSpliceRenderCallback::draw);
-  gRenderCallback3 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel3", FabricSpliceRenderCallback::draw);
-  gRenderCallback4 = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel4", FabricSpliceRenderCallback::draw);
+  gRenderCallbacks[0] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel0", FabricSpliceRenderCallback::draw);
+  gRenderCallbacks[1] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel1", FabricSpliceRenderCallback::draw);
+  gRenderCallbacks[2] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel2", FabricSpliceRenderCallback::draw);
+  gRenderCallbacks[3] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel3", FabricSpliceRenderCallback::draw);
+  gRenderCallbacks[4] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel4", FabricSpliceRenderCallback::draw);
   gOnNodeAddedCallbackId = MDGMessage::addNodeAddedCallback(FabricSpliceBaseInterface::onNodeAdded);
   gOnNodeRemovedCallbackId = MDGMessage::addNodeRemovedCallback(FabricSpliceBaseInterface::onNodeRemoved);
+  gOnModelPanelSetFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
 
   plugin.registerData(FabricSpliceMayaData::typeName, FabricSpliceMayaData::id, FabricSpliceMayaData::creator);
 
@@ -214,11 +289,11 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MSceneMessage::removeCallback(gOnSceneExportCallbackId);
   MSceneMessage::removeCallback(gOnSceneReferenceCallbackId);
   MSceneMessage::removeCallback(gOnSceneImportReferenceCallbackId);
-  MUiMessage::removeCallback(gRenderCallback0);
-  MUiMessage::removeCallback(gRenderCallback1);
-  MUiMessage::removeCallback(gRenderCallback2);
-  MUiMessage::removeCallback(gRenderCallback3);
-  MUiMessage::removeCallback(gRenderCallback4);
+  MEventMessage::removeCallback(gOnModelPanelSetFocusCallbackId);
+
+  for(unsigned int i=0;i<gRenderCallbackCount;i++)
+    MUiMessage::removeCallback(gRenderCallbacks[i]);
+
   MDGMessage::removeCallback(gOnNodeAddedCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedCallbackId);
 
