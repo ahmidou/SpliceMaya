@@ -48,7 +48,7 @@ MStatus FabricSpliceManipulationCmd::redoIt()
   try
   {
     if(m_rtval_commands.isValid()){
-      for(int i=0; i<m_rtval_commands.getArraySize(); i++){
+      for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++){
         m_rtval_commands.getArrayElement(i).callMethod("", "doAction", 0, 0);
       }
     }
@@ -68,7 +68,7 @@ MStatus FabricSpliceManipulationCmd::undoIt()
   try
   {
     if(m_rtval_commands.isValid()){
-      for(int i=0; i<m_rtval_commands.getArraySize(); i++){
+      for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++){
         m_rtval_commands.getArrayElement(i).callMethod("", "undoAction", 0, 0);
       }
     }
@@ -559,7 +559,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
         {
           FabricCore::RTVal customCommandArgs = host.maybeGetMember("customCommandArgs");
           MString args;
-          for(int i=0; i<customCommandArgs.getArraySize(); i++){
+          for(uint32_t i=0; i<customCommandArgs.getArraySize(); i++){
             if(i>0)
               args += MString(" ");
             args += MString(customCommandArgs.getArrayElement(i).getStringCString());

@@ -164,12 +164,12 @@ bool FabricSpliceKLSyntaxHighlighter::isKeyWord(const QString & word)
   QString pattern = "\\b";
   pattern += word;
   pattern += "\\b";
-  for(unsigned int i=0;i<keywordPatterns.length();i++)
+  for(int i=0;i<keywordPatterns.length();i++)
   {
     if(keywordPatterns[i] == pattern)
       return true;
   }
-  for(unsigned int i=0;i<classPatterns.length();i++)
+  for(int i=0;i<classPatterns.length();i++)
   {
     if(classPatterns[i] == pattern)
       return true;

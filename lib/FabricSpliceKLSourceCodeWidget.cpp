@@ -350,15 +350,15 @@ void FabricSpliceKLPlainTextWidget::keyPressEvent (QKeyEvent * e)
       }
 
       // figure out how many spaces to insert
-      int initialPos = pos;
-      pos = 0;
+      uint32_t initialPos = pos;
+      uint32_t codePos = 0;
       MString prefix;
-      while(pos < code.length())
+      while(codePos < code.length())
       {
-        if(code.asChar()[pos] != ' ')
+        if(code.asChar()[codePos] != ' ')
           break;
         prefix += " ";
-        pos++;
+        codePos++;
       }
 
       // remove unrequired spaces

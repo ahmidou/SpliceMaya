@@ -402,7 +402,6 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
       }
       else
       {
-        MFnNumericData::Type unitType = nAttr.unitType();
         mayaLogErrorFunc("Unsupported numeric attribute '"+childName+"'.");
         return;
       }
@@ -520,7 +519,6 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
           if(!mAttr.isArray())
           {
             MDataHandle childHandle(handle.child(child.object()));
-            const MMatrix& mayaMat = childHandle.asMatrix();
 
             childRTVal = FabricSplice::constructObjectRTVal("Mat44Param", 1, &childNameRTVal);
             FabricCore::RTVal matrixRTVal;
@@ -1126,13 +1124,13 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricCore::DFGBin
       bool requireTopoUpdate = false;
       if(!requireTopoUpdate)
       {
-        unsigned int nbPolygons = polygonMesh.callMethod("UInt64", "polygonCount", 0, 0).getUInt64();
-        requireTopoUpdate = nbPolygons != mesh.numPolygons();
+        uint64_t nbPolygons = polygonMesh.callMethod("UInt64", "polygonCount", 0, 0).getUInt64();
+        requireTopoUpdate = nbPolygons != (uint64_t)mesh.numPolygons();
       }
       if(!requireTopoUpdate)
       {
-        unsigned int nbSamples = polygonMesh.callMethod("UInt64", "polygonPointsCount", 0, 0).getUInt64();
-        requireTopoUpdate = nbSamples != mesh.numFaceVertices();
+        uint64_t nbSamples = polygonMesh.callMethod("UInt64", "polygonPointsCount", 0, 0).getUInt64();
+        requireTopoUpdate = nbSamples != (uint64_t)mesh.numFaceVertices();
       }
 
       MPointArray mayaPoints;
@@ -1388,9 +1386,9 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
 
   for(unsigned int i=0;i<curve.numKeys();i++)
   {
-	FabricCore::RTVal keyVal = FabricSplice::constructRTVal("Keyframe");
-	FabricCore::RTVal inTangentVal = FabricSplice::constructRTVal("Vec2");
-	FabricCore::RTVal outTangentVal = FabricSplice::constructRTVal("Vec2");
+    FabricCore::RTVal keyVal = FabricSplice::constructRTVal("Keyframe");
+    FabricCore::RTVal inTangentVal = FabricSplice::constructRTVal("Vec2");
+    FabricCore::RTVal outTangentVal = FabricSplice::constructRTVal("Vec2");
 
     // Integer interpolation;
     double keyTime = curve.time(i).as(MTime::kSeconds);
@@ -1400,59 +1398,55 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
 
     if(i > 0)
     {
-	  double prevKeyValue = curve.value(i-1);
       double prevKeyTime = curve.time(i-1).as(MTime::kSeconds);
-      double valueDelta = keyValue - prevKeyValue;
       double timeDelta = keyTime - prevKeyTime;
-	  
+      
       float x,y;
       curve.getTangent(i, x, y, true);
-	  
+      
       float weight = 1.0/3.0;
-	  float gradient = 0.0;
-	  
-	  // Weighted out tangents are defined as 3*(P4 - P3),
-	  // So multiplly by 1/3 to get P3, and then divide by timeDelta
-	  // to get the ratio stored by the Fabric Engine keyframes.
-	  // Also note that the default value of 1/3 for the handle weight 
-	  // will create equally spaced handles, effectively the same as
-	  // Maya's non-weighted curves.
-      if(weighted && abs(timeDelta) > 0.0001)
-		weight = (x*-1.0/3.0)/timeDelta;
-      if(abs(x) > 0.0001)
-		gradient = y/x;
-		//gradient = ((y*1.0/3.0)/valueDelta)/((x*1.0/3.0)/timeDelta);
+      float gradient = 0.0;
+      
+      // Weighted out tangents are defined as 3*(P4 - P3),
+      // So multiplly by 1/3 to get P3, and then divide by timeDelta
+      // to get the ratio stored by the Fabric Engine keyframes.
+      // Also note that the default value of 1/3 for the handle weight 
+      // will create equally spaced handles, effectively the same as
+      // Maya's non-weighted curves.
+      if(weighted && fabs(timeDelta) > 0.0001)
+        weight = (x*-1.0/3.0)/timeDelta;
+      if(fabs(x) > 0.0001)
+        gradient = y/x;
+        //gradient = ((y*1.0/3.0)/valueDelta)/((x*1.0/3.0)/timeDelta);
 
-	  inTangentVal.setMember("x", FabricSplice::constructFloat64RTVal(weight));
+      inTangentVal.setMember("x", FabricSplice::constructFloat64RTVal(weight));
       inTangentVal.setMember("y", FabricSplice::constructFloat64RTVal(gradient));
     }
 
     if(i < curve.numKeys()-1)
     {
-	  double nextKeyValue = curve.value(i+1);
       double nextKeyTime = curve.time(i+1).as(MTime::kSeconds);
-      double valueDelta = nextKeyValue - keyValue;
       double timeDelta = nextKeyTime - keyTime;
-	  
+      
       float x,y;
       curve.getTangent(i, x, y, false);
-	  
+      
       float weight = 1.0/3.0;
-	  float gradient = 0.0;
-	  
-	  // Weighted out tangents are defined as 3*(P2 - P1),
-	  // So multiplly by 1/3 to get P2, and then divide by timeDelta
-	  // to get the ratio stored by the Fabric Engine keyframes.
-	  // Also note that the default value of 1/3 for the handle weight 
-	  // will create equally spaced handles, effectively the same as
-	  // Maya's non-weighted curves.
-      if(weighted && abs(timeDelta) > 0.0001)
-		weight = (x*1.0/3.0)/timeDelta;
-      if(abs(x) > 0.0001)
-		gradient = y/x;
-		//gradient = ((y*1.0/3.0)/valueDelta)/((x*1.0/3.0)/timeDelta);
-	  
-	  outTangentVal.setMember("x", FabricSplice::constructFloat64RTVal(weight));
+      float gradient = 0.0;
+      
+      // Weighted out tangents are defined as 3*(P2 - P1),
+      // So multiplly by 1/3 to get P2, and then divide by timeDelta
+      // to get the ratio stored by the Fabric Engine keyframes.
+      // Also note that the default value of 1/3 for the handle weight 
+      // will create equally spaced handles, effectively the same as
+      // Maya's non-weighted curves.
+      if(weighted && fabs(timeDelta) > 0.0001)
+        weight = (x*1.0/3.0)/timeDelta;
+      if(fabs(x) > 0.0001)
+        gradient = y/x;
+        //gradient = ((y*1.0/3.0)/valueDelta)/((x*1.0/3.0)/timeDelta);
+      
+      outTangentVal.setMember("x", FabricSplice::constructFloat64RTVal(weight));
       outTangentVal.setMember("y", FabricSplice::constructFloat64RTVal(gradient));
     }
 
@@ -1580,10 +1574,10 @@ void dfgPortToPlug_compound_convertMat44(MMatrix & matrix, FabricCore::RTVal & r
   float * data = (float*)dataRtVal.getData();
 
   double vals[4][4] ={
-    data[0], data[4], data[8], data[12], 
-    data[1], data[5], data[9], data[13], 
-    data[2], data[6], data[10], data[14], 
-    data[3], data[7], data[11], data[15]
+    { data[0], data[4], data[8], data[12] }, 
+    { data[1], data[5], data[9], data[13] }, 
+    { data[2], data[6], data[10], data[14] }, 
+    { data[3], data[7], data[11], data[15] }
   };
   matrix = MMatrix(vals);
 
@@ -2005,7 +1999,6 @@ void dfgPortToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDa
       }
       else
       {
-        MFnNumericData::Type unitType = nAttr.unitType();
         mayaLogErrorFunc("Unsupported numeric attribute '"+childName+"'.");
         return;
       }
@@ -2608,10 +2601,10 @@ void dfgPortToPlug_mat44(FabricCore::DFGBinding & binding, char const * argName,
       MDataHandle handle = arraybuilder.addElement(i);
 
       double vals[4][4] ={
-        values[offset+0], values[offset+4], values[offset+8], values[offset+12], 
-        values[offset+1], values[offset+5], values[offset+9], values[offset+13], 
-        values[offset+2], values[offset+6], values[offset+10], values[offset+14], 
-        values[offset+3], values[offset+7], values[offset+11], values[offset+15]
+        { values[offset+0], values[offset+4], values[offset+8], values[offset+12] }, 
+        { values[offset+1], values[offset+5], values[offset+9], values[offset+13] },
+        { values[offset+2], values[offset+6], values[offset+10], values[offset+14] },
+        { values[offset+3], values[offset+7], values[offset+11], values[offset+15] }
       };
       offset += 16;
 
@@ -2634,10 +2627,10 @@ void dfgPortToPlug_mat44(FabricCore::DFGBinding & binding, char const * argName,
     FabricCore::RTVal row3 = rtVal.maybeGetMember("row3");
 
     double vals[4][4] = {
-      dfgGetFloat64FromRTVal(row0.maybeGetMember("x")), dfgGetFloat64FromRTVal(row1.maybeGetMember("x")), dfgGetFloat64FromRTVal(row2.maybeGetMember("x")), dfgGetFloat64FromRTVal(row3.maybeGetMember("x")),
-      dfgGetFloat64FromRTVal(row0.maybeGetMember("y")), dfgGetFloat64FromRTVal(row1.maybeGetMember("y")), dfgGetFloat64FromRTVal(row2.maybeGetMember("y")), dfgGetFloat64FromRTVal(row3.maybeGetMember("y")),
-      dfgGetFloat64FromRTVal(row0.maybeGetMember("z")), dfgGetFloat64FromRTVal(row1.maybeGetMember("z")), dfgGetFloat64FromRTVal(row2.maybeGetMember("z")), dfgGetFloat64FromRTVal(row3.maybeGetMember("z")),
-      dfgGetFloat64FromRTVal(row0.maybeGetMember("t")), dfgGetFloat64FromRTVal(row1.maybeGetMember("t")), dfgGetFloat64FromRTVal(row2.maybeGetMember("t")), dfgGetFloat64FromRTVal(row3.maybeGetMember("t"))
+      { dfgGetFloat64FromRTVal(row0.maybeGetMember("x")), dfgGetFloat64FromRTVal(row1.maybeGetMember("x")), dfgGetFloat64FromRTVal(row2.maybeGetMember("x")), dfgGetFloat64FromRTVal(row3.maybeGetMember("x")) },
+      { dfgGetFloat64FromRTVal(row0.maybeGetMember("y")), dfgGetFloat64FromRTVal(row1.maybeGetMember("y")), dfgGetFloat64FromRTVal(row2.maybeGetMember("y")), dfgGetFloat64FromRTVal(row3.maybeGetMember("y")) },
+      { dfgGetFloat64FromRTVal(row0.maybeGetMember("z")), dfgGetFloat64FromRTVal(row1.maybeGetMember("z")), dfgGetFloat64FromRTVal(row2.maybeGetMember("z")), dfgGetFloat64FromRTVal(row3.maybeGetMember("z")) },
+      { dfgGetFloat64FromRTVal(row0.maybeGetMember("t")), dfgGetFloat64FromRTVal(row1.maybeGetMember("t")), dfgGetFloat64FromRTVal(row2.maybeGetMember("t")), dfgGetFloat64FromRTVal(row3.maybeGetMember("t")) }
     };
 
     MMatrix mayaMat(vals);
@@ -2785,7 +2778,7 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
       unsigned int offset = 0;
       for(unsigned int i=0;i<mayaCounts.length();i++)
       {
-        for(unsigned int j=0;j<mayaCounts[i];j++,offset++)
+        for(int j=0;j<mayaCounts[i];j++,offset++)
         {
           face[offset] = i;
         }
@@ -2864,7 +2857,6 @@ void dfgPortToPlug_Lines_singleLines(MDataHandle handle, FabricCore::RTVal rtVal
     rtVal.callMethod("", "_getTopologyAsExternalArray", 1, &mayaIndicesVal);
   }
 
-  size_t nbCurves = 1;
   size_t offset = 0;
   for(unsigned int i=0;i<nbPoints;i++) {
     mayaPoints[i].x = mayaDoubles[offset++];

@@ -1028,6 +1028,7 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
 
     size_t readBytes = fread(buffer, 1, fileSize, file);
     assert(readBytes == fileSize);
+    (void)readBytes;
 
     fclose(file);
 

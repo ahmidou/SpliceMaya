@@ -165,7 +165,6 @@ else:
   if FABRIC_BUILD_OS == 'Linux':
     exportsFile = env.File('Linux.exports').srcnode()
     env.Append(SHLINKFLAGS = ['-Wl,--version-script='+str(exportsFile)])
-    env[ '_LIBFLAGS' ] = '-Wl,--start-group ' + env['_LIBFLAGS'] + ' -Wl,--end-group'
   mayaModule = env.SharedLibrary(target = target, source = pluginSources, SHLIBSUFFIX=libSuffix, SHLIBPREFIX='')
 
 sedCmd = 'sed'

@@ -200,7 +200,7 @@ MStatus FabricSpliceMayaDeformer::setDependentsDirty(MPlug const &inPlug, MPlugA
   MPlug output = thisNode.findPlug("outputGeometry");
   affectedPlugs.append(output);
 
-  for(int i = 0; i < output.numElements(); ++i){
+  for(uint32_t i = 0; i < output.numElements(); ++i){
     affectedPlugs.append(output.elementByPhysicalIndex(i));
   }
 
@@ -215,7 +215,7 @@ void FabricSpliceMayaDeformer::invalidateNode()
   MPlug output = thisNode.findPlug("outputGeometry");
   invalidatePlug(output);
 
-  for(int i = 0; i < output.numElements(); ++i){
+  for(uint32_t i = 0; i < output.numElements(); ++i){
     MPlug plug = output.elementByPhysicalIndex(i);
     invalidatePlug(plug);
   }

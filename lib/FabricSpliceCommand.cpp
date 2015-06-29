@@ -377,7 +377,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
       MString fileNameStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "fileName", "", true).c_str();
       bool asReferenced = FabricSplice::Scripting::consumeBooleanArgument(scriptArgs, "asReferenced", false, true);
 
-      int portLimit = 0;
+      uint32_t portLimit = 0;
       if(spliceMayaNodeFn.typeName() == "spliceMayaDeformer")
         portLimit = 1;
       if(interf->getPortNames().length() > portLimit)

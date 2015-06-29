@@ -73,7 +73,7 @@ void onSceneSave(void *userData){
 
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
-  for(int i = 0; i < instances.size(); ++i){
+  for(uint32_t i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
     node->storePersistenceData(mayaGetLastLoadedScene(), &status);
   }
@@ -102,7 +102,7 @@ void onSceneLoad(void *userData){
 
   // each node will only restore once, so it's safe for import too
   FabricSplice::Logging::AutoTimer persistenceTimer("Maya::onSceneLoad");
-  for(int i = 0; i < instances.size(); ++i){
+  for(uint32_t i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
     node->restoreFromPersistenceData(mayaGetLastLoadedScene(), &status); 
     if( status != MS::kSuccess)
@@ -128,7 +128,7 @@ void onMayaExiting(void *userData){
   gSceneIsDestroying = true;
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
-  for(int i = 0; i < instances.size(); ++i){
+  for(uint32_t i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
     node->resetInternalData();
   }
