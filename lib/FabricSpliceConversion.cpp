@@ -2679,111 +2679,90 @@ void portToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtM
   MObject meshObject;
   MFnMesh mesh;
   meshObject = meshDataFn.create();
-  if(mayaPoints.length() == 0 || mayaCounts.length() == 0 || mayaIndices.length() == 0)
-  {
-    mayaPoints.setLength(0);
-    mayaCounts.setLength(0);
-    mayaIndices.setLength(0);
-    
-    mayaPoints.append(MPoint(0,0,0));
-    mayaPoints.append(MPoint(0,0,0));
-    mayaPoints.append(MPoint(0,0,0));
-    mayaCounts.append(3);
-    mayaIndices.append(0);
-    mayaIndices.append(1);
-    mayaIndices.append(2);
-    mesh.create(mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject);  
-    mesh.updateSurface();
-  }
-  else
-  {
-    MIntArray normalFace, normalVertex;
-    normalFace.setLength(mayaIndices.length());
-    normalVertex.setLength(mayaIndices.length());        
 
-    int face = 0;
-    int vertex = 0;
-    int offset = 0;
+  MIntArray normalFace, normalVertex;
+  normalFace.setLength(mayaIndices.length());
+  normalVertex.setLength(mayaIndices.length());        
 
-    for(unsigned int i=0;i<mayaIndices.length();i++) {
-      normalFace[i] = face;
-      normalVertex[i] = mayaIndices[offset + vertex];
-      vertex++;
+  int face = 0;
+  int vertex = 0;
+  int offset = 0;
 
-      if( vertex == mayaCounts[face] ) {
-        offset += mayaCounts[face];
-        face++;
-        vertex = 0;
-      }
+  for(unsigned int i=0;i<mayaIndices.length();i++) {
+    normalFace[i] = face;
+    normalVertex[i] = mayaIndices[offset + vertex];
+    vertex++;
+
+    if( vertex == mayaCounts[face] ) {
+      offset += mayaCounts[face];
+      face++;
+      vertex = 0;
     }
+  }
   
-    mesh.create(mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject);  
-    mesh.updateSurface();
-    mayaPoints.clear();
-    mesh.setFaceVertexNormals( mayaNormals, normalFace, normalVertex );
+  mesh.create(mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject);  
+  mesh.updateSurface();
+  mayaPoints.clear();
+  mesh.setFaceVertexNormals( mayaNormals, normalFace, normalVertex );
 
-    if(rtMesh.callMethod("Boolean", "hasUVs", 0, 0).getBoolean())
-    {
-      FabricCore::RTVal packedIndicesVal = FabricSplice::constructRTVal("UInt32[]");
-      FabricCore::RTVal packedUVsVal = rtMesh.callMethod("Vec2[]", "getUVsAsPackedArray", 1, &packedIndicesVal);
+  if( !rtMesh.isNullObject() ) {
 
-      if(packedUVsVal.getArraySize() > 0)
-      {
-        uint32_t * packedIndices = (uint32_t *)packedIndicesVal.callMethod("Data", "data", 0, 0).getData();
-        float * packedValues = (float *)packedUVsVal.callMethod("Data", "data", 0, 0).getData();
+    if( rtMesh.callMethod( "Boolean", "hasUVs", 0, 0 ).getBoolean() ) {
+      FabricCore::RTVal packedIndicesVal = FabricSplice::constructRTVal( "UInt32[]" );
+      FabricCore::RTVal packedUVsVal = rtMesh.callMethod( "Vec2[]", "getUVsAsPackedArray", 1, &packedIndicesVal );
+
+      if( packedUVsVal.getArraySize() > 0 ) {
+        uint32_t * packedIndices = (uint32_t *)packedIndicesVal.callMethod( "Data", "data", 0, 0 ).getData();
+        float * packedValues = (float *)packedUVsVal.callMethod( "Data", "data", 0, 0 ).getData();
 
         MFloatArray u, v;
-        u.setLength(packedUVsVal.getArraySize());      
-        v.setLength(packedUVsVal.getArraySize());      
+        u.setLength( packedUVsVal.getArraySize() );
+        v.setLength( packedUVsVal.getArraySize() );
         unsigned int offset = 0;
-        for(unsigned int i=0;i<u.length();i++)
-        {
+        for( unsigned int i = 0; i < u.length(); i++ ) {
           u[i] = packedValues[offset++];
           v[i] = packedValues[offset++];
         }
-        
+
         MIntArray mayaPackedIndices;
-        mayaPackedIndices.setLength(packedIndicesVal.getArraySize());
-        for(unsigned int i=0;i<mayaPackedIndices.length();i++)
+        mayaPackedIndices.setLength( packedIndicesVal.getArraySize() );
+        for( unsigned int i = 0; i < mayaPackedIndices.length(); i++ )
           mayaPackedIndices[i] = (int)packedIndices[i];
 
-        MString setName("map1");
-        mesh.createUVSet(setName);
-        mesh.setCurrentUVSetName(setName);
-        mesh.setUVs(u, v);
-        mesh.assignUVs(mayaCounts, mayaPackedIndices);
+        MString setName( "map1" );
+        mesh.createUVSet( setName );
+        mesh.setCurrentUVSetName( setName );
+        mesh.setUVs( u, v );
+        mesh.assignUVs( mayaCounts, mayaPackedIndices );
       }
     }
 
-    if(rtMesh.callMethod("Boolean", "hasVertexColors", 0, 0).getBoolean())
-    {
-      MColorArray values(nbSamples);
-      std::vector<FabricCore::RTVal> args(2);
-      args[0] = FabricSplice::constructExternalArrayRTVal("Float32", values.length() * 4, &values[0]);
-      args[1] = FabricSplice::constructUInt32RTVal(4); // components
-      rtMesh.callMethod("", "getVertexColorsAsExternalArray", 2, &args[0]);
+    if( rtMesh.callMethod( "Boolean", "hasVertexColors", 0, 0 ).getBoolean() ) {
+      MColorArray values( nbSamples );
+      std::vector<FabricCore::RTVal> args( 2 );
+      args[0] = FabricSplice::constructExternalArrayRTVal( "Float32", values.length() * 4, &values[0] );
+      args[1] = FabricSplice::constructUInt32RTVal( 4 ); // components
+      rtMesh.callMethod( "", "getVertexColorsAsExternalArray", 2, &args[0] );
 
-      MString setName("colorSet");
-      mesh.createColorSet(setName);
-      mesh.setCurrentColorSetName(setName);
+      MString setName( "colorSet" );
+      mesh.createColorSet( setName );
+      mesh.setCurrentColorSetName( setName );
 
-      MIntArray face(nbSamples);
+      MIntArray face( nbSamples );
 
       unsigned int offset = 0;
-      for(unsigned int i=0;i<mayaCounts.length();i++)
-      {
-        for(int j=0;j<mayaCounts[i];j++,offset++)
-        {
+      for( unsigned int i = 0; i < mayaCounts.length(); i++ ) {
+        for( int j = 0; j < mayaCounts[i]; j++, offset++ ) {
           face[offset] = i;
         }
       }
 
-      mesh.setFaceVertexColors(values, face, mayaIndices);
+      mesh.setFaceVertexColors( values, face, mayaIndices );
     }
-
-    handle.set(meshObject);
-    handle.setClean();
   }
+
+  handle.set(meshObject);
+  handle.setClean();
 
   CORE_CATCH_END;
 }
