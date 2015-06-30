@@ -22,6 +22,7 @@ public:
   // implement pure virtual functions
   virtual MObject getThisMObject() { return thisMObject(); }
   virtual MPlug getSaveDataPlug() { return MPlug(thisMObject(), saveData); }
+  virtual MPlug getRefFilePathPlug() { return MPlug(thisMObject(), refFilePath); }
 
   MStatus compute(const MPlug& plug, MDataBlock& data);
   MStatus setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs);
@@ -31,10 +32,15 @@ public:
   virtual MStatus connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
   virtual MStatus connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
 
+#if _SPLICE_MAYA_VERSION >= 2016
+  virtual MStatus preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode);
+#endif
+
   // node attributes
   static MTypeId id;
   static MObject saveData;
   static MObject evalID;
+  static MObject refFilePath;
 };
 
 #endif

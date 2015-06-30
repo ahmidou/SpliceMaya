@@ -76,14 +76,7 @@ MStatus FabricSpliceMayaNode::compute(const MPlug& plug, MDataBlock& data){
 }
 
 MStatus FabricSpliceMayaNode::setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs){
-  MStatus stat;
-  MAYASPLICE_CATCH_BEGIN(&stat);
-  
-  FabricSpliceBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
-
-  MAYASPLICE_CATCH_END(&stat);
-
-  return stat;
+  return FabricSpliceBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
 }
 
 MStatus FabricSpliceMayaNode::shouldSave(const MPlug &plug, bool &isSaving){
@@ -107,3 +100,11 @@ MStatus FabricSpliceMayaNode::connectionBroken(const MPlug &plug, const MPlug &o
   FabricSpliceBaseInterface::onConnection(plug, otherPlug, asSrc, false);
   return MS::kUnknownParameter;
 }
+
+#if _SPLICE_MAYA_VERSION >= 2016
+MStatus FabricSpliceMayaNode::preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode)
+{
+  return FabricSpliceBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
+}
+#endif
+

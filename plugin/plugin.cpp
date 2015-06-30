@@ -73,7 +73,7 @@ void onSceneSave(void *userData){
 
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
-  for(int i = 0; i < instances.size(); ++i){
+  for(uint32_t i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
     node->storePersistenceData(mayaGetLastLoadedScene(), &status);
   }
@@ -102,7 +102,7 @@ void onSceneLoad(void *userData){
 
   // each node will only restore once, so it's safe for import too
   FabricSplice::Logging::AutoTimer persistenceTimer("Maya::onSceneLoad");
-  for(int i = 0; i < instances.size(); ++i){
+  for(uint32_t i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
     node->restoreFromPersistenceData(mayaGetLastLoadedScene(), &status); 
     if( status != MS::kSuccess)
@@ -128,7 +128,7 @@ void onMayaExiting(void *userData){
   gSceneIsDestroying = true;
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
-  for(int i = 0; i < instances.size(); ++i){
+  for(uint32_t i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
     node->resetInternalData();
   }
@@ -211,6 +211,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("dfgGetDesc", FabricDFGGetDescCommand::creator, FabricDFGGetDescCommand::newSyntax);
   plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
   plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
+  plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
   plugin.registerCommand("dfgSetNodeCacheRule", FabricDFGSetNodeCacheRuleCommand::creator, FabricDFGSetNodeCacheRuleCommand::newSyntax);
   plugin.registerCommand("dfgCopy", FabricDFGCopyCommand::creator, FabricDFGCopyCommand::newSyntax);
   plugin.registerCommand("dfgPaste", FabricDFGPasteCommand::creator, FabricDFGPasteCommand::newSyntax);
@@ -299,6 +300,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand("dfgGetDesc");
   plugin.deregisterCommand("dfgImportJSON");
   plugin.deregisterCommand("dfgExportJSON");
+  plugin.deregisterCommand("dfgReloadJSON");
   plugin.deregisterCommand("dfgSetNodeCacheRule");
   plugin.deregisterCommand("dfgCopy");
   plugin.deregisterCommand("dfgPaste");

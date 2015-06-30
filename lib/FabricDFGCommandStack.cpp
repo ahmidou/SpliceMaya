@@ -78,22 +78,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     for(unsigned int i=0;i<cmd->getNbCommands();i++)
       result = result && logMayaCommand(cmd->getCommand(i), id, undoable, lastCommand);
   }
-  // else if(commandName == "dfgRemoveNode")
-  // {
-  //   addCommandToIgnore(commandName.asChar(), id, undoable);
-  //   if(s_mayaCommandsEnabled)
-  //   {
-  //     DFG::DFGRemoveNodeCommand * cmd = (DFG::DFGRemoveNodeCommand*)genericCommand;
-  //     interf = getInterfaceFromCommand(cmd);
-  //     MString nodeName = getNodeNameFromCommand(cmd);
-  //     MString path = cmd->getNodePath();
-  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
-  
-  //     MString cmdStr = "dfgRemoveNode -node \""+nodeName+"\"";
-  //     cmdStr += " -path \""+path+"\"";
-  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
-  //   }
-  // }
   else if(commandName == "dfgRenameNode")
   {
     addCommandToIgnore(commandName.asChar(), id, undoable);
@@ -104,7 +88,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath();
       MString name = cmd->getTitle();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgRenameNode -node \""+nodeName+"\"";
       cmdStr += " -path \""+path+"\"";
@@ -112,90 +95,101 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MGlobal::executeCommandOnIdle(cmdStr+";", true);
     }
   }
-  // else if(commandName == "dfgAddEmptyFunc")
-  // {
-  //   addCommandToIgnore(commandName.asChar(), id, undoable);
-  //   if(s_mayaCommandsEnabled)
-  //   {
-  //     DFG::DFGAddEmptyFuncCommand * cmd = (DFG::DFGAddEmptyFuncCommand*)genericCommand;
-  //     interf = getInterfaceFromCommand(cmd);
-  //     MString nodeName = getNodeNameFromCommand(cmd);
-  //     MString path = cmd->getInstPath();
-  //     MString name = cmd->getTitle();
-  //     QPointF pos = cmd->getPos();
-  //     MString x, y;
-  //     x.set(pos.x());
-  //     y.set(pos.y());
-  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+  else if(commandName == "dfgAddEmptyFunc")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGAddEmptyFuncCommand * cmd = (DFG::DFGAddEmptyFuncCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      MString path = cmd->getInstPath();
+      MString name = cmd->getTitle();
+      QPointF pos = cmd->getPos();
+      MString x, y;
+      x.set(pos.x());
+      y.set(pos.y());
   
-  //     MString cmdStr = "dfgAddEmptyFunc -node \""+nodeName+"\"";
-  //     cmdStr += " -path \""+path+"\"";
-  //     cmdStr += " -name \""+name+"\"";
-  //     cmdStr += " -xpos "+x;
-  //     cmdStr += " -ypos "+y;
-  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
-  //   }
-  // }
-  // else if(commandName == "dfgAddEmptyGraph")
-  // {
-  //   addCommandToIgnore(commandName.asChar(), id, undoable);
-  //   if(s_mayaCommandsEnabled)
-  //   {
-  //     DFG::DFGAddEmptyGraphCommand * cmd = (DFG::DFGAddEmptyGraphCommand*)genericCommand;
-  //     interf = getInterfaceFromCommand(cmd);
-  //     MString nodeName = getNodeNameFromCommand(cmd);
-  //     MString path = cmd->getInstPath();
-  //     MString name = cmd->getTitle();
-  //     QPointF pos = cmd->getPos();
-  //     MString x, y;
-  //     x.set(pos.x());
-  //     y.set(pos.y());
-  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+      MString cmdStr = "dfgAddEmptyFunc -node \""+nodeName+"\"";
+      cmdStr += " -path \""+path+"\"";
+      cmdStr += " -name \""+name+"\"";
+      cmdStr += " -xpos "+x;
+      cmdStr += " -ypos "+y;
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgAddEmptyGraph")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGAddEmptyGraphCommand * cmd = (DFG::DFGAddEmptyGraphCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      MString path = cmd->getInstPath();
+      MString name = cmd->getTitle();
+      QPointF pos = cmd->getPos();
+      MString x, y;
+      x.set(pos.x());
+      y.set(pos.y());
   
-  //     MString cmdStr = "dfgAddEmptyGraph -node \""+nodeName+"\"";
-  //     cmdStr += " -path \""+path+"\"";
-  //     cmdStr += " -name \""+name+"\"";
-  //     cmdStr += " -xpos "+x;
-  //     cmdStr += " -ypos "+y;
-  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
-  //   }
-  // }
-  // else if(commandName == "dfgAddConnection")
-  // {
-  //   addCommandToIgnore(commandName.asChar(), id, undoable);
-  //   if(s_mayaCommandsEnabled)
-  //   {
-  //     DFG::DFGAddConnectionCommand * cmd = (DFG::DFGAddConnectionCommand*)genericCommand;
-  //     interf = getInterfaceFromCommand(cmd);
-  //     MString nodeName = getNodeNameFromCommand(cmd);
-  //     MString srcPath = cmd->getSrcPath();
-  //     MString dstPath = cmd->getDstPath();
-  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+      MString cmdStr = "dfgAddEmptyGraph -node \""+nodeName+"\"";
+      cmdStr += " -path \""+path+"\"";
+      cmdStr += " -name \""+name+"\"";
+      cmdStr += " -xpos "+x;
+      cmdStr += " -ypos "+y;
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgAddConnection")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGAddConnectionCommand * cmd = (DFG::DFGAddConnectionCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      MString srcPath = cmd->getSrcPath();
+      MString dstPath = cmd->getDstPath();
   
-  //     MString cmdStr = "dfgAddConnection -node \""+nodeName+"\"";
-  //     cmdStr += " -srcPath \""+srcPath+"\"";
-  //     cmdStr += " -dstPath \""+dstPath+"\"";
-  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
-  //   }
-  // }
-  // else if(commandName == "dfgRemoveConnection")
-  // {
-  //   addCommandToIgnore(commandName.asChar(), id, undoable);
-  //   if(s_mayaCommandsEnabled)
-  //   {
-  //     DFG::DFGRemoveConnectionCommand * cmd = (DFG::DFGRemoveConnectionCommand*)genericCommand;
-  //     interf = getInterfaceFromCommand(cmd);
-  //     MString nodeName = getNodeNameFromCommand(cmd);
-  //     MString srcPath = cmd->getSrcPath();
-  //     MString dstPath = cmd->getDstPath();
-  //     DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
+      MString cmdStr = "dfgAddConnection -node \""+nodeName+"\"";
+      cmdStr += " -srcPath \""+srcPath+"\"";
+      cmdStr += " -dstPath \""+dstPath+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgRemoveConnection")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGRemoveConnectionCommand * cmd = (DFG::DFGRemoveConnectionCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      MString srcPath = cmd->getSrcPath();
+      MString dstPath = cmd->getDstPath();
   
-  //     MString cmdStr = "dfgRemoveConnection -node \""+nodeName+"\"";
-  //     cmdStr += " -srcPath \""+srcPath+"\"";
-  //     cmdStr += " -dstPath \""+dstPath+"\"";
-  //     MGlobal::executeCommandOnIdle(cmdStr+";", true);
-  //   }
-  // }
+      MString cmdStr = "dfgRemoveConnection -node \""+nodeName+"\"";
+      cmdStr += " -srcPath \""+srcPath+"\"";
+      cmdStr += " -dstPath \""+dstPath+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
+  else if(commandName == "dfgRemoveAllConnections")
+  {
+    addCommandToIgnore(commandName.asChar(), id, undoable);
+    if(s_mayaCommandsEnabled)
+    {
+      DFG::DFGRemoveAllConnectionsCommand * cmd = (DFG::DFGRemoveAllConnectionsCommand*)genericCommand;
+      interf = getInterfaceFromCommand(cmd);
+      MString nodeName = getNodeNameFromCommand(cmd);
+      MString path = cmd->getPath();
+  
+      MString cmdStr = "dfgRemoveAllConnections -node \""+nodeName+"\"";
+      cmdStr += " -path \""+path+"\"";
+      MGlobal::executeCommandOnIdle(cmdStr+";", true);
+    }
+  }
   else if(commandName == "dfgAddPort")
   {
     addCommandToIgnore(commandName.asChar(), id, undoable);
@@ -204,7 +198,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGAddPortCommand * cmd = (DFG::DFGAddPortCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      MString path = cmd->getPortPath();
+      MString execPath = cmd->getExecPath();
       MString name = cmd->getPortName();
       MString portType = "In";
       if(cmd->getPortType() == GraphView::PortType_Input)
@@ -212,10 +206,9 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       else if(cmd->getPortType() == GraphView::PortType_IO)
         portType = "IO";
       MString dataType = cmd->getDataType();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgAddPort -node \""+nodeName+"\"";
-      cmdStr += " -path \""+path+"\"";
+      cmdStr += " -execPath \""+execPath+"\"";
       cmdStr += " -name \""+name+"\"";
       cmdStr += " -portType \""+portType+"\"";
       cmdStr += " -dataType \""+dataType+"\"";
@@ -232,7 +225,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getExecPath();
       MString name = cmd->getPortName();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgRemovePort -node \""+nodeName+"\"";
       cmdStr += " -path \""+path+"\"";
@@ -250,7 +242,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath();
       MString name = cmd->getPortName();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgRenamePort -node \""+nodeName+"\"";
       cmdStr += " -path \""+path+"\"";
@@ -269,7 +260,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString path = cmd->getArgName();
       MString dataType = cmd->getDataType();
       std::string json = cmd->getJSON();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgSetArg -node \""+nodeName+"\"";
       cmdStr += " -path \""+path+"\"";
@@ -289,7 +279,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString path = cmd->getPath();
       MString dataType = cmd->getDataType();
       std::string json = cmd->getJSON();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgSetDefaultValue -node \""+nodeName+"\"";
       cmdStr += " -path \""+path+"\"";
@@ -309,7 +298,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString path = cmd->getPath();
       std::string code = cmd->getCode();
 
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgSetCode -node \""+nodeName+"\"";
       cmdStr += " -path \""+path+"\"";
@@ -327,7 +315,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath();
       MString cacheRule = cmd->getRuleName();
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgSetNodeCacheRule -node \""+nodeName+"\"";
       cmdStr += " -path \""+path+"\"";
@@ -343,7 +330,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGCopyCommand * cmd = (DFG::DFGCopyCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgCopy -node \""+nodeName+"\"";
       std::vector<std::string> paths = cmd->getNodePaths();
@@ -367,7 +353,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGPasteCommand * cmd = (DFG::DFGPasteCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgPaste -node \""+nodeName+"\"";
       // cmdStr += " -path \""+path+"\"";
@@ -383,7 +368,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGImplodeNodesCommand * cmd = (DFG::DFGImplodeNodesCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgImplodeNodes -node \""+nodeName+"\"";
       MString name = cmd->getDesiredName();
@@ -409,7 +393,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGExplodeNodeCommand * cmd = (DFG::DFGExplodeNodeCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgExplodeNode -node \""+nodeName+"\"";
       MString path = cmd->getNodePath();
@@ -425,7 +408,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGAddVarCommand * cmd = (DFG::DFGAddVarCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgAddVar -node \""+nodeName+"\"";
       MString varName = cmd->getVarName();
@@ -447,7 +429,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGAddGetCommand * cmd = (DFG::DFGAddGetCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgAddGet -node \""+nodeName+"\"";
       MString varPath = cmd->getVarPath();
@@ -464,7 +445,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGAddSetCommand * cmd = (DFG::DFGAddSetCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgAddSet -node \""+nodeName+"\"";
       MString varPath = cmd->getVarPath();
@@ -481,7 +461,6 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
       DFG::DFGSetRefVarPathCommand * cmd = (DFG::DFGSetRefVarPathCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
-      DFG::DFGController * controller = (DFG::DFGController *)cmd->controller();
   
       MString cmdStr = "dfgSetRefVarPath -node \""+nodeName+"\"";
       MString path = cmd->getPath();
@@ -512,7 +491,8 @@ FabricDFGCommandStack * FabricDFGCommandStack::getStack()
 
 FabricDFGBaseInterface * FabricDFGCommandStack::getInterfaceFromCommand(FabricUI::DFG::DFGCommand * command)
 {
-  MString interfIdStr = ((DFG::DFGController*)command->controller())->getBinding().getExec().getMetadata("maya_id");
+  FabricCore::DFGBinding binding = ((DFG::DFGController*)command->controller())->getCoreDFGBinding();
+  MString interfIdStr = binding.getMetadata("maya_id");
   if(interfIdStr.length() == 0)
     return NULL;
   unsigned int interfId = (unsigned int)interfIdStr.asInt();

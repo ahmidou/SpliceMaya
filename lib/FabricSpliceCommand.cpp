@@ -23,7 +23,6 @@
 #include "FabricSpliceEditorCmd.h"
 #include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceRenderCallback.h"
-#include "FabricSpliceLicenseDialog.h"
 #include "FabricSpliceHelpers.h"
 
 #define kActionFlag "-a"
@@ -88,8 +87,9 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
 
       MStatus stat;
       MAYASPLICE_CATCH_BEGIN(&stat);
-      FabricSpliceLicenseDialog dialog(MQtUtil::mainWindow());
-      dialog.exec();
+      // FIXME [andrew 20150623]
+      // FabricSpliceLicenseDialog dialog(MQtUtil::mainWindow());
+      // dialog.exec();
       MAYASPLICE_CATCH_END(&stat);
 
       return mayaErrorOccured();
@@ -377,7 +377,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
       MString fileNameStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "fileName", "", true).c_str();
       bool asReferenced = FabricSplice::Scripting::consumeBooleanArgument(scriptArgs, "asReferenced", false, true);
 
-      int portLimit = 0;
+      uint32_t portLimit = 0;
       if(spliceMayaNodeFn.typeName() == "spliceMayaDeformer")
         portLimit = 1;
       if(interf->getPortNames().length() > portLimit)

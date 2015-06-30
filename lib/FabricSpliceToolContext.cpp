@@ -7,12 +7,14 @@
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricDFGBaseInterface.h"
 #include <FabricSplice.h>
 #include <maya/MCursor.h>
 #include <maya/MDagPath.h>
 #include <maya/MFnCamera.h>
 #include <maya/MAnimControl.h>
 #include <maya/MTime.h>
+#include <FTL/StrRef.h>
 
 #include <map>
 
@@ -46,7 +48,7 @@ MStatus FabricSpliceManipulationCmd::redoIt()
   try
   {
     if(m_rtval_commands.isValid()){
-      for(int i=0; i<m_rtval_commands.getArraySize(); i++){
+      for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++){
         m_rtval_commands.getArrayElement(i).callMethod("", "doAction", 0, 0);
       }
     }
@@ -66,7 +68,7 @@ MStatus FabricSpliceManipulationCmd::undoIt()
   try
   {
     if(m_rtval_commands.isValid()){
-      for(int i=0; i<m_rtval_commands.getArraySize(); i++){
+      for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++){
         m_rtval_commands.getArrayElement(i).callMethod("", "undoAction", 0, 0);
       }
     }
@@ -361,13 +363,13 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
 
           if(isOrthographic){
             double windowAspect = width/height;
-            double left;
-            double right;
-            double bottom;
-            double top;
-            bool  applyOverscan;
-            bool  applySqueeze;
-            bool  applyPanZoom;
+            double left = 0.0;
+            double right = 0.0;
+            double bottom = 0.0;
+            double top = 0.0;
+            bool  applyOverscan = 0.0;
+            bool  applySqueeze = 0.0;
+            bool  applyPanZoom = 0.0;
             camera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
             param = FabricSplice::constructFloat64RTVal(top-bottom);
             inlineCamera.callMethod("", "setOrthographicFrustumHeight", 1, &param);
@@ -448,15 +450,123 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       // Invoke the custom command passing the speficied args.
       MString customCommand(host.maybeGetMember("customCommand").getStringCString());
       if(customCommand.length() > 0){
-        FabricCore::RTVal customCommandArgs = host.maybeGetMember("customCommandArgs");
-        MString args;
-        for(int i=0; i<customCommandArgs.getArraySize(); i++){
-          if(i>0)
-            args += MString(" ");
-          args += MString(customCommandArgs.getArrayElement(i).getStringCString());
+        FabricCore::RTVal customCommandParams = host.maybeGetMember("customCommandParams");
+        if(customCommandParams.callMethod("Size", "size", 0, 0).getUInt32() > 0)
+        {
+          if(customCommand == "setAttr")
+          {
+            FabricCore::RTVal attributeVal = FabricSplice::constructStringRTVal("attribute");
+            FabricCore::RTVal valueVal = FabricSplice::constructStringRTVal("value");
+
+            MString attribute = customCommandParams.callMethod("String", "getString", 1, &attributeVal).getStringCString();
+            MString valueType = customCommandParams.callMethod("String", "getValueType", 1, &valueVal).getStringCString();
+            FabricCore::RTVal value;
+
+            if(attribute.length() > 0)
+            {
+              MStringArray parts;
+              attribute.split('.', parts);
+              if(parts.length() == 2)
+              {
+                FabricDFGBaseInterface * dfgInterf = FabricDFGBaseInterface::getInstanceByName(parts[0].asChar());
+                if(dfgInterf)
+                {
+                  FabricCore::DFGBinding binding = dfgInterf->getDFGBinding();
+                  FabricCore::DFGExec exec = binding.getExec();
+                  FTL::StrRef portResolvedType = exec.getExecPortResolvedType(parts[1].asChar());
+
+                  if(portResolvedType == "Mat44")
+                  {
+                    if(valueType == "Mat44")
+                    {
+                      value = customCommandParams.callMethod("Mat44", "getMat44", 1, &valueVal);
+                    }
+                    else if(valueType == "Xfo")
+                    {
+                      value = customCommandParams.callMethod("Xfo", "getXfo", 1, &valueVal);
+                      value = value.callMethod("Mat44", "toMat44", 0, 0);
+                    }
+                  }
+                  else if(portResolvedType == "Vec3")
+                  {
+                    if(valueType == "Vec3")
+                    {
+                      value = customCommandParams.callMethod("Vec3", "getVec3", 1, &valueVal);
+                    }
+                    else if(valueType == "Xfo")
+                    {
+                      value = customCommandParams.callMethod("Xfo", "getXfo", 1, &valueVal);
+                      value = value.maybeGetMember("tr");
+                    }
+                  }
+                  else if(portResolvedType == "Euler")
+                  {
+                    if(valueType == "Euler")
+                    {
+                      value = customCommandParams.callMethod("Euler", "getEuler", 1, &valueVal);
+                    }
+                    else if(valueType == "Quat")
+                    {
+                      value = customCommandParams.callMethod("Quat", "getQuat", 1, &valueVal);
+                      value = value.callMethod("Euler", "toEuler", 0, 0);
+                    }
+                    else if(valueType == "Xfo")
+                    {
+                      value = customCommandParams.callMethod("Xfo", "getXfo", 1, &valueVal);
+                      value = value.maybeGetMember("ori");
+                      value = value.callMethod("Euler", "toEuler", 0, 0);
+                    }
+                  }
+                  else
+                  {
+                    MString message = "Attribute '"+attribute;
+                    message += "'to be driven has unsupported type '";
+                    message += portResolvedType.data();
+                    message += "'.";
+                    mayaLogErrorFunc(message);
+                    return false;
+                  }
+
+                  if(!value.isValid())
+                    return false;
+
+                  if(portResolvedType == "Mat44")
+                  {
+                    // value = value.callMethod("Mat44", "toMat44", 0, 0);
+                  }
+                  else if(portResolvedType == "Vec3")
+                  {
+                    bool displayEnabled = true;
+                    MString x,y,z;
+                    x.set(value.maybeGetMember("x").getFloat32());
+                    y.set(value.maybeGetMember("y").getFloat32());
+                    z.set(value.maybeGetMember("z").getFloat32());
+                    MGlobal::executeCommandOnIdle(MString("setAttr ") + attribute + "_x " + x + ";", displayEnabled);
+                    MGlobal::executeCommandOnIdle(MString("setAttr ") + attribute + "_y " + y + ";", displayEnabled);
+                    MGlobal::executeCommandOnIdle(MString("setAttr ") + attribute + "_z " + z + ";", displayEnabled);
+                  }
+                  else if(portResolvedType == "Euler")
+                  {
+                    // value = value.maybeGetMember("tr");
+                  }
+                }
+              }
+            }
+
+          }
         }
-        bool displayEnabled = true;
-        MGlobal::executeCommandOnIdle(customCommand + MString(" ") + args, displayEnabled);
+        else
+        {
+          FabricCore::RTVal customCommandArgs = host.maybeGetMember("customCommandArgs");
+          MString args;
+          for(uint32_t i=0; i<customCommandArgs.getArraySize(); i++){
+            if(i>0)
+              args += MString(" ");
+            args += MString(customCommandArgs.getArrayElement(i).getStringCString());
+          }
+          bool displayEnabled = true;
+          MGlobal::executeCommandOnIdle(customCommand + MString(" ") + args, displayEnabled);
+        }
       }
 
       if(host.maybeGetMember("redrawRequested").getBoolean())

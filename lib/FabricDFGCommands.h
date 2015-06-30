@@ -204,6 +204,16 @@ public:
   virtual MStatus doIt(const MArgList &args);
 };
 
+class FabricDFGReloadJSONCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual const char * getName() { return "dfgReloadJSON"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+};
+
 class FabricNewDFGBaseCommand: public MPxCommand
 {
 public:

@@ -37,8 +37,6 @@ env.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 
 mayaFlags = {
   'CPPPATH': [
-      MAYA_INCLUDE_DIR,
-      os.path.join(MAYA_INCLUDE_DIR, 'Qt'),
       env.Dir('lib'),
       env.Dir('plugin')
     ],
@@ -46,15 +44,21 @@ mayaFlags = {
     MAYA_LIB_DIR
   ],
 }
+if FABRIC_BUILD_OS == 'Windows':
+  mayaFlags['CPPPATH'].extend([MAYA_INCLUDE_DIR, os.path.join(MAYA_INCLUDE_DIR, 'Qt')])
+else:
+  mayaFlags['CCFLAGS'] = ['-isystem', MAYA_INCLUDE_DIR]
 
 mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
   mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4', 'QtOpenGL4'])
-if FABRIC_BUILD_OS == 'Linux':
+  # FE-4590
+  mayaFlags['CCFLAGS'] = ['/wd4190']
+elif FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
   mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
-if FABRIC_BUILD_OS == 'Darwin':
+elif FABRIC_BUILD_OS == 'Darwin':
   mayaFlags['CPPDEFINES'] = ['OSMac_']
   qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
   qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
@@ -65,6 +69,7 @@ if FABRIC_BUILD_OS == 'Darwin':
     qtOpenGLLib,
     File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
     ])
+  mayaFlags['CCFLAGS'].extend(['-Wno-#warnings', '-Wno-return-type-c-linkage'])
 
 env.MergeFlags(mayaFlags)
 
@@ -165,7 +170,6 @@ else:
   if FABRIC_BUILD_OS == 'Linux':
     exportsFile = env.File('Linux.exports').srcnode()
     env.Append(SHLINKFLAGS = ['-Wl,--version-script='+str(exportsFile)])
-    env[ '_LIBFLAGS' ] = '-Wl,--start-group ' + env['_LIBFLAGS'] + ' -Wl,--end-group'
   mayaModule = env.SharedLibrary(target = target, source = pluginSources, SHLIBSUFFIX=libSuffix, SHLIBPREFIX='')
 
 sedCmd = 'sed'

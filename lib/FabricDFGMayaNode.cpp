@@ -10,6 +10,7 @@
 MTypeId FabricDFGMayaNode::id(0x0011AE46);
 MObject FabricDFGMayaNode::saveData;
 MObject FabricDFGMayaNode::evalID;
+MObject FabricDFGMayaNode::refFilePath;
 
 FabricDFGMayaNode::FabricDFGMayaNode()
 : FabricDFGBaseInterface()
@@ -40,6 +41,10 @@ MStatus FabricDFGMayaNode::initialize(){
   nAttr.setHidden(true);
   addAttribute(evalID);
 
+  refFilePath = typedAttr.create("refFilePath", "rfp", MFnData::kString);
+  typedAttr.setHidden(true);
+  addAttribute(refFilePath);
+
   return MS::kSuccess;
 }
 
@@ -69,14 +74,7 @@ MStatus FabricDFGMayaNode::compute(const MPlug& plug, MDataBlock& data){
 }
 
 MStatus FabricDFGMayaNode::setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs){
-  MStatus stat;
-  MAYADFG_CATCH_BEGIN(&stat);
-  
-  FabricDFGBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
-
-  MAYADFG_CATCH_END(&stat);
-
-  return stat;
+  return FabricDFGBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
 }
 
 MStatus FabricDFGMayaNode::shouldSave(const MPlug &plug, bool &isSaving){
@@ -100,3 +98,11 @@ MStatus FabricDFGMayaNode::connectionBroken(const MPlug &plug, const MPlug &othe
   FabricDFGBaseInterface::onConnection(plug, otherPlug, asSrc, false);
   return MS::kUnknownParameter;
 }
+
+#if _SPLICE_MAYA_VERSION >= 2016
+MStatus FabricDFGMayaNode::preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode)
+{
+  return FabricDFGBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
+}
+#endif
+

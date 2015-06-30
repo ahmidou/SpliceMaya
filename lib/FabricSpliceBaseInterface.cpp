@@ -24,6 +24,10 @@
 #include <maya/MFnPluginData.h>
 #include <maya/MAnimControl.h>
 
+#if _SPLICE_MAYA_VERSION >= 2016
+# include <maya/MEvaluationNode.h>
+#endif
+
 std::vector<FabricSpliceBaseInterface*> FabricSpliceBaseInterface::_instances;
 #if _SPLICE_MAYA_VERSION < 2013
   std::map<std::string, int> FabricSpliceBaseInterface::_nodeCreatorCounts;
@@ -126,7 +130,7 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
 
   MFnDependencyNode thisNode(getThisMObject());
 
-  for(int i = 0; i < _dirtyPlugs.length(); ++i){
+  for(size_t i = 0; i < _dirtyPlugs.length(); ++i){
     MString plugName = _dirtyPlugs[i];
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull()){
@@ -216,7 +220,7 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
   
   MFnDependencyNode thisNode(getThisMObject());
 
-  for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+  for(size_t i = 0; i < _spliceGraph.getDGPortCount(); ++i){
     FabricSplice::DGPort port = _spliceGraph.getDGPort((unsigned int)i);
     if(!port.isValid())
       continue;
@@ -289,7 +293,7 @@ void FabricSpliceBaseInterface::collectDirtyPlug(MPlug const &inPlug){
     }
   }
 
-  for(int i = 0; i < _dirtyPlugs.length(); ++i){
+  for(size_t i = 0; i < _dirtyPlugs.length(); ++i){
     if(_dirtyPlugs[i] == name)
       return;
   }
@@ -302,7 +306,7 @@ void FabricSpliceBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affect
     return;
   }
 
-  for(int i = 0; i < plug.numChildren(); ++i){
+  for(size_t i = 0; i < plug.numChildren(); ++i){
     MPlug childPlug = plug.child(i);
     if(!childPlug.isNull()){
       affectedPlugs.append(childPlug);
@@ -310,7 +314,7 @@ void FabricSpliceBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affect
     }
   }
 
-  for(int i = 0; i < plug.numElements(); ++i){
+  for(size_t i = 0; i < plug.numElements(); ++i){
     MPlug elementPlug = plug.elementByPhysicalIndex(i);
     if(!elementPlug.isNull()){
       affectedPlugs.append(elementPlug);
@@ -868,24 +872,22 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
   // set the mode
   if(!newAttribute.isNull())
   {
-    if(portMode != FabricSplice::Port_Mode_IN)
-    {
-      nAttr.setReadable(true);
-      tAttr.setReadable(true);
-      mAttr.setReadable(true);
-      uAttr.setReadable(true);
-      cAttr.setReadable(true);
-      pAttr.setReadable(true);
-    }
-    if(portMode != FabricSplice::Port_Mode_OUT)
-    {
-      nAttr.setWritable(true);
-      tAttr.setWritable(true);
-      mAttr.setWritable(true);
-      uAttr.setWritable(true);
-      cAttr.setWritable(true);
-      pAttr.setWritable(true);
-    }
+    bool readable = portMode != FabricSplice::Port_Mode_IN;
+    nAttr.setReadable(readable);
+    tAttr.setReadable(readable);
+    mAttr.setReadable(readable);
+    uAttr.setReadable(readable);
+    cAttr.setReadable(readable);
+    pAttr.setReadable(readable);
+
+    bool writable = portMode != FabricSplice::Port_Mode_OUT;
+    nAttr.setWritable(writable);
+    tAttr.setWritable(writable);
+    mAttr.setWritable(writable);
+    uAttr.setWritable(writable);
+    cAttr.setWritable(writable);
+    pAttr.setWritable(writable);
+
     if(portMode == FabricSplice::Port_Mode_IN && storable)
     {
       nAttr.setKeyable(true);
@@ -932,7 +934,7 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(MString portName, Fabr
   {
     if(portMode != FabricSplice::Port_Mode_IN)
     {
-      for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
+      for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
         std::string otherPortName = _spliceGraph.getDGPortName(i);
         if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
           continue;
@@ -953,7 +955,7 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(MString portName, Fabr
     }
     else
     {
-      for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
+      for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
         std::string otherPortName = _spliceGraph.getDGPortName(i);
         if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
           continue;
@@ -1176,7 +1178,7 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
   if(_spliceGraph.isReferenced())
   {
     MFnDependencyNode thisNode(getThisMObject());
-    for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+    for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i){
       std::string portName = _spliceGraph.getDGPortName(i);
       FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.c_str());
 
@@ -1191,7 +1193,7 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
   invalidateNode();
 
   MFnDependencyNode thisNode(getThisMObject());
-  for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+  for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i){
     std::string portName = _spliceGraph.getDGPortName(i);
     
     MPlug plug = thisNode.findPlug(portName.c_str());
@@ -1320,7 +1322,7 @@ void FabricSpliceBaseInterface::invalidateNode()
   }
 
   // ensure that the node is invalidated
-  for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+  for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i){
     std::string portName = _spliceGraph.getDGPortName(i);
     
     MPlug plug = thisNode.findPlug(portName.c_str());
@@ -1337,7 +1339,7 @@ void FabricSpliceBaseInterface::invalidateNode()
         collectDirtyPlug(plug);
         MPlugArray plugs;
         plug.connectedTo(plugs,true,false);
-        for(int j=0;j<plugs.length();j++)
+        for(uint32_t j=0;j<plugs.length();j++)
           invalidatePlug(plugs[j]);
       }
       else
@@ -1348,7 +1350,7 @@ void FabricSpliceBaseInterface::invalidateNode()
 
         MPlugArray plugs;
         affectChildPlugs(plug, plugs);
-        for(int j=0;j<plugs.length();j++)
+        for(uint32_t j=0;j<plugs.length();j++)
           invalidatePlug(plugs[j]);
       }
     }
@@ -1424,7 +1426,7 @@ MStatus FabricSpliceBaseInterface::loadFromFile(MString fileName, bool asReferen
   _spliceGraph.loadFromFile(fileName.asChar(), &info, asReferenced);
 
   // create all relevant maya attributes
-  for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+  for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i){
     std::string portName = _spliceGraph.getDGPortName(i);
     FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.c_str());
     if(!port.isValid())
@@ -1455,7 +1457,7 @@ MStatus FabricSpliceBaseInterface::reloadFromFile()
   _spliceGraph.reloadFromFile(&info);
 
   // create all relevant maya attributes
-  for(int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
+  for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i){
     std::string portName = _spliceGraph.getDGPortName(i);
     FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.c_str());
     if(!port.isValid())
@@ -1650,7 +1652,7 @@ MStatus FabricSpliceBaseInterface::createAttributeForPort(FabricSplice::DGPort p
 
 bool FabricSpliceBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
   bool found = false;
-  for(int i = 0; i < array.length(); ++i){
+  for(uint32_t i = 0; i < array.length(); ++i){
     if(array[i] == plug){
       found = true;
       break;
@@ -1660,7 +1662,7 @@ bool FabricSpliceBaseInterface::plugInArray(const MPlug &plug, const MPlugArray 
   return found;
 }
 
-void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
+MStatus FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
 
   MFnDependencyNode thisNode(thisMObject);
 
@@ -1672,28 +1674,26 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
   collectDirtyPlug(inPlug);
 
   if(_outputsDirtied)
-    return;
+    return MS::kSuccess;
 
   if(_affectedPlugsDirty)
   {
-    if(_affectedPlugs.length() > 0)
-      affectedPlugs.setSizeIncrement(_affectedPlugs.length());
-    
     _affectedPlugs.clear();
 
-    for(unsigned int i = 0; i < _spliceGraph.getDGPortCount(); ++i){
-      FabricSplice::DGPort port = _spliceGraph.getDGPort(i);
-      if(!port.isValid())
+    for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
+      MFnAttribute attrib(thisNode.attribute(i));
+      if(attrib.isHidden())
         continue;
-      int portMode = (int)port.getMode();
-      
-      if(port.getMode() != FabricSplice::Port_Mode_IN){
-        MPlug outPlug = thisNode.findPlug(port.getName());
-        if(!outPlug.isNull()){
-          if(!plugInArray(outPlug, _affectedPlugs)){
-            _affectedPlugs.append(outPlug);
-            affectChildPlugs(outPlug, _affectedPlugs);
-          }
+      if(!attrib.isDynamic())
+        continue;
+      if(!attrib.isReadable())
+        continue;
+
+      MPlug outPlug = thisNode.findPlug(attrib.name());
+      if(!outPlug.isNull()){
+        if(!plugInArray(outPlug, _affectedPlugs)){
+          _affectedPlugs.append(outPlug);
+          affectChildPlugs(outPlug, _affectedPlugs);
         }
       }
     }
@@ -1703,6 +1703,8 @@ void FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
   affectedPlugs = _affectedPlugs;
 
   _outputsDirtied = true;
+
+  return MS::kSuccess;
 }
 
 void FabricSpliceBaseInterface::copyInternalData(MPxNode *node){
@@ -1782,3 +1784,22 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
 
   _portObjectsDestroyed = destroy;
 }
+
+#if _SPLICE_MAYA_VERSION >= 2016
+MStatus FabricSpliceBaseInterface::preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode)
+{
+  MStatus status;
+  if(!context.isNormal()) 
+    return MStatus::kFailure;
+
+  // [andrew 20150616] in 2016 this needs to also happen here because
+  // setDependentsDirty isn't called in Serial or Parallel eval mode
+  for (MEvaluationNodeIterator dirtyIt = evaluationNode.iterator();
+      !dirtyIt.isDone(); dirtyIt.next())
+  {
+    collectDirtyPlug(dirtyIt.plug());
+  }
+  return MS::kSuccess;
+}
+#endif
+

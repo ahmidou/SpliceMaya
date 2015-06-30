@@ -27,6 +27,10 @@
 #include <maya/MFnPluginData.h>
 #include <maya/MAnimControl.h>
 
+#if _SPLICE_MAYA_VERSION >= 2016
+# include <maya/MEvaluationNode.h>
+#endif
+
 std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
 #if _SPLICE_MAYA_VERSION < 2013
   std::map<std::string, int> FabricDFGBaseInterface::_nodeCreatorCounts;
@@ -44,7 +48,10 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(){
   _portObjectsDestroyed = false;
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
+  _isReferenced = false;
   _instances.push_back(this);
+  m_useNativeArrayForNextAttribute = false;
+  m_useOpaqueForNextAttribute = false;
 
   m_host = NULL;
   m_router = NULL;
@@ -59,6 +66,7 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface(){
 
   FabricDFGWidget::closeWidgetsForBaseInterface(this);
 
+  m_evalContext = FabricCore::RTVal();
   if(m_ctrl)
   {
     delete(m_ctrl);
@@ -128,7 +136,7 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_ctrl->setRouter(m_router);
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
   MString idStr; idStr.set(m_id);
-  exec.setMetadata("maya_id", idStr.asChar(), false);
+  m_binding.setMetadata("maya_id", idStr.asChar(), false);
   MAYADFG_CATCH_END(&stat);
 
 }
@@ -220,9 +228,9 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   MFnDependencyNode thisNode(getThisMObject());
 
   FabricCore::DFGExec exec = getDFGGraph();
-  for(int i = 0; i < _dirtyPlugs.length(); ++i){
+  for(size_t i = 0; i < _dirtyPlugs.length(); ++i){
     MString plugName = _dirtyPlugs[i];
-    if(plugName == "evalID" || plugName == "saveData")
+    if(plugName == "evalID" || plugName == "saveData" || plugName == "refFilePath")
       continue;
 
     MString portName = getPortName(plugName);
@@ -266,6 +274,32 @@ void FabricDFGBaseInterface::evaluate(){
   FabricSplice::Logging::AutoTimer timer("Maya::evaluate()");
   managePortObjectValues(false); // recreate objects if not there yet
 
+  if(!m_evalContext.isValid())
+  {
+    try
+    {
+      m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
+      m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
+      m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
+    }
+    catch(FabricCore::Exception e)
+    {
+      mayaLogErrorFunc(e.getDesc_cstr());
+    }
+  }  
+  if(m_evalContext.isValid())
+  {
+    try
+    {
+      m_evalContext.setMember("graph", FabricCore::RTVal::ConstructString(m_client, thisNode.name().asChar()));
+      m_evalContext.setMember("time", FabricCore::RTVal::ConstructFloat32(m_client, MAnimControl::currentTime().as(MTime::kSeconds)));
+      m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, mayaGetLastLoadedScene().asChar()));
+    }
+    catch(FabricCore::Exception e)
+    {
+      mayaLogErrorFunc(e.getDesc_cstr());
+    }
+  }
   // if(_spliceGraph.usesEvalContext())
   // {
   //   // setup the context
@@ -317,7 +351,7 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
 
   FabricCore::DFGExec graph = getDFGGraph();
 
-  for(int i = 0; i < graph.getExecPortCount(); ++i){
+  for(unsigned i = 0; i < graph.getExecPortCount(); ++i){
 
     FabricCore::DFGPortType portType = graph.getExecPortType(i);
     if(portType != FabricCore::DFGPortType_In){
@@ -371,7 +405,7 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
     name = name.substring(0, bracketPos-1);
 
   // filter out savedata
-  if(name == "saveData")
+  if(name == "saveData" || name == "refFilePath")
     return;
 
   // if(_spliceGraph.usesEvalContext())
@@ -395,7 +429,7 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
     }
   }
 
-  for(int i = 0; i < _dirtyPlugs.length(); ++i){
+  for(size_t i = 0; i < _dirtyPlugs.length(); ++i){
     if(_dirtyPlugs[i] == name)
       return;
   }
@@ -408,7 +442,7 @@ void FabricDFGBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affectedP
     return;
   }
 
-  for(int i = 0; i < plug.numChildren(); ++i){
+  for(size_t i = 0; i < plug.numChildren(); ++i){
     MPlug childPlug = plug.child(i);
     if(!childPlug.isNull()){
       affectedPlugs.append(childPlug);
@@ -416,7 +450,7 @@ void FabricDFGBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affectedP
     }
   }
 
-  for(int i = 0; i < plug.numElements(); ++i){
+  for(size_t i = 0; i < plug.numElements(); ++i){
     MPlug elementPlug = plug.elementByPhysicalIndex(i);
     if(!elementPlug.isNull()){
       affectedPlugs.append(elementPlug);
@@ -442,7 +476,46 @@ void FabricDFGBaseInterface::restoreFromPersistenceData(MString file, MStatus *s
     return;
 
   MPlug saveDataPlug = getSaveDataPlug();
-  restoreFromJSON(saveDataPlug.asString(), stat);
+  MString json = saveDataPlug.asString();
+  MPlug refFilePathPlug = getRefFilePathPlug();
+
+  _isReferenced = false;
+
+  MString refFilePath = refFilePathPlug.asString();
+  if(refFilePath.length() > 0)
+  {
+    MString resolvedRefFilePath = resolveEnvironmentVariables(refFilePath);
+    if(resolvedRefFilePath != refFilePath)
+      mayaLogFunc("Referenced file path '"+refFilePath+"' resolved to '"+resolvedRefFilePath+"'.");
+
+    FILE * file = fopen(resolvedRefFilePath.asChar(), "rb");
+    if(!file)
+    {
+      mayaLogErrorFunc("Referenced file path '"+refFilePath+"' cannot be opened, falling back to locally saved json.");
+    }
+    else
+    {
+      fseek( file, 0, SEEK_END );
+      int fileSize = ftell( file );
+      rewind( file );
+
+      char * buffer = (char*) malloc(fileSize + 1);
+      buffer[fileSize] = '\0';
+
+      size_t readBytes = fread(buffer, 1, fileSize, file);
+      assert(readBytes == fileSize);
+      (void)readBytes;
+
+      fclose(file);
+
+      json = buffer;
+      free(buffer);
+
+      _isReferenced = true;
+    }
+  }
+
+  restoreFromJSON(json, stat);
 }
 
 void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
@@ -479,7 +552,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
 
   MString idStr; idStr.set(m_id);
-  exec.setMetadata("maya_id", idStr.asChar(), false);
+  m_binding.setMetadata("maya_id", idStr.asChar(), false);
 
   // todo: update UI
 
@@ -489,7 +562,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   MFnDependencyNode thisNode(getThisMObject());
 
-  for(int i = 0; i < exec.getExecPortCount(); ++i){
+  for(unsigned i = 0; i < exec.getExecPortCount(); ++i){
     std::string portName = exec.getExecPortName(i);
     MString plugName = getPlugName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
@@ -511,7 +584,10 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       arrayType = "Array (Multi)";
       FTL::StrRef nativeArray = exec.getExecPortMetadata(portName.c_str(), "nativeArray");
       if(nativeArray == "true")
+      {
         arrayType = "Array (Native)";
+        graph.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false);
+      }
     }
 
     addMayaAttribute(portName.c_str(), dataType.c_str(), portType, arrayType.c_str());
@@ -570,7 +646,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     }
   }
 
-  for(int i = 0; i < exec.getExecPortCount(); ++i){
+  for(unsigned i = 0; i < exec.getExecPortCount(); ++i){
     std::string portName = exec.getExecPortName(i);
     MString plugName = getPlugName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
@@ -592,12 +668,37 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   MAYADFG_CATCH_END(stat);
 }
 
+void FabricDFGBaseInterface::setReferencedFilePath(MString filePath)
+{
+  MPlug plug = getRefFilePathPlug();
+  plug.setString(filePath);
+  if(m_binding.isValid())
+  {
+    m_binding.setMetadata("editable", "false", false);
+    _isReferenced = true;
+  }
+}
+
+void FabricDFGBaseInterface::reloadFromReferencedFilePath()
+{
+  MPlug plug = getRefFilePathPlug();
+  MString filePath = plug.asString();
+  if(filePath.length() == 0)
+    return;
+
+  _restoredFromPersistenceData = false;
+  MStatus status;
+  restoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
+}
+
 MString FabricDFGBaseInterface::getPlugName(MString portName)
 {
   if(portName == "message")
     return "dfg_message";
   else if(portName == "saveData")
     return "dfg_saveData";
+  else if(portName == "refFilePath")
+    return "dfg_refFilePath";
   return portName;
 }
 
@@ -607,6 +708,8 @@ MString FabricDFGBaseInterface::getPortName(MString plugName)
     return "message";
   else if(plugName == "dfg_saveData")
     return "saveData";
+  else if(plugName == "dfg_refFilePath")
+    return "refFilePath";
   return plugName;
 }
 
@@ -675,7 +778,7 @@ void FabricDFGBaseInterface::invalidateNode()
         collectDirtyPlug(plug);
         MPlugArray plugs;
         plug.connectedTo(plugs,true,false);
-        for(int j=0;j<plugs.length();j++)
+        for(size_t j=0;j<plugs.length();j++)
           invalidatePlug(plugs[j]);
       }
       else
@@ -684,7 +787,7 @@ void FabricDFGBaseInterface::invalidateNode()
 
         MPlugArray plugs;
         affectChildPlugs(plug, plugs);
-        for(int j=0;j<plugs.length();j++)
+        for(size_t j=0;j<plugs.length();j++)
           invalidatePlug(plugs[j]);
       }
     }
@@ -709,7 +812,7 @@ void FabricDFGBaseInterface::incrementEvalID()
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
   bool found = false;
-  for(int i = 0; i < array.length(); ++i){
+  for(size_t i = 0; i < array.length(); ++i){
     if(array[i] == plug){
       found = true;
       break;
@@ -718,7 +821,7 @@ bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &ar
   return found;
 }
 
-void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
+MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
 
   MFnDependencyNode thisNode(thisMObject);
 
@@ -728,30 +831,29 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
   collectDirtyPlug(inPlug);
 
   if(_outputsDirtied)
-    return;
+    return MS::kSuccess;
 
   if(_affectedPlugsDirty)
   {
     FabricSplice::Logging::AutoTimer timer("Maya::setDependentsDirty() _affectedPlugsDirty");
-
-    if(_affectedPlugs.length() > 0)
-      affectedPlugs.setSizeIncrement(_affectedPlugs.length());
     
     _affectedPlugs.clear();
 
     // todo: performance considerations
-    FabricCore::DFGExec graph = getDFGGraph();
-    for(unsigned int i = 0; i < graph.getExecPortCount(); i++) 
-    {
-      FabricCore::DFGPortType portType = graph.getExecPortType(i);
-      if(portType != FabricCore::DFGPortType_In){
-        MString plugName = getPlugName(graph.getExecPortName(i));
-        MPlug outPlug = thisNode.findPlug(plugName);
-        if(!outPlug.isNull()){
-          if(!plugInArray(outPlug, _affectedPlugs)){
-            _affectedPlugs.append(outPlug);
-            affectChildPlugs(outPlug, _affectedPlugs);
-          }
+    for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
+      MFnAttribute attrib(thisNode.attribute(i));
+      if(attrib.isHidden())
+        continue;
+      if(!attrib.isDynamic())
+        continue;
+      if(!attrib.isReadable())
+        continue;
+
+      MPlug outPlug = thisNode.findPlug(attrib.name());
+      if(!outPlug.isNull()){
+        if(!plugInArray(outPlug, _affectedPlugs)){
+          _affectedPlugs.append(outPlug);
+          affectChildPlugs(outPlug, _affectedPlugs);
         }
       }
     }
@@ -765,6 +867,8 @@ void FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const
   }
 
   _outputsDirtied = true;
+
+  return MS::kSuccess;
 }
 
 void FabricDFGBaseInterface::copyInternalData(MPxNode *node){
@@ -804,13 +908,32 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
 
   MString dataTypeOverride = dataType;
 
+  if(m_useOpaqueForNextAttribute)
+  {
+    dataTypeOverride = "SpliceMayaData";
+    FabricCore::DFGExec graph = m_binding.getExec();
+    graph.setExecPortMetadata(portName.asChar(), "opaque", "true", false);
+    m_useOpaqueForNextAttribute = false;
+  }
+
   // remove []
   MStringArray splitBuffer;
   dataTypeOverride.split('[', splitBuffer);
   if(splitBuffer.length()){
     dataTypeOverride = splitBuffer[0];
     if(splitBuffer.length() > 1 && arrayType.length() == 0)
-      arrayType = "Array (Multi)";
+    {
+      if(m_useNativeArrayForNextAttribute)
+      {
+        m_useNativeArrayForNextAttribute = false;
+        arrayType = "Array (Native)";
+
+        FabricCore::DFGExec graph = m_binding.getExec();
+        graph.setExecPortMetadata(portName.asChar(), "nativeArray", "true", false);
+      }
+      else
+        arrayType = "Array (Multi)";
+    }
   }
 
   if(arrayType.length() == 0)
@@ -820,6 +943,9 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   MString plugName = getPlugName(portName);
   MPlug plug = thisNode.findPlug(plugName);
   if(!plug.isNull()){
+    if(_isReferenced)
+      return plug.attribute();
+
     mayaLogFunc("Attribute '"+portName+"' already exists on node '"+thisNode.name()+"'.");
     return newAttribute;
   }
@@ -1299,7 +1425,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   }
   else
   {
-    mayaLogErrorFunc("DataType '"+dataType+"' not supported.");
+    // mayaLogErrorFunc("DataType '"+dataType+"' not supported.");
     return newAttribute;
   }
 
@@ -1389,7 +1515,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
   
     if(portType != FabricCore::DFGPortType_In)
     {
-      for(int i = 0; i < graph.getExecPortCount(); ++i) {
+      for(unsigned i = 0; i < graph.getExecPortCount(); ++i) {
         std::string otherPortName = graph.getExecPortName(i);
         if(otherPortName == portName.asChar() && portType != FabricCore::DFGPortType_IO)
           continue;
@@ -1404,7 +1530,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
     }
     else
     {
-      for(int i = 0; i < graph.getExecPortCount(); ++i) {
+      for(unsigned i = 0; i < graph.getExecPortCount(); ++i) {
         std::string otherPortName = graph.getExecPortName(i);
         if(otherPortName == portName.asChar() && portType != FabricCore::DFGPortType_IO)
           continue;
@@ -1590,3 +1716,54 @@ void FabricDFGBaseInterface::renamePlug(const MPlug &plug, MString oldName, MStr
     renamePlug(plug.child(i), oldName, newName);
   }
 }
+
+MString FabricDFGBaseInterface::resolveEnvironmentVariables(const MString & filePath)
+{
+  std::string text = filePath.asChar();
+  std::string output;
+  for(unsigned int i=0;i<text.length()-1;i++)
+  {
+    if(text[i] == '$' && text[i+1] == '{')
+    {
+      size_t closePos = text.find('}', i);
+      if(closePos != std::string::npos)
+      {
+        std::string envVarName = text.substr(i+2, closePos - i - 2);
+        const char * envVarValue = getenv(envVarName.c_str());
+        if(envVarValue != NULL)
+        {
+          output += envVarValue;
+          i = (unsigned int)closePos;
+          continue;
+        }
+      }
+    }
+    output += text[i];
+  }
+
+  if(text.length() > 0)
+  {
+    if(text[text.length()-1] != '}')
+      output += text[text.length()-1];
+  }
+  return output.c_str();
+}
+
+#if _SPLICE_MAYA_VERSION >= 2016
+MStatus FabricDFGBaseInterface::preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode)
+{
+  MStatus status;
+  if(!context.isNormal()) 
+    return MStatus::kFailure;
+
+  // [andrew 20150616] in 2016 this needs to also happen here because
+  // setDependentsDirty isn't called in Serial or Parallel eval mode
+  for (MEvaluationNodeIterator dirtyIt = evaluationNode.iterator();
+      !dirtyIt.isDone(); dirtyIt.next())
+  {
+    collectDirtyPlug(dirtyIt.plug());
+  }
+  return MS::kSuccess;
+}
+#endif
+

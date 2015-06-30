@@ -194,22 +194,15 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
 }
 
 MStatus FabricSpliceMayaDeformer::setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs){
-  MStatus stat;
-  MAYASPLICE_CATCH_BEGIN(&stat);
-
-  collectDirtyPlug(inPlug);
-
-  FabricSpliceBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
+  MStatus stat = FabricSpliceBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
 
   MFnDependencyNode thisNode(thisMObject());
   MPlug output = thisNode.findPlug("outputGeometry");
   affectedPlugs.append(output);
 
-  for(int i = 0; i < output.numElements(); ++i){
+  for(uint32_t i = 0; i < output.numElements(); ++i){
     affectedPlugs.append(output.elementByPhysicalIndex(i));
   }
-
-  MAYASPLICE_CATCH_END(&stat);
 
   return stat;
 }
@@ -222,7 +215,7 @@ void FabricSpliceMayaDeformer::invalidateNode()
   MPlug output = thisNode.findPlug("outputGeometry");
   invalidatePlug(output);
 
-  for(int i = 0; i < output.numElements(); ++i){
+  for(uint32_t i = 0; i < output.numElements(); ++i){
     MPlug plug = output.elementByPhysicalIndex(i);
     invalidatePlug(plug);
   }
@@ -277,3 +270,11 @@ MStatus FabricSpliceMayaDeformer::connectionBroken(const MPlug &plug, const MPlu
   FabricSpliceBaseInterface::onConnection(plug, otherPlug, asSrc, false);
   return MS::kUnknownParameter;
 }
+
+#if _SPLICE_MAYA_VERSION >= 2016
+MStatus FabricSpliceMayaDeformer::preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode)
+{
+  return FabricSpliceBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
+}
+#endif
+
