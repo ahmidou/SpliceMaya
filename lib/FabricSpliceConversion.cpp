@@ -69,13 +69,13 @@ double getFloat64FromRTVal(FabricCore::RTVal rtVal)
   if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT16)
     return simpleData.value.uint16;
   if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT64)
-    return simpleData.value.uint64;
+    return double(simpleData.value.uint64);
   if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT8)
     return simpleData.value.sint8;
   if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT16)
     return simpleData.value.sint16;
   if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT64)
-    return simpleData.value.sint64;
+    return double(simpleData.value.sint64);
   return DBL_MAX;
 }
 
@@ -1400,7 +1400,7 @@ void plugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal & t
       float x,y;
       curve.getTangent(i, x, y, true);
       
-      float weight = 1.0/3.0;
+      float weight = 1.0f/3.0f;
       float gradient = 0.0;
       
       // Weighted out tangents are defined as 3*(P4 - P3),
@@ -1427,7 +1427,7 @@ void plugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal & t
       float x,y;
       curve.getTangent(i, x, y, false);
       
-      float weight = 1.0/3.0;
+      float weight = 1.0f/3.0f;
       float gradient = 0.0;
       
       // Weighted out tangents are defined as 3*(P2 - P1),
