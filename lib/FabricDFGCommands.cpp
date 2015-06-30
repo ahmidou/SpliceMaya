@@ -279,7 +279,7 @@ MStatus FabricDFGRenameNodeCommand::doIt(const MArgList &args)
   MString name = argData.flagArgumentString("name", 0);
   
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->renameNode(path.asChar(), name.asChar());
+  interf->getDFGController()->renameNodeByPath(path.asChar(), name.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -507,7 +507,7 @@ MStatus FabricDFGRemoveConnectionCommand::doIt(const MArgList &args)
   dstPath.split('.', dstPathParts);
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->removeConnection(srcPath.asChar(), dstPath.asChar());
+  interf->getDFGController()->removeConnectionByPath(srcPath.asChar(), dstPath.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -622,7 +622,7 @@ MStatus FabricDFGAddPortCommand::doIt(const MArgList &args)
     portType = GraphView::PortType_IO;
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString result = interf->getDFGController()->addPort(execPath.asChar(), name.asChar(), portType, dataType.asChar()).c_str();
+  MString result = interf->getDFGController()->addPortByPath(execPath.asChar(), name.asChar(), portType, dataType.asChar()).c_str();
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -674,7 +674,7 @@ MStatus FabricDFGRemovePortCommand::doIt(const MArgList &args)
   MString name = argData.flagArgumentString("name", 0);
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->removePort(name.asChar());
+  interf->getDFGController()->removePortByName(name.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 
@@ -725,7 +725,7 @@ MStatus FabricDFGRenamePortCommand::doIt(const MArgList &args)
   MString name = argData.flagArgumentString("name", 0);
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  MString result = interf->getDFGController()->renamePort(path.asChar(), name.asChar()).c_str();
+  MString result = interf->getDFGController()->renamePortByPath(path.asChar(), name.asChar()).c_str();
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 

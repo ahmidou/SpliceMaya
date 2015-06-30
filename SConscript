@@ -37,8 +37,6 @@ env.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 
 mayaFlags = {
   'CPPPATH': [
-      MAYA_INCLUDE_DIR,
-      os.path.join(MAYA_INCLUDE_DIR, 'Qt'),
       env.Dir('lib'),
       env.Dir('plugin')
     ],
@@ -46,13 +44,15 @@ mayaFlags = {
     MAYA_LIB_DIR
   ],
 }
+if FABRIC_BUILD_OS == 'Windows':
+  mayaFlags['CPPPATH'].extend([MAYA_INCLUDE_DIR, os.path.join(MAYA_INCLUDE_DIR, 'Qt')])
+else:
+  mayaFlags['CCFLAGS'] = ['-isystem', MAYA_INCLUDE_DIR]
 
 mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
   mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4', 'QtOpenGL4'])
-  # FE-4590
-  mayaFlags['CCFLAGS'] = ['/wd4190']
 if FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
   mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
@@ -67,6 +67,7 @@ if FABRIC_BUILD_OS == 'Darwin':
     qtOpenGLLib,
     File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
     ])
+  mayaFlags['CCFLAGS'].extend(['-Wno-#warnings'])
 
 env.MergeFlags(mayaFlags)
 

@@ -440,7 +440,6 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
         {
           if(!tAttr.isArray())
           {
-            MDataHandle childHandle(handle.child(child.object()));
             args[0] = childNameRTVal;
             childRTVal = FabricSplice::constructObjectRTVal("SInt32ArrayParam", 1, &args[0]);
 
@@ -463,7 +462,6 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
         {
           if(!tAttr.isArray())
           {
-            MDataHandle childHandle(handle.child(child.object()));
             args[0] = childNameRTVal;
             childRTVal = FabricSplice::constructObjectRTVal("Float64ArrayParam", 1, &args[0]);
 
@@ -486,7 +484,6 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
         {
           if(!tAttr.isArray())
           {
-            MDataHandle childHandle(handle.child(child.object()));
             args[0] = childNameRTVal;
             childRTVal = FabricSplice::constructObjectRTVal("Vec3ArrayParam", 1, &args[0]);
 
