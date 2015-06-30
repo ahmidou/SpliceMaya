@@ -55,10 +55,10 @@ if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4', 'QtOpenGL4'])
   # FE-4590
   mayaFlags['CCFLAGS'] = ['/wd4190']
-if FABRIC_BUILD_OS == 'Linux':
+elif FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
   mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
-if FABRIC_BUILD_OS == 'Darwin':
+elif FABRIC_BUILD_OS == 'Darwin':
   mayaFlags['CPPDEFINES'] = ['OSMac_']
   qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
   qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
@@ -69,7 +69,7 @@ if FABRIC_BUILD_OS == 'Darwin':
     qtOpenGLLib,
     File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
     ])
-  mayaFlags['CCFLAGS'].extend(['-Wno-#warnings'])
+  mayaFlags['CCFLAGS'].extend(['-Wno-#warnings', '-Wno-return-type-c-linkage'])
 
 env.MergeFlags(mayaFlags)
 
