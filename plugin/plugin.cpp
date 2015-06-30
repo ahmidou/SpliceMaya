@@ -32,9 +32,9 @@
 #include "FabricSpliceHelpers.h"
 
 #ifdef _MSC_VER
-  #define MAYA_EXPORT __declspec(dllexport) MStatus _cdecl
+  #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
 #else
-  #define MAYA_EXPORT MStatus
+  #define MAYA_EXPORT extern "C" MStatus
 #endif
 
 // FE Owned IDs 0x0011AE40 - 0x0011AF3F
