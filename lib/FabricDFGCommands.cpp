@@ -915,14 +915,14 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
     }
 
     fseek( file, 0, SEEK_END );
-    int fileSize = ftell( file );
+    long fileSize = ftell( file );
     rewind( file );
 
     char * buffer = (char*) malloc(fileSize + 1);
     buffer[fileSize] = '\0';
 
     size_t readBytes = fread(buffer, 1, fileSize, file);
-    assert(readBytes == fileSize);
+    assert(readBytes == size_t(fileSize));
     (void)readBytes;
 
     fclose(file);
