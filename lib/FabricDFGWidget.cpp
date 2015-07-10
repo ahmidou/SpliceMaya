@@ -34,7 +34,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 
     DFG::DFGConfig config;
     config.graphConfig.useOpenGL = false;
-    init(m_mayaClient, manager, host, binding, exec, FabricDFGCommandStack::getStack(), false, config);
+    init(m_mayaClient, manager, host, binding, "", exec, FabricDFGCommandStack::getStack(), false, config);
   }
 
     QObject::connect(this, SIGNAL(portEditDialogCreated(FabricUI::DFG::DFGBaseDialog*)), 

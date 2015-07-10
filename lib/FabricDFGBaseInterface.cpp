@@ -121,10 +121,10 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_binding = m_host.createBindingToNewGraph();
   m_binding.setNotificationCallback(bindingNotificationCallback, this);
   FabricCore::DFGExec graph = m_binding.getExec();
-  m_router = new DFG::DFGNotificationRouter(m_binding, graph);
-  m_ctrl = new DFG::DFGController(NULL, NULL, m_client, m_manager, m_host, m_binding, graph, FabricDFGCommandStack::getStack(), false);
+  m_ctrl = new DFG::DFGController(NULL, NULL, m_client, m_manager, FabricDFGCommandStack::getStack(), false);
   m_ctrl->setRouter(m_router);
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
+  m_router = new DFG::DFGNotificationRouter(m_ctrl);
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
   MAYADFG_CATCH_END(&stat);
@@ -526,10 +526,10 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   if(m_ctrl)
     delete(m_ctrl);
 
-  m_router = new DFG::DFGNotificationRouter(m_binding, graph);
-  m_ctrl = new DFG::DFGController(NULL, NULL, m_client, m_manager, m_host, m_binding, graph, FabricDFGCommandStack::getStack(), false);
+  m_ctrl = new DFG::DFGController(NULL, NULL, m_client, m_manager, FabricDFGCommandStack::getStack(), false);
   m_ctrl->setRouter(m_router);
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
+  m_router = new DFG::DFGNotificationRouter(m_ctrl);
 
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
