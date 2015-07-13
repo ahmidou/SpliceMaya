@@ -125,6 +125,10 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
   m_router = new DFG::DFGNotificationRouter(m_ctrl);
   m_ctrl->setRouter(m_router);
+
+  FabricCore::DFGExec exec = m_binding.getExec();
+  m_ctrl->setHostBindingExec( m_host, m_binding, "", exec );
+
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
   MAYADFG_CATCH_END(&stat);
@@ -530,6 +534,9 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
   m_router = new DFG::DFGNotificationRouter(m_ctrl);
   m_ctrl->setRouter(m_router);
+
+  FabricCore::DFGExec exec = m_binding.getExec();
+  m_ctrl->setHostBindingExec( m_host, m_binding, "", exec );
 
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
