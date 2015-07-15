@@ -49,8 +49,9 @@ MCallbackId gOnSceneSaveCallbackId;
 MCallbackId gOnMayaExitCallbackId;
 MCallbackId gOnSceneImportCallbackId;
 MCallbackId gOnSceneExportCallbackId;
-MCallbackId gOnSceneReferenceCallbackId;
+MCallbackId gOnSceneCreateReferenceCallbackId;
 MCallbackId gOnSceneImportReferenceCallbackId;
+MCallbackId gOnSceneLoadReferenceCallbackId;
 #define gRenderCallbackCount 32
 MCallbackId gRenderCallbacks[gRenderCallbackCount];
 bool gRenderCallbacksSet[gRenderCallbackCount];
@@ -327,8 +328,9 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnMayaExitCallbackId = MSceneMessage::addCallback(MSceneMessage::kMayaExiting, onMayaExiting);
   gOnSceneExportCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeExport, onSceneSave);
   gOnSceneImportCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImport, onSceneLoad);
-  gOnSceneReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterLoadReference, onSceneLoad);
+  gOnSceneCreateReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterCreateReference, onSceneLoad);
   gOnSceneImportReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImportReference, onSceneLoad);
+  gOnSceneLoadReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterLoadReference, onSceneLoad);
   gRenderCallbacks[0] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel0", FabricSpliceRenderCallback::draw);
   gRenderCallbacksSet[0] = true;
   gRenderCallbacks[1] = MUiMessage::add3dViewPostRenderMsgCallback("modelPanel1", FabricSpliceRenderCallback::draw);
@@ -396,8 +398,9 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MSceneMessage::removeCallback(gOnMayaExitCallbackId);
   MSceneMessage::removeCallback(gOnSceneImportCallbackId);
   MSceneMessage::removeCallback(gOnSceneExportCallbackId);
-  MSceneMessage::removeCallback(gOnSceneReferenceCallbackId);
+  MSceneMessage::removeCallback(gOnSceneCreateReferenceCallbackId);
   MSceneMessage::removeCallback(gOnSceneImportReferenceCallbackId);
+  MSceneMessage::removeCallback(gOnSceneLoadReferenceCallbackId);
   MEventMessage::removeCallback(gOnModelPanelSetFocusCallbackId);
 
   for(unsigned int i=0;i<gRenderCallbackCount;i++)
