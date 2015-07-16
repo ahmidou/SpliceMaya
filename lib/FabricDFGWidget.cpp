@@ -25,6 +25,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
   if(interf)
   {
     s_widgets.insert(std::pair<FabricDFGWidget*, FabricDFGBaseInterface*>(this, interf));
+    interf->setWidget( this );
 
     m_mayaClient = interf->getCoreClient();
     FabricServices::ASTWrapper::KLASTManager * manager = interf->getASTManager();
@@ -45,6 +46,13 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 
 FabricDFGWidget::~FabricDFGWidget()
 {
+  FabricDFGBaseInterface *interf =
+    FabricDFGBaseInterface::getInstanceByName( m_baseInterfaceName.c_str() );
+  if ( interf )
+  {
+    if ( interf->getWidget() == this )
+      interf->setWidget( NULL );
+  }
 }
 
 QWidget * FabricDFGWidget::creator(QWidget * parent, const QString & name)
