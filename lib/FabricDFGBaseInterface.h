@@ -35,6 +35,8 @@ using namespace FabricUI;
       *statusPtr=MS::kFailure; \
   }
 
+class FabricDFGWidget;
+
 class FabricDFGBaseInterface {
 
 public:
@@ -57,9 +59,18 @@ public:
   FabricCore::DFGHost getDFGHost();
   FabricCore::DFGBinding getDFGBinding();
   FabricCore::DFGExec getDFGGraph();
-  DFG::DFGNotificationRouter * getDFGRouter();
   DFG::DFGController * getDFGController();
 
+  FabricDFGWidget *getWidget() const
+  {
+    return m_widget;
+  }
+
+  void setWidget( FabricDFGWidget *widget )
+  {
+    m_widget = widget;
+  }
+ 
   void storePersistenceData(MString file, MStatus *stat = 0);
   void restoreFromPersistenceData(MString file, MStatus *stat = 0);
   void restoreFromJSON(MString json, MStatus *stat = 0);
@@ -138,8 +149,6 @@ protected:
   FabricCore::DFGHost m_host;
   FabricCore::DFGBinding m_binding;
   FabricCore::RTVal m_evalContext;
-  DFG::DFGNotificationRouter * m_router;
-  FabricUI::DFG::DFGController * m_ctrl;
   std::map<std::string, std::string> _argTypes;
   DFGUICmdHandler_Maya m_cmdHandler;
 
@@ -153,6 +162,7 @@ private:
   static unsigned int s_maxID;
   bool m_useNativeArrayForNextAttribute;
   bool m_useOpaqueForNextAttribute;
+  FabricDFGWidget *m_widget;
 };
 
 #endif

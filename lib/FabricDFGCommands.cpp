@@ -788,7 +788,7 @@ MStatus FabricDFGSetCodeCommand::doIt(const MArgList &args)
   MString code = argData.flagArgumentString("code", 0);
 
   FabricDFGCommandStack::enableMayaCommands(false);
-  interf->getDFGController()->setCode(path.asChar(), code.asChar());
+  interf->getDFGController()->setCode(code.asChar());
   FabricDFGCommandStack::enableMayaCommands(true);
   m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
 

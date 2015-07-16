@@ -54,7 +54,6 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(){
   m_useOpaqueForNextAttribute = false;
 
   m_host = NULL;
-  m_router = NULL;
   m_id = s_maxID++;
 
   MAYADFG_CATCH_END(&stat);
@@ -67,16 +66,6 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface(){
   FabricDFGWidget::closeWidgetsForBaseInterface(this);
 
   m_evalContext = FabricCore::RTVal();
-  if(m_ctrl)
-  {
-    delete(m_ctrl);
-    m_ctrl = NULL;
-  }
-  if(m_router)
-  {
-    delete(m_router);
-    m_router = NULL;
-  }
   if(m_host)
   {
     m_host = FabricCore::DFGHost();
@@ -120,25 +109,11 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_host = m_client.getDFGHost();
   m_binding = m_host.createBindingToNewGraph();
   m_binding.setNotificationCallback(bindingNotificationCallback, this);
-  FTL::StrRef execPath;
   FabricCore::DFGExec exec = m_binding.getExec();
-  m_router = new DFG::DFGNotificationRouter(m_binding, execPath, exec);
-  m_ctrl = new DFG::DFGController(
-    NULL,
-    m_client,
-    m_manager,
-    m_host,
-    m_binding,
-    &m_cmdHandler,
-    FabricDFGCommandStack::getStack(),
-    false
-    );
-  m_ctrl->setRouter(m_router);
-  m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
+
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
   MAYADFG_CATCH_END(&stat);
-
 }
 
 FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByName(const std::string & name) {
@@ -198,16 +173,6 @@ FabricCore::DFGHost FabricDFGBaseInterface::getDFGHost()
 FabricCore::DFGBinding FabricDFGBaseInterface::getDFGBinding()
 {
   return m_binding;
-}
-
-DFG::DFGNotificationRouter * FabricDFGBaseInterface::getDFGRouter()
-{
-  return m_router;
-}
-
-DFG::DFGController * FabricDFGBaseInterface::getDFGController()
-{
-  return m_ctrl;
 }
 
 FabricCore::DFGExec FabricDFGBaseInterface::getDFGGraph()
@@ -531,25 +496,6 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   FTL::StrRef execPath;
   FabricCore::DFGExec exec = m_binding.getExec();
-
-  if(m_router)
-    delete(m_router);
-  if(m_ctrl)
-    delete(m_ctrl);
-
-  m_router = new DFG::DFGNotificationRouter( m_binding, execPath, exec );
-  m_ctrl = new DFG::DFGController(
-    NULL,
-    m_client,
-    m_manager,
-    m_host,
-    m_binding,
-    &m_cmdHandler,
-    FabricDFGCommandStack::getStack(),
-    false
-    );
-  m_ctrl->setRouter(m_router);
-  m_ctrl->setLogFunc(&FabricDFGWidget::mayaLog);
 
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
@@ -1767,3 +1713,9 @@ MStatus FabricDFGBaseInterface::preEvaluation(MObject thisMObject, const MDGCont
 }
 #endif
 
+DFG::DFGController * FabricDFGBaseInterface::getDFGController()
+{
+  if ( m_widget )
+    return m_widget->getDfgWidget()->getDFGController();
+  return NULL;
+}
