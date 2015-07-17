@@ -1527,6 +1527,17 @@ void plugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
 
 void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
   try{
+
+    FabricCore::Variant option = port.getOption("disableSpliceMayaDataConversion");
+    if(!option.isNull())
+    {
+      if(option.getBoolean())
+      {
+        // this is an unconnected opaque port, exit early
+        return;
+      }
+    }
+
     if(!plug.isArray()){
       MDataHandle handle = data.inputValue(plug);
       MObject spliceMayaDataObj = handle.data();

@@ -836,12 +836,17 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
   }
   else if(dataTypeOverride == "SpliceMayaData"){
     
+    FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
     if(arrayType == "Single Value")
     {
-      if(_spliceGraph.getDGPort(portName.asChar()).isValid()){
+      if(port.isValid()){
         newAttribute = tAttr.create(portName, portName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
+
+        // disable input conversion by default
+        // only enable it again if there is a connection to the port
+        port.setOption("disableSpliceMayaDataConversion", FabricCore::Variant::CreateBoolean(true));
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
@@ -850,12 +855,16 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
     }
     else
     {
-      if(_spliceGraph.getDGPort(portName.asChar()).isValid()){
+      if(port.isValid()){
         newAttribute = tAttr.create(portName, portName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
         tAttr.setArray(true);
         tAttr.setUsesArrayDataBuilder(true);
+
+        // disable input conversion by default
+        // only enable it again if there is a connection to the port
+        port.setOption("disableSpliceMayaDataConversion", FabricCore::Variant::CreateBoolean(true));
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
@@ -1737,6 +1746,34 @@ void FabricSpliceBaseInterface::onNodeRemoved(MObject &node, void *clientData)
 void FabricSpliceBaseInterface::onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made)
 {
   _affectedPlugsDirty = true;
+
+  if(!asSrc)
+  {
+    MString plugName = plug.name();
+
+    if(plugName.index('.') > -1)
+    {
+      plugName = plugName.substring(plugName.index('.')+1, plugName.length());
+      if(plugName.index('[') > -1)
+       plugName = plugName.substring(0, plugName.index('[')-1);
+    }
+
+    for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
+    {
+      if(mSpliceMayaDataOverride[j] == plugName.asChar())
+      {
+        FabricSplice::DGPort port = getPort(plugName.asChar());
+        if(port.isValid())
+        {
+          // if there are no connections, 
+          // ensure to disable the conversion
+          port.setOption("disableSpliceMayaDataConversion", FabricCore::Variant::CreateBoolean(!made));
+        }
+        break;
+      }
+    }
+
+  }
 }
 
 void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
