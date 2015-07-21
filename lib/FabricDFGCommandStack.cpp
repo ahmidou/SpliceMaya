@@ -9,7 +9,6 @@
 #include <DFG/DFGUICmd_QUndo/DFGSetArgCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGSetCodeCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGSetNodeCacheRuleCommand.h>
-#include <DFG/DFGUICmd_QUndo/DFGCopyCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGImplodeNodesCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGExplodeNodeCommand.h>
 
@@ -325,7 +324,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     addCommandToIgnore(commandName.asChar(), id, undoable);
     if(s_mayaCommandsEnabled)
     {
-      DFG::DFGCopyCommand * cmd = (DFG::DFGCopyCommand*)genericCommand;
+      DFG::DFGCommand * cmd = 0; //(DFG::DFGCopyCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
   
