@@ -7,11 +7,9 @@
 #include <DFG/DFGUICmd_QUndo/DFGRemovePortCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGRenamePortCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGSetArgCommand.h>
-#include <DFG/DFGUICmd_QUndo/DFGSetDefaultValueCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGSetCodeCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGSetNodeCacheRuleCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGCopyCommand.h>
-#include <DFG/DFGUICmd_QUndo/DFGPasteCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGImplodeNodesCommand.h>
 #include <DFG/DFGUICmd_QUndo/DFGExplodeNodeCommand.h>
 
@@ -273,7 +271,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     addCommandToIgnore(commandName.asChar(), id, undoable);
     if(s_mayaCommandsEnabled)
     {
-      DFG::DFGSetDefaultValueCommand * cmd = (DFG::DFGSetDefaultValueCommand*)genericCommand;
+      DFG::DFGCommand * cmd = 0; //(DFG::DFGSetDefaultValueCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
       MString path = cmd->getPath();
@@ -350,7 +348,7 @@ bool FabricDFGCommandStack::logMayaCommand(FabricServices::Commands::Command * g
     addCommandToIgnore(commandName.asChar(), id, undoable);
     if(s_mayaCommandsEnabled)
     {
-      DFG::DFGPasteCommand * cmd = (DFG::DFGPasteCommand*)genericCommand;
+      DFG::DFGCommand * cmd = 0; //(DFG::DFGPasteCommand*)genericCommand;
       interf = getInterfaceFromCommand(cmd);
       MString nodeName = getNodeNameFromCommand(cmd);
   
