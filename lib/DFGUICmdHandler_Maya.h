@@ -15,86 +15,243 @@ public:
 
 protected:
 
-  virtual void dfgDoRemoveNodesImpl(
+  virtual void dfgDoRemoveNodes(
     FTL::CStrRef desc,
-    FabricCore::DFGBinding &binding,
+    FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
-    FabricCore::DFGExec &exec,
-    FTL::ArrayRef<FTL::StrRef> nodeNames
+    FabricCore::DFGExec const &exec,
+    FTL::ArrayRef<FTL::CStrRef> nodeNames
     );
-  virtual void dfgDoConnectImpl(
+
+  virtual void dfgDoConnect(
     FTL::CStrRef desc,
-    FabricCore::DFGBinding &binding,
+    FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
-    FabricCore::DFGExec &exec,
-    FTL::StrRef srcPath, 
-    FTL::StrRef dstPath
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef srcPath, 
+    FTL::CStrRef dstPath
     );
-  virtual void dfgDoDisconnectImpl(
+
+  virtual void dfgDoDisconnect(
     FTL::CStrRef desc,
-    FabricCore::DFGBinding &binding,
+    FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
-    FabricCore::DFGExec &exec,
-    FTL::StrRef srcPath, 
-    FTL::StrRef dstPath
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef srcPath, 
+    FTL::CStrRef dstPath
     );
-  virtual std::string dfgDoAddInstWithEmptyGraphImpl(
+
+  virtual std::string dfgDoAddInstWithEmptyGraph(
     FTL::CStrRef desc,
-    FabricCore::DFGBinding &binding,
+    FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
-    FabricCore::DFGExec &exec,
+    FabricCore::DFGExec const &exec,
     FTL::CStrRef title,
     QPointF pos
     );
-  virtual std::string dfgDoAddInstWithEmptyFuncImpl(
+
+  virtual std::string dfgDoAddInstWithEmptyFunc(
     FTL::CStrRef desc,
-    FabricCore::DFGBinding &binding,
+    FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
-    FabricCore::DFGExec &exec,
+    FabricCore::DFGExec const &exec,
     FTL::CStrRef title,
     FTL::CStrRef initialCode,
     QPointF pos
     );
-  virtual std::string dfgDoAddInstFromPresetImpl(
+
+  virtual std::string dfgDoAddInstFromPreset(
     FTL::CStrRef desc,
-    FabricCore::DFGBinding &binding,
+    FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
-    FabricCore::DFGExec &exec,
+    FabricCore::DFGExec const &exec,
     FTL::CStrRef presetPath,
     QPointF pos
     );
-  virtual std::string dfgDoAddVarImpl(
+
+  virtual std::string dfgDoAddVar(
     FTL::CStrRef desc,
-    FabricCore::DFGBinding &binding,
+    FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
-    FabricCore::DFGExec &exec,
+    FabricCore::DFGExec const &exec,
     FTL::CStrRef desiredNodeName,
-    FTL::StrRef dataType,
-    FTL::StrRef extDep,
+    FTL::CStrRef dataType,
+    FTL::CStrRef extDep,
     QPointF pos
     );
-  virtual std::string dfgDoAddGetImpl(
+
+  virtual std::string dfgDoAddGet(
     FTL::CStrRef desc,
-    FabricCore::DFGBinding &binding,
+    FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
-    FabricCore::DFGExec &exec,
+    FabricCore::DFGExec const &exec,
     FTL::CStrRef desiredNodeName,
-    FTL::StrRef varPath,
+    FTL::CStrRef varPath,
     QPointF pos
     );
-  virtual std::string dfgDoAddSetImpl(
+
+  virtual std::string dfgDoAddSet(
     FTL::CStrRef desc,
-    FabricCore::DFGBinding &binding,
+    FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
-    FabricCore::DFGExec &exec,
+    FabricCore::DFGExec const &exec,
     FTL::CStrRef desiredNodeName,
-    FTL::StrRef varPath,
+    FTL::CStrRef varPath,
     QPointF pos
+    );
+
+  virtual std::string dfgDoAddPort(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef desiredPortName,
+    FabricCore::DFGPortType portType,
+    FTL::CStrRef typeSpec,
+    FTL::CStrRef portToConnect
+    );
+
+  virtual void dfgDoRemovePort(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef portName
+    );
+
+  virtual void dfgDoMoveNodes(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::ArrayRef<FTL::CStrRef> nodeNames,
+    FTL::ArrayRef<QPointF> newTopLeftPoss
+    );
+
+  virtual void dfgDoResizeBackDropNode(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef backDropNodeName,
+    QPointF newTopLeftPos,
+    QSizeF newSize
+    );
+
+  virtual std::string dfgDoImplodeNodes(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef desiredNodeName,
+    FTL::ArrayRef<FTL::CStrRef> nodeNames
+    );
+
+  virtual std::vector<std::string> dfgDoExplodeNode(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef nodeName
+    );
+
+  virtual void dfgDoAddBackDrop(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef title,
+    QPointF pos
+    );
+
+  virtual void dfgDoSetNodeTitle(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef nodeName,
+    FTL::CStrRef newTitle
+    );
+
+  virtual void dfgDoSetNodeComment(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef nodeName,
+    FTL::CStrRef comment
+    );
+
+  virtual void dfgDoSetNodeCommentExpanded(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef nodeName,
+    bool expanded
+    );
+
+  virtual void dfgDoSetCode(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef code
+    );
+
+  virtual std::string dfgDoRenameExecPort(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef oldName,
+    FTL::CStrRef desiredNewName
+    );
+
+  virtual std::vector<std::string> dfgDoPaste(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef json,
+    QPointF cursorPos
+    );
+
+  virtual void dfgDoSetArgType(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef argName,
+    FTL::CStrRef typeName
+    );
+
+  virtual void dfgDoSetArgValue(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef argName,
+    FabricCore::RTVal const &value
+    );
+
+  virtual void dfgDoSetDefaultValue(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef portPath,
+    FabricCore::RTVal const &value
+    );
+
+  virtual void dfgDoSetRefVarPath(
+    FTL::CStrRef desc,
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::CStrRef refName,
+    FTL::CStrRef varPath
     );
 
 protected:
     
-  MString getNodeNameFromBinding( FabricCore::DFGBinding &binding );
+  MString getNodeNameFromBinding( FabricCore::DFGBinding const &binding );
 };
 
 #endif // __UI_DFG_DFGUICmdHandler_Maya__

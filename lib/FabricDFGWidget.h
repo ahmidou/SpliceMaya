@@ -16,8 +16,6 @@
 
 #include <FabricSplice.h>
 
-#include "FabricDFGCommandStack.h"
-
 using namespace FabricServices;
 using namespace FabricUI;
 

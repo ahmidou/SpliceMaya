@@ -47,17 +47,18 @@ static void EncodeMELString(
   ss << '"';
 }
 
-std::string DFGUICmdHandler_Maya::dfgDoAddInstFromPresetImpl(
+std::string DFGUICmdHandler_Maya::dfgDoAddInstFromPreset(
   FTL::CStrRef desc,
-  FabricCore::DFGBinding &binding,
+  FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
-  FabricCore::DFGExec &exec,
+  FabricCore::DFGExec const &exec,
   FTL::CStrRef presetPath,
   QPointF pos
   )
 {
   std::stringstream cmd;
-  cmd << "canvasAddInstFromPreset -mayaNode ";
+  cmd << CmdName_AddInstFromPreset();
+  cmd << " -mayaNode ";
   EncodeMELString( getNodeNameFromBinding( binding ).asChar(), cmd );
   cmd << " -execPath ";
   EncodeMELString( execPath, cmd );
@@ -79,19 +80,20 @@ std::string DFGUICmdHandler_Maya::dfgDoAddInstFromPresetImpl(
   return result.asChar();
 }
 
-std::string DFGUICmdHandler_Maya::dfgDoAddVarImpl(
+std::string DFGUICmdHandler_Maya::dfgDoAddVar(
   FTL::CStrRef desc,
-  FabricCore::DFGBinding &binding,
+  FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
-  FabricCore::DFGExec &exec,
+  FabricCore::DFGExec const &exec,
   FTL::CStrRef desiredNodeName,
-  FTL::StrRef dataType,
-  FTL::StrRef extDep,
+  FTL::CStrRef dataType,
+  FTL::CStrRef extDep,
   QPointF pos
   )
 {
   std::stringstream cmd;
-  cmd << "canvasAddVar -mayaNode ";
+  cmd << CmdName_AddVar();
+  cmd << " -mayaNode ";
   EncodeMELString( getNodeNameFromBinding( binding ).asChar(), cmd );
   cmd << " -execPath ";
   EncodeMELString( execPath, cmd );
@@ -117,18 +119,19 @@ std::string DFGUICmdHandler_Maya::dfgDoAddVarImpl(
   return result.asChar();
 }
 
-std::string DFGUICmdHandler_Maya::dfgDoAddGetImpl(
+std::string DFGUICmdHandler_Maya::dfgDoAddGet(
   FTL::CStrRef desc,
-  FabricCore::DFGBinding &binding,
+  FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
-  FabricCore::DFGExec &exec,
+  FabricCore::DFGExec const &exec,
   FTL::CStrRef desiredNodeName,
-  FTL::StrRef varPath,
+  FTL::CStrRef varPath,
   QPointF pos
   )
 {
   std::stringstream cmd;
-  cmd << "canvasAddGet -mayaNode ";
+  cmd << CmdName_AddGet();
+  cmd << " -mayaNode ";
   EncodeMELString( getNodeNameFromBinding( binding ).asChar(), cmd );
   cmd << " -execPath ";
   EncodeMELString( execPath, cmd );
@@ -152,18 +155,19 @@ std::string DFGUICmdHandler_Maya::dfgDoAddGetImpl(
   return result.asChar();
 }
 
-std::string DFGUICmdHandler_Maya::dfgDoAddSetImpl(
+std::string DFGUICmdHandler_Maya::dfgDoAddSet(
   FTL::CStrRef desc,
-  FabricCore::DFGBinding &binding,
+  FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
-  FabricCore::DFGExec &exec,
+  FabricCore::DFGExec const &exec,
   FTL::CStrRef desiredNodeName,
-  FTL::StrRef varPath,
+  FTL::CStrRef varPath,
   QPointF pos
   )
 {
   std::stringstream cmd;
-  cmd << "canvasAddSet -mayaNode ";
+  cmd << CmdName_AddSet();
+  cmd << " -mayaNode ";
   EncodeMELString( getNodeNameFromBinding( binding ).asChar(), cmd );
   cmd << " -execPath ";
   EncodeMELString( execPath, cmd );
@@ -187,17 +191,18 @@ std::string DFGUICmdHandler_Maya::dfgDoAddSetImpl(
   return result.asChar();
 }
 
-std::string DFGUICmdHandler_Maya::dfgDoAddInstWithEmptyGraphImpl(
+std::string DFGUICmdHandler_Maya::dfgDoAddInstWithEmptyGraph(
   FTL::CStrRef desc,
-  FabricCore::DFGBinding &binding,
+  FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
-  FabricCore::DFGExec &exec,
+  FabricCore::DFGExec const &exec,
   FTL::CStrRef title,
   QPointF pos
   )
 {
   std::stringstream cmd;
-  cmd << "canvasAddInstWithEmptyGraph -mayaNode ";
+  cmd << CmdName_AddInstWithEmptyGraph();
+  cmd << " -mayaNode ";
   EncodeMELString( getNodeNameFromBinding( binding ).asChar(), cmd );
   cmd << " -execPath ";
   EncodeMELString( execPath, cmd );
@@ -219,18 +224,19 @@ std::string DFGUICmdHandler_Maya::dfgDoAddInstWithEmptyGraphImpl(
   return result.asChar();
 }
 
-std::string DFGUICmdHandler_Maya::dfgDoAddInstWithEmptyFuncImpl(
+std::string DFGUICmdHandler_Maya::dfgDoAddInstWithEmptyFunc(
   FTL::CStrRef desc,
-  FabricCore::DFGBinding &binding,
+  FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
-  FabricCore::DFGExec &exec,
+  FabricCore::DFGExec const &exec,
   FTL::CStrRef title,
   FTL::CStrRef initialCode,
   QPointF pos
   )
 {
   std::stringstream cmd;
-  cmd << "canvasAddInstWithEmptyFunc -mayaNode ";
+  cmd << CmdName_AddInstWithEmptyFunc();
+  cmd << " -mayaNode ";
   EncodeMELString( getNodeNameFromBinding( binding ).asChar(), cmd );
   cmd << " -execPath ";
   EncodeMELString( execPath, cmd );
@@ -254,16 +260,17 @@ std::string DFGUICmdHandler_Maya::dfgDoAddInstWithEmptyFuncImpl(
   return result.asChar();
 }
 
-void DFGUICmdHandler_Maya::dfgDoRemoveNodesImpl(
+void DFGUICmdHandler_Maya::dfgDoRemoveNodes(
   FTL::CStrRef desc,
-  FabricCore::DFGBinding &binding,
+  FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
-  FabricCore::DFGExec &exec,
-  FTL::ArrayRef<FTL::StrRef> nodeNames
+  FabricCore::DFGExec const &exec,
+  FTL::ArrayRef<FTL::CStrRef> nodeNames
   )
 {
   std::stringstream cmd;
-  cmd << "canvasRemoveNodes -mayaNode ";
+  cmd << CmdName_RemoveNodes();
+  cmd << " -mayaNode ";
   EncodeMELString( getNodeNameFromBinding( binding ).asChar(), cmd );
   cmd << " -execPath ";
   EncodeMELString( execPath, cmd );
@@ -283,17 +290,18 @@ void DFGUICmdHandler_Maya::dfgDoRemoveNodesImpl(
     );
 }
 
-void DFGUICmdHandler_Maya::dfgDoConnectImpl(
+void DFGUICmdHandler_Maya::dfgDoConnect(
   FTL::CStrRef desc,
-  FabricCore::DFGBinding &binding,
+  FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
-  FabricCore::DFGExec &exec,
-  FTL::StrRef srcPort, 
-  FTL::StrRef dstPort
+  FabricCore::DFGExec const &exec,
+  FTL::CStrRef srcPort, 
+  FTL::CStrRef dstPort
   )
 {
   std::stringstream cmd;
-  cmd << "canvasConnect -mayaNode ";
+  cmd << CmdName_Connect();
+  cmd << " -mayaNode ";
   EncodeMELString( getNodeNameFromBinding( binding ).asChar(), cmd );
   cmd << " -execPath ";
   EncodeMELString( execPath, cmd );
@@ -310,17 +318,18 @@ void DFGUICmdHandler_Maya::dfgDoConnectImpl(
     );
  }
 
-void DFGUICmdHandler_Maya::dfgDoDisconnectImpl(
+void DFGUICmdHandler_Maya::dfgDoDisconnect(
   FTL::CStrRef desc,
-  FabricCore::DFGBinding &binding,
+  FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
-  FabricCore::DFGExec &exec,
-  FTL::StrRef srcPort, 
-  FTL::StrRef dstPort
+  FabricCore::DFGExec const &exec,
+  FTL::CStrRef srcPort, 
+  FTL::CStrRef dstPort
   )
 {
   std::stringstream cmd;
-  cmd << "canvasDisconnect -mayaNode ";
+  cmd << CmdName_Disconnect();
+  cmd << " -mayaNode ";
   EncodeMELString( getNodeNameFromBinding( binding ).asChar(), cmd );
   cmd << " -execPath ";
   EncodeMELString( execPath, cmd );
@@ -338,7 +347,7 @@ void DFGUICmdHandler_Maya::dfgDoDisconnectImpl(
 }
 
 MString DFGUICmdHandler_Maya::getNodeNameFromBinding(
-  FabricCore::DFGBinding &binding
+  FabricCore::DFGBinding const &binding
   )
 {
   MString interfIdStr = binding.getExec().getMetadata("maya_id");

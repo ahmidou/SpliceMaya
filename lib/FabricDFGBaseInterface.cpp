@@ -4,7 +4,6 @@
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceMayaData.h"
 #include "FabricDFGWidget.h"
-#include "FabricDFGCommandStack.h"
 #include "FabricSpliceHelpers.h"
 
 #include <string>
@@ -532,7 +531,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       if(nativeArray == "true")
       {
         arrayType = "Array (Native)";
-        graph.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false);
+        exec.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false);
       }
     }
 
