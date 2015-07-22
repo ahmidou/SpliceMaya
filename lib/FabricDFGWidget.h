@@ -3,6 +3,7 @@
 #define _FABRICDFGWIDGET_H_
 
 #include "Foundation.h"
+#include "DFGUICmdHandler_Maya.h"
 #include <QtGui/QWidget>
 #include <QtGui/QSplitter>
 
@@ -45,6 +46,7 @@ private slots:
 private:
 
   FabricCore::Client m_mayaClient;
+  DFGUICmdHandler_Maya m_cmdHandler;
   std::string m_baseInterfaceName;
   static std::string s_currentUINodeName;
   static std::map<FabricDFGWidget*, FabricDFGBaseInterface*> s_widgets;

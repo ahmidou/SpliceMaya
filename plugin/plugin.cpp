@@ -92,7 +92,6 @@ void onSceneSave(void *userData){
 void onSceneNew(void *userData){
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
-  FabricDFGCommandStack::getStack()->clear();
   FabricSplice::DestroyClient();
 }
 
@@ -376,37 +375,73 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
   plugin.registerNode("dfgMayaNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
 
-  plugin.registerCommand("canvasAddInstFromPreset", FabricDFGAddInstFromPresetCommand::creator, FabricDFGAddInstFromPresetCommand::newSyntax);
-  plugin.registerCommand("canvasAddInstWithEmptyFunc", FabricDFGAddInstWithEmptyFuncCommand::creator, FabricDFGAddInstWithEmptyFuncCommand::newSyntax);
-  plugin.registerCommand("canvasAddInstWithEmptyGraph", FabricDFGAddInstWithEmptyGraphCommand::creator, FabricDFGAddInstWithEmptyGraphCommand::newSyntax);
-  plugin.registerCommand("canvasAddVar", FabricDFGAddVarCommand::creator, FabricDFGAddVarCommand::newSyntax);
-  plugin.registerCommand("canvasAddGet", FabricDFGAddGetCommand::creator, FabricDFGAddGetCommand::newSyntax);
-  plugin.registerCommand("canvasAddSet", FabricDFGAddSetCommand::creator, FabricDFGAddSetCommand::newSyntax);
-  plugin.registerCommand("canvasConnect", FabricDFGConnectCommand::creator, FabricDFGConnectCommand::newSyntax);
-  plugin.registerCommand("canvasDisconnect", FabricDFGDisconnectCommand::creator, FabricDFGDisconnectCommand::newSyntax);
-  plugin.registerCommand("canvasRemoveNodes", FabricDFGRemoveNodesCommand::creator, FabricDFGRemoveNodesCommand::newSyntax);
-  plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
-  plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
-  plugin.registerCommand("dfgRenameNode", FabricDFGRenameNodeCommand::creator, FabricDFGRenameNodeCommand::newSyntax);
-  plugin.registerCommand("dfgAddPort", FabricDFGAddPortCommand::creator, FabricDFGAddPortCommand::newSyntax);
-  plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);
-  plugin.registerCommand("dfgRenamePort", FabricDFGRenamePortCommand::creator, FabricDFGRenamePortCommand::newSyntax);
-  plugin.registerCommand("dfgSetArg", FabricDFGSetArgCommand::creator, FabricDFGSetArgCommand::newSyntax);
-  plugin.registerCommand("dfgSetDefaultValue", FabricDFGSetDefaultValueCommand::creator, FabricDFGSetDefaultValueCommand::newSyntax);
-  plugin.registerCommand("dfgSetCode", FabricDFGSetCodeCommand::creator, FabricDFGSetCodeCommand::newSyntax);
-  plugin.registerCommand("dfgGetDesc", FabricDFGGetDescCommand::creator, FabricDFGGetDescCommand::newSyntax);
-  plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
-  plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
-  plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
-  plugin.registerCommand("dfgSetNodeCacheRule", FabricDFGSetNodeCacheRuleCommand::creator, FabricDFGSetNodeCacheRuleCommand::newSyntax);
-  plugin.registerCommand("dfgCopy", FabricDFGCopyCommand::creator, FabricDFGCopyCommand::newSyntax);
-  plugin.registerCommand("dfgPaste", FabricDFGPasteCommand::creator, FabricDFGPasteCommand::newSyntax);
-  plugin.registerCommand("dfgImplodeNodes", FabricDFGImplodeNodesCommand::creator, FabricDFGImplodeNodesCommand::newSyntax);
-  plugin.registerCommand("dfgExplodeNode", FabricDFGExplodeNodeCommand::creator, FabricDFGExplodeNodeCommand::newSyntax);
-  plugin.registerCommand("dfgAddVar", FabricDFGAddVarCommand::creator, FabricDFGAddVarCommand::newSyntax);
-  plugin.registerCommand("dfgAddGet", FabricDFGAddGetCommand::creator, FabricDFGAddGetCommand::newSyntax);
-  plugin.registerCommand("dfgAddSet", FabricDFGAddSetCommand::creator, FabricDFGAddSetCommand::newSyntax);
-  plugin.registerCommand("dfgSetRefVarPath", FabricDFGSetRefVarPathCommand::creator, FabricDFGSetRefVarPathCommand::newSyntax);
+  plugin.registerCommand(
+    DFGUICmdHandler_Maya::CmdName_AddInstFromPreset().c_str(),
+    FabricDFGAddInstFromPresetCommand::creator,
+    FabricDFGAddInstFromPresetCommand::newSyntax
+    );
+  plugin.registerCommand(
+    DFGUICmdHandler_Maya::CmdName_AddInstWithEmptyFunc().c_str(),
+    FabricDFGAddInstWithEmptyFuncCommand::creator,
+    FabricDFGAddInstWithEmptyFuncCommand::newSyntax
+    );
+  plugin.registerCommand(
+    DFGUICmdHandler_Maya::CmdName_AddInstWithEmptyGraph().c_str(),
+    FabricDFGAddInstWithEmptyGraphCommand::creator,
+    FabricDFGAddInstWithEmptyGraphCommand::newSyntax
+    );
+  plugin.registerCommand(
+    DFGUICmdHandler_Maya::CmdName_AddVar().c_str(),
+    FabricDFGAddVarCommand::creator,
+    FabricDFGAddVarCommand::newSyntax
+    );
+  plugin.registerCommand(
+    DFGUICmdHandler_Maya::CmdName_AddGet().c_str(),
+    FabricDFGAddGetCommand::creator,
+    FabricDFGAddGetCommand::newSyntax
+    );
+  plugin.registerCommand(
+    DFGUICmdHandler_Maya::CmdName_AddSet().c_str(),
+    FabricDFGAddSetCommand::creator,
+    FabricDFGAddSetCommand::newSyntax
+    );
+  plugin.registerCommand(
+    DFGUICmdHandler_Maya::CmdName_Connect().c_str(),
+    FabricDFGConnectCommand::creator,
+    FabricDFGConnectCommand::newSyntax
+    );
+  plugin.registerCommand(
+    DFGUICmdHandler_Maya::CmdName_Disconnect().c_str(),
+    FabricDFGDisconnectCommand::creator,
+    FabricDFGDisconnectCommand::newSyntax
+    );
+  plugin.registerCommand(
+    DFGUICmdHandler_Maya::CmdName_RemoveNodes().c_str(),
+    FabricDFGRemoveNodesCommand::creator,
+    FabricDFGRemoveNodesCommand::newSyntax
+    );
+  // plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
+  // plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
+  // plugin.registerCommand("dfgRenameNode", FabricDFGRenameNodeCommand::creator, FabricDFGRenameNodeCommand::newSyntax);
+  // plugin.registerCommand("dfgAddPort", FabricDFGAddPortCommand::creator, FabricDFGAddPortCommand::newSyntax);
+  // plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);
+  // plugin.registerCommand("dfgRenamePort", FabricDFGRenamePortCommand::creator, FabricDFGRenamePortCommand::newSyntax);
+  // plugin.registerCommand("dfgSetArg", FabricDFGSetArgCommand::creator, FabricDFGSetArgCommand::newSyntax);
+  // plugin.registerCommand("dfgSetDefaultValue", FabricDFGSetDefaultValueCommand::creator, FabricDFGSetDefaultValueCommand::newSyntax);
+  // plugin.registerCommand("dfgSetCode", FabricDFGSetCodeCommand::creator, FabricDFGSetCodeCommand::newSyntax);
+  // plugin.registerCommand("dfgGetDesc", FabricDFGGetDescCommand::creator, FabricDFGGetDescCommand::newSyntax);
+  // plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
+  // plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
+  // plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
+  // plugin.registerCommand("dfgSetNodeCacheRule", FabricDFGSetNodeCacheRuleCommand::creator, FabricDFGSetNodeCacheRuleCommand::newSyntax);
+  // plugin.registerCommand("dfgCopy", FabricDFGCopyCommand::creator, FabricDFGCopyCommand::newSyntax);
+  // plugin.registerCommand("dfgPaste", FabricDFGPasteCommand::creator, FabricDFGPasteCommand::newSyntax);
+  // plugin.registerCommand("dfgImplodeNodes", FabricDFGImplodeNodesCommand::creator, FabricDFGImplodeNodesCommand::newSyntax);
+  // plugin.registerCommand("dfgExplodeNode", FabricDFGExplodeNodeCommand::creator, FabricDFGExplodeNodeCommand::newSyntax);
+  // plugin.registerCommand("dfgAddVar", FabricDFGAddVarCommand::creator, FabricDFGAddVarCommand::newSyntax);
+  // plugin.registerCommand("dfgAddGet", FabricDFGAddGetCommand::creator, FabricDFGAddGetCommand::newSyntax);
+  // plugin.registerCommand("dfgAddSet", FabricDFGAddSetCommand::creator, FabricDFGAddSetCommand::newSyntax);
+  // plugin.registerCommand("dfgSetRefVarPath", FabricDFGSetRefVarPathCommand::creator, FabricDFGSetRefVarPathCommand::newSyntax);
 
   MString pluginPath = plugin.loadPath();
   MString lastFolder("plug-ins");

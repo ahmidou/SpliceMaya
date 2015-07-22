@@ -43,7 +43,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
       binding,
       "",
       exec,
-      FabricDFGCommandStack::getStack(),
+      &m_cmdHandler,
       false,
       config
       );
@@ -133,7 +133,7 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
   bool enabled = true;
   if(title.length() > 0)
   {
-    FabricCore::DFGExec exec = controller->getCoreDFGExec();
+    FabricCore::DFGExec &exec = controller->getExec();
     QString nativeSetting = exec.getExecPortMetadata(title.toUtf8().constData(), "nativeArray");
     if(nativeSetting == "true")
       native = true;

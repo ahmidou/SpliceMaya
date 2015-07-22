@@ -144,7 +144,7 @@ MStatus FabricNewDFGBaseCommand::redoIt()
 void FabricDFGExecCommand::addSyntax( MSyntax &syntax )
 {
   Parent::addSyntax( syntax );
-  syntax.addFlag( "-ep", "-execPath", MSyntax::kString );
+  syntax.addFlag( "-e", "-exec", MSyntax::kString );
 }
 
 MStatus FabricDFGExecCommand::invoke(
@@ -152,12 +152,12 @@ MStatus FabricDFGExecCommand::invoke(
   FabricCore::DFGBinding &binding
   )
 {
-  if ( !argParser.isFlagSet( "execPath" ) )
+  if ( !argParser.isFlagSet( "exec" ) )
   {
-    logError( "-execPath not provided." );
+    logError( "-exec not provided." );
     return MS::kFailure;
   }
-  MString execPath = argParser.flagArgumentString( "execPath", 0 );
+  MString execPath = argParser.flagArgumentString( "exec", 0 );
   FabricCore::DFGExec exec =
     binding.getExec().getSubExec( execPath.asChar() );
   return invoke( argParser, exec );
@@ -204,7 +204,7 @@ MSyntax FabricDFGAddInstFromPresetCommand::newSyntax()
 {
   MSyntax syntax;
   Parent::addSyntax( syntax );
-  syntax.addFlag("-pp", "-presetPath", MSyntax::kString);
+  syntax.addFlag("-p", "-preset", MSyntax::kString);
   return syntax;
 }
 
@@ -213,12 +213,12 @@ MStatus FabricDFGAddInstFromPresetCommand::invoke(
   FabricCore::DFGExec &exec
   )
 {
-  if ( !argParser.isFlagSet( "presetPath" ) )
+  if ( !argParser.isFlagSet( "preset" ) )
   {
-    logError( "-presetPath not provided." );
+    logError( "-preset not provided." );
     return MS::kFailure;
   }
-  MString presetPath = argParser.flagArgumentString( "presetPath", 0 );
+  MString presetPath = argParser.flagArgumentString( "preset", 0 );
 
   FTL::CStrRef nodeName = exec.addInstFromPreset( presetPath.asChar() );
   incCoreUndoCount();
@@ -267,7 +267,7 @@ MSyntax FabricDFGAddInstWithEmptyFuncCommand::newSyntax()
   MSyntax syntax;
   Parent::addSyntax( syntax );
   syntax.addFlag("-t", "-title", MSyntax::kString);
-  syntax.addFlag("-c", "-initialCode", MSyntax::kString);
+  syntax.addFlag("-c", "-code", MSyntax::kString);
   return syntax;
 }
 
@@ -286,9 +286,9 @@ MStatus FabricDFGAddInstWithEmptyFuncCommand::invoke(
   FTL::CStrRef nodeName = exec.addInstWithNewFunc( title.asChar() );
   incCoreUndoCount();
 
-  if ( argParser.isFlagSet( "initialCode" ) )
+  if ( argParser.isFlagSet( "code" ) )
   {
-    MString initialCode = argParser.flagArgumentString( "initialCode", 0 );
+    MString initialCode = argParser.flagArgumentString( "code", 0 );
     FabricCore::DFGExec subExec = exec.getSubExec( nodeName.c_str() );
     subExec.setCode( initialCode.asChar() );
     incCoreUndoCount();
@@ -306,8 +306,8 @@ MSyntax FabricDFGAddVarCommand::newSyntax()
 {
   MSyntax syntax;
   Parent::addSyntax( syntax );
-  syntax.addFlag("-t", "-dataType", MSyntax::kString);
-  syntax.addFlag("-n", "-desiredNodeName", MSyntax::kString);
+  syntax.addFlag("-dt", "-dataType", MSyntax::kString);
+  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
   syntax.addFlag("-ed", "-extDep", MSyntax::kString);
   return syntax;
 }
@@ -318,8 +318,8 @@ MStatus FabricDFGAddVarCommand::invoke(
   )
 {
   MString desiredNodeName;
-  if ( argParser.isFlagSet( "desiredNodeName" ) )
-    desiredNodeName = argParser.flagArgumentString( "desiredNodeName", 0 );
+  if ( argParser.isFlagSet( "desiredName" ) )
+    desiredNodeName = argParser.flagArgumentString( "desiredName", 0 );
 
   if ( !argParser.isFlagSet( "dataType" ) )
   {
@@ -353,7 +353,7 @@ MSyntax FabricDFGAddGetCommand::newSyntax()
   MSyntax syntax;
   Parent::addSyntax( syntax );
   syntax.addFlag("-vp", "-varPath", MSyntax::kString);
-  syntax.addFlag("-n", "-desiredNodeName", MSyntax::kString);
+  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
   return syntax;
 }
 
@@ -363,8 +363,8 @@ MStatus FabricDFGAddGetCommand::invoke(
   )
 {
   MString desiredNodeName;
-  if ( argParser.isFlagSet( "desiredNodeName" ) )
-    desiredNodeName = argParser.flagArgumentString( "desiredNodeName", 0 );
+  if ( argParser.isFlagSet( "desiredName" ) )
+    desiredNodeName = argParser.flagArgumentString( "desiredName", 0 );
 
   if ( !argParser.isFlagSet( "varPath" ) )
   {
@@ -393,7 +393,7 @@ MSyntax FabricDFGAddSetCommand::newSyntax()
   MSyntax syntax;
   Parent::addSyntax( syntax );
   syntax.addFlag("-vp", "-varPath", MSyntax::kString);
-  syntax.addFlag("-n", "-desiredNodeName", MSyntax::kString);
+  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
   return syntax;
 }
 
@@ -403,8 +403,8 @@ MStatus FabricDFGAddSetCommand::invoke(
   )
 {
   MString desiredNodeName;
-  if ( argParser.isFlagSet( "desiredNodeName" ) )
-    desiredNodeName = argParser.flagArgumentString( "desiredNodeName", 0 );
+  if ( argParser.isFlagSet( "desiredName" ) )
+    desiredNodeName = argParser.flagArgumentString( "desiredName", 0 );
 
   if ( !argParser.isFlagSet( "varPath" ) )
   {
@@ -504,8 +504,8 @@ MSyntax FabricDFGRemoveNodesCommand::newSyntax()
 {
   MSyntax syntax;
   Parent::addSyntax( syntax );
-  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
-  syntax.makeFlagMultiUse("-nodeName");
+  syntax.addFlag("-n", "-node", MSyntax::kString);
+  syntax.makeFlagMultiUse("-node");
   return syntax;
 }
 
@@ -514,26 +514,26 @@ MStatus FabricDFGRemoveNodesCommand::invoke(
   FabricCore::DFGExec &exec
   )
 {
-  std::vector<std::string> nodeNames;
+  std::vector<std::string> nodes;
 
   for ( unsigned i = 0; ; ++i )
   {
     MArgList argList;
     if ( argParser.getFlagArgumentList(
-      "nodeName", i, argList
+      "node", i, argList
       ) != MS::kSuccess )
       break;
-    MString nodeName;
-    if ( argList.get( 0, nodeName ) != MS::kSuccess )
+    MString node;
+    if ( argList.get( 0, node ) != MS::kSuccess )
     {
-      logError( "-nodeName not a string" );
+      logError( "-node not a string" );
       return MS::kFailure;
     }
-    nodeNames.push_back( nodeName.asChar() );
+    nodes.push_back( node.asChar() );
   }
 
-  for ( std::vector<std::string>::const_iterator it = nodeNames.begin();
-    it != nodeNames.end(); ++it )
+  for ( std::vector<std::string>::const_iterator it = nodes.begin();
+    it != nodes.end(); ++it )
   {
     exec.removeNode( it->c_str() );
     incCoreUndoCount();
