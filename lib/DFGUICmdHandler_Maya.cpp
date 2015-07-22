@@ -634,7 +634,8 @@ void DFGUICmdHandler_Maya::dfgDoSetNodeComment(
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
   FTL::CStrRef node,
-  FTL::CStrRef comment
+  FTL::CStrRef comment,
+  bool expanded
   )
 {
   std::stringstream cmd;
@@ -642,28 +643,6 @@ void DFGUICmdHandler_Maya::dfgDoSetNodeComment(
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("node"), node, cmd );
   encodeStringArg( FTL_STR("comment"), comment, cmd );
-  cmd << ';';
-
-  MGlobal::executeCommand(
-    cmd.str().c_str(),
-    true, // displayEnabled
-    true  // undoEnabled
-    );
-}
-
-void DFGUICmdHandler_Maya::dfgDoSetNodeCommentExpanded(
-  FTL::CStrRef desc,
-  FabricCore::DFGBinding const &binding,
-  FTL::CStrRef execPath,
-  FabricCore::DFGExec const &exec,
-  FTL::CStrRef node,
-  bool expanded
-  )
-{
-  std::stringstream cmd;
-  cmd << CmdName_SetNodeCommentExpanded();
-  encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("node"), node, cmd );
   encodeBooleanArg( FTL_STR("expanded"), expanded, cmd );
   cmd << ';';
 

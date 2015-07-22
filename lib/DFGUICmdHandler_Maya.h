@@ -179,15 +179,7 @@ protected:
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
     FTL::CStrRef node,
-    FTL::CStrRef comment
-    );
-
-  virtual void dfgDoSetNodeCommentExpanded(
-    FTL::CStrRef desc,
-    FabricCore::DFGBinding const &binding,
-    FTL::CStrRef execPath,
-    FabricCore::DFGExec const &exec,
-    FTL::CStrRef node,
+    FTL::CStrRef comment,
     bool expanded
     );
 
