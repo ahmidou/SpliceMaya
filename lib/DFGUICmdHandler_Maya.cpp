@@ -847,7 +847,7 @@ MString DFGUICmdHandler_Maya::getNodeNameFromBinding(
   FabricCore::DFGBinding const &binding
   )
 {
-  MString interfIdStr = binding.getExec().getMetadata("maya_id");
+  MString interfIdStr = binding.getMetadata("maya_id");
   if(interfIdStr.length() == 0)
     return "";
   unsigned int interfId = (unsigned int)interfIdStr.asInt();
