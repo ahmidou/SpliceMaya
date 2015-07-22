@@ -146,12 +146,12 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
   QCheckBox * nativeCheckBox = new QCheckBox();
   nativeCheckBox->setCheckState(native ? Qt::Checked : Qt::Unchecked);
   nativeCheckBox->setEnabled(enabled);
-  dialog->addInput(nativeCheckBox, "native DCC array");
+  dialog->addInput(nativeCheckBox, "native DCC array", "maya specific");
 
   QCheckBox * opaqueCheckBox = new QCheckBox();
   opaqueCheckBox->setCheckState(opaque ? Qt::Checked : Qt::Unchecked);
   opaqueCheckBox->setEnabled(enabled);
-  dialog->addInput(opaqueCheckBox, "opaque in DCC");
+  dialog->addInput(opaqueCheckBox, "opaque in DCC", "maya specific");
 }
 
 void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog)
