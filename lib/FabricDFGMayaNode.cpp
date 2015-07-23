@@ -19,6 +19,8 @@ FabricDFGMayaNode::FabricDFGMayaNode()
 
 void FabricDFGMayaNode::postConstructor(){
   FabricDFGBaseInterface::constructBaseInterface();
+  setExistWithoutInConnections(true);
+  setExistWithoutOutConnections(true);
 }
 
 FabricDFGMayaNode::~FabricDFGMayaNode()
