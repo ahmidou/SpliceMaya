@@ -383,6 +383,101 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddVarCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGAddRefCommand
+
+void FabricDFGAddRefCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
+  syntax.addFlag("-va", "-varPath", MSyntax::kString);
+}
+
+void FabricDFGAddRefCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( argParser.isFlagSet( "desiredName" ) )
+    args.desiredName = argParser.flagArgumentString( "desiredName", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "varPath" ) )
+    args.varPath = argParser.flagArgumentString( "varPath", 0 ).asChar();
+}
+
+// FabricDFGAddGetCommand
+
+void FabricDFGAddGetCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+}
+
+void FabricDFGAddGetCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGAddGetCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddGet *cmd =
+    new FabricUI::DFG::DFGUICmd_AddGet(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.desiredName,
+      args.varPath,
+      args.pos
+      );
+  cmd->doit();
+  setResult( cmd->getActualNodeName().c_str() );
+  return cmd;
+}
+
+// FabricDFGAddSetCommand
+
+void FabricDFGAddSetCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+}
+
+void FabricDFGAddSetCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGAddSetCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddSet *cmd =
+    new FabricUI::DFG::DFGUICmd_AddSet(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.desiredName,
+      args.varPath,
+      args.pos
+      );
+  cmd->doit();
+  setResult( cmd->getActualNodeName().c_str() );
+  return cmd;
+}
+
 // // FabricDFGAddVarCommand
 
 // MSyntax FabricDFGAddVarCommand::newSyntax()

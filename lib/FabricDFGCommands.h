@@ -495,6 +495,74 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_AddVar
   > MayaDFGUICmd_AddVar;
 
+class FabricDFGAddRefCommand
+  : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string desiredName;
+    std::string varPath;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+};
+
+class FabricDFGAddGetCommand
+  : public FabricDFGAddRefCommand
+{
+  typedef FabricDFGAddRefCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddGetCommand,
+  FabricUI::DFG::DFGUICmd_AddGet
+  > MayaDFGUICmd_AddGet;
+
+class FabricDFGAddSetCommand
+  : public FabricDFGAddRefCommand
+{
+  typedef FabricDFGAddRefCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddSetCommand,
+  FabricUI::DFG::DFGUICmd_AddSet
+  > MayaDFGUICmd_AddSet;
+
 // class FabricDFGAddGraphCommand : public FabricDFGAddNodeCommand
 // {
 //   typedef FabricDFGAddNodeCommand Parent;

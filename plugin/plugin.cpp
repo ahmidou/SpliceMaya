@@ -319,6 +319,13 @@ void onModelPanelSetFocus(void * client)
   MGlobal::executeCommandOnIdle("refresh;", false);
 }
 
+#define MAYA_REGISTER_DFGUICMD( plugin, Name ) \
+  plugin.registerCommand( \
+    MayaDFGUICmd_##Name::GetName(), \
+    MayaDFGUICmd_##Name::GetCreator(), \
+    MayaDFGUICmd_##Name::GetCreateSyntax() \
+    )
+
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
 #endif
@@ -378,56 +385,18 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
 
-  plugin.registerCommand(
-    MayaDFGUICmd_AddFunc::GetName(),
-    MayaDFGUICmd_AddFunc::GetCreator(),
-    MayaDFGUICmd_AddFunc::GetCreateSyntax()
-    );
-  plugin.registerCommand(
-    MayaDFGUICmd_AddGraph::GetName(),
-    MayaDFGUICmd_AddGraph::GetCreator(),
-    MayaDFGUICmd_AddGraph::GetCreateSyntax()
-    );
-  plugin.registerCommand(
-    MayaDFGUICmd_AddPort::GetName(),
-    MayaDFGUICmd_AddPort::GetCreator(),
-    MayaDFGUICmd_AddPort::GetCreateSyntax()
-    );
-  plugin.registerCommand(
-    MayaDFGUICmd_AddVar::GetName(),
-    MayaDFGUICmd_AddVar::GetCreator(),
-    MayaDFGUICmd_AddVar::GetCreateSyntax()
-    );
-  plugin.registerCommand(
-    MayaDFGUICmd_Connect::GetName(),
-    MayaDFGUICmd_Connect::GetCreator(),
-    MayaDFGUICmd_Connect::GetCreateSyntax()
-    );
-  plugin.registerCommand(
-    MayaDFGUICmd_Disconnect::GetName(),
-    MayaDFGUICmd_Disconnect::GetCreator(),
-    MayaDFGUICmd_Disconnect::GetCreateSyntax()
-    );
-  plugin.registerCommand(
-    MayaDFGUICmd_InstPreset::GetName(),
-    MayaDFGUICmd_InstPreset::GetCreator(),
-    MayaDFGUICmd_InstPreset::GetCreateSyntax()
-    );
-  plugin.registerCommand(
-    MayaDFGUICmd_MoveNodes::GetName(),
-    MayaDFGUICmd_MoveNodes::GetCreator(),
-    MayaDFGUICmd_MoveNodes::GetCreateSyntax()
-    );
-  plugin.registerCommand(
-    MayaDFGUICmd_RemoveNodes::GetName(),
-    MayaDFGUICmd_RemoveNodes::GetCreator(),
-    MayaDFGUICmd_RemoveNodes::GetCreateSyntax()
-    );
-  plugin.registerCommand(
-    MayaDFGUICmd_SetArgType::GetName(),
-    MayaDFGUICmd_SetArgType::GetCreator(),
-    MayaDFGUICmd_SetArgType::GetCreateSyntax()
-    );
+  MAYA_REGISTER_DFGUICMD( plugin, AddFunc );
+  MAYA_REGISTER_DFGUICMD( plugin, AddGet );
+  MAYA_REGISTER_DFGUICMD( plugin, AddGraph );
+  MAYA_REGISTER_DFGUICMD( plugin, AddPort );
+  MAYA_REGISTER_DFGUICMD( plugin, AddSet );
+  MAYA_REGISTER_DFGUICMD( plugin, AddVar );
+  MAYA_REGISTER_DFGUICMD( plugin, Connect );
+  MAYA_REGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_REGISTER_DFGUICMD( plugin, InstPreset );
+  MAYA_REGISTER_DFGUICMD( plugin, MoveNodes );
+  MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes );
+  MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
 
   // plugin.registerCommand(
   //   FabricUI::DFG::DFGUICmd_AddFunc::CmdName().c_str(),
