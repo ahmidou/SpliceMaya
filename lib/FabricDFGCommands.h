@@ -10,7 +10,9 @@
 #include <maya/MArgParser.h>
 #include "FabricDFGBaseInterface.h"
 #include <DFG/DFGController.h>
+#include <DFG/DFGUICmd/DFGUICmds.h>
 #include <DFG/DFGUICmdHandler.h>
+#include <FTL/OwnedPtr.h>
 
 class FabricDFGGetContextIDCommand: public MPxCommand
 {
@@ -49,19 +51,10 @@ public:
 
 protected:
 
-  FabricNewDFGBaseCommand()
-    : m_coreUndoCount( 0 )
-    {}
+  FabricNewDFGBaseCommand() {}
 
-  void incCoreUndoCount()
-    { ++m_coreUndoCount; }
-
-  FabricCore::DFGBinding &getBinding()
-    { return m_binding; }
-
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGBinding &binding
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
     ) = 0;
 
   void logError( MString const &desc )
@@ -69,29 +62,69 @@ protected:
 
   static void addSyntax( MSyntax &syntax );
 
+  class ArgException
+  {
+  public:
+
+    ArgException( MStatus status, MString const &mString )
+      : m_status( status )
+      , m_desc( mString )
+      {}
+
+    MStatus getStatus()
+      { return m_status; }
+
+    MString const &getDesc()
+      { return m_desc; }
+  
+  private:
+
+    MStatus m_status;
+    MString m_desc;
+  };
+
 private:
 
-  unsigned m_coreUndoCount;
-  FabricCore::DFGBinding m_binding;
+  FTL::OwnedPtr<FabricUI::DFG::DFGUICmd> m_dfgUICmd;
 };
 
-class FabricDFGExecCommand : public FabricNewDFGBaseCommand
+class FabricDFGBindingCommand : public FabricNewDFGBaseCommand
 {
   typedef FabricNewDFGBaseCommand Parent;
 
 protected:
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGBinding &binding
-    );
+  static void addSyntax( MSyntax &syntax );
 
-  virtual MStatus invoke(
+  struct Args
+  {
+    FabricCore::DFGBinding binding;
+  };
+
+  void getArgs(
     MArgParser &argParser,
-    FabricCore::DFGExec &exec
-    ) = 0;
+    Args &args
+    );
+};
+
+class FabricDFGExecCommand : public FabricDFGBindingCommand
+{
+  typedef FabricDFGBindingCommand Parent;
+
+protected:
 
   static void addSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string execPath;
+    FabricCore::DFGExec exec;
+  };
+
+  void getArgs(
+    MArgParser &argParser,
+    Args &args
+    );
 };
 
 class FabricDFGConnectCommand : public FabricDFGExecCommand
@@ -102,21 +135,37 @@ public:
 
   virtual MString getName()
     { return MString(
-      FabricUI::DFG::DFGUICmdHandler::CmdName_Connect().c_str()
+      FabricUI::DFG::DFGUICmd_Connect::CmdName().c_str()
       ); }
 
   static void* creator()
     { return new FabricDFGConnectCommand; }
 
-  static MSyntax newSyntax();
+  static MSyntax newSyntax()
+  {
+    MSyntax syntax;
+    addSyntax( syntax );
+    return syntax;
+  }
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec
+protected:
+
+  static void addSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string srcPort;
+    std::string dstPort;
+  };
+
+  void getArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
     );
 };
 
-class FabricDFGDisconnectCommand : public FabricDFGExecCommand
+class FabricDFGMoveNodesCommand : public FabricDFGExecCommand
 {
   typedef FabricDFGExecCommand Parent;
   
@@ -124,41 +173,79 @@ public:
 
   virtual MString getName()
     { return MString(
-      FabricUI::DFG::DFGUICmdHandler::CmdName_Disconnect().c_str()
+      FabricUI::DFG::DFGUICmd_MoveNodes::CmdName().c_str()
       ); }
 
   static void* creator()
-    { return new FabricDFGDisconnectCommand; }
+    { return new FabricDFGMoveNodesCommand; }
 
-  static MSyntax newSyntax();
+  static MSyntax newSyntax()
+  {
+    MSyntax syntax;
+    addSyntax( syntax );
+    return syntax;
+  }
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec
+protected:
+
+  static void addSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::vector<FTL::StrRef> nodeNames;
+    std::vector<QPointF> poss;
+  };
+
+  void getArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
     );
 };
 
-class FabricDFGRemoveNodesCommand : public FabricDFGExecCommand
-{
-  typedef FabricDFGExecCommand Parent;
+// class FabricDFGDisconnectCommand : public FabricDFGExecCommand
+// {
+//   typedef FabricDFGExecCommand Parent;
   
-public:
+// public:
 
-  virtual MString getName()
-    { return MString(
-      FabricUI::DFG::DFGUICmdHandler::CmdName_RemoveNodes().c_str()
-      ); }
+//   virtual MString getName()
+//     { return MString(
+//       FabricUI::DFG::DFGUICmd_Disconnect::CmdName().c_str()
+//       ); }
 
-  static void* creator()
-    { return new FabricDFGRemoveNodesCommand; }
+//   static void* creator()
+//     { return new FabricDFGDisconnectCommand; }
 
-  static MSyntax newSyntax();
+//   static MSyntax newSyntax();
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec
-    );
-};
+//   virtual MStatus invoke(
+//     MArgParser &argParser,
+//     FabricCore::DFGExec &exec
+//     );
+// };
+
+// class FabricDFGRemoveNodesCommand : public FabricDFGExecCommand
+// {
+//   typedef FabricDFGExecCommand Parent;
+  
+// public:
+
+//   virtual MString getName()
+//     { return MString(
+//       FabricUI::DFG::DFGUICmd_RemoveNodes::CmdName().c_str()
+//       ); }
+
+//   static void* creator()
+//     { return new FabricDFGRemoveNodesCommand; }
+
+//   static MSyntax newSyntax();
+
+//   virtual MStatus invoke(
+//     MArgParser &argParser,
+//     FabricCore::DFGExec &exec
+//     );
+// };
 
 class FabricDFGAddNodeCommand : public FabricDFGExecCommand
 {
@@ -168,14 +255,15 @@ protected:
 
   static void addSyntax( MSyntax &syntax );
 
-  void setPos(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec,
-    FTL::CStrRef nodeName
-    );
+  struct Args : Parent::Args
+  {
+    QPointF pos;
+  };
+
+  void getArgs( MArgParser &argParser, Args &args );
 };
 
-class FabricDFGAddInstFromPresetCommand : public FabricDFGAddNodeCommand
+class FabricDFGInstPresetCommand : public FabricDFGAddNodeCommand
 {
   typedef FabricDFGAddNodeCommand Parent;
   
@@ -183,128 +271,143 @@ public:
 
   virtual MString getName()
     { return MString(
-      FabricUI::DFG::DFGUICmdHandler::CmdName_AddInstFromPreset().c_str()
+      FabricUI::DFG::DFGUICmd_InstPreset::CmdName().c_str()
       ); }
 
   static void* creator()
-    { return new FabricDFGAddInstFromPresetCommand; }
+    { return new FabricDFGInstPresetCommand; }
 
-  static MSyntax newSyntax();
+  static MSyntax newSyntax()
+  {
+    MSyntax syntax;
+    addSyntax( syntax );
+    return syntax;
+  }
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec
+protected:
+
+  static void addSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string presetPath;
+  };
+
+  void getArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
     );
 };
 
-class FabricDFGAddInstWithEmptyGraphCommand : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
+// class FabricDFGAddGraphCommand : public FabricDFGAddNodeCommand
+// {
+//   typedef FabricDFGAddNodeCommand Parent;
   
-public:
+// public:
 
-  virtual MString getName()
-    { return MString(
-      FabricUI::DFG::DFGUICmdHandler::CmdName_AddInstWithEmptyGraph().c_str()
-      ); }
+//   virtual MString getName()
+//     { return MString(
+//       FabricUI::DFG::DFGUICmd_AddGraph::CmdName().c_str()
+//       ); }
 
-  static void* creator()
-    { return new FabricDFGAddInstWithEmptyGraphCommand; }
+//   static void* creator()
+//     { return new FabricDFGAddGraphCommand; }
 
-  static MSyntax newSyntax();
+//   static MSyntax newSyntax();
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec
-    );
-};
+//   virtual MStatus invoke(
+//     MArgParser &argParser,
+//     FabricCore::DFGExec &exec
+//     );
+// };
 
-class FabricDFGAddInstWithEmptyFuncCommand : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
+// class FabricDFGAddFuncCommand : public FabricDFGAddNodeCommand
+// {
+//   typedef FabricDFGAddNodeCommand Parent;
   
-public:
+// public:
 
-  virtual MString getName()
-    { return MString(
-      FabricUI::DFG::DFGUICmdHandler::CmdName_AddInstWithEmptyFunc().c_str()
-      ); }
+//   virtual MString getName()
+//     { return MString(
+//       FabricUI::DFG::DFGUICmd_AddFunc::CmdName().c_str()
+//       ); }
 
-  static void* creator()
-    { return new FabricDFGAddInstWithEmptyFuncCommand; }
+//   static void* creator()
+//     { return new FabricDFGAddFuncCommand; }
 
-  static MSyntax newSyntax();
+//   static MSyntax newSyntax();
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec
-    );
-};
+//   virtual MStatus invoke(
+//     MArgParser &argParser,
+//     FabricCore::DFGExec &exec
+//     );
+// };
 
-class FabricDFGAddVarCommand : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
+// class FabricDFGAddVarCommand : public FabricDFGAddNodeCommand
+// {
+//   typedef FabricDFGAddNodeCommand Parent;
   
-public:
+// public:
 
-  virtual MString getName()
-    { return MString(
-      FabricUI::DFG::DFGUICmdHandler::CmdName_AddVar().c_str()
-      ); }
+//   virtual MString getName()
+//     { return MString(
+//       FabricUI::DFG::DFGUICmd_AddVar::CmdName().c_str()
+//       ); }
 
-  static void* creator()
-    { return new FabricDFGAddVarCommand; }
+//   static void* creator()
+//     { return new FabricDFGAddVarCommand; }
 
-  static MSyntax newSyntax();
+//   static MSyntax newSyntax();
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec
-    );
-};
+//   virtual MStatus invoke(
+//     MArgParser &argParser,
+//     FabricCore::DFGExec &exec
+//     );
+// };
 
-class FabricDFGAddGetCommand : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
+// class FabricDFGAddGetCommand : public FabricDFGAddNodeCommand
+// {
+//   typedef FabricDFGAddNodeCommand Parent;
   
-public:
+// public:
 
-  virtual MString getName()
-    { return MString(
-      FabricUI::DFG::DFGUICmdHandler::CmdName_AddGet().c_str()
-      ); }
+//   virtual MString getName()
+//     { return MString(
+//       FabricUI::DFG::DFGUICmd_AddGet::CmdName().c_str()
+//       ); }
 
-  static void* creator()
-    { return new FabricDFGAddGetCommand; }
+//   static void* creator()
+//     { return new FabricDFGAddGetCommand; }
 
-  static MSyntax newSyntax();
+//   static MSyntax newSyntax();
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec
-    );
-};
+//   virtual MStatus invoke(
+//     MArgParser &argParser,
+//     FabricCore::DFGExec &exec
+//     );
+// };
 
-class FabricDFGAddSetCommand : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
+// class FabricDFGAddSetCommand : public FabricDFGAddNodeCommand
+// {
+//   typedef FabricDFGAddNodeCommand Parent;
   
-public:
+// public:
 
-  virtual MString getName()
-    { return MString(
-      FabricUI::DFG::DFGUICmdHandler::CmdName_AddSet().c_str()
-      ); }
+//   virtual MString getName()
+//     { return MString(
+//       FabricUI::DFG::DFGUICmd_AddSet::CmdName().c_str()
+//       ); }
 
-  static void* creator()
-    { return new FabricDFGAddSetCommand; }
+//   static void* creator()
+//     { return new FabricDFGAddSetCommand; }
 
-  static MSyntax newSyntax();
+//   static MSyntax newSyntax();
 
-  virtual MStatus invoke(
-    MArgParser &argParser,
-    FabricCore::DFGExec &exec
-    );
-};
+//   virtual MStatus invoke(
+//     MArgParser &argParser,
+//     FabricCore::DFGExec &exec
+//     );
+// };
 
 #endif 

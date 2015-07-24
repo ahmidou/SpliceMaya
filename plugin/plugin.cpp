@@ -375,53 +375,59 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
   plugin.registerNode("dfgMayaNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
 
+  plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
+  plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
+
   plugin.registerCommand(
-    DFGUICmdHandler_Maya::CmdName_AddInstFromPreset().c_str(),
-    FabricDFGAddInstFromPresetCommand::creator,
-    FabricDFGAddInstFromPresetCommand::newSyntax
+    FabricUI::DFG::DFGUICmd_InstPreset::CmdName().c_str(),
+    FabricDFGInstPresetCommand::creator,
+    FabricDFGInstPresetCommand::newSyntax
     );
+  // plugin.registerCommand(
+  //   FabricUI::DFG::DFGUICmd_AddFunc::CmdName().c_str(),
+  //   FabricDFGAddFuncCommand::creator,
+  //   FabricDFGAddFuncCommand::newSyntax
+  //   );
+  // plugin.registerCommand(
+  //   FabricUI::DFG::DFGUICmd_AddGraph::CmdName().c_str(),
+  //   FabricDFGAddGraphCommand::creator,
+  //   FabricDFGAddGraphCommand::newSyntax
+  //   );
+  // plugin.registerCommand(
+  //   FabricUI::DFG::DFGUICmd_AddVar::CmdName().c_str(),
+  //   FabricDFGAddVarCommand::creator,
+  //   FabricDFGAddVarCommand::newSyntax
+  //   );
+  // plugin.registerCommand(
+  //   FabricUI::DFG::DFGUICmd_AddGet::CmdName().c_str(),
+  //   FabricDFGAddGetCommand::creator,
+  //   FabricDFGAddGetCommand::newSyntax
+  //   );
+  // plugin.registerCommand(
+  //   FabricUI::DFG::DFGUICmd_AddSet::CmdName().c_str(),
+  //   FabricDFGAddSetCommand::creator,
+  //   FabricDFGAddSetCommand::newSyntax
+  //   );
   plugin.registerCommand(
-    DFGUICmdHandler_Maya::CmdName_AddInstWithEmptyFunc().c_str(),
-    FabricDFGAddInstWithEmptyFuncCommand::creator,
-    FabricDFGAddInstWithEmptyFuncCommand::newSyntax
-    );
-  plugin.registerCommand(
-    DFGUICmdHandler_Maya::CmdName_AddInstWithEmptyGraph().c_str(),
-    FabricDFGAddInstWithEmptyGraphCommand::creator,
-    FabricDFGAddInstWithEmptyGraphCommand::newSyntax
-    );
-  plugin.registerCommand(
-    DFGUICmdHandler_Maya::CmdName_AddVar().c_str(),
-    FabricDFGAddVarCommand::creator,
-    FabricDFGAddVarCommand::newSyntax
-    );
-  plugin.registerCommand(
-    DFGUICmdHandler_Maya::CmdName_AddGet().c_str(),
-    FabricDFGAddGetCommand::creator,
-    FabricDFGAddGetCommand::newSyntax
-    );
-  plugin.registerCommand(
-    DFGUICmdHandler_Maya::CmdName_AddSet().c_str(),
-    FabricDFGAddSetCommand::creator,
-    FabricDFGAddSetCommand::newSyntax
-    );
-  plugin.registerCommand(
-    DFGUICmdHandler_Maya::CmdName_Connect().c_str(),
+    FabricUI::DFG::DFGUICmd_Connect::CmdName().c_str(),
     FabricDFGConnectCommand::creator,
     FabricDFGConnectCommand::newSyntax
     );
   plugin.registerCommand(
-    DFGUICmdHandler_Maya::CmdName_Disconnect().c_str(),
-    FabricDFGDisconnectCommand::creator,
-    FabricDFGDisconnectCommand::newSyntax
+    FabricUI::DFG::DFGUICmd_MoveNodes::CmdName().c_str(),
+    FabricDFGMoveNodesCommand::creator,
+    FabricDFGMoveNodesCommand::newSyntax
     );
-  plugin.registerCommand(
-    DFGUICmdHandler_Maya::CmdName_RemoveNodes().c_str(),
-    FabricDFGRemoveNodesCommand::creator,
-    FabricDFGRemoveNodesCommand::newSyntax
-    );
-  // plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
-  // plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
+  // plugin.registerCommand(
+  //   FabricUI::DFG::DFGUICmd_Disconnect::CmdName().c_str(),
+  //   FabricDFGDisconnectCommand::creator,
+  //   FabricDFGDisconnectCommand::newSyntax
+  //   );
+  // plugin.registerCommand(
+  //   FabricUI::DFG::DFGUICmd_RemoveNodes::CmdName().c_str(),
+  //   FabricDFGRemoveNodesCommand::creator,
+  //   FabricDFGRemoveNodesCommand::newSyntax
+  //   );
   // plugin.registerCommand("dfgRenameNode", FabricDFGRenameNodeCommand::creator, FabricDFGRenameNodeCommand::newSyntax);
   // plugin.registerCommand("dfgAddPort", FabricDFGAddPortCommand::creator, FabricDFGAddPortCommand::newSyntax);
   // plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);

@@ -16,7 +16,6 @@ public:
 protected:
 
   virtual void dfgDoRemoveNodes(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -24,7 +23,6 @@ protected:
     );
 
   virtual void dfgDoConnect(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -33,7 +31,6 @@ protected:
     );
 
   virtual void dfgDoDisconnect(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -41,8 +38,7 @@ protected:
     FTL::CStrRef dstPath
     );
 
-  virtual std::string dfgDoAddInstWithEmptyGraph(
-    FTL::CStrRef desc,
+  virtual std::string dfgDoAddGraph(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -50,8 +46,7 @@ protected:
     QPointF pos
     );
 
-  virtual std::string dfgDoAddInstWithEmptyFunc(
-    FTL::CStrRef desc,
+  virtual std::string dfgDoAddFunc(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -60,8 +55,7 @@ protected:
     QPointF pos
     );
 
-  virtual std::string dfgDoAddInstFromPreset(
-    FTL::CStrRef desc,
+  virtual std::string dfgDoInstPreset(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -70,7 +64,6 @@ protected:
     );
 
   virtual std::string dfgDoAddVar(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -81,7 +74,6 @@ protected:
     );
 
   virtual std::string dfgDoAddGet(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -91,7 +83,6 @@ protected:
     );
 
   virtual std::string dfgDoAddSet(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -101,7 +92,6 @@ protected:
     );
 
   virtual std::string dfgDoAddPort(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -112,7 +102,6 @@ protected:
     );
 
   virtual void dfgDoRemovePort(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -120,7 +109,6 @@ protected:
     );
 
   virtual void dfgDoMoveNodes(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -128,8 +116,7 @@ protected:
     FTL::ArrayRef<QPointF> newTopLeftPoss
     );
 
-  virtual void dfgDoResizeBackDropNode(
-    FTL::CStrRef desc,
+  virtual void dfgDoResizeBackDrop(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -139,7 +126,6 @@ protected:
     );
 
   virtual std::string dfgDoImplodeNodes(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -148,7 +134,6 @@ protected:
     );
 
   virtual std::vector<std::string> dfgDoExplodeNode(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -156,7 +141,6 @@ protected:
     );
 
   virtual void dfgDoAddBackDrop(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -165,7 +149,6 @@ protected:
     );
 
   virtual void dfgDoSetNodeTitle(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -174,7 +157,6 @@ protected:
     );
 
   virtual void dfgDoSetNodeComment(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -184,15 +166,13 @@ protected:
     );
 
   virtual void dfgDoSetCode(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
     FTL::CStrRef code
     );
 
-  virtual std::string dfgDoRenameExecPort(
-    FTL::CStrRef desc,
+  virtual std::string dfgDoRenamePort(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -201,7 +181,6 @@ protected:
     );
 
   virtual std::vector<std::string> dfgDoPaste(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -210,21 +189,18 @@ protected:
     );
 
   virtual void dfgDoSetArgType(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef argName,
     FTL::CStrRef typeName
     );
 
   virtual void dfgDoSetArgValue(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef name,
     FabricCore::RTVal const &value
     );
 
   virtual void dfgDoSetPortDefaultValue(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
@@ -233,7 +209,6 @@ protected:
     );
 
   virtual void dfgDoSetRefVarPath(
-    FTL::CStrRef desc,
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
