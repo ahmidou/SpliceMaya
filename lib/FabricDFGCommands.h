@@ -405,6 +405,112 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_SetNodeTitle
   > MayaDFGUICmd_SetNodeTitle;
 
+class FabricDFGRemovePortCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef portName;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGRemovePortCommand,
+  FabricUI::DFG::DFGUICmd_RemovePort
+  > MayaDFGUICmd_RemovePort;
+
+class FabricDFGSetCodeCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef code;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSetCodeCommand,
+  FabricUI::DFG::DFGUICmd_SetCode
+  > MayaDFGUICmd_SetCode;
+
+class FabricDFGSetRefVarPathCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef refName;
+    FTL::StrRef varPath;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSetRefVarPathCommand,
+  FabricUI::DFG::DFGUICmd_SetRefVarPath
+  > MayaDFGUICmd_SetRefVarPath;
+
+class FabricDFGRenamePortCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef oldPortName;
+    FTL::StrRef desiredNewPortName;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGRenamePortCommand,
+  FabricUI::DFG::DFGUICmd_RenamePort
+  > MayaDFGUICmd_RenamePort;
+
 class FabricDFGSetNodeCommentCommand
   : public FabricDFGExecCommand
 {
@@ -432,50 +538,6 @@ typedef MayaDFGUICmdWrapper<
   FabricDFGSetNodeCommentCommand,
   FabricUI::DFG::DFGUICmd_SetNodeComment
   > MayaDFGUICmd_SetNodeComment;
-
-// class FabricDFGDisconnectCommand : public FabricDFGExecCommand
-// {
-//   typedef FabricDFGExecCommand Parent;
-  
-// public:
-
-//   virtual MString getName()
-//     { return MString(
-//       FabricUI::DFG::DFGUICmd_Disconnect::CmdName().c_str()
-//       ); }
-
-//   static void* creator()
-//     { return new FabricDFGDisconnectCommand; }
-
-//   static MSyntax newSyntax();
-
-//   virtual MStatus invoke(
-//     MArgParser &argParser,
-//     FabricCore::DFGExec &exec
-//     );
-// };
-
-// class FabricDFGRemoveNodesCommand : public FabricDFGExecCommand
-// {
-//   typedef FabricDFGExecCommand Parent;
-  
-// public:
-
-//   virtual MString getName()
-//     { return MString(
-//       FabricUI::DFG::DFGUICmd_RemoveNodes::CmdName().c_str()
-//       ); }
-
-//   static void* creator()
-//     { return new FabricDFGRemoveNodesCommand; }
-
-//   static MSyntax newSyntax();
-
-//   virtual MStatus invoke(
-//     MArgParser &argParser,
-//     FabricCore::DFGExec &exec
-//     );
-// };
 
 class FabricDFGAddNodeCommand
   : public FabricDFGExecCommand
@@ -652,115 +714,5 @@ typedef MayaDFGUICmdWrapper<
   FabricDFGAddSetCommand,
   FabricUI::DFG::DFGUICmd_AddSet
   > MayaDFGUICmd_AddSet;
-
-// class FabricDFGAddGraphCommand : public FabricDFGAddNodeCommand
-// {
-//   typedef FabricDFGAddNodeCommand Parent;
-  
-// public:
-
-//   virtual MString getName()
-//     { return MString(
-//       FabricUI::DFG::DFGUICmd_AddGraph::CmdName().c_str()
-//       ); }
-
-//   static void* creator()
-//     { return new FabricDFGAddGraphCommand; }
-
-//   static MSyntax newSyntax();
-
-//   virtual MStatus invoke(
-//     MArgParser &argParser,
-//     FabricCore::DFGExec &exec
-//     );
-// };
-
-// class FabricDFGAddFuncCommand : public FabricDFGAddNodeCommand
-// {
-//   typedef FabricDFGAddNodeCommand Parent;
-  
-// public:
-
-//   virtual MString getName()
-//     { return MString(
-//       FabricUI::DFG::DFGUICmd_AddFunc::CmdName().c_str()
-//       ); }
-
-//   static void* creator()
-//     { return new FabricDFGAddFuncCommand; }
-
-//   static MSyntax newSyntax();
-
-//   virtual MStatus invoke(
-//     MArgParser &argParser,
-//     FabricCore::DFGExec &exec
-//     );
-// };
-
-// class FabricDFGAddVarCommand : public FabricDFGAddNodeCommand
-// {
-//   typedef FabricDFGAddNodeCommand Parent;
-  
-// public:
-
-//   virtual MString getName()
-//     { return MString(
-//       FabricUI::DFG::DFGUICmd_AddVar::CmdName().c_str()
-//       ); }
-
-//   static void* creator()
-//     { return new FabricDFGAddVarCommand; }
-
-//   static MSyntax newSyntax();
-
-//   virtual MStatus invoke(
-//     MArgParser &argParser,
-//     FabricCore::DFGExec &exec
-//     );
-// };
-
-// class FabricDFGAddGetCommand : public FabricDFGAddNodeCommand
-// {
-//   typedef FabricDFGAddNodeCommand Parent;
-  
-// public:
-
-//   virtual MString getName()
-//     { return MString(
-//       FabricUI::DFG::DFGUICmd_AddGet::CmdName().c_str()
-//       ); }
-
-//   static void* creator()
-//     { return new FabricDFGAddGetCommand; }
-
-//   static MSyntax newSyntax();
-
-//   virtual MStatus invoke(
-//     MArgParser &argParser,
-//     FabricCore::DFGExec &exec
-//     );
-// };
-
-// class FabricDFGAddSetCommand : public FabricDFGAddNodeCommand
-// {
-//   typedef FabricDFGAddNodeCommand Parent;
-  
-// public:
-
-//   virtual MString getName()
-//     { return MString(
-//       FabricUI::DFG::DFGUICmd_AddSet::CmdName().c_str()
-//       ); }
-
-//   static void* creator()
-//     { return new FabricDFGAddSetCommand; }
-
-//   static MSyntax newSyntax();
-
-//   virtual MStatus invoke(
-//     MArgParser &argParser,
-//     FabricCore::DFGExec &exec
-//     );
-// };
 
 #endif 

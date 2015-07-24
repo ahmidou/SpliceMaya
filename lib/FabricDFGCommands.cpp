@@ -1056,3 +1056,168 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetNodeCommentCommand::executeDFGUICmd(
   cmd->doit();
   return cmd;
 }
+
+// FabricDFGSetRefVarPathCommand
+
+void FabricDFGSetRefVarPathCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-r", "-refName", MSyntax::kString);
+  syntax.addFlag("-v", "-varPath", MSyntax::kString);
+}
+
+void FabricDFGSetRefVarPathCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "refName" ) )
+    throw ArgException( MS::kFailure, "-refName not provided." );
+  args.refName = argParser.flagArgumentString( "refName", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "varPath" ) )
+    throw ArgException( MS::kFailure, "-varPath not provided." );
+  args.varPath = argParser.flagArgumentString( "varPath", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGSetRefVarPathCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_SetRefVarPath *cmd =
+    new FabricUI::DFG::DFGUICmd_SetRefVarPath(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.refName,
+      args.varPath
+      );
+  cmd->doit();
+  return cmd;
+}
+
+// FabricDFGRenamePortCommand
+
+void FabricDFGRenamePortCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-oldPortName", MSyntax::kString);
+  syntax.addFlag("-d", "-desiredNewPortName", MSyntax::kString);
+}
+
+void FabricDFGRenamePortCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "oldPortName" ) )
+    throw ArgException( MS::kFailure, "-oldPortName not provided." );
+  args.oldPortName = argParser.flagArgumentString( "oldPortName", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "desiredNewPortName" ) )
+    throw ArgException( MS::kFailure, "-desiredNewPortName not provided." );
+  args.desiredNewPortName = argParser.flagArgumentString( "desiredNewPortName", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGRenamePortCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_RenamePort *cmd =
+    new FabricUI::DFG::DFGUICmd_RenamePort(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.oldPortName,
+      args.desiredNewPortName
+      );
+  cmd->doit();
+  setResult( cmd->getActualNewPortName().c_str() );
+  return cmd;
+}
+
+// FabricDFGRemovePortCommand
+
+void FabricDFGRemovePortCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-p", "-portName", MSyntax::kString);
+}
+
+void FabricDFGRemovePortCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "portName" ) )
+    throw ArgException( MS::kFailure, "-portName not provided." );
+  args.portName = argParser.flagArgumentString( "portName", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGRemovePortCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_RemovePort *cmd =
+    new FabricUI::DFG::DFGUICmd_RemovePort(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.portName
+      );
+  cmd->doit();
+  return cmd;
+}
+
+// FabricDFGSetCodeCommand
+
+void FabricDFGSetCodeCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-c", "-code", MSyntax::kString);
+}
+
+void FabricDFGSetCodeCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "code" ) )
+    throw ArgException( MS::kFailure, "-code not provided." );
+  args.code = argParser.flagArgumentString( "code", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGSetCodeCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_SetCode *cmd =
+    new FabricUI::DFG::DFGUICmd_SetCode(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.code
+      );
+  cmd->doit();
+  return cmd;
+}

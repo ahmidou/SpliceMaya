@@ -440,8 +440,7 @@ void DFGUICmdHandler_Maya::dfgDoRemovePort(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_RemovePort::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  cmd << " -port ";
-  encodeMELString( portName, cmd );
+  encodeStringArg( FTL_STR("portName"), portName, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
@@ -650,8 +649,8 @@ std::string DFGUICmdHandler_Maya::dfgDoRenamePort(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_RenamePort::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("s"), name, cmd );
-  encodeStringArg( FTL_STR("d"), desiredName, cmd );
+  encodeStringArg( FTL_STR("oldPortName"), name, cmd );
+  encodeStringArg( FTL_STR("desiredNewPortName"), desiredName, cmd );
   cmd << ';';
 
   MString mResult;

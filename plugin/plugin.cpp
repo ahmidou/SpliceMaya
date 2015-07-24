@@ -398,15 +398,16 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, InstPreset );
   MAYA_REGISTER_DFGUICMD( plugin, MoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes );
+  MAYA_REGISTER_DFGUICMD( plugin, RemovePort );
+  MAYA_REGISTER_DFGUICMD( plugin, RenamePort );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
+  MAYA_REGISTER_DFGUICMD( plugin, SetCode );
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeTitle );
+  MAYA_REGISTER_DFGUICMD( plugin, SetRefVarPath );
 
-  // plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);
-  // plugin.registerCommand("dfgRenamePort", FabricDFGRenamePortCommand::creator, FabricDFGRenamePortCommand::newSyntax);
   // plugin.registerCommand("dfgSetArg", FabricDFGSetArgCommand::creator, FabricDFGSetArgCommand::newSyntax);
   // plugin.registerCommand("dfgSetDefaultValue", FabricDFGSetDefaultValueCommand::creator, FabricDFGSetDefaultValueCommand::newSyntax);
-  // plugin.registerCommand("dfgSetCode", FabricDFGSetCodeCommand::creator, FabricDFGSetCodeCommand::newSyntax);
   // plugin.registerCommand("dfgGetDesc", FabricDFGGetDescCommand::creator, FabricDFGGetDescCommand::newSyntax);
   // plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
   // plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
