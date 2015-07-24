@@ -1020,7 +1020,6 @@ void FabricDFGSetNodeCommentCommand::AddSyntax( MSyntax &syntax )
   Parent::AddSyntax( syntax );
   syntax.addFlag("-n", "-nodeName", MSyntax::kString);
   syntax.addFlag("-c", "-comment", MSyntax::kString);
-  syntax.addFlag("-x", "-expanded", MSyntax::kString);
 }
 
 void FabricDFGSetNodeCommentCommand::GetArgs(
@@ -1037,10 +1036,6 @@ void FabricDFGSetNodeCommentCommand::GetArgs(
   if ( !argParser.isFlagSet( "comment" ) )
     throw ArgException( MS::kFailure, "-comment not provided." );
   args.comment = argParser.flagArgumentString( "comment", 0 ).asChar();
-
-  if ( !argParser.isFlagSet( "expanded" ) )
-    throw ArgException( MS::kFailure, "-expanded not provided." );
-  args.expanded = argParser.flagArgumentBool( "expanded", 0 );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGSetNodeCommentCommand::executeDFGUICmd(
@@ -1056,8 +1051,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetNodeCommentCommand::executeDFGUICmd(
       args.execPath,
       args.exec,
       args.nodeName,
-      args.comment,
-      args.expanded
+      args.comment
       );
   cmd->doit();
   return cmd;

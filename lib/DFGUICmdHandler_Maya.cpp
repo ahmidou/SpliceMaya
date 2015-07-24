@@ -602,8 +602,7 @@ void DFGUICmdHandler_Maya::dfgDoSetNodeComment(
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
   FTL::CStrRef node,
-  FTL::CStrRef comment,
-  bool expanded
+  FTL::CStrRef comment
   )
 {
   std::stringstream cmd;
@@ -611,7 +610,6 @@ void DFGUICmdHandler_Maya::dfgDoSetNodeComment(
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("nodeName"), node, cmd );
   encodeStringArg( FTL_STR("comment"), comment, cmd );
-  encodeBooleanArg( FTL_STR("expanded"), expanded, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
