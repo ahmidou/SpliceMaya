@@ -164,7 +164,7 @@ protected:
     );
 };
 
-class FabricDFGConnectCommand
+class FabricDFGCnxnCommand
   : public FabricDFGExecCommand
 {
   typedef FabricDFGExecCommand Parent;
@@ -180,6 +180,14 @@ protected:
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
+};
+
+class FabricDFGConnectCommand
+  : public FabricDFGCnxnCommand
+{
+  typedef FabricDFGCnxnCommand Parent;
+  
+protected:
 
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser
@@ -192,21 +200,11 @@ typedef MayaDFGUICmdWrapper<
   > MayaDFGUICmd_Connect;
 
 class FabricDFGDisconnectCommand
-  : public FabricDFGExecCommand
+  : public FabricDFGCnxnCommand
 {
-  typedef FabricDFGExecCommand Parent;
+  typedef FabricDFGCnxnCommand Parent;
   
 protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    FTL::StrRef srcPort;
-    FTL::StrRef dstPort;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
 
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser
@@ -407,6 +405,34 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_SetNodeTitle
   > MayaDFGUICmd_SetNodeTitle;
 
+class FabricDFGSetNodeCommentCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef nodeName;
+    FTL::StrRef comment;
+    bool expanded;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSetNodeCommentCommand,
+  FabricUI::DFG::DFGUICmd_SetNodeComment
+  > MayaDFGUICmd_SetNodeComment;
+
 // class FabricDFGDisconnectCommand : public FabricDFGExecCommand
 // {
 //   typedef FabricDFGExecCommand Parent;
@@ -600,14 +626,6 @@ class FabricDFGAddGetCommand
   
 protected:
 
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser
     );
@@ -624,14 +642,6 @@ class FabricDFGAddSetCommand
   typedef FabricDFGAddRefCommand Parent;
   
 protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
 
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser

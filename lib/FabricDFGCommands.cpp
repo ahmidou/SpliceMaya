@@ -147,7 +147,7 @@ MStatus FabricNewDFGBaseCommand::redoIt()
 void FabricDFGBindingCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag( "-mn", "-mayaNode", MSyntax::kString );
+  syntax.addFlag( "-m", "-mayaNode", MSyntax::kString );
 }
 
 void FabricDFGBindingCommand::GetArgs(
@@ -162,7 +162,7 @@ void FabricDFGBindingCommand::GetArgs(
   FabricDFGBaseInterface * interf =
     FabricDFGBaseInterface::getInstanceByName( mayaNodeName.asChar() );
   if ( !interf )
-    throw ArgException( MS::kNotFound, "Maya node '" + mayaNodeName + "' not found." );
+    throw ArgException( MS::kNotFound, "-mayaNode '" + mayaNodeName + "' not found." );
   args.binding = interf->getDFGBinding();
 }
 
@@ -171,7 +171,7 @@ void FabricDFGBindingCommand::GetArgs(
 void FabricDFGExecCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag( "-e", "-exec", MSyntax::kString );
+  syntax.addFlag( "-e", "-execPath", MSyntax::kString );
 }
 
 void FabricDFGExecCommand::GetArgs(
@@ -181,9 +181,9 @@ void FabricDFGExecCommand::GetArgs(
 {
   Parent::GetArgs( argParser, args );
 
-  if ( !argParser.isFlagSet( "exec" ) )
-    throw ArgException( MS::kFailure, "-exec not provided." );
-  MString execPathMString = argParser.flagArgumentString( "exec", 0 );
+  if ( !argParser.isFlagSet( "execPath" ) )
+    throw ArgException( MS::kFailure, "-execPath not provided." );
+  MString execPathMString = argParser.flagArgumentString( "execPath", 0 );
   args.execPath = execPathMString.asChar();
   args.exec = args.binding.getExec().getSubExec( execPathMString.asChar() );
 }
@@ -216,7 +216,7 @@ void FabricDFGAddNodeCommand::GetArgs( MArgParser &argParser, Args &args )
 void FabricDFGInstPresetCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-p", "-preset", MSyntax::kString);
+  syntax.addFlag("-p", "-presetPath", MSyntax::kString);
 }
 
 void FabricDFGInstPresetCommand::GetArgs(
@@ -226,9 +226,9 @@ void FabricDFGInstPresetCommand::GetArgs(
 {
   Parent::GetArgs( argParser, args );
 
-  if ( !argParser.isFlagSet( "preset" ) )
-    throw ArgException( MS::kFailure, "-preset not provided." );
-  args.presetPath = argParser.flagArgumentString( "preset", 0 ).asChar();
+  if ( !argParser.isFlagSet( "presetPath" ) )
+    throw ArgException( MS::kFailure, "-presetPath not provided." );
+  args.presetPath = argParser.flagArgumentString( "presetPath", 0 ).asChar();
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGInstPresetCommand::executeDFGUICmd(
@@ -339,7 +339,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddFuncCommand::executeDFGUICmd(
 void FabricDFGAddVarCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
+  syntax.addFlag("-d", "-desiredNodeName", MSyntax::kString);
   syntax.addFlag("-t", "-type", MSyntax::kString);
   syntax.addFlag("-ed", "-extDep", MSyntax::kString);
 }
@@ -351,8 +351,8 @@ void FabricDFGAddVarCommand::GetArgs(
 {
   Parent::GetArgs( argParser, args );
 
-  if ( argParser.isFlagSet( "desiredName" ) )
-    args.desiredName = argParser.flagArgumentString( "desiredName", 0 ).asChar();
+  if ( argParser.isFlagSet( "desiredNodeName" ) )
+    args.desiredName = argParser.flagArgumentString( "desiredNodeName", 0 ).asChar();
 
   if ( argParser.isFlagSet( "type" ) )
     args.type = argParser.flagArgumentString( "type", 0 ).asChar();
@@ -388,8 +388,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddVarCommand::executeDFGUICmd(
 void FabricDFGAddRefCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
-  syntax.addFlag("-va", "-varPath", MSyntax::kString);
+  syntax.addFlag("-d", "-desiredNodeName", MSyntax::kString);
+  syntax.addFlag("-v", "-varPath", MSyntax::kString);
 }
 
 void FabricDFGAddRefCommand::GetArgs(
@@ -399,27 +399,14 @@ void FabricDFGAddRefCommand::GetArgs(
 {
   Parent::GetArgs( argParser, args );
 
-  if ( argParser.isFlagSet( "desiredName" ) )
-    args.desiredName = argParser.flagArgumentString( "desiredName", 0 ).asChar();
+  if ( argParser.isFlagSet( "desiredNodeName" ) )
+    args.desiredName = argParser.flagArgumentString( "desiredNodeName", 0 ).asChar();
 
   if ( argParser.isFlagSet( "varPath" ) )
     args.varPath = argParser.flagArgumentString( "varPath", 0 ).asChar();
 }
 
 // FabricDFGAddGetCommand
-
-void FabricDFGAddGetCommand::AddSyntax( MSyntax &syntax )
-{
-  Parent::AddSyntax( syntax );
-}
-
-void FabricDFGAddGetCommand::GetArgs(
-  MArgParser &argParser,
-  Args &args
-  )
-{
-  Parent::GetArgs( argParser, args );
-}
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddGetCommand::executeDFGUICmd(
   MArgParser &argParser
@@ -443,19 +430,6 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddGetCommand::executeDFGUICmd(
 }
 
 // FabricDFGAddSetCommand
-
-void FabricDFGAddSetCommand::AddSyntax( MSyntax &syntax )
-{
-  Parent::AddSyntax( syntax );
-}
-
-void FabricDFGAddSetCommand::GetArgs(
-  MArgParser &argParser,
-  Args &args
-  )
-{
-  Parent::GetArgs( argParser, args );
-}
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddSetCommand::executeDFGUICmd(
   MArgParser &argParser
@@ -604,30 +578,32 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddSetCommand::executeDFGUICmd(
 //   return MS::kSuccess;
 // }
 
-// FabricDFGConnectCommand
+// FabricDFGCnxnCommand
 
-void FabricDFGConnectCommand::AddSyntax( MSyntax &syntax )
+void FabricDFGCnxnCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-sp", "-srcPort", MSyntax::kString);
-  syntax.addFlag("-dp", "-dstPort", MSyntax::kString);
+  syntax.addFlag("-s", "-srcPortPath", MSyntax::kString);
+  syntax.addFlag("-d", "-dstPortPath", MSyntax::kString);
 }
 
-void FabricDFGConnectCommand::GetArgs(
+void FabricDFGCnxnCommand::GetArgs(
   MArgParser &argParser,
   Args &args
   )
 {
   Parent::GetArgs( argParser, args );
 
-  if ( !argParser.isFlagSet( "srcPort" ) )
-    throw ArgException( MS::kFailure, "-srcPort not provided." );
-  args.srcPort = argParser.flagArgumentString( "srcPort", 0 ).asChar();
+  if ( !argParser.isFlagSet( "srcPortPath" ) )
+    throw ArgException( MS::kFailure, "-srcPortPath not provided." );
+  args.srcPort = argParser.flagArgumentString( "srcPortPath", 0 ).asChar();
 
-  if ( !argParser.isFlagSet( "dstPort" ) )
-    throw ArgException( MS::kFailure, "-dstPort not provided." );
-  args.dstPort = argParser.flagArgumentString( "dstPort", 0 ).asChar();
+  if ( !argParser.isFlagSet( "dstPortPath" ) )
+    throw ArgException( MS::kFailure, "-dstPortPath not provided." );
+  args.dstPort = argParser.flagArgumentString( "dstPortPath", 0 ).asChar();
 }
+
+// FabricDFGConnectCommand
 
 FabricUI::DFG::DFGUICmd *FabricDFGConnectCommand::executeDFGUICmd(
   MArgParser &argParser
@@ -649,29 +625,6 @@ FabricUI::DFG::DFGUICmd *FabricDFGConnectCommand::executeDFGUICmd(
 }
 
 // FabricDFGDisconnectCommand
-
-void FabricDFGDisconnectCommand::AddSyntax( MSyntax &syntax )
-{
-  Parent::AddSyntax( syntax );
-  syntax.addFlag("-sp", "-srcPort", MSyntax::kString);
-  syntax.addFlag("-dp", "-dstPort", MSyntax::kString);
-}
-
-void FabricDFGDisconnectCommand::GetArgs(
-  MArgParser &argParser,
-  Args &args
-  )
-{
-  Parent::GetArgs( argParser, args );
-
-  if ( !argParser.isFlagSet( "srcPort" ) )
-    throw ArgException( MS::kFailure, "-srcPort not provided." );
-  args.srcPort = argParser.flagArgumentString( "srcPort", 0 ).asChar();
-
-  if ( !argParser.isFlagSet( "dstPort" ) )
-    throw ArgException( MS::kFailure, "-dstPort not provided." );
-  args.dstPort = argParser.flagArgumentString( "dstPort", 0 ).asChar();
-}
 
 FabricUI::DFG::DFGUICmd *FabricDFGDisconnectCommand::executeDFGUICmd(
   MArgParser &argParser
@@ -697,8 +650,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGDisconnectCommand::executeDFGUICmd(
 void FabricDFGMoveNodesCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-n", "-node", MSyntax::kString);
-  syntax.makeFlagMultiUse("-node");
+  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
+  syntax.makeFlagMultiUse("-nodeName");
   syntax.addFlag("-xy", "-position", MSyntax::kDouble, MSyntax::kDouble);
   syntax.makeFlagMultiUse("-position");
 }
@@ -714,12 +667,12 @@ void FabricDFGMoveNodesCommand::GetArgs(
   {
     MArgList argList;
     if ( argParser.getFlagArgumentList(
-      "node", i, argList
+      "nodeName", i, argList
       ) != MS::kSuccess )
       break;
     MString nodeName;
     if ( argList.get( 0, nodeName ) != MS::kSuccess )
-      throw ArgException( MS::kFailure, "-node not a string" );
+      throw ArgException( MS::kFailure, "-nodeName not a string" );
     args.nodeNames.push_back( nodeName.asChar() );
   }
 
@@ -763,9 +716,9 @@ FabricUI::DFG::DFGUICmd *FabricDFGMoveNodesCommand::executeDFGUICmd(
 void FabricDFGImplodeNodesCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-n", "-node", MSyntax::kString);
-  syntax.makeFlagMultiUse("-node");
-  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
+  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
+  syntax.makeFlagMultiUse("-nodeName");
+  syntax.addFlag("-d", "-desiredImplodedNodeName", MSyntax::kString);
 }
 
 void FabricDFGImplodeNodesCommand::GetArgs(
@@ -779,18 +732,18 @@ void FabricDFGImplodeNodesCommand::GetArgs(
   {
     MArgList argList;
     if ( argParser.getFlagArgumentList(
-      "node", i, argList
+      "nodeName", i, argList
       ) != MS::kSuccess )
       break;
     MString node;
     if ( argList.get( 0, node ) != MS::kSuccess )
-      throw ArgException( MS::kFailure, "-node not a string" );
+      throw ArgException( MS::kFailure, "-n (-nodeName) not a string" );
     args.nodes.push_back( node.asChar() );
   }
 
-  if ( argParser.isFlagSet( "desiredName" ) )
+  if ( argParser.isFlagSet( "desiredImplodedNodeName" ) )
     args.desiredName =
-      argParser.flagArgumentString( "desiredName", 0 ).asChar();;
+      argParser.flagArgumentString( "desiredImplodedNodeName", 0 ).asChar();;
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGImplodeNodesCommand::executeDFGUICmd(
@@ -818,7 +771,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGImplodeNodesCommand::executeDFGUICmd(
 void FabricDFGExplodeNodeCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-n", "-node", MSyntax::kString);
+  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
 }
 
 void FabricDFGExplodeNodeCommand::GetArgs(
@@ -828,9 +781,9 @@ void FabricDFGExplodeNodeCommand::GetArgs(
 {
   Parent::GetArgs( argParser, args );
 
-  if ( !argParser.isFlagSet( "node" ) )
-    throw ArgException( MS::kFailure, "-node not provided." );
-  args.node = argParser.flagArgumentString( "node", 0 ).asChar();
+  if ( !argParser.isFlagSet( "nodeName" ) )
+    throw ArgException( MS::kFailure, "-n (-nodeName) not provided." );
+  args.node = argParser.flagArgumentString( "nodeName", 0 ).asChar();
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGExplodeNodeCommand::executeDFGUICmd(
@@ -867,8 +820,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGExplodeNodeCommand::executeDFGUICmd(
 void FabricDFGRemoveNodesCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-n", "-node", MSyntax::kString);
-  syntax.makeFlagMultiUse("-node");
+  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
+  syntax.makeFlagMultiUse("-nodeName");
 }
 
 void FabricDFGRemoveNodesCommand::GetArgs(
@@ -882,12 +835,12 @@ void FabricDFGRemoveNodesCommand::GetArgs(
   {
     MArgList argList;
     if ( argParser.getFlagArgumentList(
-      "node", i, argList
+      "nodeName", i, argList
       ) != MS::kSuccess )
       break;
     MString nodeName;
     if ( argList.get( 0, nodeName ) != MS::kSuccess )
-      throw ArgException( MS::kFailure, "-node not a string" );
+      throw ArgException( MS::kFailure, "-nodeName not a string" );
     args.nodeNames.push_back( nodeName.asChar() );
   }
 }
@@ -915,10 +868,10 @@ FabricUI::DFG::DFGUICmd *FabricDFGRemoveNodesCommand::executeDFGUICmd(
 void FabricDFGAddPortCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
-  syntax.addFlag("-pt", "-portType", MSyntax::kString);
-  syntax.addFlag("-ts", "-typeSpec", MSyntax::kString);
-  syntax.addFlag("-cw", "-connectWith", MSyntax::kString);
+  syntax.addFlag("-d", "-desiredPortName", MSyntax::kString);
+  syntax.addFlag("-p", "-portType", MSyntax::kString);
+  syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
+  syntax.addFlag("-c", "-connectToPortPath", MSyntax::kString);
 }
 
 void FabricDFGAddPortCommand::GetArgs(
@@ -928,9 +881,9 @@ void FabricDFGAddPortCommand::GetArgs(
 {
   Parent::GetArgs( argParser, args );
 
-  if ( !argParser.isFlagSet( "desiredName" ) )
-    throw ArgException( MS::kFailure, "-desiredName not provided." );
-  args.desiredPortName = argParser.flagArgumentString( "desiredName", 0 ).asChar();
+  if ( !argParser.isFlagSet( "desiredPortName" ) )
+    throw ArgException( MS::kFailure, "-desiredPortName not provided." );
+  args.desiredPortName = argParser.flagArgumentString( "desiredPortName", 0 ).asChar();
 
   if ( !argParser.isFlagSet( "portType" ) )
     throw ArgException( MS::kFailure, "-portType not provided." );
@@ -948,8 +901,8 @@ void FabricDFGAddPortCommand::GetArgs(
   if ( argParser.isFlagSet( "typeSpec" ) )
     args.typeSpec = argParser.flagArgumentString( "typeSpec", 0 ).asChar();
 
-  if ( argParser.isFlagSet( "connectWith" ) )
-    args.portToConnectWith = argParser.flagArgumentString( "connectWith", 0 ).asChar();
+  if ( argParser.isFlagSet( "connectToPortPath" ) )
+    args.portToConnectWith = argParser.flagArgumentString( "connectToPortPath", 0 ).asChar();
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
@@ -1021,7 +974,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetArgTypeCommand::executeDFGUICmd(
 void FabricDFGSetNodeTitleCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-n", "-node", MSyntax::kString);
+  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
   syntax.addFlag("-t", "-title", MSyntax::kString);
 }
 
@@ -1032,9 +985,9 @@ void FabricDFGSetNodeTitleCommand::GetArgs(
 {
   Parent::GetArgs( argParser, args );
 
-  if ( !argParser.isFlagSet( "node" ) )
-    throw ArgException( MS::kFailure, "-node not provided." );
-  args.nodeName = argParser.flagArgumentString( "node", 0 ).asChar();
+  if ( !argParser.isFlagSet( "nodeName" ) )
+    throw ArgException( MS::kFailure, "-nodeName not provided." );
+  args.nodeName = argParser.flagArgumentString( "nodeName", 0 ).asChar();
 
   if ( !argParser.isFlagSet( "title" ) )
     throw ArgException( MS::kFailure, "-title not provided." );
@@ -1055,6 +1008,56 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetNodeTitleCommand::executeDFGUICmd(
       args.exec,
       args.nodeName,
       args.title
+      );
+  cmd->doit();
+  return cmd;
+}
+
+// FabricDFGSetNodeCommentCommand
+
+void FabricDFGSetNodeCommentCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
+  syntax.addFlag("-c", "-comment", MSyntax::kString);
+  syntax.addFlag("-x", "-expanded", MSyntax::kString);
+}
+
+void FabricDFGSetNodeCommentCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "nodeName" ) )
+    throw ArgException( MS::kFailure, "-nodeName not provided." );
+  args.nodeName = argParser.flagArgumentString( "nodeName", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "comment" ) )
+    throw ArgException( MS::kFailure, "-comment not provided." );
+  args.comment = argParser.flagArgumentString( "comment", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "expanded" ) )
+    throw ArgException( MS::kFailure, "-expanded not provided." );
+  args.expanded = argParser.flagArgumentBool( "expanded", 0 );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGSetNodeCommentCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_SetNodeComment *cmd =
+    new FabricUI::DFG::DFGUICmd_SetNodeComment(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.nodeName,
+      args.comment,
+      args.expanded
       );
   cmd->doit();
   return cmd;

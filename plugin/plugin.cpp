@@ -399,6 +399,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, MoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
+  MAYA_REGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeTitle );
 
   // plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);

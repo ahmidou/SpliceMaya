@@ -148,11 +148,8 @@ void DFGUICmdHandler_Maya::encodeBinding(
   std::stringstream &cmd
   )
 {
-  encodeStringArg(
-    FTL_STR("mayaNode"),
-    getNodeNameFromBinding( binding ).asChar(),
-    cmd
-    );
+  FTL::CStrRef mayaNodeName = getNodeNameFromBinding( binding ).asChar();
+  encodeStringArg( FTL_STR("mayaNode"), mayaNodeName.c_str(), cmd );
 }
 
 void DFGUICmdHandler_Maya::encodeExec(
@@ -163,11 +160,7 @@ void DFGUICmdHandler_Maya::encodeExec(
   )
 {
   encodeBinding( binding, cmd );
-  encodeStringArg(
-    FTL_STR("exec"),
-    execPath,
-    cmd
-    );
+  encodeStringArg( FTL_STR("execPath"), execPath, cmd );
 }
 
 std::string DFGUICmdHandler_Maya::dfgDoInstPreset(
@@ -181,8 +174,8 @@ std::string DFGUICmdHandler_Maya::dfgDoInstPreset(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_InstPreset::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("preset"), preset, cmd );
-  encodePositionArg( FTL_STR("position"), pos, cmd );
+  encodeStringArg( FTL_STR("presetPath"), preset, cmd );
+  encodePositionArg( FTL_STR("xy"), pos, cmd );
   cmd << ';';
 
   MString result;
@@ -199,7 +192,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddVar(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef desiredName,
+  FTL::CStrRef desiredNodeName,
   FTL::CStrRef type,
   FTL::CStrRef extDep,
   QPointF pos
@@ -208,10 +201,10 @@ std::string DFGUICmdHandler_Maya::dfgDoAddVar(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_AddVar::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("desiredName"), desiredName, cmd );
+  encodeStringArg( FTL_STR("desiredNodeName"), desiredNodeName, cmd );
   encodeStringArg( FTL_STR("type"), type, cmd );
   encodeStringArg( FTL_STR("extDep"), extDep, cmd );
-  encodePositionArg( FTL_STR("position"), pos, cmd );
+  encodePositionArg( FTL_STR("xy"), pos, cmd );
   cmd << ';';
 
   MString result;
@@ -228,7 +221,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddGet(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef desiredName,
+  FTL::CStrRef desiredNodeName,
   FTL::CStrRef varPath,
   QPointF pos
   )
@@ -236,9 +229,9 @@ std::string DFGUICmdHandler_Maya::dfgDoAddGet(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_AddGet::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("desiredName"), desiredName, cmd );
+  encodeStringArg( FTL_STR("desiredNodeName"), desiredNodeName, cmd );
   encodeStringArg( FTL_STR("varPath"), varPath, cmd );
-  encodePositionArg( FTL_STR("position"), pos, cmd );
+  encodePositionArg( FTL_STR("xy"), pos, cmd );
   cmd << ';';
 
   MString result;
@@ -255,7 +248,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddSet(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef desiredName,
+  FTL::CStrRef desiredNodeName,
   FTL::CStrRef varPath,
   QPointF pos
   )
@@ -263,9 +256,9 @@ std::string DFGUICmdHandler_Maya::dfgDoAddSet(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_AddSet::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("desiredName"), desiredName, cmd );
+  encodeStringArg( FTL_STR("desiredNodeName"), desiredNodeName, cmd );
   encodeStringArg( FTL_STR("varPath"), varPath, cmd );
-  encodePositionArg( FTL_STR("position"), pos, cmd );
+  encodePositionArg( FTL_STR("xy"), pos, cmd );
   cmd << ';';
 
   MString result;
@@ -290,7 +283,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddGraph(
   cmd << FabricUI::DFG::DFGUICmd_AddGraph::CmdName();
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("title"), title, cmd );
-  encodePositionArg( FTL_STR("position"), pos, cmd );
+  encodePositionArg( FTL_STR("xy"), pos, cmd );
   cmd << ';';
 
   MString result;
@@ -317,7 +310,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddFunc(
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("title"), title, cmd );
   encodeStringArg( FTL_STR("code"), code, cmd );
-  encodePositionArg( FTL_STR("position"), pos, cmd );
+  encodePositionArg( FTL_STR("xy"), pos, cmd );
   cmd << ';';
 
   MString result;
@@ -340,7 +333,7 @@ void DFGUICmdHandler_Maya::dfgDoRemoveNodes(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_RemoveNodes::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringsArg( FTL_STR("node"), nodes, cmd );
+  encodeStringsArg( FTL_STR("nodeName"), nodes, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
@@ -354,17 +347,15 @@ void DFGUICmdHandler_Maya::dfgDoConnect(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef srcPort, 
-  FTL::CStrRef dstPort
+  FTL::CStrRef srcPortPath, 
+  FTL::CStrRef dstPortPath
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_Connect::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  cmd << " -srcPort ";
-  encodeMELString( srcPort, cmd );
-  cmd << " -dstPort ";
-  encodeMELString( dstPort, cmd );
+  encodeStringArg( FTL_STR("srcPortPath"), srcPortPath, cmd );
+  encodeStringArg( FTL_STR("dstPortPath"), dstPortPath, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
@@ -378,17 +369,15 @@ void DFGUICmdHandler_Maya::dfgDoDisconnect(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef srcPort, 
-  FTL::CStrRef dstPort
+  FTL::CStrRef srcPortPath, 
+  FTL::CStrRef dstPortPath
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_Disconnect::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  cmd << " -srcPort ";
-  encodeMELString( srcPort, cmd );
-  cmd << " -dstPort ";
-  encodeMELString( dstPort, cmd );
+  encodeStringArg( FTL_STR("srcPortPath"), srcPortPath, cmd );
+  encodeStringArg( FTL_STR("dstPortPath"), dstPortPath, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
@@ -405,34 +394,29 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
   FTL::CStrRef desiredPortName,
   FabricCore::DFGPortType portType,
   FTL::CStrRef typeSpec,
-  FTL::CStrRef portToConnect
+  FTL::CStrRef connectToPortPath
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_AddPort::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  cmd << " -desiredName ";
-  encodeMELString( desiredPortName, cmd );
-  cmd << " -portType ";
+  encodeStringArg( FTL_STR("desiredPortName"), desiredPortName, cmd );
+  FTL::CStrRef portTypeStr;
   switch ( portType )
   {
     case FabricCore::DFGPortType_In:
-      encodeMELString( "In", cmd );
+      portTypeStr = FTL_STR("In");
       break;
     case FabricCore::DFGPortType_IO:
-      encodeMELString( "IO", cmd );
+      portTypeStr = FTL_STR("IO");
       break;
     case FabricCore::DFGPortType_Out:
-      encodeMELString( "Out", cmd );
+      portTypeStr = FTL_STR("Out");
       break;
   }
-  cmd << " -typeSpec ";
-  encodeMELString( typeSpec, cmd );
-  if ( !portToConnect.empty() )
-  {
-    cmd << " -connectWith ";
-    encodeMELString( portToConnect, cmd );
-  }
+  encodeStringArg( FTL_STR("portType"), portTypeStr, cmd );
+  encodeStringArg( FTL_STR("typeSpec"), typeSpec, cmd );
+  encodeStringArg( FTL_STR("connectToPortPath"), connectToPortPath, cmd );
   cmd << ';';
 
   MString mResult;
@@ -478,8 +462,8 @@ void DFGUICmdHandler_Maya::dfgDoMoveNodes(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_MoveNodes::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringsArg( FTL_STR("node"), nodes, cmd );
-  encodePositionsArg( FTL_STR("position"), poss, cmd );
+  encodeStringsArg( FTL_STR("nodeName"), nodes, cmd );
+  encodePositionsArg( FTL_STR("xy"), poss, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
@@ -502,7 +486,7 @@ void DFGUICmdHandler_Maya::dfgDoResizeBackDrop(
   cmd << FabricUI::DFG::DFGUICmd_ResizeBackDrop::CmdName();
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("name"), name, cmd );
-  encodePositionArg( FTL_STR("position"), newTopLeftPos, cmd );
+  encodePositionArg( FTL_STR("xy"), newTopLeftPos, cmd );
   cmd << " -size ";
   cmd << newSize.width();
   cmd << " ";
@@ -527,8 +511,8 @@ std::string DFGUICmdHandler_Maya::dfgDoImplodeNodes(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_ImplodeNodes::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("desiredName"), desiredName, cmd );
-  encodeStringsArg( FTL_STR("node"), nodes, cmd );
+  encodeStringArg( FTL_STR("d"), desiredName, cmd );
+  encodeStringsArg( FTL_STR("n"), nodes, cmd );
   cmd << ';';
 
   MString result;
@@ -551,7 +535,7 @@ std::vector<std::string> DFGUICmdHandler_Maya::dfgDoExplodeNode(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_ExplodeNode::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("node"), nodeName, cmd );
+  encodeStringArg( FTL_STR("n"), nodeName, cmd );
   cmd << ';';
 
   MStringArray mResult;
@@ -581,7 +565,7 @@ void DFGUICmdHandler_Maya::dfgDoAddBackDrop(
   cmd << FabricUI::DFG::DFGUICmd_AddBackDrop::CmdName();
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("title"), title, cmd );
-  encodePositionArg( FTL_STR("position"), pos, cmd );
+  encodePositionArg( FTL_STR("xy"), pos, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
@@ -602,7 +586,7 @@ void DFGUICmdHandler_Maya::dfgDoSetNodeTitle(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_SetNodeTitle::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("node"), node, cmd );
+  encodeStringArg( FTL_STR("nodeName"), node, cmd );
   encodeStringArg( FTL_STR("title"), title, cmd );
   cmd << ';';
 
@@ -625,7 +609,7 @@ void DFGUICmdHandler_Maya::dfgDoSetNodeComment(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_SetNodeComment::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("node"), node, cmd );
+  encodeStringArg( FTL_STR("nodeName"), node, cmd );
   encodeStringArg( FTL_STR("comment"), comment, cmd );
   encodeBooleanArg( FTL_STR("expanded"), expanded, cmd );
   cmd << ';';
@@ -668,8 +652,8 @@ std::string DFGUICmdHandler_Maya::dfgDoRenamePort(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_RenamePort::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("name"), name, cmd );
-  encodeStringArg( FTL_STR("desiredName"), desiredName, cmd );
+  encodeStringArg( FTL_STR("s"), name, cmd );
+  encodeStringArg( FTL_STR("d"), desiredName, cmd );
   cmd << ';';
 
   MString mResult;
@@ -695,7 +679,7 @@ std::vector<std::string> DFGUICmdHandler_Maya::dfgDoPaste(
   cmd << FabricUI::DFG::DFGUICmd_Paste::CmdName();
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("json"), json, cmd );
-  encodePositionArg( FTL_STR("position"), cursorPos, cmd );
+  encodePositionArg( FTL_STR("xy"), cursorPos, cmd );
   cmd << ';';
 
   MStringArray mResult;
