@@ -251,76 +251,88 @@ FabricUI::DFG::DFGUICmd *FabricDFGInstPresetCommand::executeDFGUICmd(
   return cmd;
 }
 
-// // FabricDFGAddGraphCommand
+// FabricDFGAddGraphCommand
 
-// MSyntax FabricDFGAddGraphCommand::newSyntax()
-// {
-//   MSyntax syntax;
-//   Parent::AddSyntax( syntax );
-//   syntax.addFlag("-t", "-title", MSyntax::kString);
-//   return syntax;
-// }
+void FabricDFGAddGraphCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-t", "-title", MSyntax::kString);
+}
 
-// MStatus FabricDFGAddGraphCommand::invoke(
-//   MArgParser &argParser,
-//   FabricCore::DFGExec &exec
-//   )
-// {
-//   if ( !argParser.isFlagSet( "title" ) )
-//   {
-//     logError( "-title not provided." );
-//     return MS::kFailure;
-//   }
-//   MString title = argParser.flagArgumentString( "title", 0 );
+void FabricDFGAddGraphCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
 
-//   FTL::CStrRef nodeName = exec.addInstWithNewGraph( title.asChar() );
-//   incCoreUndoCount();
+  if ( argParser.isFlagSet( "title" ) )
+    args.title = argParser.flagArgumentString( "title", 0 ).asChar();
+}
 
-//   setPos( argParser, exec, nodeName );
+FabricUI::DFG::DFGUICmd *FabricDFGAddGraphCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
 
-//   setResult( MString( nodeName.c_str() ) );
-//   return MS::kSuccess;
-// }
+  FabricUI::DFG::DFGUICmd_AddGraph *cmd =
+    new FabricUI::DFG::DFGUICmd_AddGraph(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.title,
+      args.pos
+      );
+  cmd->doit();
+  setResult( cmd->getActualNodeName().c_str() );
+  return cmd;
+}
 
-// // FabricDFGAddFuncCommand
+// FabricDFGAddFuncCommand
 
-// MSyntax FabricDFGAddFuncCommand::newSyntax()
-// {
-//   MSyntax syntax;
-//   Parent::AddSyntax( syntax );
-//   syntax.addFlag("-t", "-title", MSyntax::kString);
-//   syntax.addFlag("-c", "-code", MSyntax::kString);
-//   return syntax;
-// }
+void FabricDFGAddFuncCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-t", "-title", MSyntax::kString);
+  syntax.addFlag("-c", "-code", MSyntax::kString);
+}
 
-// MStatus FabricDFGAddFuncCommand::invoke(
-//   MArgParser &argParser,
-//   FabricCore::DFGExec &exec
-//   )
-// {
-//   if ( !argParser.isFlagSet( "title" ) )
-//   {
-//     logError( "-title not provided." );
-//     return MS::kFailure;
-//   }
-//   MString title = argParser.flagArgumentString( "title", 0 );
+void FabricDFGAddFuncCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
 
-//   FTL::CStrRef nodeName = exec.addInstWithNewFunc( title.asChar() );
-//   incCoreUndoCount();
+  if ( argParser.isFlagSet( "title" ) )
+    args.title = argParser.flagArgumentString( "title", 0 ).asChar();
 
-//   if ( argParser.isFlagSet( "code" ) )
-//   {
-//     MString initialCode = argParser.flagArgumentString( "code", 0 );
-//     FabricCore::DFGExec subExec = exec.getSubExec( nodeName.c_str() );
-//     subExec.setCode( initialCode.asChar() );
-//     incCoreUndoCount();
-//   }
+  if ( argParser.isFlagSet( "code" ) )
+    args.code = argParser.flagArgumentString( "code", 0 ).asChar();
+}
 
-//   setPos( argParser, exec, nodeName );
+FabricUI::DFG::DFGUICmd *FabricDFGAddFuncCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
 
-//   setResult( MString( nodeName.c_str() ) );
-//   return MS::kSuccess;
-// }
+  FabricUI::DFG::DFGUICmd_AddFunc *cmd =
+    new FabricUI::DFG::DFGUICmd_AddFunc(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.title,
+      args.code,
+      args.pos
+      );
+  cmd->doit();
+  setResult( cmd->getActualNodeName().c_str() );
+  return cmd;
+}
 
 // // FabricDFGAddVarCommand
 
@@ -655,10 +667,10 @@ FabricUI::DFG::DFGUICmd *FabricDFGRemoveNodesCommand::executeDFGUICmd(
 void FabricDFGAddPortCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-dpn", "-desiredPortName", MSyntax::kString);
+  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
   syntax.addFlag("-pt", "-portType", MSyntax::kString);
   syntax.addFlag("-ts", "-typeSpec", MSyntax::kString);
-  syntax.addFlag("-ptc", "-portToConnect", MSyntax::kString);
+  syntax.addFlag("-cw", "-connectWith", MSyntax::kString);
 }
 
 void FabricDFGAddPortCommand::GetArgs(
@@ -668,9 +680,9 @@ void FabricDFGAddPortCommand::GetArgs(
 {
   Parent::GetArgs( argParser, args );
 
-  if ( !argParser.isFlagSet( "desiredPortName" ) )
-    throw ArgException( MS::kFailure, "-desiredPortName not provided." );
-  args.desiredPortName = argParser.flagArgumentString( "desiredPortName", 0 ).asChar();
+  if ( !argParser.isFlagSet( "desiredName" ) )
+    throw ArgException( MS::kFailure, "-desiredName not provided." );
+  args.desiredPortName = argParser.flagArgumentString( "desiredName", 0 ).asChar();
 
   if ( !argParser.isFlagSet( "portType" ) )
     throw ArgException( MS::kFailure, "-portType not provided." );
@@ -688,8 +700,8 @@ void FabricDFGAddPortCommand::GetArgs(
   if ( argParser.isFlagSet( "typeSpec" ) )
     args.typeSpec = argParser.flagArgumentString( "typeSpec", 0 ).asChar();
 
-  if ( argParser.isFlagSet( "portToConnect" ) )
-    args.portToConnectWith = argParser.flagArgumentString( "portToConnect", 0 ).asChar();
+  if ( argParser.isFlagSet( "connectWith" ) )
+    args.portToConnectWith = argParser.flagArgumentString( "connectWith", 0 ).asChar();
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(

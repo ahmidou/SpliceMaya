@@ -411,7 +411,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_AddPort::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  cmd << " -desiredPortName ";
+  cmd << " -desiredName ";
   encodeMELString( desiredPortName, cmd );
   cmd << " -portType ";
   switch ( portType )
@@ -430,7 +430,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
   encodeMELString( typeSpec, cmd );
   if ( !portToConnect.empty() )
   {
-    cmd << " -portToConnect ";
+    cmd << " -connectWith ";
     encodeMELString( portToConnect, cmd );
   }
   cmd << ';';

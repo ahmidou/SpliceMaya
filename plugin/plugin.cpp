@@ -379,6 +379,16 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
 
   plugin.registerCommand(
+    MayaDFGUICmd_AddFunc::GetName(),
+    MayaDFGUICmd_AddFunc::GetCreator(),
+    MayaDFGUICmd_AddFunc::GetCreateSyntax()
+    );
+  plugin.registerCommand(
+    MayaDFGUICmd_AddGraph::GetName(),
+    MayaDFGUICmd_AddGraph::GetCreator(),
+    MayaDFGUICmd_AddGraph::GetCreateSyntax()
+    );
+  plugin.registerCommand(
     MayaDFGUICmd_AddPort::GetName(),
     MayaDFGUICmd_AddPort::GetCreator(),
     MayaDFGUICmd_AddPort::GetCreateSyntax()
@@ -413,37 +423,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
     MayaDFGUICmd_SetArgType::GetCreator(),
     MayaDFGUICmd_SetArgType::GetCreateSyntax()
     );
-
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_Connect::CmdName().c_str(),
-  //   FabricDFGConnectCommand::creator,
-  //   FabricDFGConnectCommand::newSyntax
-  //   );
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_MoveNodes::CmdName().c_str(),
-  //   FabricDFGMoveNodesCommand::creator,
-  //   FabricDFGMoveNodesCommand::newSyntax
-  //   );
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_RemoveNodes::CmdName().c_str(),
-  //   FabricDFGRemoveNodesCommand::creator,
-  //   FabricDFGRemoveNodesCommand::newSyntax
-  //   );
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_AddPort::CmdName().c_str(),
-  //   FabricDFGAddPortCommand::creator,
-  //   FabricDFGAddPortCommand::newSyntax
-  //   );
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_SetArgType::CmdName().c_str(),
-  //   FabricDFGSetArgTypeCommand::creator,
-  //   FabricDFGSetArgTypeCommand::newSyntax
-  //   );
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_Disconnect::CmdName().c_str(),
-  //   FabricDFGDisconnectCommand::creator,
-  //   FabricDFGDisconnectCommand::newSyntax
-  //   );
 
   // plugin.registerCommand(
   //   FabricUI::DFG::DFGUICmd_AddFunc::CmdName().c_str(),
