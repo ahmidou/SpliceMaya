@@ -423,6 +423,11 @@ MAYA_EXPORT initializePlugin(MObject obj)
     FabricDFGAddPortCommand::creator,
     FabricDFGAddPortCommand::newSyntax
     );
+  plugin.registerCommand(
+    FabricUI::DFG::DFGUICmd_SetArgType::CmdName().c_str(),
+    FabricDFGSetArgTypeCommand::creator,
+    FabricDFGSetArgTypeCommand::newSyntax
+    );
   // plugin.registerCommand(
   //   FabricUI::DFG::DFGUICmd_Disconnect::CmdName().c_str(),
   //   FabricDFGDisconnectCommand::creator,

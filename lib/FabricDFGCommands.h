@@ -117,7 +117,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string execPath;
+    FTL::StrRef execPath;
     FabricCore::DFGExec exec;
   };
 
@@ -154,8 +154,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string srcPort;
-    std::string dstPort;
+    FTL::StrRef srcPort;
+    FTL::StrRef dstPort;
   };
 
   void getArgs( MArgParser &argParser, Args &args );
@@ -230,10 +230,48 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string desiredPortName;
+    FTL::StrRef desiredPortName;
     FabricCore::DFGPortType portType;
     FTL::StrRef typeSpec;
     FTL::StrRef portToConnectWith;
+  };
+
+  void getArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+class FabricDFGSetArgTypeCommand : public FabricDFGBindingCommand
+{
+  typedef FabricDFGBindingCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString(
+      FabricUI::DFG::DFGUICmd_SetArgType::CmdName().c_str()
+      ); }
+
+  static void* creator()
+    { return new FabricDFGSetArgTypeCommand; }
+
+  static MSyntax newSyntax()
+  {
+    MSyntax syntax;
+    addSyntax( syntax );
+    return syntax;
+  }
+
+protected:
+
+  static void addSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef argName;
+    FTL::StrRef typeName;
   };
 
   void getArgs( MArgParser &argParser, Args &args );

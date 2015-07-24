@@ -183,8 +183,9 @@ void FabricDFGExecCommand::getArgs(
 
   if ( !argParser.isFlagSet( "exec" ) )
     throw ArgException( MS::kFailure, "-exec not provided." );
-  args.execPath = argParser.flagArgumentString( "exec", 0 ).asChar();
-  args.exec = args.binding.getExec().getSubExec( args.execPath.c_str() );
+  MString execPathMString = argParser.flagArgumentString( "exec", 0 );
+  args.execPath = execPathMString.asChar();
+  args.exec = args.binding.getExec().getSubExec( execPathMString.asChar() );
 }
 
 // FabricDFGAddNodeCommand
@@ -562,10 +563,10 @@ FabricUI::DFG::DFGUICmd *FabricDFGMoveNodesCommand::executeDFGUICmd(
 void FabricDFGAddPortCommand::addSyntax( MSyntax &syntax )
 {
   Parent::addSyntax( syntax );
-  syntax.addFlag("-n", "-desiredPortName", MSyntax::kString);
+  syntax.addFlag("-dpn", "-desiredPortName", MSyntax::kString);
   syntax.addFlag("-pt", "-portType", MSyntax::kString);
   syntax.addFlag("-ts", "-typeSpec", MSyntax::kString);
-  syntax.addFlag("-c", "-portToConnect", MSyntax::kString);
+  syntax.addFlag("-ptc", "-portToConnect", MSyntax::kString);
 }
 
 void FabricDFGAddPortCommand::getArgs(
@@ -617,6 +618,48 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
       );
   cmd->doit();
   setResult( cmd->getActualPortName().c_str() );
+  return cmd;
+}
+
+// FabricDFGSetArgTypeCommand
+
+void FabricDFGSetArgTypeCommand::addSyntax( MSyntax &syntax )
+{
+  Parent::addSyntax( syntax );
+  syntax.addFlag("-n", "-name", MSyntax::kString);
+  syntax.addFlag("-t", "-type", MSyntax::kString);
+}
+
+void FabricDFGSetArgTypeCommand::getArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::getArgs( argParser, args );
+  
+  if ( !argParser.isFlagSet( "name" ) )
+    throw ArgException( MS::kFailure, "-name not provided." );
+  args.argName = argParser.flagArgumentString( "name", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "type" ) )
+    throw ArgException( MS::kFailure, "-type not provided." );
+  args.typeName = argParser.flagArgumentString( "type", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGSetArgTypeCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  getArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_SetArgType *cmd =
+    new FabricUI::DFG::DFGUICmd_SetArgType(
+      args.binding,
+      args.argName,
+      args.typeName
+      );
+  cmd->doit();
   return cmd;
 }
 

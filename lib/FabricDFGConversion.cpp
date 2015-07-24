@@ -581,7 +581,7 @@ void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricCore::DFGB
       dfgPlugToPort_compound_convertCompound(compound, handle, compoundVal);
       compoundVals.callMethod("", "addParam", 1, &compoundVal);
     }
-    binding.setArgValue(argName, compoundVals);
+    binding.setArgValue(argName, compoundVals, false);
   }
   else{
   }
@@ -604,14 +604,14 @@ void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data, FabricCore::DFGBindin
       dfgPlugToPort_compound_convertCompound(compound, handle, compoundVal);
       compoundVals.setArrayElement(j, compoundVal);
     }
-    binding.setArgValue(argName, compoundVals);
+    binding.setArgValue(argName, compoundVals, false);
   }
   else{
     MDataHandle handle = data.inputValue(plug);
     FabricCore::RTVal rtVal = FabricSplice::constructObjectRTVal("CompoundParam");
     MFnCompoundAttribute compound(plug.attribute());
     dfgPlugToPort_compound_convertCompound(compound, handle, rtVal);
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
   }
 }
 
@@ -631,11 +631,11 @@ void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
       values[i] = handle.asBool();
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
   }
   else{
     MDataHandle handle = data.inputValue(plug);
-    binding.setArgValue(argName, FabricSplice::constructBooleanRTVal(handle.asBool()));
+    binding.setArgValue(argName, FabricSplice::constructBooleanRTVal(handle.asBool()), false);
   }
 }
 
@@ -656,7 +656,7 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding
       values[i] = handle.asLong();
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
   }else{
     MDataHandle handle = data.inputValue(plug);
 
@@ -673,11 +673,11 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding
         values[i] = arrayValues[i];
       }
 
-      binding.setArgValue(argName, rtVal);
+      binding.setArgValue(argName, rtVal, false);
     }else{
       FabricCore::RTVal rtVal = binding.getArgValue(argName);
       if(!rtVal.isArray())
-        binding.setArgValue(argName, FabricSplice::constructSInt32RTVal(handle.asLong()));
+        binding.setArgValue(argName, FabricSplice::constructSInt32RTVal(handle.asLong()), false);
     }
   }
 }
@@ -715,7 +715,7 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding 
       }
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
   }else{
     MDataHandle handle = data.inputValue(plug);
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
@@ -731,20 +731,20 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding 
         values[i] = arrayValues[i];
       }
 
-      binding.setArgValue(argName, rtVal);
+      binding.setArgValue(argName, rtVal, false);
     }else{
       if(scalarUnit == "time")
-        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asTime().as(MTime::kSeconds)));
+        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asTime().as(MTime::kSeconds)), false);
       else if(scalarUnit == "angle")
-        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asAngle().as(MAngle::kRadians)));
+        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asAngle().as(MAngle::kRadians)), false);
       else if(scalarUnit == "distance")
-        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asDistance().as(MDistance::kMillimeters)));
+        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asDistance().as(MDistance::kMillimeters)), false);
       else
       {
         if(handle.numericType() == MFnNumericData::kFloat)
-          binding.setArgValue(argName, FabricSplice::constructFloat32RTVal(handle.asFloat()));
+          binding.setArgValue(argName, FabricSplice::constructFloat32RTVal(handle.asFloat()), false);
         else
-          binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asDouble()));
+          binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asDouble()), false);
       }
     }
   }
@@ -766,14 +766,14 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding 
       stringArrayVal.setArrayElement(i, FabricSplice::constructStringRTVal(stringVal.asChar()));
     }
 
-    binding.setArgValue(argName, stringArrayVal);
+    binding.setArgValue(argName, stringArrayVal, false);
   }
   else{
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray())
       return;
     MDataHandle handle = data.inputValue(plug);
-    binding.setArgValue(argName, FabricSplice::constructStringRTVal(handle.asString().asChar()));
+    binding.setArgValue(argName, FabricSplice::constructStringRTVal(handle.asString().asChar()), false);
   }
 
   CORE_CATCH_END;
@@ -809,7 +809,7 @@ void dfgPlugToPort_color(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       arrayVal.setArrayElement(i, color);
     }
 
-    binding.setArgValue(argName, arrayVal);
+    binding.setArgValue(argName, arrayVal, false);
   }
   else {
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
@@ -831,7 +831,7 @@ void dfgPlugToPort_color(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
     }
     color.setMember("a", FabricSplice::constructFloat64RTVal(1.0));
 
-    binding.setArgValue(argName, color);
+    binding.setArgValue(argName, color, false);
   }
 
   CORE_CATCH_END;
@@ -865,7 +865,7 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
       }
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
   }else{
     MDataHandle handle = data.inputValue(plug);
     if(handle.type() == MFnData::kVectorArray){
@@ -884,7 +884,7 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
         values[offset++] = (float)arrayValues[i].z;
       }
 
-      binding.setArgValue(argName, rtVal);
+      binding.setArgValue(argName, rtVal, false);
     }else if(handle.type() == MFnData::kPointArray){
       MPointArray arrayValues = MFnPointArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
@@ -901,7 +901,7 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
         values[offset++] = (float)arrayValues[i].z;
       }
 
-      binding.setArgValue(argName, rtVal);
+      binding.setArgValue(argName, rtVal, false);
     }else{
       FabricCore::RTVal rtVal = binding.getArgValue(argName);
       if(rtVal.isArray())
@@ -918,7 +918,7 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & 
         spliceVec.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
         spliceVec.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
       }
-      binding.setArgValue(argName, spliceVec);
+      binding.setArgValue(argName, spliceVec, false);
     }
   }
 }
@@ -952,7 +952,7 @@ void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       arrayVal.setArrayElement(i, euler);
     }
 
-    binding.setArgValue(argName, arrayVal);
+    binding.setArgValue(argName, arrayVal, false);
   }
   else {
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
@@ -973,7 +973,7 @@ void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       euler.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
     }
 
-    binding.setArgValue(argName, euler);
+    binding.setArgValue(argName, euler, false);
   }
 
   CORE_CATCH_END;
@@ -1014,7 +1014,7 @@ void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       values[offset++] = (float)mayaMat[3][3];
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
   }
   else{
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
@@ -1050,7 +1050,7 @@ void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
     spliceMatRow.setMember("t", FabricSplice::constructFloat64RTVal(mayaMat.matrix[3][3]));
     spliceMat.setMember("row3", spliceMatRow);
 
-    binding.setArgValue(argName, spliceMat);
+    binding.setArgValue(argName, spliceMat, false);
   }
 }
 
@@ -1230,7 +1230,7 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricCore::DFGBin
       mayaIndices.clear();
     }
 
-    binding.setArgValue(argName, portRTVal);
+    binding.setArgValue(argName, portRTVal, false);
   }
   catch(FabricCore::Exception e)
   {
@@ -1334,7 +1334,7 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding &
       rtVal.callMethod("", "_setTopologyFromExternalArray", 1, &mayaIndicesVal);
     }
 
-    binding.setArgValue(argName, portRTVal);
+    binding.setArgValue(argName, portRTVal, false);
   }
   catch(FabricCore::Exception e)
   {
@@ -1484,7 +1484,7 @@ void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricCore::DFGB
 
     FabricCore::RTVal trackVal;
     dfgPlugToPort_KeyframeTrack_helper(curve, trackVal);
-    binding.setArgValue(argName, trackVal);
+    binding.setArgValue(argName, trackVal, false);
   } else {
 
     FabricCore::RTVal trackVals = FabricSplice::constructRTVal("KeyframeTrack[]");
@@ -1516,7 +1516,7 @@ void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricCore::DFGB
       trackVals.setArrayElement(j, trackVal);
     }
 
-    binding.setArgValue(argName, trackVals);
+    binding.setArgValue(argName, trackVals, false);
   }
 }
 
@@ -1530,7 +1530,7 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricCore::DFG
       if(!spliceMayaData)
         return;
 
-      binding.setArgValue(argName, spliceMayaData->getRTVal());
+      binding.setArgValue(argName, spliceMayaData->getRTVal(), false);
     }else{
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
       unsigned int elements = arrayHandle.elementCount();
@@ -1553,7 +1553,7 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricCore::DFG
         value.setArrayElement(i, spliceMayaData->getRTVal());
       }
 
-      binding.setArgValue(argName, value);
+      binding.setArgValue(argName, value, false);
     }
   }
   catch(FabricCore::Exception e)
@@ -2234,7 +2234,7 @@ void dfgPortToPlug_bool(FabricCore::DFGBinding & binding, char const * argName, 
       handle.setBool(values[i]);
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
@@ -2262,7 +2262,7 @@ void dfgPortToPlug_integer(FabricCore::DFGBinding & binding, char const * argNam
       handle.setInt(values[i]);
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
@@ -2284,7 +2284,7 @@ void dfgPortToPlug_integer(FabricCore::DFGBinding & binding, char const * argNam
         arrayValues[i] = values[i];
       }
 
-      binding.setArgValue(argName, rtVal);
+      binding.setArgValue(argName, rtVal, false);
       handle.set(MFnIntArrayData().create(arrayValues));
     }else{
       FabricCore::RTVal rtVal = binding.getArgValue(argName);
@@ -2325,7 +2325,7 @@ void dfgPortToPlug_scalar(FabricCore::DFGBinding & binding, char const * argName
       }
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
@@ -2471,7 +2471,7 @@ void dfgPortToPlug_vec3(FabricCore::DFGBinding & binding, char const * argName, 
       offset+=3;
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
@@ -2495,7 +2495,7 @@ void dfgPortToPlug_vec3(FabricCore::DFGBinding & binding, char const * argName, 
         arrayValues[i].z = values[offset++];
       }
 
-      binding.setArgValue(argName, rtVal);
+      binding.setArgValue(argName, rtVal, false);
       handle.set(MFnVectorArrayData().create(arrayValues));
     }else if(handle.type() == MFnData::kPointArray) {
       unsigned int elements = rtVal.getArraySize();
@@ -2513,7 +2513,7 @@ void dfgPortToPlug_vec3(FabricCore::DFGBinding & binding, char const * argName, 
         arrayValues[i].z = values[offset++];
       }
 
-      binding.setArgValue(argName, rtVal);
+      binding.setArgValue(argName, rtVal, false);
       handle.set(MFnPointArrayData().create(arrayValues));
     }else{
       FabricCore::RTVal rtVal = binding.getArgValue(argName);
@@ -2609,7 +2609,7 @@ void dfgPortToPlug_mat44(FabricCore::DFGBinding & binding, char const * argName,
       handle.setMMatrix(mayaMat);
     }
 
-    binding.setArgValue(argName, rtVal);
+    binding.setArgValue(argName, rtVal, false);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
