@@ -467,6 +467,34 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_AddFunc
   > MayaDFGUICmd_AddFunc;
 
+class FabricDFGAddVarCommand
+  : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string desiredName;
+    std::string type;
+    std::string extDep;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddVarCommand,
+  FabricUI::DFG::DFGUICmd_AddVar
+  > MayaDFGUICmd_AddVar;
+
 // class FabricDFGAddGraphCommand : public FabricDFGAddNodeCommand
 // {
 //   typedef FabricDFGAddNodeCommand Parent;

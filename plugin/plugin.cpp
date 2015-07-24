@@ -394,6 +394,11 @@ MAYA_EXPORT initializePlugin(MObject obj)
     MayaDFGUICmd_AddPort::GetCreateSyntax()
     );
   plugin.registerCommand(
+    MayaDFGUICmd_AddVar::GetName(),
+    MayaDFGUICmd_AddVar::GetCreator(),
+    MayaDFGUICmd_AddVar::GetCreateSyntax()
+    );
+  plugin.registerCommand(
     MayaDFGUICmd_Connect::GetName(),
     MayaDFGUICmd_Connect::GetCreator(),
     MayaDFGUICmd_Connect::GetCreateSyntax()

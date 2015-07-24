@@ -334,6 +334,55 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddFuncCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGAddVarCommand
+
+void FabricDFGAddVarCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
+  syntax.addFlag("-t", "-type", MSyntax::kString);
+  syntax.addFlag("-ed", "-extDep", MSyntax::kString);
+}
+
+void FabricDFGAddVarCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( argParser.isFlagSet( "desiredName" ) )
+    args.desiredName = argParser.flagArgumentString( "desiredName", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "type" ) )
+    args.type = argParser.flagArgumentString( "type", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "extDep" ) )
+    args.extDep = argParser.flagArgumentString( "extDep", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGAddVarCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddVar *cmd =
+    new FabricUI::DFG::DFGUICmd_AddVar(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.desiredName,
+      args.type,
+      args.extDep,
+      args.pos
+      );
+  cmd->doit();
+  setResult( cmd->getActualNodeName().c_str() );
+  return cmd;
+}
+
 // // FabricDFGAddVarCommand
 
 // MSyntax FabricDFGAddVarCommand::newSyntax()

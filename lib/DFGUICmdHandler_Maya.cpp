@@ -200,7 +200,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddVar(
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
   FTL::CStrRef desiredName,
-  FTL::CStrRef dataType,
+  FTL::CStrRef type,
   FTL::CStrRef extDep,
   QPointF pos
   )
@@ -209,7 +209,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddVar(
   cmd << FabricUI::DFG::DFGUICmd_AddVar::CmdName();
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("desiredName"), desiredName, cmd );
-  encodeStringArg( FTL_STR("dataType"), dataType, cmd );
+  encodeStringArg( FTL_STR("type"), type, cmd );
   encodeStringArg( FTL_STR("extDep"), extDep, cmd );
   encodePositionArg( FTL_STR("position"), pos, cmd );
   cmd << ';';
