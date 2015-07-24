@@ -979,7 +979,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
 void FabricDFGSetArgTypeCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag("-n", "-name", MSyntax::kString);
+  syntax.addFlag("-a", "-argument", MSyntax::kString);
   syntax.addFlag("-t", "-type", MSyntax::kString);
 }
 
@@ -990,9 +990,9 @@ void FabricDFGSetArgTypeCommand::GetArgs(
 {
   Parent::GetArgs( argParser, args );
 
-  if ( !argParser.isFlagSet( "name" ) )
-    throw ArgException( MS::kFailure, "-name not provided." );
-  args.argName = argParser.flagArgumentString( "name", 0 ).asChar();
+  if ( !argParser.isFlagSet( "argument" ) )
+    throw ArgException( MS::kFailure, "-argument not provided." );
+  args.argName = argParser.flagArgumentString( "argument", 0 ).asChar();
 
   if ( !argParser.isFlagSet( "type" ) )
     throw ArgException( MS::kFailure, "-type not provided." );
@@ -1016,82 +1016,46 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetArgTypeCommand::executeDFGUICmd(
   return cmd;
 }
 
-// // FabricDFGDisconnectCommand
+// FabricDFGSetNodeTitleCommand
 
-// MSyntax FabricDFGDisconnectCommand::newSyntax()
-// {
-//   MSyntax syntax;
-//   Parent::AddSyntax( syntax );
-//   syntax.addFlag("-sp", "-srcPort", MSyntax::kString);
-//   syntax.addFlag("-dp", "-dstPort", MSyntax::kString);
-//   return syntax;
-// }
+void FabricDFGSetNodeTitleCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-node", MSyntax::kString);
+  syntax.addFlag("-t", "-title", MSyntax::kString);
+}
 
-// MStatus FabricDFGDisconnectCommand::invoke(
-//   MArgParser &argParser,
-//   FabricCore::DFGExec &exec
-//   )
-// {
-//   if ( !argParser.isFlagSet( "srcPort" ) )
-//   {
-//     logError( "-srcPort not provided." );
-//     return MS::kFailure;
-//   }
-//   MString srcPort = argParser.flagArgumentString( "srcPort", 0 );
+void FabricDFGSetNodeTitleCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
 
-//   if ( !argParser.isFlagSet( "dstPort" ) )
-//   {
-//     logError( "-dstPort not provided." );
-//     return MS::kFailure;
-//   }
-//   MString dstPort = argParser.flagArgumentString( "dstPort", 0 );
+  if ( !argParser.isFlagSet( "node" ) )
+    throw ArgException( MS::kFailure, "-node not provided." );
+  args.nodeName = argParser.flagArgumentString( "node", 0 ).asChar();
 
-//   exec.disconnectFrom( srcPort.asChar(), dstPort.asChar() );
-//   incCoreUndoCount();
+  if ( !argParser.isFlagSet( "title" ) )
+    throw ArgException( MS::kFailure, "-title not provided." );
+  args.title = argParser.flagArgumentString( "title", 0 ).asChar();
+}
 
-//   return MS::kSuccess;
-// }
+FabricUI::DFG::DFGUICmd *FabricDFGSetNodeTitleCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
 
-// // FabricDFGRemoveNodesCommand
-
-// MSyntax FabricDFGRemoveNodesCommand::newSyntax()
-// {
-//   MSyntax syntax;
-//   Parent::AddSyntax( syntax );
-//   syntax.addFlag("-n", "-node", MSyntax::kString);
-//   syntax.makeFlagMultiUse("-node");
-//   return syntax;
-// }
-
-// MStatus FabricDFGRemoveNodesCommand::invoke(
-//   MArgParser &argParser,
-//   FabricCore::DFGExec &exec
-//   )
-// {
-//   std::vector<std::string> nodes;
-
-//   for ( unsigned i = 0; ; ++i )
-//   {
-//     MArgList argList;
-//     if ( argParser.getFlagArgumentList(
-//       "node", i, argList
-//       ) != MS::kSuccess )
-//       break;
-//     MString node;
-//     if ( argList.get( 0, node ) != MS::kSuccess )
-//     {
-//       logError( "-node not a string" );
-//       return MS::kFailure;
-//     }
-//     nodes.push_back( node.asChar() );
-//   }
-
-//   for ( std::vector<std::string>::const_iterator it = nodes.begin();
-//     it != nodes.end(); ++it )
-//   {
-//     exec.removeNode( it->c_str() );
-//     incCoreUndoCount();
-//   }
-
-//   return MS::kSuccess;
-// }
+  FabricUI::DFG::DFGUICmd_SetNodeTitle *cmd =
+    new FabricUI::DFG::DFGUICmd_SetNodeTitle(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.nodeName,
+      args.title
+      );
+  cmd->doit();
+  return cmd;
+}

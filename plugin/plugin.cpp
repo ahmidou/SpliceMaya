@@ -399,8 +399,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, MoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
+  MAYA_REGISTER_DFGUICMD( plugin, SetNodeTitle );
 
-  // plugin.registerCommand("dfgRenameNode", FabricDFGRenameNodeCommand::creator, FabricDFGRenameNodeCommand::newSyntax);
   // plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);
   // plugin.registerCommand("dfgRenamePort", FabricDFGRenamePortCommand::creator, FabricDFGRenamePortCommand::newSyntax);
   // plugin.registerCommand("dfgSetArg", FabricDFGSetArgCommand::creator, FabricDFGSetArgCommand::newSyntax);

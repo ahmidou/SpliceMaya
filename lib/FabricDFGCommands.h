@@ -380,6 +380,33 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_SetArgType
   > MayaDFGUICmd_SetArgType;
 
+class FabricDFGSetNodeTitleCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef nodeName;
+    FTL::StrRef title;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSetNodeTitleCommand,
+  FabricUI::DFG::DFGUICmd_SetNodeTitle
+  > MayaDFGUICmd_SetNodeTitle;
+
 // class FabricDFGDisconnectCommand : public FabricDFGExecCommand
 // {
 //   typedef FabricDFGExecCommand Parent;

@@ -715,15 +715,15 @@ std::vector<std::string> DFGUICmdHandler_Maya::dfgDoPaste(
 
 void DFGUICmdHandler_Maya::dfgDoSetArgType(
   FabricCore::DFGBinding const &binding,
-  FTL::CStrRef name,
-  FTL::CStrRef type
+  FTL::CStrRef argName,
+  FTL::CStrRef typeName
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_SetArgType::CmdName();
   encodeBinding( binding, cmd );
-  encodeStringArg( FTL_STR("name"), name, cmd );
-  encodeStringArg( FTL_STR("type"), type, cmd );
+  encodeStringArg( FTL_STR("argument"), argName, cmd );
+  encodeStringArg( FTL_STR("type"), typeName, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
