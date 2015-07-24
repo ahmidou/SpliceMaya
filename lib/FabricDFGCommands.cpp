@@ -583,11 +583,12 @@ void FabricDFGAddPortCommand::getArgs(
   if ( !argParser.isFlagSet( "portType" ) )
     throw ArgException( MS::kFailure, "-portType not provided." );
   MString portTypeString = argParser.flagArgumentString( "portType", 0 ).asChar();
-  if ( portTypeString == "In" )
+  portTypeString.toLowerCase(); 
+  if ( portTypeString == "in" )
     args.portType = FabricCore::DFGPortType_In;
-  else if ( portTypeString == "IO" )
+  else if ( portTypeString == "io" )
     args.portType = FabricCore::DFGPortType_IO;
-  else if ( portTypeString == "Out" )
+  else if ( portTypeString == "out" )
     args.portType = FabricCore::DFGPortType_Out;
   else
     throw ArgException( MS::kFailure, "-portType value unrecognized" );
@@ -636,7 +637,7 @@ void FabricDFGSetArgTypeCommand::getArgs(
   )
 {
   Parent::getArgs( argParser, args );
-  
+
   if ( !argParser.isFlagSet( "name" ) )
     throw ArgException( MS::kFailure, "-name not provided." );
   args.argName = argParser.flagArgumentString( "name", 0 ).asChar();
