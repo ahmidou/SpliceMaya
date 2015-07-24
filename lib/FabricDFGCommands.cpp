@@ -813,6 +813,55 @@ FabricUI::DFG::DFGUICmd *FabricDFGImplodeNodesCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGExplodeNodeCommand
+
+void FabricDFGExplodeNodeCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-node", MSyntax::kString);
+}
+
+void FabricDFGExplodeNodeCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "node" ) )
+    throw ArgException( MS::kFailure, "-node not provided." );
+  args.node = argParser.flagArgumentString( "node", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGExplodeNodeCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_ExplodeNode *cmd =
+    new FabricUI::DFG::DFGUICmd_ExplodeNode(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.node
+      );
+  cmd->doit();
+
+  FTL::ArrayRef<std::string> explodedNodeNames =
+    cmd->getExplodedNodeNames();
+
+  MStringArray mExplodedNodeNames;
+  mExplodedNodeNames.setSizeIncrement( explodedNodeNames.size() );
+  for ( FTL::ArrayRef<std::string>::IT it = explodedNodeNames.begin();
+    it != explodedNodeNames.end(); ++it )
+    mExplodedNodeNames.append( it->c_str() );
+  setResult( mExplodedNodeNames );
+
+  return cmd;
+}
+
 // FabricDFGRemoveNodesCommand
 
 void FabricDFGRemoveNodesCommand::AddSyntax( MSyntax &syntax )

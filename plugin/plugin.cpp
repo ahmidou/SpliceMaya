@@ -393,6 +393,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, AddVar );
   MAYA_REGISTER_DFGUICMD( plugin, Connect );
   MAYA_REGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_REGISTER_DFGUICMD( plugin, ExplodeNode );
   MAYA_REGISTER_DFGUICMD( plugin, ImplodeNodes );
   MAYA_REGISTER_DFGUICMD( plugin, InstPreset );
   MAYA_REGISTER_DFGUICMD( plugin, MoveNodes );
@@ -411,8 +412,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   // plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
   // plugin.registerCommand("dfgCopy", FabricDFGCopyCommand::creator, FabricDFGCopyCommand::newSyntax);
   // plugin.registerCommand("dfgPaste", FabricDFGPasteCommand::creator, FabricDFGPasteCommand::newSyntax);
-  // plugin.registerCommand("dfgImplodeNodes", FabricDFGImplodeNodesCommand::creator, FabricDFGImplodeNodesCommand::newSyntax);
-  // plugin.registerCommand("dfgExplodeNode", FabricDFGExplodeNodeCommand::creator, FabricDFGExplodeNodeCommand::newSyntax);
   // plugin.registerCommand("dfgSetRefVarPath", FabricDFGSetRefVarPathCommand::creator, FabricDFGSetRefVarPathCommand::newSyntax);
 
   MString pluginPath = plugin.loadPath();

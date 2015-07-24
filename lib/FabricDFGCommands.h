@@ -272,6 +272,32 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_ImplodeNodes
   > MayaDFGUICmd_ImplodeNodes;
 
+class FabricDFGExplodeNodeCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef node;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGExplodeNodeCommand,
+  FabricUI::DFG::DFGUICmd_ExplodeNode
+  > MayaDFGUICmd_ExplodeNode;
+
 class FabricDFGRemoveNodesCommand
   : public FabricDFGExecCommand
 {

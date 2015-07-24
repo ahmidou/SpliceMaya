@@ -545,13 +545,13 @@ std::vector<std::string> DFGUICmdHandler_Maya::dfgDoExplodeNode(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef name
+  FTL::CStrRef nodeName
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_ExplodeNode::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("name"), name, cmd );
+  encodeStringArg( FTL_STR("node"), nodeName, cmd );
   cmd << ';';
 
   MStringArray mResult;
