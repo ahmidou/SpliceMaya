@@ -758,6 +758,61 @@ FabricUI::DFG::DFGUICmd *FabricDFGMoveNodesCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGImplodeNodesCommand
+
+void FabricDFGImplodeNodesCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-node", MSyntax::kString);
+  syntax.makeFlagMultiUse("-node");
+  syntax.addFlag("-dn", "-desiredName", MSyntax::kString);
+}
+
+void FabricDFGImplodeNodesCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  for ( unsigned i = 0; ; ++i )
+  {
+    MArgList argList;
+    if ( argParser.getFlagArgumentList(
+      "node", i, argList
+      ) != MS::kSuccess )
+      break;
+    MString node;
+    if ( argList.get( 0, node ) != MS::kSuccess )
+      throw ArgException( MS::kFailure, "-node not a string" );
+    args.nodes.push_back( node.asChar() );
+  }
+
+  if ( argParser.isFlagSet( "desiredName" ) )
+    args.desiredName =
+      argParser.flagArgumentString( "desiredName", 0 ).asChar();;
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGImplodeNodesCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_ImplodeNodes *cmd =
+    new FabricUI::DFG::DFGUICmd_ImplodeNodes(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.desiredName,
+      args.nodes
+      );
+  cmd->doit();
+  setResult( cmd->getActualImplodedNodeName().c_str() );
+  return cmd;
+}
+
 // FabricDFGRemoveNodesCommand
 
 void FabricDFGRemoveNodesCommand::AddSyntax( MSyntax &syntax )

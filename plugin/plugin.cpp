@@ -393,36 +393,12 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, AddVar );
   MAYA_REGISTER_DFGUICMD( plugin, Connect );
   MAYA_REGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_REGISTER_DFGUICMD( plugin, ImplodeNodes );
   MAYA_REGISTER_DFGUICMD( plugin, InstPreset );
   MAYA_REGISTER_DFGUICMD( plugin, MoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
 
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_AddFunc::CmdName().c_str(),
-  //   FabricDFGAddFuncCommand::creator,
-  //   FabricDFGAddFuncCommand::newSyntax
-  //   );
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_AddGraph::CmdName().c_str(),
-  //   FabricDFGAddGraphCommand::creator,
-  //   FabricDFGAddGraphCommand::newSyntax
-  //   );
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_AddVar::CmdName().c_str(),
-  //   FabricDFGAddVarCommand::creator,
-  //   FabricDFGAddVarCommand::newSyntax
-  //   );
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_AddGet::CmdName().c_str(),
-  //   FabricDFGAddGetCommand::creator,
-  //   FabricDFGAddGetCommand::newSyntax
-  //   );
-  // plugin.registerCommand(
-  //   FabricUI::DFG::DFGUICmd_AddSet::CmdName().c_str(),
-  //   FabricDFGAddSetCommand::creator,
-  //   FabricDFGAddSetCommand::newSyntax
-  //   );
   // plugin.registerCommand("dfgRenameNode", FabricDFGRenameNodeCommand::creator, FabricDFGRenameNodeCommand::newSyntax);
   // plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);
   // plugin.registerCommand("dfgRenamePort", FabricDFGRenamePortCommand::creator, FabricDFGRenamePortCommand::newSyntax);
@@ -433,14 +409,10 @@ MAYA_EXPORT initializePlugin(MObject obj)
   // plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
   // plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
   // plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
-  // plugin.registerCommand("dfgSetNodeCacheRule", FabricDFGSetNodeCacheRuleCommand::creator, FabricDFGSetNodeCacheRuleCommand::newSyntax);
   // plugin.registerCommand("dfgCopy", FabricDFGCopyCommand::creator, FabricDFGCopyCommand::newSyntax);
   // plugin.registerCommand("dfgPaste", FabricDFGPasteCommand::creator, FabricDFGPasteCommand::newSyntax);
   // plugin.registerCommand("dfgImplodeNodes", FabricDFGImplodeNodesCommand::creator, FabricDFGImplodeNodesCommand::newSyntax);
   // plugin.registerCommand("dfgExplodeNode", FabricDFGExplodeNodeCommand::creator, FabricDFGExplodeNodeCommand::newSyntax);
-  // plugin.registerCommand("dfgAddVar", FabricDFGAddVarCommand::creator, FabricDFGAddVarCommand::newSyntax);
-  // plugin.registerCommand("dfgAddGet", FabricDFGAddGetCommand::creator, FabricDFGAddGetCommand::newSyntax);
-  // plugin.registerCommand("dfgAddSet", FabricDFGAddSetCommand::creator, FabricDFGAddSetCommand::newSyntax);
   // plugin.registerCommand("dfgSetRefVarPath", FabricDFGSetRefVarPathCommand::creator, FabricDFGSetRefVarPathCommand::newSyntax);
 
   MString pluginPath = plugin.loadPath();
