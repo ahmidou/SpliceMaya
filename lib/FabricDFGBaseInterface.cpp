@@ -1436,10 +1436,7 @@ void FabricDFGBaseInterface::removeMayaAttribute(MString portName, MStatus * sta
   MPlug plug = thisNode.findPlug(plugName);
   if(!plug.isNull())
   {
-    MString command = "deleteAttr "+thisNode.name()+"."+plugName;
-    MGlobal::executeCommandOnIdle(command); 
-    // in Maya 2015 this is causing a crash in Qt due to a bug in Maya.
-    // thisNode.removeAttribute(plug.attribute());
+    thisNode.removeAttribute(plug.attribute());
     _affectedPlugsDirty = true;
   }
 
