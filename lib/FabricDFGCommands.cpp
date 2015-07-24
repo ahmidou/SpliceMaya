@@ -557,6 +557,69 @@ FabricUI::DFG::DFGUICmd *FabricDFGMoveNodesCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGAddPortCommand
+
+void FabricDFGAddPortCommand::addSyntax( MSyntax &syntax )
+{
+  Parent::addSyntax( syntax );
+  syntax.addFlag("-n", "-desiredPortName", MSyntax::kString);
+  syntax.addFlag("-pt", "-portType", MSyntax::kString);
+  syntax.addFlag("-ts", "-typeSpec", MSyntax::kString);
+  syntax.addFlag("-c", "-portToConnect", MSyntax::kString);
+}
+
+void FabricDFGAddPortCommand::getArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::getArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "desiredPortName" ) )
+    throw ArgException( MS::kFailure, "-desiredPortName not provided." );
+  args.desiredPortName = argParser.flagArgumentString( "desiredPortName", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "portType" ) )
+    throw ArgException( MS::kFailure, "-portType not provided." );
+  MString portTypeString = argParser.flagArgumentString( "portType", 0 ).asChar();
+  if ( portTypeString == "In" )
+    args.portType = FabricCore::DFGPortType_In;
+  else if ( portTypeString == "IO" )
+    args.portType = FabricCore::DFGPortType_IO;
+  else if ( portTypeString == "Out" )
+    args.portType = FabricCore::DFGPortType_Out;
+  else
+    throw ArgException( MS::kFailure, "-portType value unrecognized" );
+
+  if ( argParser.isFlagSet( "typeSpec" ) )
+    args.typeSpec = argParser.flagArgumentString( "typeSpec", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "portToConnect" ) )
+    args.portToConnectWith = argParser.flagArgumentString( "portToConnect", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  getArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddPort *cmd =
+    new FabricUI::DFG::DFGUICmd_AddPort(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.desiredPortName,
+      args.portType,
+      args.typeSpec,
+      args.portToConnectWith
+      );
+  cmd->doit();
+  setResult( cmd->getActualPortName().c_str() );
+  return cmd;
+}
+
 // // FabricDFGDisconnectCommand
 
 // MSyntax FabricDFGDisconnectCommand::newSyntax()

@@ -203,6 +203,46 @@ protected:
     );
 };
 
+class FabricDFGAddPortCommand : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+public:
+
+  virtual MString getName()
+    { return MString(
+      FabricUI::DFG::DFGUICmd_AddPort::CmdName().c_str()
+      ); }
+
+  static void* creator()
+    { return new FabricDFGAddPortCommand; }
+
+  static MSyntax newSyntax()
+  {
+    MSyntax syntax;
+    addSyntax( syntax );
+    return syntax;
+  }
+
+protected:
+
+  static void addSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string desiredPortName;
+    FabricCore::DFGPortType portType;
+    FTL::StrRef typeSpec;
+    FTL::StrRef portToConnectWith;
+  };
+
+  void getArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
 // class FabricDFGDisconnectCommand : public FabricDFGExecCommand
 // {
 //   typedef FabricDFGExecCommand Parent;

@@ -418,6 +418,11 @@ MAYA_EXPORT initializePlugin(MObject obj)
     FabricDFGMoveNodesCommand::creator,
     FabricDFGMoveNodesCommand::newSyntax
     );
+  plugin.registerCommand(
+    FabricUI::DFG::DFGUICmd_AddPort::CmdName().c_str(),
+    FabricDFGAddPortCommand::creator,
+    FabricDFGAddPortCommand::newSyntax
+    );
   // plugin.registerCommand(
   //   FabricUI::DFG::DFGUICmd_Disconnect::CmdName().c_str(),
   //   FabricDFGDisconnectCommand::creator,
@@ -429,7 +434,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   //   FabricDFGRemoveNodesCommand::newSyntax
   //   );
   // plugin.registerCommand("dfgRenameNode", FabricDFGRenameNodeCommand::creator, FabricDFGRenameNodeCommand::newSyntax);
-  // plugin.registerCommand("dfgAddPort", FabricDFGAddPortCommand::creator, FabricDFGAddPortCommand::newSyntax);
   // plugin.registerCommand("dfgRemovePort", FabricDFGRemovePortCommand::creator, FabricDFGRemovePortCommand::newSyntax);
   // plugin.registerCommand("dfgRenamePort", FabricDFGRenamePortCommand::creator, FabricDFGRenamePortCommand::newSyntax);
   // plugin.registerCommand("dfgSetArg", FabricDFGSetArgCommand::creator, FabricDFGSetArgCommand::newSyntax);
