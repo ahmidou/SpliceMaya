@@ -1650,13 +1650,10 @@ void FabricDFGBaseInterface::renamePlug(const MPlug &plug, MString oldName, MStr
   MString cmdStr = "renameAttr \"";
   cmdStr += thisNode.name() + "." + plug.partialName();
   cmdStr += "\" \"" + newPlugName + "\";";
-  MGlobal::executeCommandOnIdle(cmdStr, false);
-  // MGlobal::displayInfo(cmdStr);
+  MGlobal::executeCommand( cmdStr, false, false );
 
   for(unsigned int i=0;i<plug.numChildren();i++)
-  {
-    renamePlug(plug.child(i), oldName, newName);
-  }
+    renamePlug( plug.child(i), oldName, newName );
 }
 
 MString FabricDFGBaseInterface::resolveEnvironmentVariables(const MString & filePath)
