@@ -1596,6 +1596,58 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
   return status;
 }
 
+// FabricDFGReloadJSONCommand
+
+MSyntax FabricDFGReloadJSONCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag("-mn", "-mayaNode", MSyntax::kString);
+  syntax.addFlag("-p", "-path", MSyntax::kString);
+  syntax.addFlag("-f", "-filePath", MSyntax::kString);
+  syntax.addFlag("-j", "-json", MSyntax::kString);
+  syntax.addFlag("-r", "-referenced", MSyntax::kBoolean);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+MStatus FabricDFGReloadJSONCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argParser( syntax(), args, &status );
+  if ( status != MS::kSuccess )
+    return status;
+
+  try
+  {
+    if ( !argParser.isFlagSet("mayaNode") )
+      throw ArgException( MS::kFailure, "-mayaNode not provided." );
+    MString mayaNodeName = argParser.flagArgumentString("mayaNode", 0);
+
+    FabricDFGBaseInterface * interf =
+      FabricDFGBaseInterface::getInstanceByName( mayaNodeName.asChar() );
+    if ( !interf )
+      throw ArgException( MS::kNotFound, "-mayaNode '" + mayaNodeName + "' not found." );
+
+    interf->reloadFromReferencedFilePath();
+  }
+  catch ( ArgException e )
+  {
+    logError( e.getDesc() );
+    status = e.getStatus();
+  }
+  catch ( FabricCore::Exception e )
+  {
+    logError( e.getDesc_cstr() );
+    status = MS::kFailure;
+  }
+  
+  // this command isn't issued through the UI
+  // m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+  
+  return status;
+}
+
 // FabricDFGExportJSONCommand
 
 MSyntax FabricDFGExportJSONCommand::newSyntax()

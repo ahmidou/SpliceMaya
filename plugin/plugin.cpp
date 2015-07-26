@@ -422,11 +422,15 @@ MAYA_EXPORT initializePlugin(MObject obj)
     FabricDFGImportJSONCommand::newSyntax
     );
   plugin.registerCommand(
+    "dfgReloadJSON",
+    FabricDFGReloadJSONCommand::creator,
+    FabricDFGReloadJSONCommand::newSyntax
+    );
+  plugin.registerCommand(
     "dfgExportJSON",
     FabricDFGExportJSONCommand::creator,
     FabricDFGExportJSONCommand::newSyntax
     );
-  // plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
 
   MString pluginPath = plugin.loadPath();
   MString lastFolder("plug-ins");
@@ -516,6 +520,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, SetRefVarPath );
 
   plugin.deregisterCommand( "dfgImportJSON" );
+  plugin.deregisterCommand( "dfgReloadJSON" );
   plugin.deregisterCommand( "dfgExportJSON" );
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements

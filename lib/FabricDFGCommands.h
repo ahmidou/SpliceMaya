@@ -871,6 +871,22 @@ public:
   virtual bool isUndoable() const { return false; }
 };
 
+class FabricDFGReloadJSONCommand
+  : public FabricDFGBaseCommand
+{
+public:
+
+  static void* creator()
+    { return new FabricDFGReloadJSONCommand; }
+
+  virtual MString getName()
+    { return "dfgReloadJSON"; }
+
+  static MSyntax newSyntax();
+  virtual MStatus doIt( const MArgList &args );
+  virtual bool isUndoable() const { return false; }
+};
+
 class FabricDFGExportJSONCommand
   : public FabricDFGBaseCommand
 {
