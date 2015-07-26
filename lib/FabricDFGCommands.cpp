@@ -969,6 +969,58 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetArgTypeCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGSetArgValueCommand
+
+void FabricDFGSetArgValueCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-a", "-argument", MSyntax::kString);
+  syntax.addFlag("-t", "-type", MSyntax::kString);
+  syntax.addFlag("-v", "-value", MSyntax::kString);
+}
+
+void FabricDFGSetArgValueCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "argument" ) )
+    throw ArgException( MS::kFailure, "-argument not provided." );
+  args.argName = argParser.flagArgumentString( "argument", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "type" ) )
+    throw ArgException( MS::kFailure, "-type not provided." );
+  MString type = argParser.flagArgumentString( "type", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "value" ) )
+    throw ArgException( MS::kFailure, "-value not provided." );
+  MString valueJSON = argParser.flagArgumentString( "value", 0 ).asChar();
+  FabricCore::DFGHost host = args.binding.getHost();
+  FabricCore::Context context = host.getContext();
+  args.value =
+    FabricCore::RTVal::Construct( context, type.asChar(), 0, NULL );
+  args.value.setJSON( valueJSON.asChar() );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGSetArgValueCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_SetArgValue *cmd =
+    new FabricUI::DFG::DFGUICmd_SetArgValue(
+      args.binding,
+      args.argName,
+      args.value
+      );
+  cmd->doit();
+  return cmd;
+}
+
 // FabricDFGSetNodeTitleCommand
 
 void FabricDFGSetNodeTitleCommand::AddSyntax( MSyntax &syntax )

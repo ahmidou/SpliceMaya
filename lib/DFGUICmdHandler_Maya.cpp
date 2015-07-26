@@ -724,6 +724,7 @@ void DFGUICmdHandler_Maya::dfgDoSetArgValue(
   cmd << FabricUI::DFG::DFGUICmd_SetArgValue::CmdName();
   encodeBinding( binding, cmd );
   encodeStringArg( FTL_STR("name"), name, cmd );
+  encodeStringArg( FTL_STR("type"), value.getTypeNameCStr(), cmd );
   FabricCore::RTVal valueJSON = value.getJSON();
   encodeStringArg( FTL_STR("value"), valueJSON.getStringCString(), cmd );
   cmd << ';';

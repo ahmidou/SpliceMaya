@@ -378,6 +378,33 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_SetArgType
   > MayaDFGUICmd_SetArgType;
 
+class FabricDFGSetArgValueCommand
+  : public FabricDFGBindingCommand
+{
+  typedef FabricDFGBindingCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef argName;
+    FabricCore::RTVal value;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSetArgValueCommand,
+  FabricUI::DFG::DFGUICmd_SetArgValue
+  > MayaDFGUICmd_SetArgValue;
+
 class FabricDFGSetNodeTitleCommand
   : public FabricDFGExecCommand
 {
