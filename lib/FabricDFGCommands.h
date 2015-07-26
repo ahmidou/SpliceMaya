@@ -72,31 +72,9 @@ protected:
   }
 };
 
-class FabricNewDFGBaseCommand: public MPxCommand
+class FabricDFGBaseCommand: public MPxCommand
 {
-public:
-
-  virtual MString getName() = 0;
-
-  virtual MStatus doIt( const MArgList &args );
-  virtual MStatus undoIt();
-  virtual MStatus redoIt();
-
-  virtual bool isUndoable() const
-    { return true; }
-
 protected:
-
-  FabricNewDFGBaseCommand() {}
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    ) = 0;
-
-  void logError( MString const &desc )
-    { displayError( getName() + ": " + desc, true ); }
-
-  static void AddSyntax( MSyntax &syntax );
 
   class ArgException
   {
@@ -119,14 +97,41 @@ protected:
     MString m_desc;
   };
 
+  virtual MString getName() = 0;
+
+  void logError( MString const &desc )
+    { displayError( getName() + ": " + desc, true ); }
+};
+
+class FabricDFGCoreCommand: public FabricDFGBaseCommand
+{
+public:
+
+  virtual MStatus doIt( const MArgList &args );
+  virtual MStatus undoIt();
+  virtual MStatus redoIt();
+
+  virtual bool isUndoable() const
+    { return true; }
+
+protected:
+
+  FabricDFGCoreCommand() {}
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    ) = 0;
+
+  static void AddSyntax( MSyntax &syntax );
+
 private:
 
   FTL::OwnedPtr<FabricUI::DFG::DFGUICmd> m_dfgUICmd;
 };
 
-class FabricDFGBindingCommand : public FabricNewDFGBaseCommand
+class FabricDFGBindingCommand : public FabricDFGCoreCommand
 {
-  typedef FabricNewDFGBaseCommand Parent;
+  typedef FabricDFGCoreCommand Parent;
 
 protected:
 
@@ -849,5 +854,21 @@ typedef MayaDFGUICmdWrapper<
   FabricDFGAddSetCommand,
   FabricUI::DFG::DFGUICmd_AddSet
   > MayaDFGUICmd_AddSet;
+
+class FabricDFGImportJSONCommand
+  : public FabricDFGBaseCommand
+{
+public:
+
+  static void* creator()
+    { return new FabricDFGImportJSONCommand; }
+
+  virtual MString getName()
+    { return "dfgImportJSON"; }
+
+  static MSyntax newSyntax();
+  virtual MStatus doIt( const MArgList &args );
+  virtual bool isUndoable() const { return false; }
+};
 
 #endif 

@@ -326,6 +326,11 @@ void onModelPanelSetFocus(void * client)
     MayaDFGUICmd_##Name::GetCreateSyntax() \
     )
 
+#define MAYA_DEREGISTER_DFGUICMD( plugin, Name ) \
+  plugin.deregisterCommand( \
+    MayaDFGUICmd_##Name::GetName() \
+    )
+
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
 #endif
@@ -411,8 +416,11 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetRefVarPath );
 
-  // plugin.registerCommand("dfgGetDesc", FabricDFGGetDescCommand::creator, FabricDFGGetDescCommand::newSyntax);
-  // plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
+  plugin.registerCommand(
+    "dfgImportJSON",
+    FabricDFGImportJSONCommand::creator,
+    FabricDFGImportJSONCommand::newSyntax
+    );
   // plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
   // plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
 
@@ -477,34 +485,33 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MQtUtil::deregisterUIType("FabricDFGWidget");
   plugin.deregisterNode(FabricDFGMayaNode::id);
 
-  plugin.deregisterCommand("dfgGetContextID");
-  plugin.deregisterCommand("dfgGetBindingID");
-  plugin.deregisterCommand("dfgAddNode");
-  plugin.deregisterCommand("dfgRemoveNode");
-  plugin.deregisterCommand("dfgRenameNode");
-  plugin.deregisterCommand("dfgAddEmptyFunc");
-  plugin.deregisterCommand("dfgAddEmptyGraph");
-  plugin.deregisterCommand("dfgAddConnection");
-  plugin.deregisterCommand("dfgRemoveConnection");
-  plugin.deregisterCommand("dfgAddPort");
-  plugin.deregisterCommand("dfgRemovePort");
-  plugin.deregisterCommand("dfgRenamePort");
-  plugin.deregisterCommand("dfgSetArg");
-  plugin.deregisterCommand("dfgSetDefaultValue");
-  plugin.deregisterCommand("dfgSetCode");
-  plugin.deregisterCommand("dfgGetDesc");
-  plugin.deregisterCommand("dfgImportJSON");
-  plugin.deregisterCommand("dfgExportJSON");
-  plugin.deregisterCommand("dfgReloadJSON");
-  plugin.deregisterCommand("dfgSetNodeCacheRule");
-  plugin.deregisterCommand("dfgCopy");
-  plugin.deregisterCommand("dfgPaste");
-  plugin.deregisterCommand("dfgImplodeNodes");
-  plugin.deregisterCommand("dfgExplodeNode");
-  plugin.deregisterCommand("dfgAddVar");
-  plugin.deregisterCommand("dfgAddGet");
-  plugin.deregisterCommand("dfgAddSet");
-  plugin.deregisterCommand("dfgSetRefVarPath");
+  MAYA_DEREGISTER_DFGUICMD( plugin, AddBackDrop );
+  MAYA_DEREGISTER_DFGUICMD( plugin, AddFunc );
+  MAYA_DEREGISTER_DFGUICMD( plugin, AddGet );
+  MAYA_DEREGISTER_DFGUICMD( plugin, AddGraph );
+  MAYA_DEREGISTER_DFGUICMD( plugin, AddPort );
+  MAYA_DEREGISTER_DFGUICMD( plugin, AddSet );
+  MAYA_DEREGISTER_DFGUICMD( plugin, AddVar );
+  MAYA_DEREGISTER_DFGUICMD( plugin, Connect );
+  MAYA_DEREGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_DEREGISTER_DFGUICMD( plugin, ExplodeNode );
+  MAYA_DEREGISTER_DFGUICMD( plugin, ImplodeNodes );
+  MAYA_DEREGISTER_DFGUICMD( plugin, InstPreset );
+  MAYA_DEREGISTER_DFGUICMD( plugin, MoveNodes );
+  MAYA_DEREGISTER_DFGUICMD( plugin, Paste );
+  MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes );
+  MAYA_DEREGISTER_DFGUICMD( plugin, RemovePort );
+  MAYA_DEREGISTER_DFGUICMD( plugin, RenamePort );
+  MAYA_DEREGISTER_DFGUICMD( plugin, ResizeBackDrop );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SetArgType );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SetArgValue );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SetCode );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeComment );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeTitle );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SetPortDefaultValue );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SetRefVarPath );
+
+  plugin.deregisterCommand( "dfgImportJSON" );
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by

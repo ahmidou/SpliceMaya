@@ -80,15 +80,15 @@ MStatus FabricDFGGetBindingIDCommand::doIt(const MArgList &args)
   return MS::kSuccess;
 }
 
-// FabricNewDFGBaseCommand
+// FabricDFGCoreCommand
 
-void FabricNewDFGBaseCommand::AddSyntax( MSyntax &syntax )
+void FabricDFGCoreCommand::AddSyntax( MSyntax &syntax )
 {
   syntax.enableQuery(false);
   syntax.enableEdit(false);
 }
 
-MStatus FabricNewDFGBaseCommand::doIt( const MArgList &args )
+MStatus FabricDFGCoreCommand::doIt( const MArgList &args )
 {
   MStatus status = MS::kSuccess;
   MArgParser argParser( syntax(), args, &status );
@@ -112,7 +112,7 @@ MStatus FabricNewDFGBaseCommand::doIt( const MArgList &args )
   return status;
 }
 
-MStatus FabricNewDFGBaseCommand::undoIt()
+MStatus FabricDFGCoreCommand::undoIt()
 {
   MStatus status = MS::kSuccess;
   try
@@ -127,7 +127,7 @@ MStatus FabricNewDFGBaseCommand::undoIt()
   return status;
 }
 
-MStatus FabricNewDFGBaseCommand::redoIt()
+MStatus FabricDFGCoreCommand::redoIt()
 {
   MStatus status = MS::kSuccess;
   try
@@ -1483,4 +1483,115 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetCodeCommand::executeDFGUICmd(
       );
   cmd->doit();
   return cmd;
+}
+
+// FabricDFGImportJSONCommand
+
+MSyntax FabricDFGImportJSONCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag("-mn", "-mayaNode", MSyntax::kString);
+  syntax.addFlag("-p", "-path", MSyntax::kString);
+  syntax.addFlag("-f", "-filePath", MSyntax::kString);
+  syntax.addFlag("-j", "-json", MSyntax::kString);
+  syntax.addFlag("-r", "-referenced", MSyntax::kBoolean);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argParser( syntax(), args, &status );
+  if ( status != MS::kSuccess )
+    return status;
+
+  try
+  {
+    if ( !argParser.isFlagSet("mayaNode") )
+      throw ArgException( MS::kFailure, "-mayaNode not provided." );
+    MString mayaNodeName = argParser.flagArgumentString("mayaNode", 0);
+
+    FabricDFGBaseInterface * interf =
+      FabricDFGBaseInterface::getInstanceByName( mayaNodeName.asChar() );
+    if ( !interf )
+      throw ArgException( MS::kNotFound, "-mayaNode '" + mayaNodeName + "' not found." );
+
+    MString path; // for now we aren't using this.
+    if(argParser.isFlagSet("path"))
+      path = argParser.flagArgumentString("path", 0);
+
+    if(!argParser.isFlagSet("filePath") && !argParser.isFlagSet("json"))
+      throw ArgException( MS::kFailure, MString(getName()) + ": Either File path (-f, -filePath) or JSON (-j, -json) has to be provided.");
+
+    bool asReferenced = false;
+    MString filePath;
+
+    MString json;
+    if(argParser.isFlagSet("filePath"))
+    {
+      if(argParser.isFlagSet("referenced"))
+        asReferenced = argParser.flagArgumentBool("referenced", 0);
+
+      filePath = argParser.flagArgumentString("filePath", 0);
+      if(filePath.length() == 0)
+      {
+        QString qFileName = QFileDialog::getOpenFileName( 
+          MQtUtil::mainWindow(), 
+          "Choose DFG file", 
+          QDir::currentPath(), 
+          "DFG files (*.dfg.json);;All files (*.*)"
+        );
+
+        if(qFileName.isNull())
+          throw ArgException( MS::kNotFound, "No filename specified.");
+
+        filePath = qFileName.toUtf8().constData();      
+      }
+
+      FILE * file = fopen(filePath.asChar(), "rb");
+      if(!file)
+        throw ArgException( MS::kNotFound, "File path (-f, -filePath) '"+filePath+"' cannot be found.");
+
+      fseek( file, 0, SEEK_END );
+      long fileSize = ftell( file );
+      rewind( file );
+
+      char * buffer = (char*) malloc(fileSize + 1);
+      buffer[fileSize] = '\0';
+
+      size_t readBytes = fread(buffer, 1, fileSize, file);
+      assert(readBytes == size_t(fileSize));
+      (void)readBytes;
+
+      fclose(file);
+
+      json = buffer;
+      free(buffer);
+    }
+    else if(argParser.isFlagSet("json"))
+    {
+      json = argParser.flagArgumentString("json", 0);
+    }
+
+    interf->restoreFromJSON(json);
+    if(asReferenced)
+      interf->setReferencedFilePath(filePath);
+  }
+  catch ( ArgException e )
+  {
+    logError( e.getDesc() );
+    status = e.getStatus();
+  }
+  catch ( FabricCore::Exception e )
+  {
+    logError( e.getDesc_cstr() );
+    status = MS::kFailure;
+  }
+  
+  // this command isn't issued through the UI
+  // m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+  
+  return status;
 }
