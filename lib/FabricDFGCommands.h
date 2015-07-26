@@ -296,6 +296,34 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_ExplodeNode
   > MayaDFGUICmd_ExplodeNode;
 
+class FabricDFGResizeBackDropCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef nodeName;
+    QPointF xy;
+    QSizeF wh;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGResizeBackDropCommand,
+  FabricUI::DFG::DFGUICmd_ResizeBackDrop
+  > MayaDFGUICmd_ResizeBackDrop;
+
 class FabricDFGRemoveNodesCommand
   : public FabricDFGExecCommand
 {
@@ -582,6 +610,32 @@ protected:
 
   static void GetArgs( MArgParser &argParser, Args &args );
 };
+
+class FabricDFGAddBackDropCommand
+  : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string title;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddBackDropCommand,
+  FabricUI::DFG::DFGUICmd_AddBackDrop
+  > MayaDFGUICmd_AddBackDrop;
 
 class FabricDFGInstPresetCommand
   : public FabricDFGAddNodeCommand

@@ -385,6 +385,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
 
+  MAYA_REGISTER_DFGUICMD( plugin, AddBackDrop );
   MAYA_REGISTER_DFGUICMD( plugin, AddFunc );
   MAYA_REGISTER_DFGUICMD( plugin, AddGet );
   MAYA_REGISTER_DFGUICMD( plugin, AddGraph );
@@ -400,6 +401,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, RemovePort );
   MAYA_REGISTER_DFGUICMD( plugin, RenamePort );
+  MAYA_REGISTER_DFGUICMD( plugin, ResizeBackDrop );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetCode );

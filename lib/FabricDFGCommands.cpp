@@ -211,6 +211,46 @@ void FabricDFGAddNodeCommand::GetArgs( MArgParser &argParser, Args &args )
   else args.pos = QPointF( 0, 0 );
 }
 
+// FabricDFGAddBackDropCommand
+
+void FabricDFGAddBackDropCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-t", "-title", MSyntax::kString);
+}
+
+void FabricDFGAddBackDropCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "title" ) )
+    throw ArgException( MS::kFailure, "-title not provided." );
+  args.title = argParser.flagArgumentString( "title", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGAddBackDropCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddBackDrop *cmd =
+    new FabricUI::DFG::DFGUICmd_AddBackDrop(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.title,
+      args.pos
+      );
+  cmd->doit();
+  setResult( cmd->getActualNodeName().c_str() );
+  return cmd;
+}
+
 // FabricDFGInstPresetCommand
 
 void FabricDFGInstPresetCommand::AddSyntax( MSyntax &syntax )
@@ -737,7 +777,7 @@ void FabricDFGImplodeNodesCommand::GetArgs(
       break;
     MString node;
     if ( argList.get( 0, node ) != MS::kSuccess )
-      throw ArgException( MS::kFailure, "-n (-nodeName) not a string" );
+      throw ArgException( MS::kFailure, "-nodeName not a string" );
     args.nodes.push_back( node.asChar() );
   }
 
@@ -782,7 +822,7 @@ void FabricDFGExplodeNodeCommand::GetArgs(
   Parent::GetArgs( argParser, args );
 
   if ( !argParser.isFlagSet( "nodeName" ) )
-    throw ArgException( MS::kFailure, "-n (-nodeName) not provided." );
+    throw ArgException( MS::kFailure, "-nodeName not provided." );
   args.node = argParser.flagArgumentString( "nodeName", 0 ).asChar();
 }
 
@@ -812,6 +852,64 @@ FabricUI::DFG::DFGUICmd *FabricDFGExplodeNodeCommand::executeDFGUICmd(
     mExplodedNodeNames.append( it->c_str() );
   setResult( mExplodedNodeNames );
 
+  return cmd;
+}
+
+// FabricDFGResizeBackDropCommand
+
+void FabricDFGResizeBackDropCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
+  syntax.addFlag( "-xy", "-position", MSyntax::kDouble, MSyntax::kDouble );
+  syntax.addFlag( "-wh", "-size", MSyntax::kDouble, MSyntax::kDouble );
+}
+
+void FabricDFGResizeBackDropCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "nodeName" ) )
+    throw ArgException( MS::kFailure, "-nodeName not provided." );
+  args.nodeName = argParser.flagArgumentString( "nodeName", 0 ).asChar();
+
+  if ( !argParser.isFlagSet("position") )
+    throw ArgException( MS::kFailure, "-position not provided." );
+  args.xy =
+    QPointF(
+      argParser.flagArgumentDouble("position", 0),
+      argParser.flagArgumentDouble("position", 1)
+      );
+
+  if ( !argParser.isFlagSet("size") )
+    throw ArgException( MS::kFailure, "-size not provided." );
+  args.wh =
+    QSizeF(
+      argParser.flagArgumentDouble("size", 0),
+      argParser.flagArgumentDouble("size", 1)
+      );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGResizeBackDropCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_ResizeBackDrop *cmd =
+    new FabricUI::DFG::DFGUICmd_ResizeBackDrop(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.nodeName,
+      args.xy,
+      args.wh
+      );
+  cmd->doit();
   return cmd;
 }
 
@@ -999,8 +1097,7 @@ void FabricDFGSetArgValueCommand::GetArgs(
   MString valueJSON = argParser.flagArgumentString( "value", 0 ).asChar();
   FabricCore::DFGHost host = args.binding.getHost();
   FabricCore::Context context = host.getContext();
-  args.value =
-    FabricCore::RTVal::Construct( context, type.asChar(), 0, NULL );
+  args.value = FabricCore::RTVal::Construct( context, type.asChar(), 0, NULL );
   args.value.setJSON( valueJSON.asChar() );
 }
 

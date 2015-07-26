@@ -476,7 +476,7 @@ void DFGUICmdHandler_Maya::dfgDoResizeBackDrop(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef name,
+  FTL::CStrRef nodeName,
   QPointF newTopLeftPos,
   QSizeF newSize
   )
@@ -484,12 +484,9 @@ void DFGUICmdHandler_Maya::dfgDoResizeBackDrop(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_ResizeBackDrop::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("name"), name, cmd );
+  encodeStringArg( FTL_STR("nodeName"), nodeName, cmd );
   encodePositionArg( FTL_STR("xy"), newTopLeftPos, cmd );
-  cmd << " -size ";
-  cmd << newSize.width();
-  cmd << " ";
-  cmd << newSize.height();
+  encodeSizeArg( FTL_STR("wh"), newSize, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
