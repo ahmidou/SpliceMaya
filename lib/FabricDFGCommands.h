@@ -296,6 +296,33 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_ExplodeNode
   > MayaDFGUICmd_ExplodeNode;
 
+class FabricDFGPasteCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef text;
+    QPointF xy;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGPasteCommand,
+  FabricUI::DFG::DFGUICmd_Paste
+  > MayaDFGUICmd_Paste;
+
 class FabricDFGResizeBackDropCommand
   : public FabricDFGExecCommand
 {

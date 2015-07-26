@@ -398,6 +398,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, ImplodeNodes );
   MAYA_REGISTER_DFGUICMD( plugin, InstPreset );
   MAYA_REGISTER_DFGUICMD( plugin, MoveNodes );
+  MAYA_REGISTER_DFGUICMD( plugin, Paste );
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, RemovePort );
   MAYA_REGISTER_DFGUICMD( plugin, RenamePort );
@@ -414,8 +415,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   // plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
   // plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
   // plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
-  // plugin.registerCommand("dfgCopy", FabricDFGCopyCommand::creator, FabricDFGCopyCommand::newSyntax);
-  // plugin.registerCommand("dfgPaste", FabricDFGPasteCommand::creator, FabricDFGPasteCommand::newSyntax);
 
   MString pluginPath = plugin.loadPath();
   MString lastFolder("plug-ins");

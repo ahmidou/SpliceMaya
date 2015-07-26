@@ -665,14 +665,14 @@ std::vector<std::string> DFGUICmdHandler_Maya::dfgDoPaste(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef json,
+  FTL::CStrRef text,
   QPointF cursorPos
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_Paste::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("json"), json, cmd );
+  encodeStringArg( FTL_STR("text"), text, cmd );
   encodePositionArg( FTL_STR("xy"), cursorPos, cmd );
   cmd << ';';
 

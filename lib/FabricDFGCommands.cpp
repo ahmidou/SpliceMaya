@@ -855,6 +855,67 @@ FabricUI::DFG::DFGUICmd *FabricDFGExplodeNodeCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGPasteCommand
+
+void FabricDFGPasteCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-t", "-text", MSyntax::kString);
+  syntax.addFlag( "-xy", "-position", MSyntax::kDouble, MSyntax::kDouble );
+}
+
+void FabricDFGPasteCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "text" ) )
+    throw ArgException( MS::kFailure, "-text not provided." );
+  args.text = argParser.flagArgumentString( "text", 0 ).asChar();
+
+  if ( argParser.isFlagSet("position") )
+  {
+    args.xy =
+      QPointF(
+        argParser.flagArgumentDouble("position", 0),
+        argParser.flagArgumentDouble("position", 1)
+        );
+  }
+  else args.xy = QPointF( 0, 0 );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGPasteCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_Paste *cmd =
+    new FabricUI::DFG::DFGUICmd_Paste(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.text,
+      args.xy
+      );
+  cmd->doit();
+
+  FTL::ArrayRef<std::string> pastedNodeNames =
+    cmd->getPastedNodeNames();
+
+  MStringArray mPastedNodeNames;
+  mPastedNodeNames.setSizeIncrement( pastedNodeNames.size() );
+  for ( FTL::ArrayRef<std::string>::IT it = pastedNodeNames.begin();
+    it != pastedNodeNames.end(); ++it )
+    mPastedNodeNames.append( it->c_str() );
+  setResult( mPastedNodeNames );
+
+  return cmd;
+}
+
 // FabricDFGResizeBackDropCommand
 
 void FabricDFGResizeBackDropCommand::AddSyntax( MSyntax &syntax )
