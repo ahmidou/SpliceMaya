@@ -1545,7 +1545,7 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
         );
 
         if(qFileName.isNull())
-          throw ArgException( MS::kNotFound, "No filename specified.");
+          throw ArgException( MS::kFailure, "No filename specified.");
 
         filePath = qFileName.toUtf8().constData();      
       }
@@ -1578,6 +1578,97 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
     interf->restoreFromJSON(json);
     if(asReferenced)
       interf->setReferencedFilePath(filePath);
+  }
+  catch ( ArgException e )
+  {
+    logError( e.getDesc() );
+    status = e.getStatus();
+  }
+  catch ( FabricCore::Exception e )
+  {
+    logError( e.getDesc_cstr() );
+    status = MS::kFailure;
+  }
+  
+  // this command isn't issued through the UI
+  // m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+  
+  return status;
+}
+
+// FabricDFGExportJSONCommand
+
+MSyntax FabricDFGExportJSONCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag("-mn", "-mayaNode", MSyntax::kString);
+  syntax.addFlag("-p", "-path", MSyntax::kString);
+  syntax.addFlag("-f", "-filePath", MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argParser( syntax(), args, &status );
+  if ( status != MS::kSuccess )
+    return status;
+
+  try
+  {
+    if ( !argParser.isFlagSet("mayaNode") )
+      throw ArgException( MS::kFailure, "-mayaNode not provided." );
+    MString mayaNodeName = argParser.flagArgumentString("mayaNode", 0);
+
+    FabricDFGBaseInterface * interf =
+      FabricDFGBaseInterface::getInstanceByName( mayaNodeName.asChar() );
+    if ( !interf )
+      throw ArgException( MS::kNotFound, "-mayaNode '" + mayaNodeName + "' not found." );
+
+    MString path;
+    if(argParser.isFlagSet("path"))
+      path = argParser.flagArgumentString("path", 0);
+    MString filePath;
+    if(argParser.isFlagSet("filePath"))
+    {
+      filePath = argParser.flagArgumentString("filePath", 0);
+      if(filePath.length() == 0)
+      {
+        QString qFileName = QFileDialog::getSaveFileName( 
+          MQtUtil::mainWindow(), 
+          "Choose DFG file", 
+          QDir::currentPath(), 
+          "DFG files (*.dfg.json);;All files (*.*)"
+        );
+
+        if(qFileName.isNull())
+          throw ArgException( MS::kFailure, "No filename specified.");
+        
+        filePath = qFileName.toUtf8().constData();      
+      }
+    }
+
+    MString json = interf->getDFGController()->exportJSON(path.asChar()).c_str();
+    
+    // this command isn't issued through the UI
+    // m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+    
+    setResult(json);
+
+    // export to file
+    if(filePath.length() > 0)
+    {
+      FILE * file = fopen(filePath.asChar(), "wb");
+      if(!file)
+        throw ArgException( MS::kFailure, "File path (-f, -filePath) '"+filePath+"' is not accessible.");
+      else
+      {
+        fwrite(json.asChar(), json.length(), 1, file);
+        fclose(file);
+      }
+    }
   }
   catch ( ArgException e )
   {
