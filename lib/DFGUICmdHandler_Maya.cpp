@@ -737,14 +737,15 @@ void DFGUICmdHandler_Maya::dfgDoSetPortDefaultValue(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef port,
+  FTL::CStrRef portPath,
   FabricCore::RTVal const &value
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_SetPortDefaultValue::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("port"), port, cmd );
+  encodeStringArg( FTL_STR("portPath"), portPath, cmd );
+  encodeStringArg( FTL_STR("type"), value.getTypeNameCStr(), cmd );
   FabricCore::RTVal valueJSON = value.getJSON();
   encodeStringArg( FTL_STR("value"), valueJSON.getStringCString(), cmd );
   cmd << ';';

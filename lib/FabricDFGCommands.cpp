@@ -1118,6 +1118,59 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetArgValueCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGSetPortDefaultValueCommand
+
+void FabricDFGSetPortDefaultValueCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-p", "-portPath", MSyntax::kString);
+  syntax.addFlag("-t", "-type", MSyntax::kString);
+  syntax.addFlag("-v", "-value", MSyntax::kString);
+}
+
+void FabricDFGSetPortDefaultValueCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "portPath" ) )
+    throw ArgException( MS::kFailure, "-portPath not provided." );
+  args.portPath = argParser.flagArgumentString( "portPath", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "type" ) )
+    throw ArgException( MS::kFailure, "-type not provided." );
+  MString type = argParser.flagArgumentString( "type", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "value" ) )
+    throw ArgException( MS::kFailure, "-value not provided." );
+  MString valueJSON = argParser.flagArgumentString( "value", 0 ).asChar();
+  FabricCore::DFGHost host = args.binding.getHost();
+  FabricCore::Context context = host.getContext();
+  args.value = FabricCore::RTVal::Construct( context, type.asChar(), 0, NULL );
+  args.value.setJSON( valueJSON.asChar() );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGSetPortDefaultValueCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_SetPortDefaultValue *cmd =
+    new FabricUI::DFG::DFGUICmd_SetPortDefaultValue(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.portPath,
+      args.value
+      );
+  cmd->doit();
+  return cmd;
+}
+
 // FabricDFGSetNodeTitleCommand
 
 void FabricDFGSetNodeTitleCommand::AddSyntax( MSyntax &syntax )

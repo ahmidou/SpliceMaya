@@ -433,6 +433,33 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_SetArgValue
   > MayaDFGUICmd_SetArgValue;
 
+class FabricDFGSetPortDefaultValueCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    FTL::StrRef portPath;
+    FabricCore::RTVal value;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSetPortDefaultValueCommand,
+  FabricUI::DFG::DFGUICmd_SetPortDefaultValue
+  > MayaDFGUICmd_SetPortDefaultValue;
+
 class FabricDFGSetNodeTitleCommand
   : public FabricDFGExecCommand
 {
