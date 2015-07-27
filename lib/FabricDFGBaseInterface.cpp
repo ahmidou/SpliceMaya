@@ -1581,7 +1581,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
 
   if ( descStr == FTL_STR("dirty") )
   {
-    invalidateNode();
+    _outputsDirtied = false;
   }
   else if( descStr == FTL_STR("argTypeChanged") )
   {
