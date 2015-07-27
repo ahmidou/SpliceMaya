@@ -1,4 +1,4 @@
-\
+
 #ifndef _FABRICDFGWIDGET_H_
 #define _FABRICDFGWIDGET_H_
 
