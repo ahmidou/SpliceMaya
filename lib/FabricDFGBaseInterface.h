@@ -153,7 +153,19 @@ protected:
   DFGUICmdHandler_Maya m_cmdHandler;
 
 private:
-  static void bindingNotificationCallback(void * userData, char const *jsonCString, uint32_t jsonLength);
+
+  void bindingNotificationCallback( FTL::CStrRef jsonStr );
+  static void BindingNotificationCallback(
+    void * userData, char const *jsonCString, uint32_t jsonLength
+    )
+  {
+    FabricDFGBaseInterface * interf =
+      static_cast<FabricDFGBaseInterface *>( userData );
+    interf->bindingNotificationCallback(
+      FTL::CStrRef( jsonCString, jsonLength )
+      );
+  }
+
   bool plugInArray(const MPlug &plug, const MPlugArray &array);
   void renamePlug(const MPlug &plug, MString oldName, MString newName);
   static MString resolveEnvironmentVariables(const MString & filePath);

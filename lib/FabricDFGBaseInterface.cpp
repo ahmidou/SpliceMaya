@@ -107,7 +107,7 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   // m_manager->loadAllExtensionsFromExtsPath();
   m_host = m_client.getDFGHost();
   m_binding = m_host.createBindingToNewGraph();
-  m_binding.setNotificationCallback(bindingNotificationCallback, this);
+  m_binding.setNotificationCallback( BindingNotificationCallback, this );
   FabricCore::DFGExec exec = m_binding.getExec();
 
   MString idStr; idStr.set(m_id);
@@ -491,7 +491,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   FabricSplice::Logging::AutoTimer timer("Maya::restoreFromPersistenceData()");
 
   m_binding = m_host.createBindingFromJSON(json.asChar());
-  m_binding.setNotificationCallback(bindingNotificationCallback, this);
+  m_binding.setNotificationCallback( BindingNotificationCallback, this );
 
   FTL::StrRef execPath;
   FabricCore::DFGExec exec = m_binding.getExec();
@@ -1566,76 +1566,81 @@ void FabricDFGBaseInterface::allResetInternalData()
   }
 }
 
-void FabricDFGBaseInterface::bindingNotificationCallback(void * userData, char const *jsonCString, uint32_t jsonLength)
+void FabricDFGBaseInterface::bindingNotificationCallback(
+  FTL::CStrRef jsonStr
+  )
 {
-  if(!jsonCString)
-    return;
-  FabricDFGBaseInterface * interf = (FabricDFGBaseInterface *)userData;
-
   // MGlobal::displayInfo(jsonCString);
 
-  FabricCore::Variant notificationVar = FabricCore::Variant::CreateFromJSON(jsonCString, jsonLength);
+  FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
+  FTL::OwnedPtr<FTL::JSONObject const> jsonObject(
+    FTL::JSONValue::Decode( jsonStrWithLoc )->cast<FTL::JSONObject>()
+    );
 
-  const FabricCore::Variant * descVar = notificationVar.getDictValue("desc");
-  std::string descStr = descVar->getStringData();
+  FTL::CStrRef descStr = jsonObject->getString( FTL_STR("desc") );
 
-  if(descStr == "argTypeChanged")
+  if ( descStr == FTL_STR("dirty") )
   {
-    const FabricCore::Variant * nameVar = notificationVar.getDictValue("name");
-    std::string nameStr = nameVar->getStringData();
-    MString plugName = interf->getPlugName(nameStr.c_str());
-    const FabricCore::Variant * newTypeVar = notificationVar.getDictValue("newType");
-    std::string newTypeStr = newTypeVar->getStringData();
+    invalidateNode();
+  }
+  else if( descStr == FTL_STR("argTypeChanged") )
+  {
+    std::string nameStr = jsonObject->getString( FTL_STR("name") );
+    MString plugName = getPlugName(nameStr.c_str());
+    std::string newTypeStr = jsonObject->getString( FTL_STR("newType") );
 
-    MFnDependencyNode thisNode(interf->getThisMObject());
+    MFnDependencyNode thisNode(getThisMObject());
 
     // remove existing attributes if types don't match
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
     {
       return;
-      // std::map<std::string, std::string>::iterator it = interf->_argTypes.find(nameStr);
-      // if(it != interf->_argTypes.end())
+      // std::map<std::string, std::string>::iterator it = _argTypes.find(nameStr);
+      // if(it != _argTypes.end())
       // {
       //   if(it->second == newTypeStr)
       //     continue;
       // }
-      // interf->removeMayaAttribute(nameStr.c_str());
-      // interf->_argTypes.erase(it);
+      // removeMayaAttribute(nameStr.c_str());
+      // _argTypes.erase(it);
     }
 
-    FabricCore::DFGExec graph = interf->getDFGGraph();
+    FabricCore::DFGExec graph = getDFGGraph();
     FabricCore::DFGPortType portType = graph.getExecPortType(nameStr.c_str());
-    interf->addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
-    interf->_argTypes.insert(std::pair<std::string, std::string>(nameStr, newTypeStr));
-  }
-  else if(descStr == "argRemoved")
-  {
-    const FabricCore::Variant * nameVar = notificationVar.getDictValue("name");
-    std::string nameStr = nameVar->getStringData();
-    MString plugName = interf->getPlugName(nameStr.c_str());
+    addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
+    _argTypes.insert(std::pair<std::string, std::string>(nameStr, newTypeStr));
 
-    MFnDependencyNode thisNode(interf->getThisMObject());
+    getDFGController()->checkErrors();
+  }
+  else if( descStr == FTL_STR("argRemoved") )
+  {
+    std::string nameStr = jsonObject->getString( FTL_STR("name") );
+    MString plugName = getPlugName(nameStr.c_str());
+
+    MFnDependencyNode thisNode(getThisMObject());
 
     // remove existing attributes if types match
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
-      interf->removeMayaAttribute(nameStr.c_str());
-  }
-  else if(descStr == "argRenamed")
-  {
-    const FabricCore::Variant * oldNameVar = notificationVar.getDictValue("oldName");
-    const FabricCore::Variant * newNameVar = notificationVar.getDictValue("newName");
-    std::string oldNameStr = oldNameVar->getStringData();
-    std::string newNameStr = newNameVar->getStringData();
-    MString oldPlugName = interf->getPlugName(oldNameStr.c_str());
-    MString newPlugName = interf->getPlugName(newNameStr.c_str());
+      removeMayaAttribute(nameStr.c_str());
 
-    MFnDependencyNode thisNode(interf->getThisMObject());
+    getDFGController()->checkErrors();
+  }
+  else if( descStr == FTL_STR("argRenamed") )
+  {
+    std::string oldNameStr = jsonObject->getString( FTL_STR("oldName") );
+    MString oldPlugName = getPlugName(oldNameStr.c_str());
+    std::string newNameStr = jsonObject->getString( FTL_STR("newName") );
+    MString newPlugName = getPlugName(newNameStr.c_str());
+
+    MFnDependencyNode thisNode(getThisMObject());
 
     // remove existing attributes if types match
     MPlug plug = thisNode.findPlug(oldPlugName);
-    interf->renamePlug(plug, oldPlugName, newPlugName);
+    renamePlug(plug, oldPlugName, newPlugName);
+
+    getDFGController()->checkErrors();
   }
 }
 
