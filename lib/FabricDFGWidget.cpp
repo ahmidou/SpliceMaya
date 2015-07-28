@@ -128,12 +128,16 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
 
   DFG::DFGEditPortDialog * editPortDialog = (DFG::DFGEditPortDialog *)dialog;
   QString title = editPortDialog->title();
+  bool addAttribute = true;
   bool native = false;
   bool opaque = false;
   bool enabled = true;
   if(title.length() > 0)
   {
     FabricCore::DFGExec &exec = controller->getExec();
+    QString addAttributeSetting = exec.getExecPortMetadata(title.toUtf8().constData(), "addAttribute");
+    if(addAttributeSetting == "false")
+      addAttribute = false;
     QString nativeSetting = exec.getExecPortMetadata(title.toUtf8().constData(), "nativeArray");
     if(nativeSetting == "true")
       native = true;
@@ -142,6 +146,11 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
       native = true;
     enabled = false;
   }
+
+  QCheckBox * addAttributeCheckBox = new QCheckBox();
+  addAttributeCheckBox->setCheckState(addAttribute ? Qt::Checked : Qt::Unchecked);
+  addAttributeCheckBox->setEnabled(enabled);
+  dialog->addInput(addAttributeCheckBox, "add attribute", "maya specific");
 
   QCheckBox * nativeCheckBox = new QCheckBox();
   nativeCheckBox->setCheckState(native ? Qt::Checked : Qt::Unchecked);
@@ -163,6 +172,8 @@ void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog)
   FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(m_baseInterfaceName.c_str());
   if(interf)
   {
+    QCheckBox * addAttributeCheckBox = (QCheckBox *)dialog->input("add attribute");
+    interf->setAddAttributeForNextAttribute(addAttributeCheckBox->checkState() == Qt::Checked);
     QCheckBox * nativeCheckBox = (QCheckBox *)dialog->input("native DCC array");
     interf->setUseNativeArrayForNextAttribute(nativeCheckBox->checkState() == Qt::Checked);
     QCheckBox * opaqueCheckBox = (QCheckBox *)dialog->input("opaque in DCC");

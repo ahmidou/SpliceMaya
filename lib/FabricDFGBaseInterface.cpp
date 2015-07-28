@@ -49,6 +49,7 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(){
   _outputsDirtied = false;
   _isReferenced = false;
   _instances.push_back(this);
+  m_addAttributeForNextAttribute = true;
   m_useNativeArrayForNextAttribute = false;
   m_useOpaqueForNextAttribute = false;
 
@@ -535,7 +536,9 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       }
     }
 
-    addMayaAttribute(portName.c_str(), dataType.c_str(), portType, arrayType.c_str());
+    FTL::StrRef addAttribute = graph.getExecPortMetadata(portName.c_str(), "addAttribute");
+    if(addAttribute != "false")
+      addMayaAttribute(portName.c_str(), dataType.c_str(), portType, arrayType.c_str());
 
     if(portType != FabricCore::DFGPortType_Out)
     {
@@ -850,6 +853,15 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
 
   FabricSplice::Logging::AutoTimer timer("Maya::addMayaAttribute()");
   MObject newAttribute;
+
+  // skip if disabled by used in the EditPortDialog
+  if(!m_addAttributeForNextAttribute)
+  {
+    m_addAttributeForNextAttribute = true;
+    FabricCore::DFGExec graph = m_binding.getExec();
+    graph.setExecPortMetadata(portName.asChar(), "addAttribute", "false", false);
+    return newAttribute;
+  }
 
   MString dataTypeOverride = dataType;
 
