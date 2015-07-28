@@ -38,14 +38,14 @@ global proc reloadReferencedSpliceNode()
 global proc createReferencedDFGNode()
 {
   $node = `createNode "dfgMayaNode"`;
-  dfgImportJSON -mayaNode $node -f "" -r true;
+  dfgImportJSON -m $node -f "" -r true;
 }
 
 global proc reloadReferencedDFGNode()
 {
   string $sel[];
   $sel = `ls -selection`;
-  dfgReloadJSON -mayaNode $sel[0];
+  dfgReloadJSON -m $sel[0];
 }
 
 global proc FabricSpliceLoadMenu(string $pluginName)

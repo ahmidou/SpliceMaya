@@ -129,8 +129,8 @@ protected:
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    FTL::CStrRef desiredNodeName,
-    FTL::ArrayRef<FTL::CStrRef> nodeNames
+    FTL::ArrayRef<FTL::CStrRef> nodeNames,
+    FTL::CStrRef desiredNodeName
     );
 
   virtual std::vector<std::string> dfgDoExplodeNode(
@@ -217,6 +217,11 @@ protected:
 
 protected:
     
+  void encodeMELStringChars(
+    FTL::CStrRef str,
+    std::stringstream &ss
+    );
+
   void encodeMELString(
     FTL::CStrRef str,
     std::stringstream &ss
@@ -240,26 +245,39 @@ protected:
     std::stringstream &cmd
     );
 
-  void encodePositionArg(
+  void encodeNamesArg(
+    FTL::ArrayRef<FTL::CStrRef> values,
+    std::stringstream &cmd
+    );
+
+  void encodeFloat64Arg(
     FTL::CStrRef name,
+    double value,
+    std::stringstream &cmd
+    );
+
+  void encodePositionArg(
     QPointF value,
     std::stringstream &cmd
     );
 
-  void encodePositionsArg(
-    FTL::CStrRef name,
-    FTL::ArrayRef<QPointF> values,
-    std::stringstream &cmd
-    );
-
   void encodeSizeArg(
-    FTL::CStrRef name,
     QSizeF value,
     std::stringstream &cmd
     );
 
-  void encodeSizesArg(
+  void encodeFloat64sArg(
     FTL::CStrRef name,
+    FTL::ArrayRef<double> values,
+    std::stringstream &cmd
+    );
+
+  void encodePositionsArg(
+    FTL::ArrayRef<QPointF> values,
+    std::stringstream &cmd
+    );
+
+  void encodeSizesArg(
     FTL::ArrayRef<QSizeF> values,
     std::stringstream &cmd
     );
@@ -273,11 +291,6 @@ protected:
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    std::stringstream &cmd
-    );
-
-  void encodePositions(
-    FTL::ArrayRef<QPointF> poss,
     std::stringstream &cmd
     );
 

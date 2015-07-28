@@ -259,8 +259,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<FTL::StrRef> nodes;
-    FTL::StrRef desiredName;
+    std::vector<FTL::StrRef> nodeNames;
+    FTL::StrRef desiredImplodedNodeName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );

@@ -536,7 +536,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       }
     }
 
-    FTL::StrRef addAttribute = graph.getExecPortMetadata(portName.c_str(), "addAttribute");
+    FTL::StrRef addAttribute = exec.getExecPortMetadata(portName.c_str(), "addAttribute");
     if(addAttribute != "false")
       addMayaAttribute(portName.c_str(), dataType.c_str(), portType, arrayType.c_str());
 
