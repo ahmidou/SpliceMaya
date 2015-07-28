@@ -269,7 +269,7 @@ std::string DFGUICmdHandler_Maya::dfgDoAddVar(
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("d"), desiredNodeName, cmd );
   encodeStringArg( FTL_STR("t"), type, cmd );
-  encodeStringArg( FTL_STR("x"), extDep, cmd );
+  encodeStringArg( FTL_STR("xd"), extDep, cmd );
   encodePositionArg( pos, cmd );
   cmd << ';';
 

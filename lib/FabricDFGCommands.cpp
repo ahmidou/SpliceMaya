@@ -378,7 +378,7 @@ void FabricDFGAddVarCommand::AddSyntax( MSyntax &syntax )
   Parent::AddSyntax( syntax );
   syntax.addFlag("-d", "-desiredNodeName", MSyntax::kString);
   syntax.addFlag("-t", "-type", MSyntax::kString);
-  syntax.addFlag("-x", "-extDep", MSyntax::kString);
+  syntax.addFlag("-xd", "-extDep", MSyntax::kString);
 }
 
 void FabricDFGAddVarCommand::GetArgs(
