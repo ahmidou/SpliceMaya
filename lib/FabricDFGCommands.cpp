@@ -724,11 +724,14 @@ FabricUI::DFG::DFGUICmd *FabricDFGExplodeNodeCommand::executeDFGUICmd(
   FTL::ArrayRef<std::string> explodedNodeNames =
     cmd->getExplodedNodeNames();
 
-  MStringArray mExplodedNodeNames;
-  mExplodedNodeNames.setSizeIncrement( explodedNodeNames.size() );
+  MString mExplodedNodeNames;
   for ( FTL::ArrayRef<std::string>::IT it = explodedNodeNames.begin();
     it != explodedNodeNames.end(); ++it )
-    mExplodedNodeNames.append( it->c_str() );
+  {
+    if ( it != explodedNodeNames.begin() )
+      mExplodedNodeNames += "|";
+    mExplodedNodeNames += it->c_str();
+  }
   setResult( mExplodedNodeNames );
 
   return cmd;
@@ -790,11 +793,14 @@ FabricUI::DFG::DFGUICmd *FabricDFGPasteCommand::executeDFGUICmd(
   FTL::ArrayRef<std::string> pastedNodeNames =
     cmd->getPastedNodeNames();
 
-  MStringArray mPastedNodeNames;
-  mPastedNodeNames.setSizeIncrement( pastedNodeNames.size() );
+  MString mPastedNodeNames;
   for ( FTL::ArrayRef<std::string>::IT it = pastedNodeNames.begin();
     it != pastedNodeNames.end(); ++it )
-    mPastedNodeNames.append( it->c_str() );
+  {
+    if ( it != pastedNodeNames.begin() )
+      mPastedNodeNames += "|";
+    mPastedNodeNames += it->c_str();
+  }
   setResult( mPastedNodeNames );
 
   return cmd;
