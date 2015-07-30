@@ -193,8 +193,8 @@ void FabricDFGExecCommand::GetArgs(
 void FabricDFGAddNodeCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
-  syntax.addFlag( "-x", "-xPos", MSyntax::kDouble );
-  syntax.addFlag( "-y", "-yPos", MSyntax::kDouble );
+  syntax.addFlag( "-x", "-xPos", MSyntax::kString );
+  syntax.addFlag( "-y", "-yPos", MSyntax::kString );
 }
 
 void FabricDFGAddNodeCommand::GetArgs( MArgParser &argParser, Args &args )
@@ -203,9 +203,17 @@ void FabricDFGAddNodeCommand::GetArgs( MArgParser &argParser, Args &args )
 
   args.pos = QPointF( 0, 0 );
   if ( argParser.isFlagSet("xPos") )
-    args.pos.setX( argParser.flagArgumentDouble("xPos", 0) );
+    args.pos.setX(
+      FTL::CStrRef(
+        argParser.flagArgumentString("xPos", 0).asChar()
+        ).toFloat64()
+      );
   if ( argParser.isFlagSet("yPos") )
-    args.pos.setY( argParser.flagArgumentDouble("yPos", 0) );
+    args.pos.setY(
+      FTL::CStrRef(
+        argParser.flagArgumentString("yPos", 0).asChar()
+        ).toFloat64()
+      );
 }
 
 // FabricDFGAddBackDropCommand
@@ -732,8 +740,8 @@ void FabricDFGPasteCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
   syntax.addFlag( "-t", "-text", MSyntax::kString );
-  syntax.addFlag( "-x", "-xPos", MSyntax::kDouble );
-  syntax.addFlag( "-y", "-yPos", MSyntax::kDouble );
+  syntax.addFlag( "-x", "-xPos", MSyntax::kString );
+  syntax.addFlag( "-y", "-yPos", MSyntax::kString );
 }
 
 void FabricDFGPasteCommand::GetArgs(
@@ -749,9 +757,17 @@ void FabricDFGPasteCommand::GetArgs(
 
   args.xy = QPointF( 0, 0 );
   if ( argParser.isFlagSet("xPos") )
-    args.xy.setX( argParser.flagArgumentDouble("xPos", 0) );
+    args.xy.setX(
+      FTL::CStrRef(
+        argParser.flagArgumentString("xPos", 0).asChar()
+        ).toFloat64()
+      );
   if ( argParser.isFlagSet("yPos") )
-    args.xy.setY( argParser.flagArgumentDouble("yPos", 0) );
+    args.xy.setY(
+      FTL::CStrRef(
+        argParser.flagArgumentString("yPos", 0).asChar()
+        ).toFloat64()
+      );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGPasteCommand::executeDFGUICmd(
@@ -790,10 +806,10 @@ void FabricDFGResizeBackDropCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
   syntax.addFlag("-n", "-nodeName", MSyntax::kString);
-  syntax.addFlag( "-x", "-xPos", MSyntax::kDouble );
-  syntax.addFlag( "-y", "-yPos", MSyntax::kDouble );
-  syntax.addFlag( "-w", "-width", MSyntax::kDouble );
-  syntax.addFlag( "-h", "-height", MSyntax::kDouble );
+  syntax.addFlag( "-x", "-xPos", MSyntax::kString );
+  syntax.addFlag( "-y", "-yPos", MSyntax::kString );
+  syntax.addFlag( "-w", "-width", MSyntax::kString );
+  syntax.addFlag( "-h", "-height", MSyntax::kString );
 }
 
 void FabricDFGResizeBackDropCommand::GetArgs(
@@ -809,15 +825,31 @@ void FabricDFGResizeBackDropCommand::GetArgs(
 
   args.xy = QPointF( 0, 0 );
   if ( argParser.isFlagSet("xPos") )
-    args.xy.setX( argParser.flagArgumentDouble("xPos", 0) );
+    args.xy.setX(
+      FTL::CStrRef(
+        argParser.flagArgumentString("xPos", 0).asChar()
+        ).toFloat64()
+      );
   if ( argParser.isFlagSet("yPos") )
-    args.xy.setY( argParser.flagArgumentDouble("yPos", 0) );
+    args.xy.setY(
+      FTL::CStrRef(
+        argParser.flagArgumentString("yPos", 0).asChar()
+        ).toFloat64()
+      );
 
   args.wh = QSizeF( 0, 0 );
   if ( argParser.isFlagSet("width") )
-    args.wh.setWidth( argParser.flagArgumentDouble("width", 0) );
+    args.wh.setWidth(
+      FTL::CStrRef(
+        argParser.flagArgumentString("width", 0).asChar()
+        ).toFloat64()
+      );
   if ( argParser.isFlagSet("height") )
-    args.wh.setHeight( argParser.flagArgumentDouble("height", 0) );
+    args.wh.setHeight(
+      FTL::CStrRef(
+        argParser.flagArgumentString("height", 0).asChar()
+        ).toFloat64()
+      );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGResizeBackDropCommand::executeDFGUICmd(

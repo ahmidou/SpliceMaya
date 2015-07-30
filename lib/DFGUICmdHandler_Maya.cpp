@@ -118,8 +118,9 @@ void DFGUICmdHandler_Maya::encodeFloat64Arg(
 {
   cmd << " -";
   cmd << name.c_str();
-  cmd << " ";
+  cmd << " \"";
   cmd << value;
+  cmd << '"';
 }
 
 void DFGUICmdHandler_Maya::encodePositionArg(
