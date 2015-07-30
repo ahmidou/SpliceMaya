@@ -28,5 +28,8 @@ global proc showDFGWidget(string $pluginName)
 
 global proc deleteDFGWidget()
 {
-  deleteUI FabricDFGUIPane;
+  if (`dockControl -exists FabricDFGUIPane`)
+  {
+    deleteUI FabricDFGUIPane;
+  }
 }
