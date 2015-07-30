@@ -159,7 +159,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef execPath;
+    std::string execPath;
     FabricCore::DFGExec exec;
   };
 
@@ -180,8 +180,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef srcPort;
-    FTL::StrRef dstPort;
+    std::string srcPort;
+    std::string dstPort;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -232,7 +232,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<FTL::StrRef> nodeNames;
+    std::vector<std::string> nodeNames;
     std::vector<QPointF> poss;
   };
 
@@ -259,8 +259,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<FTL::StrRef> nodeNames;
-    FTL::StrRef desiredImplodedNodeName;
+    std::vector<std::string> nodeNames;
+    std::string desiredImplodedNodeName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -286,7 +286,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef node;
+    std::string node;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -312,7 +312,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef text;
+    std::string text;
     QPointF xy;
   };
 
@@ -339,7 +339,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef nodeName;
+    std::string nodeName;
     QPointF xy;
     QSizeF wh;
   };
@@ -367,7 +367,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<FTL::StrRef> nodeNames;
+    std::vector<std::string> nodeNames;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -393,10 +393,10 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef desiredPortName;
+    std::string desiredPortName;
     FabricCore::DFGPortType portType;
-    FTL::StrRef typeSpec;
-    FTL::StrRef portToConnectWith;
+    std::string typeSpec;
+    std::string portToConnectWith;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -422,8 +422,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef argName;
-    FTL::StrRef typeName;
+    std::string argName;
+    std::string typeName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -449,7 +449,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef argName;
+    std::string argName;
     FabricCore::RTVal value;
   };
 
@@ -476,7 +476,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef portPath;
+    std::string portPath;
     FabricCore::RTVal value;
   };
 
@@ -503,8 +503,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef nodeName;
-    FTL::StrRef title;
+    std::string nodeName;
+    std::string title;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -530,7 +530,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef portName;
+    std::string portName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -556,7 +556,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef code;
+    std::string code;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -582,8 +582,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef refName;
-    FTL::StrRef varPath;
+    std::string refName;
+    std::string varPath;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -609,8 +609,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef oldPortName;
-    FTL::StrRef desiredNewPortName;
+    std::string oldPortName;
+    std::string desiredNewPortName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -636,8 +636,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    FTL::StrRef nodeName;
-    FTL::StrRef comment;
+    std::string nodeName;
+    std::string comment;
     bool expanded;
   };
 

@@ -620,12 +620,19 @@ FabricUI::DFG::DFGUICmd *FabricDFGMoveNodesCommand::executeDFGUICmd(
   Args args;
   GetArgs( argParser, args );
 
+  std::vector<FTL::StrRef> nodeNames;
+  nodeNames.insert(
+    nodeNames.end(),
+    args.nodeNames.begin(),
+    args.nodeNames.end()
+    );
+
   FabricUI::DFG::DFGUICmd_MoveNodes *cmd =
     new FabricUI::DFG::DFGUICmd_MoveNodes(
       args.binding,
       args.execPath,
       args.exec,
-      args.nodeNames,
+      nodeNames,
       args.poss
       );
   cmd->doit();
@@ -672,12 +679,19 @@ FabricUI::DFG::DFGUICmd *FabricDFGImplodeNodesCommand::executeDFGUICmd(
   Args args;
   GetArgs( argParser, args );
 
+  std::vector<FTL::StrRef> nodeNames;
+  nodeNames.insert(
+    nodeNames.end(),
+    args.nodeNames.begin(),
+    args.nodeNames.end()
+    );
+
   FabricUI::DFG::DFGUICmd_ImplodeNodes *cmd =
     new FabricUI::DFG::DFGUICmd_ImplodeNodes(
       args.binding,
       args.execPath,
       args.exec,
-      args.nodeNames,
+      nodeNames,
       args.desiredImplodedNodeName
       );
   cmd->doit();
@@ -913,12 +927,19 @@ FabricUI::DFG::DFGUICmd *FabricDFGRemoveNodesCommand::executeDFGUICmd(
   Args args;
   GetArgs( argParser, args );
 
+  std::vector<FTL::StrRef> nodeNames;
+  nodeNames.insert(
+    nodeNames.end(),
+    args.nodeNames.begin(),
+    args.nodeNames.end()
+    );
+
   FabricUI::DFG::DFGUICmd_RemoveNodes *cmd =
     new FabricUI::DFG::DFGUICmd_RemoveNodes(
       args.binding,
       args.execPath,
       args.exec,
-      args.nodeNames
+      nodeNames
       );
   cmd->doit();
   return cmd;

@@ -94,7 +94,7 @@ void onSceneNew(void *userData){
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
 
   MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
-  MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
+  MGlobal::executeCommandOnIdle(cmd, false);
   FabricDFGWidget::Destroy();
  
   FabricSplice::DestroyClient();
