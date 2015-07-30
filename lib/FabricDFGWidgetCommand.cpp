@@ -56,7 +56,7 @@ MStatus FabricDFGWidgetCommand::doIt(const MArgList &args)
   if(action == "showUI")
   {
     // inform the UI of the next node to edit
-    FabricDFGWidget::setCurrentUINodeName(argData.flagArgumentString("node", 0).asChar());
+    FabricDFGWidget::SetCurrentUINodeName(argData.flagArgumentString("node", 0).asChar());
 
     // use mel to open a floating window
     MString cmd = "source \"FabricDFGUI.mel\"; showDFGWidget(\"";

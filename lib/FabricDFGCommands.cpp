@@ -1604,7 +1604,7 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
       }
     }
 
-    MString json = interf->getDFGController()->exportJSON(path.asChar()).c_str();
+    MString json = interf->getDFGBinding().exportJSON().getCString();
     
     // this command isn't issued through the UI
     // m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());

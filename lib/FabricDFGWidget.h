@@ -31,10 +31,21 @@ public:
   ~FabricDFGWidget();
 
   static QWidget * creator(QWidget * parent, const QString & name);
-  
-  static void setCurrentUINodeName(const char * node);
-  static void mayaLog(const char * message);
-  static void closeWidgetsForBaseInterface(FabricDFGBaseInterface * interf);
+ 
+  static FabricDFGWidget *Instance();
+  static void Destroy();
+
+  static void SetCurrentUINodeName(const char * node);
+
+  FabricCore::Client &getCoreClient()
+  {
+    return m_coreClient;
+  }
+
+  FabricCore::DFGHost &getDFGHost()
+  {
+    return m_dfgHost;
+  }
 
 public slots:
   virtual void onRecompilation();
@@ -43,13 +54,18 @@ private slots:
   void onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog * dialog);
   void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog);
 
+protected:
+  void setCurrentUINodeName(const char * node);
+
 private:
 
-  FabricCore::Client m_mayaClient;
   DFGUICmdHandler_Maya m_cmdHandler;
-  std::string m_baseInterfaceName;
-  static std::string s_currentUINodeName;
-  static std::map<FabricDFGWidget*, FabricDFGBaseInterface*> s_widgets;
+  std::string m_currentUINodeName;
+  FabricCore::Client m_coreClient;
+  FabricCore::DFGHost m_dfgHost;
+  bool m_initialized;
+
+  static FabricDFGWidget *s_widget;
 };
 
 #endif 

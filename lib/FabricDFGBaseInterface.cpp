@@ -53,7 +53,6 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(){
   m_useNativeArrayForNextAttribute = false;
   m_useOpaqueForNextAttribute = false;
 
-  m_host = NULL;
   m_id = s_maxID++;
 
   MAYADFG_CATCH_END(&stat);
@@ -63,13 +62,7 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface(){
   // todo: eventually destroy the binding
   // m_binding = DFGWrapper::Binding();
 
-  FabricDFGWidget::closeWidgetsForBaseInterface(this);
-
   m_evalContext = FabricCore::RTVal();
-  if(m_host)
-  {
-    m_host = FabricCore::DFGHost();
-  }
 
   for(size_t i=0;i<_instances.size();i++){
     if(_instances[i] == this){
@@ -102,12 +95,10 @@ void FabricDFGBaseInterface::constructBaseInterface(){
 
   FabricSplice::Logging::AutoTimer timer("Maya::FabricDFGBaseInterface()");
 
-  m_client = FabricSplice::ConstructClient();
-  m_manager = ASTWrapper::KLASTManager::retainGlobalManager(&m_client);
-  // FE-4147
-  // m_manager->loadAllExtensionsFromExtsPath();
-  m_host = m_client.getDFGHost();
-  m_binding = m_host.createBindingToNewGraph();
+  m_client = FabricDFGWidget::Instance()->getCoreClient();
+  FabricCore::DFGHost &dfgHost = FabricDFGWidget::Instance()->getDFGHost();
+
+  m_binding = dfgHost.createBindingToNewGraph();
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
   FabricCore::DFGExec exec = m_binding.getExec();
 
@@ -160,22 +151,12 @@ FabricCore::Client FabricDFGBaseInterface::getCoreClient()
   return m_client;
 }
 
-ASTWrapper::KLASTManager * FabricDFGBaseInterface::getASTManager()
-{
-  return m_manager;
-}
-
-FabricCore::DFGHost FabricDFGBaseInterface::getDFGHost()
-{
-  return m_host;
-}
-
 FabricCore::DFGBinding FabricDFGBaseInterface::getDFGBinding()
 {
   return m_binding;
 }
 
-FabricCore::DFGExec FabricDFGBaseInterface::getDFGGraph()
+FabricCore::DFGExec FabricDFGBaseInterface::getDFGExec()
 {
   return m_binding.getExec();
 }
@@ -192,7 +173,7 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
 
   MFnDependencyNode thisNode(getThisMObject());
 
-  FabricCore::DFGExec exec = getDFGGraph();
+  FabricCore::DFGExec exec = getDFGExec();
   for(size_t i = 0; i < _dirtyPlugs.length(); ++i){
     MString plugName = _dirtyPlugs[i];
     if(plugName == "evalID" || plugName == "saveData" || plugName == "refFilePath")
@@ -265,41 +246,6 @@ void FabricDFGBaseInterface::evaluate(){
       mayaLogErrorFunc(e.getDesc_cstr());
     }
   }
-  // if(_spliceGraph.usesEvalContext())
-  // {
-  //   // setup the context
-  //   FabricCore::RTVal context = _spliceGraph.getEvalContext();
-  //   context.setMember("host", FabricSplice::constructStringRTVal("Maya"));
-  //   context.setMember("graph", FabricSplice::constructStringRTVal(thisNode.name().asChar()));
-  //   context.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
-  //   context.setMember("currentFilePath", FabricSplice::constructStringRTVal(mayaGetLastLoadedScene().asChar()));
-
-  //   if(_evalContextPlugNames.length() > 0)
-  //   {
-  //     for(unsigned int i=0;i<_evalContextPlugNames.length();i++)
-  //     {
-  //       MString name = _evalContextPlugNames[i];
-  //       MString portName = name;
-  //       int periodPos = portName.index('.');
-  //       if(periodPos > 0)
-  //         portName = portName.substring(0, periodPos-1);
-  //       FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
-  //       if(port->isValid()){
-  //         if(port->getExecPortType() != FabricCore::DFGPortType_Out)
-  //         {
-  //           std::vector<FabricCore::RTVal> args(1);
-  //           args[0] = FabricSplice::constructStringRTVal(name.asChar());
-  //           if(_evalContextPlugIds[i] >= 0)
-  //             args.push_back(FabricSplice::constructSInt32RTVal(_evalContextPlugIds[i]));
-  //           context.callMethod("", "_addDirtyInput", args.size(), &args[0]);
-  //         }
-  //       }
-  //     }
-    
-  //     _evalContextPlugNames.clear();
-  //     _evalContextPlugIds.clear();
-  //   }
-  // }
 
   m_binding.execute();
 }
@@ -314,16 +260,16 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
   
   MFnDependencyNode thisNode(getThisMObject());
 
-  FabricCore::DFGExec graph = getDFGGraph();
+  FabricCore::DFGExec exec = getDFGExec();
 
-  for(unsigned i = 0; i < graph.getExecPortCount(); ++i){
+  for(unsigned i = 0; i < exec.getExecPortCount(); ++i){
 
-    FabricCore::DFGPortType portType = graph.getExecPortType(i);
+    FabricCore::DFGPortType portType = exec.getExecPortType(i);
     if(portType != FabricCore::DFGPortType_In){
       
-      std::string portName = graph.getExecPortName(i);
+      std::string portName = exec.getExecPortName(i);
       std::string plugName = getPlugName(portName.c_str()).asChar();
-      std::string portDataType = graph.getExecPortResolvedType(i);
+      std::string portDataType = exec.getExecPortResolvedType(i);
 
       if(portDataType.substr(portDataType.length()-2, 2) == "[]")
         portDataType = portDataType.substr(0, portDataType.length()-2);
@@ -491,7 +437,8 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   FabricSplice::Logging::AutoTimer timer("Maya::restoreFromPersistenceData()");
 
-  m_binding = m_host.createBindingFromJSON(json.asChar());
+  FabricCore::DFGHost &dfgHost = FabricDFGWidget::Instance()->getDFGHost();
+  m_binding = dfgHost.createBindingFromJSON(json.asChar());
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
 
   FTL::StrRef execPath;
@@ -693,14 +640,14 @@ void FabricDFGBaseInterface::invalidateNode()
 
   MFnDependencyNode thisNode(getThisMObject());
 
-  FabricCore::DFGExec graph = getDFGGraph();
+  FabricCore::DFGExec exec = getDFGExec();
 
   // ensure we setup the mayaSpliceData overrides first
   mSpliceMayaDataOverride.resize(0);
-  for(unsigned int i = 0; i < graph.getExecPortCount(); ++i){
+  for(unsigned int i = 0; i < exec.getExecPortCount(); ++i){
     // if(ports[i]->isManipulatable())
     //   continue;
-    std::string portName = graph.getExecPortName(i);
+    std::string portName = exec.getExecPortName(i);
     MString plugName = getPortName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
     MObject attrObj = plug.attribute();
@@ -714,12 +661,12 @@ void FabricDFGBaseInterface::invalidateNode()
   }
 
   // ensure that the node is invalidated
-  for(unsigned int i = 0; i < graph.getExecPortCount(); ++i){
-    std::string portName = graph.getExecPortName(i);
+  for(unsigned int i = 0; i < exec.getExecPortCount(); ++i){
+    std::string portName = exec.getExecPortName(i);
     MString plugName = getPortName(portName.c_str());
     MPlug plug = thisNode.findPlug(plugName);
 
-    FabricCore::DFGPortType portType = graph.getExecPortType(i);
+    FabricCore::DFGPortType portType = exec.getExecPortType(i);
     if(!plug.isNull()){
       if(portType == FabricCore::DFGPortType_In)
       {
@@ -858,8 +805,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   if(!m_addAttributeForNextAttribute)
   {
     m_addAttributeForNextAttribute = true;
-    FabricCore::DFGExec graph = m_binding.getExec();
-    graph.setExecPortMetadata(portName.asChar(), "addAttribute", "false", false);
+    FabricCore::DFGExec exec = m_binding.getExec();
+    exec.setExecPortMetadata(portName.asChar(), "addAttribute", "false", false);
     return newAttribute;
   }
 
@@ -868,8 +815,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   if(m_useOpaqueForNextAttribute)
   {
     dataTypeOverride = "SpliceMayaData";
-    FabricCore::DFGExec graph = m_binding.getExec();
-    graph.setExecPortMetadata(portName.asChar(), "opaque", "true", false);
+    FabricCore::DFGExec exec = m_binding.getExec();
+    exec.setExecPortMetadata(portName.asChar(), "opaque", "true", false);
     m_useOpaqueForNextAttribute = false;
   }
 
@@ -885,8 +832,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
         m_useNativeArrayForNextAttribute = false;
         arrayType = "Array (Native)";
 
-        FabricCore::DFGExec graph = m_binding.getExec();
-        graph.setExecPortMetadata(portName.asChar(), "nativeArray", "true", false);
+        FabricCore::DFGExec exec = m_binding.getExec();
+        exec.setExecPortMetadata(portName.asChar(), "nativeArray", "true", false);
       }
       else
         arrayType = "Array (Multi)";
@@ -1325,7 +1272,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     
     if(arrayType == "Single Value")
     {
-      if(getDFGGraph().haveExecPort(portName.asChar())) {
+      if(getDFGExec().haveExecPort(portName.asChar())) {
         newAttribute = pAttr.create(plugName, plugName);
         pAttr.setStorable(true);
         pAttr.setKeyable(true);
@@ -1338,7 +1285,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     }
     else
     {
-      if(getDFGGraph().haveExecPort(portName.asChar())) {
+      if(getDFGExec().haveExecPort(portName.asChar())) {
         newAttribute = pAttr.create(plugName, plugName);
         pAttr.setStorable(true);
         pAttr.setKeyable(true);
@@ -1355,7 +1302,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     
     if(arrayType == "Single Value")
     {
-      if(getDFGGraph().haveExecPort(portName.asChar())) {
+      if(getDFGExec().haveExecPort(portName.asChar())) {
         newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
@@ -1367,7 +1314,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     }
     else
     {
-      if(getDFGGraph().haveExecPort(portName.asChar())) {
+      if(getDFGExec().haveExecPort(portName.asChar())) {
         newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
@@ -1465,15 +1412,15 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
   MPxNode * userNode = thisNode.userNode();
   if(userNode != NULL)
   {
-    FabricCore::DFGExec graph = getDFGGraph();
+    FabricCore::DFGExec exec = getDFGExec();
   
     if(portType != FabricCore::DFGPortType_In)
     {
-      for(unsigned i = 0; i < graph.getExecPortCount(); ++i) {
-        std::string otherPortName = graph.getExecPortName(i);
+      for(unsigned i = 0; i < exec.getExecPortCount(); ++i) {
+        std::string otherPortName = exec.getExecPortName(i);
         if(otherPortName == portName.asChar() && portType != FabricCore::DFGPortType_IO)
           continue;
-        if(graph.getExecPortType(i) != FabricCore::DFGPortType_In)
+        if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -1484,11 +1431,11 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
     }
     else
     {
-      for(unsigned i = 0; i < graph.getExecPortCount(); ++i) {
-        std::string otherPortName = graph.getExecPortName(i);
+      for(unsigned i = 0; i < exec.getExecPortCount(); ++i) {
+        std::string otherPortName = exec.getExecPortName(i);
         if(otherPortName == portName.asChar() && portType != FabricCore::DFGPortType_IO)
           continue;
-        if(graph.getExecPortType(i) == FabricCore::DFGPortType_In)
+        if(exec.getExecPortType(i) == FabricCore::DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -1571,10 +1518,6 @@ void FabricDFGBaseInterface::allResetInternalData()
     _instances[i]->_outputsDirtied = false;
     // todo: eventually destroy the binding
     // m_binding = DFGWrapper::Binding();
-    if(_instances[i]->m_host)
-    {
-      _instances[i]->m_host = FabricCore::DFGHost();
-    }
   }
 }
 
@@ -1618,12 +1561,10 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
       // _argTypes.erase(it);
     }
 
-    FabricCore::DFGExec graph = getDFGGraph();
-    FabricCore::DFGPortType portType = graph.getExecPortType(nameStr.c_str());
+    FabricCore::DFGExec exec = getDFGExec();
+    FabricCore::DFGPortType portType = exec.getExecPortType(nameStr.c_str());
     addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
     _argTypes.insert(std::pair<std::string, std::string>(nameStr, newTypeStr));
-
-    getDFGController()->checkErrors();
   }
   else if( descStr == FTL_STR("argRemoved") )
   {
@@ -1636,8 +1577,6 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
       removeMayaAttribute(nameStr.c_str());
-
-    getDFGController()->checkErrors();
   }
   else if( descStr == FTL_STR("argRenamed") )
   {
@@ -1651,8 +1590,6 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     // remove existing attributes if types match
     MPlug plug = thisNode.findPlug(oldPlugName);
     renamePlug(plug, oldPlugName, newPlugName);
-
-    getDFGController()->checkErrors();
   }
 }
 
@@ -1723,9 +1660,3 @@ MStatus FabricDFGBaseInterface::preEvaluation(MObject thisMObject, const MDGCont
 }
 #endif
 
-DFG::DFGController * FabricDFGBaseInterface::getDFGController()
-{
-  if ( m_widget )
-    return m_widget->getDfgWidget()->getDFGController();
-  return NULL;
-}

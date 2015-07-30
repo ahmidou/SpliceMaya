@@ -12,112 +12,86 @@
 
 #include <maya/MGlobal.h>
 
-std::string FabricDFGWidget::s_currentUINodeName;
-std::map<FabricDFGWidget*, FabricDFGBaseInterface*> FabricDFGWidget::s_widgets;
+FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 
 FabricDFGWidget::FabricDFGWidget(QWidget * parent)
-:DFG::DFGCombinedWidget(parent)
+  : DFG::DFGCombinedWidget(parent)
+  , m_initialized( false )
 {
-  m_baseInterfaceName = s_currentUINodeName;
-  
-  FabricDFGBaseInterface * interf =
-    FabricDFGBaseInterface::getInstanceByName(m_baseInterfaceName.c_str());
+  m_coreClient = FabricSplice::ConstructClient();
+  m_dfgHost = m_coreClient.getDFGHost();
 
-  if(interf)
-  {
-    s_widgets.insert(std::pair<FabricDFGWidget*, FabricDFGBaseInterface*>(this, interf));
-    interf->setWidget( this );
-
-    m_mayaClient = interf->getCoreClient();
-    FabricServices::ASTWrapper::KLASTManager * manager = interf->getASTManager();
-    FabricCore::DFGHost host = interf->getDFGHost();
-    FabricCore::DFGBinding binding = interf->getDFGBinding();
-    FabricCore::DFGExec exec = binding.getExec();
-
-    DFG::DFGConfig config;
-    config.graphConfig.useOpenGL = false;
-    init(
-      m_mayaClient,
-      manager,
-      host,
-      binding,
-      "",
-      exec,
-      &m_cmdHandler,
-      false,
-      config
-      );
-  }
-
-    QObject::connect(this, SIGNAL(portEditDialogCreated(FabricUI::DFG::DFGBaseDialog*)), 
-      this, SLOT(onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog*)));
-    QObject::connect(this, SIGNAL(portEditDialogInvoked(FabricUI::DFG::DFGBaseDialog*)), 
-      this, SLOT(onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog*)));
+  QObject::connect(
+    this, SIGNAL( portEditDialogCreated(FabricUI::DFG::DFGBaseDialog *)),
+    this, SLOT( onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog *)) );
+  QObject::connect(
+    this, SIGNAL( portEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *)),
+    this, SLOT( onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *)) );
 }
 
 FabricDFGWidget::~FabricDFGWidget()
 {
-  FabricDFGBaseInterface *interf =
-    FabricDFGBaseInterface::getInstanceByName( m_baseInterfaceName.c_str() );
-  if ( interf )
-  {
-    if ( interf->getWidget() == this )
-      interf->setWidget( NULL );
-  }
+}
+
+FabricDFGWidget *FabricDFGWidget::Instance()
+{
+  if ( !s_widget )
+    s_widget = new FabricDFGWidget( NULL );
+  return s_widget;
+}
+
+void FabricDFGWidget::Destroy()
+{
+  if ( s_widget )
+    delete s_widget;
+  s_widget = NULL;
 }
 
 QWidget * FabricDFGWidget::creator(QWidget * parent, const QString & name)
 {
-  return new FabricDFGWidget(parent);
+  return Instance();
+}
+
+void FabricDFGWidget::SetCurrentUINodeName(const char * node)
+{
+  if ( node )
+    Instance()->setCurrentUINodeName( node );
 }
 
 void FabricDFGWidget::setCurrentUINodeName(const char * node)
 {
-  if(node)
-    s_currentUINodeName = node;
-}
+  m_currentUINodeName = node;
 
-void FabricDFGWidget::closeWidgetsForBaseInterface(FabricDFGBaseInterface * interf)
-{
-  std::map<FabricDFGWidget*, FabricDFGBaseInterface*>::iterator it;
-  for(it = s_widgets.begin(); it != s_widgets.end(); it++)
+  FabricDFGBaseInterface *interf =
+    FabricDFGBaseInterface::getInstanceByName( m_currentUINodeName.c_str() );
+
+  FabricCore::DFGBinding binding = interf->getDFGBinding();
+  FabricCore::DFGExec exec = binding.getExec();
+
+  if ( !m_initialized )
   {
-    if(it->second == interf)
-    {
-      s_widgets.erase(it);
+    FabricServices::ASTWrapper::KLASTManager *manager =
+      ASTWrapper::KLASTManager::retainGlobalManager( &m_coreClient );
 
-      QWidget * parent = (QWidget*)it->first->parent();
+    DFG::DFGConfig config;
+    config.graphConfig.useOpenGL = false;
 
-      // layout widget
-      if(parent)
-        parent = (QWidget*)parent->parent();
+    init( m_coreClient, manager, m_dfgHost, binding, "", exec, &m_cmdHandler,
+          false, config );
 
-      // dock widget
-      if(parent)
-        parent = (QWidget*)parent->parent();
-
-      if(parent)
-      {
-        parent->close();
-        parent->deleteLater();
-      }
-      break;
-    }
+    m_initialized = true;
   }
+  else
+    getDfgWidget()->getUIController()->setBindingExec( binding, "", exec );
 }
 
 void FabricDFGWidget::onRecompilation()
 {
-  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(m_baseInterfaceName.c_str());
+  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(m_currentUINodeName.c_str());
   if(interf)
   {
     interf->invalidateNode();
   }
-}
-
-void FabricDFGWidget::mayaLog(const char * message)
-{
-  mayaLogFunc(message);
 }
 
 void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
@@ -169,7 +143,7 @@ void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog)
   if(!controller->isViewingRootGraph())
     return;
 
-  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(m_baseInterfaceName.c_str());
+  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(m_currentUINodeName.c_str());
   if(interf)
   {
     QCheckBox * addAttributeCheckBox = (QCheckBox *)dialog->input("add attribute");

@@ -92,6 +92,11 @@ void onSceneSave(void *userData){
 void onSceneNew(void *userData){
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
+
+  MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
+  MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
+  FabricDFGWidget::Destroy();
+ 
   FabricSplice::DestroyClient();
 }
 
@@ -141,6 +146,8 @@ void onMayaExiting(void *userData){
   }
 
   FabricDFGBaseInterface::allResetInternalData();
+
+  FabricDFGWidget::Destroy();
 
   FabricSplice::DestroyClient(true);
 }

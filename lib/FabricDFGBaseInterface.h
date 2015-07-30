@@ -56,10 +56,8 @@ public:
   unsigned int getId() const;
   FabricCore::Client getCoreClient();
   ASTWrapper::KLASTManager * getASTManager();
-  FabricCore::DFGHost getDFGHost();
   FabricCore::DFGBinding getDFGBinding();
-  FabricCore::DFGExec getDFGGraph();
-  DFG::DFGController * getDFGController();
+  FabricCore::DFGExec getDFGExec();
 
   FabricDFGWidget *getWidget() const
   {
@@ -147,7 +145,6 @@ protected:
 
   FabricCore::Client m_client;
   FabricServices::ASTWrapper::KLASTManager * m_manager;
-  FabricCore::DFGHost m_host;
   FabricCore::DFGBinding m_binding;
   FabricCore::RTVal m_evalContext;
   std::map<std::string, std::string> _argTypes;
