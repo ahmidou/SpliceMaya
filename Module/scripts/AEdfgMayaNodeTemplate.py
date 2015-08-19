@@ -6,7 +6,6 @@ class AEdfgMayaBaseTemplate(ui.AETemplate):
     ui.AETemplate.__init__(self, nodeName)
 
     self.__nodeName = nodeName
-    print "__init__ " + str(self.__nodeName)
 
     cmds.editorTemplate(beginScrollLayout = True, collapse = False)
    
