@@ -33,7 +33,12 @@ class AEdfgMayaBaseTemplate(ui.AETemplate):
       if cmds.nodeType(node) == "dfgMayaNode":
         nodeName = node
         break
-      nodes += cmds.listConnections(node, destination=True)
+      rels = cmds.listRelatives(node, shapes=True)
+      if rels:
+          nodes += rels
+      conns = cmds.listConnections(node, destination=True)
+      if conns:
+        nodes += conns        
 
     cmds.fabricDFG(action="showUI", node=nodeName)
    
