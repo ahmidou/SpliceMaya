@@ -744,7 +744,7 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding 
         if(handle.numericType() == MFnNumericData::kFloat)
           binding.setArgValue(argName, FabricSplice::constructFloat32RTVal(handle.asFloat()), false);
         else
-          binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asDouble()), false);
+          binding.setArgValue(argName, FabricSplice::constructFloat32RTVal((float)handle.asDouble()), false);
       }
     }
   }
