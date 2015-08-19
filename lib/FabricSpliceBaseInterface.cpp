@@ -9,7 +9,6 @@
 #include <sstream>
 #include <algorithm>
 
-#include <maya/MEvaluationManager.h>
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnNumericAttribute.h>
@@ -1672,12 +1671,8 @@ bool FabricSpliceBaseInterface::plugInArray(const MPlug &plug, const MPlugArray 
   return found;
 }
 
-MStatus FabricSpliceBaseInterface::setDependentsDirty(
-  MObject thisMObject,
-  MPlug const &inPlug,
-  MPlugArray &affectedPlugs
-  )
-{
+MStatus FabricSpliceBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
+
   MFnDependencyNode thisNode(thisMObject);
 
   FabricSplice::Logging::AutoTimer globalTimer("Maya::setDependentsDirty()");
@@ -1686,14 +1681,6 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
 
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
-
-#if _SPLICE_MAYA_VERSION >= 2016
-  if ( MEvaluationManager::graphConstructionActive() )
-  {
-    _outputsDirtied = false;
-    _affectedPlugsDirty = true;
-  }
-#endif
 
   if(_outputsDirtied)
     return MS::kSuccess;

@@ -26,6 +26,7 @@ public:
   virtual MPlug getSaveDataPlug() { return MPlug(thisMObject(), saveData); }
 
   MStatus compute(const MPlug& plug, MDataBlock& data);
+  MStatus setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs);
   MStatus shouldSave(const MPlug &plug, bool &isSaving);
   void copyInternalData(MPxNode *node);
 
