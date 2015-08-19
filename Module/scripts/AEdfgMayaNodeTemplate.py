@@ -6,11 +6,12 @@ class AEdfgMayaBaseTemplate(ui.AETemplate):
     ui.AETemplate.__init__(self, nodeName)
 
     self.__nodeName = nodeName
+    print "__init__ " + str(self.__nodeName)
 
     cmds.editorTemplate(beginScrollLayout = True, collapse = False)
    
     # DFG layout containing the 'Open DFG Editor' button
-    cmds.editorTemplate(beginLayout = "DFG", collapse = False)
+    cmds.editorTemplate(beginLayout = "Fabric Engine - Canvas", collapse = False)
     self.callCustom(self.new, self.replace, '')
     cmds.editorTemplate(endLayout = True)
    
@@ -25,18 +26,20 @@ class AEdfgMayaBaseTemplate(ui.AETemplate):
     cmds.editorTemplate(endScrollLayout = True)
 
   def __openDFGEditor(self, arg):
-    selectedNames = cmds.ls(sl=True)
     nodeName = self.__nodeName
-    for selectedName in selectedNames:
-      nodeType = cmds.nodeType(selectedName)
-      if nodeType.startswith('dfg'):
-        nodeName = selectedName
+
+    nodes = cmds.ls(sl=True)
+    for node in nodes:
+      if cmds.nodeType(node) == "dfgMayaNode":
+        nodeName = node
         break
+      nodes += cmds.listConnections(node, destination=True)
+
     cmds.fabricDFG(action="showUI", node=nodeName)
    
   def new(self, attr):
     cmds.setUITemplate("attributeEditorTemplate", pushTemplate=True)
-    cmds.button(label='Open DFG Editor', command=self.__openDFGEditor)
+    cmds.button(label='Open Canvas UI', command=self.__openDFGEditor)
     cmds.setUITemplate(popTemplate=True)
    
   def replace(self, attr):
