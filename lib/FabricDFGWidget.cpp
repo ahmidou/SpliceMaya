@@ -31,6 +31,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
 
 FabricDFGWidget::~FabricDFGWidget()
 {
+  s_widget = NULL;
 }
 
 FabricDFGWidget *FabricDFGWidget::Instance()
