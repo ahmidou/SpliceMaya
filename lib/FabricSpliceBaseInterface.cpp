@@ -669,12 +669,18 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
     if(arrayType == "Single Value")
     {
       MObject x = nAttr.create(portName+"_x", portName+"_x", MFnNumericData::kDouble);
+      nAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      nAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
       MObject y = nAttr.create(portName+"_y", portName+"_y", MFnNumericData::kDouble);
+      nAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      nAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
       MObject z = nAttr.create(portName+"_z", portName+"_z", MFnNumericData::kDouble);
+      nAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      nAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
       newAttribute = cAttr.create(portName, portName);
@@ -685,12 +691,18 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
     else if(arrayType == "Array (Multi)")
     {
       MObject x = nAttr.create(portName+"_x", portName+"_x", MFnNumericData::kDouble);
+      nAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      nAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
       MObject y = nAttr.create(portName+"_y", portName+"_y", MFnNumericData::kDouble);
+      nAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      nAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
       MObject z = nAttr.create(portName+"_z", portName+"_z", MFnNumericData::kDouble);
+      nAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      nAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
       newAttribute = cAttr.create(portName, portName);
@@ -715,12 +727,18 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
     if(arrayType == "Single Value")
     {
       MObject x = uAttr.create(portName+"_x", portName+"_x", MFnUnitAttribute::kAngle);
+      uAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      uAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       uAttr.setStorable(true);
       uAttr.setKeyable(true);
       MObject y = uAttr.create(portName+"_y", portName+"_y", MFnUnitAttribute::kAngle);
+      uAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      uAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       uAttr.setStorable(true);
       uAttr.setKeyable(true);
       MObject z = uAttr.create(portName+"_z", portName+"_z", MFnUnitAttribute::kAngle);
+      uAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      uAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       uAttr.setStorable(true);
       uAttr.setKeyable(true);
       newAttribute = cAttr.create(portName, portName);
@@ -731,10 +749,16 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
     else if(arrayType == "Array (Multi)")
     {
       MObject x = uAttr.create(portName+"_x", portName+"_x", MFnUnitAttribute::kAngle);
+      uAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      uAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       uAttr.setStorable(true);
       MObject y = uAttr.create(portName+"_y", portName+"_y", MFnUnitAttribute::kAngle);
+      uAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      uAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       uAttr.setStorable(true);
       MObject z = uAttr.create(portName+"_z", portName+"_z", MFnUnitAttribute::kAngle);
+      uAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
+      uAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       uAttr.setStorable(true);
       newAttribute = cAttr.create(portName, portName);
       cAttr.addChild(x);
@@ -1680,6 +1704,19 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
   MPlugArray &affectedPlugs
   )
 {
+  MFnAttribute inAttrib( inPlug.attribute() );
+  if ( inAttrib.isHidden()
+    || !inAttrib.isDynamic()
+    || !inAttrib.isWritable() )
+    return MS::kSuccess;
+
+  static FILE *fp = fopen("/tmp/foo", "w");
+  fprintf(
+    fp, "BEGIN setDependentsDirty %s graphConstructionActive=%s\n",
+    inAttrib.name().asChar(),
+    MEvaluationManager::graphConstructionActive()? "true": "false"
+    );
+
   MFnDependencyNode thisNode(thisMObject);
 
   FabricSplice::Logging::AutoTimer globalTimer("Maya::setDependentsDirty()");
@@ -1698,7 +1735,11 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
 #endif
 
   if(_outputsDirtied)
+  {
+    fprintf( fp, "END fast\n");
+    fflush( fp );
     return MS::kSuccess;
+  }
 
   if(_affectedPlugsDirty)
   {
@@ -1706,6 +1747,13 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
 
     for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
       MFnAttribute attrib(thisNode.attribute(i));
+
+      fprintf(
+        fp, "%u %s isReadable=%s isWritable=%s\n",
+        i, attrib.name().asChar(),
+        attrib.isReadable()? "true": "false",
+        attrib.isWritable()? "true": "false"
+        );
       if(attrib.isHidden())
         continue;
       if(!attrib.isDynamic())
@@ -1713,11 +1761,14 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
       if(!attrib.isReadable())
         continue;
 
+      if ( !strchr( attrib.name().asChar(), '_' ) )
+        continue;
+
       MPlug outPlug = thisNode.findPlug(attrib.name());
       if(!outPlug.isNull()){
         if(!plugInArray(outPlug, _affectedPlugs)){
           _affectedPlugs.append(outPlug);
-          affectChildPlugs(outPlug, _affectedPlugs);
+          // affectChildPlugs(outPlug, _affectedPlugs);
         }
       }
     }
@@ -1728,6 +1779,17 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
 
   _outputsDirtied = true;
 
+  fprintf( fp, "RES");
+  for ( unsigned i = 0; i < affectedPlugs.length(); ++i )
+  {
+    MPlug affectedPlug = affectedPlugs[i];
+    MFnAttribute affectedAttrib( affectedPlug.attribute() );
+    fprintf( fp, " %s", affectedAttrib.name().asChar() );
+  }
+  fprintf( fp, "\n" );
+
+  fprintf( fp, "END slow\n");
+  fflush( fp );
   return MS::kSuccess;
 }
 
