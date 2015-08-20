@@ -76,12 +76,7 @@ MStatus FabricSpliceMayaNode::compute(const MPlug& plug, MDataBlock& data){
 }
 
 MStatus FabricSpliceMayaNode::setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs){
-  MStatus result = FabricSpliceBaseInterface::setDependentsDirty(
-    thisMObject(), inPlug, affectedPlugs
-    );
-  if ( result == MS::kSuccess )
-    result = MPxNode::setDependentsDirty( inPlug, affectedPlugs );
-  return result;
+  return FabricSpliceBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
 }
 
 MStatus FabricSpliceMayaNode::shouldSave(const MPlug &plug, bool &isSaving){

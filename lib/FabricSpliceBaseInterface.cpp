@@ -1726,14 +1726,6 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
 
-#if _SPLICE_MAYA_VERSION >= 2016
-  if ( MEvaluationManager::graphConstructionActive() )
-  {
-    _outputsDirtied = false;
-    _affectedPlugsDirty = true;
-  }
-#endif
-
   if(_outputsDirtied)
   {
     fprintf( fp, "END fast\n");
