@@ -43,7 +43,7 @@ class AEdfgMayaBaseTemplate(ui.AETemplate):
    
   def new(self, attr):
     cmds.setUITemplate("attributeEditorTemplate", pushTemplate=True)
-    cmds.button(label='Open Canvas UI', command=self.__openDFGEditor)
+    cmds.button(label='Open Canvas', command=self.__openDFGEditor)
     cmds.setUITemplate(popTemplate=True)
    
   def replace(self, attr):
