@@ -668,25 +668,11 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
   {
     if(arrayType == "Single Value")
     {
-      MObject x = nAttr.create(portName+"_x", portName+"_x", MFnNumericData::kDouble);
+      newAttribute = nAttr.createPoint(portName, portName);
       nAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
       nAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       nAttr.setStorable(true);
       nAttr.setKeyable(true);
-      MObject y = nAttr.create(portName+"_y", portName+"_y", MFnNumericData::kDouble);
-      nAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
-      nAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      MObject z = nAttr.create(portName+"_z", portName+"_z", MFnNumericData::kDouble);
-      nAttr.setReadable(portMode != FabricSplice::Port_Mode_IN);
-      nAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      newAttribute = cAttr.create(portName, portName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
     }
     else if(arrayType == "Array (Multi)")
     {
@@ -741,7 +727,7 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
       uAttr.setWritable(portMode != FabricSplice::Port_Mode_OUT);
       uAttr.setStorable(true);
       uAttr.setKeyable(true);
-      newAttribute = cAttr.create(portName, portName);
+      newAttribute = nAttr.createPoint(portName, portName);
       cAttr.addChild(x);
       cAttr.addChild(y);
       cAttr.addChild(z);
@@ -1710,9 +1696,8 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
     || !inAttrib.isWritable() )
     return MS::kSuccess;
 
-  static FILE *fp = fopen("/tmp/foo", "w");
-  fprintf(
-    fp, "BEGIN setDependentsDirty %s graphConstructionActive=%s\n",
+  printf(
+    "BEGIN setDependentsDirty %s graphConstructionActive=%s\n",
     inAttrib.name().asChar(),
     MEvaluationManager::graphConstructionActive()? "true": "false"
     );
@@ -1726,10 +1711,15 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
 
+  if ( MEvaluationManager::graphConstructionActive() )
+  {
+    _outputsDirtied = false;
+    _affectedPlugsDirty = true;
+  }
+
   if(_outputsDirtied)
   {
-    fprintf( fp, "END fast\n");
-    fflush( fp );
+    printf( "END fast\n");
     return MS::kSuccess;
   }
 
@@ -1740,8 +1730,8 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
     for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
       MFnAttribute attrib(thisNode.attribute(i));
 
-      fprintf(
-        fp, "%u %s isReadable=%s isWritable=%s\n",
+      printf(
+        "%u %s isReadable=%s isWritable=%s\n",
         i, attrib.name().asChar(),
         attrib.isReadable()? "true": "false",
         attrib.isWritable()? "true": "false"
@@ -1753,14 +1743,11 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
       if(!attrib.isReadable())
         continue;
 
-      if ( !strchr( attrib.name().asChar(), '_' ) )
-        continue;
-
       MPlug outPlug = thisNode.findPlug(attrib.name());
       if(!outPlug.isNull()){
         if(!plugInArray(outPlug, _affectedPlugs)){
           _affectedPlugs.append(outPlug);
-          // affectChildPlugs(outPlug, _affectedPlugs);
+          affectChildPlugs(outPlug, _affectedPlugs);
         }
       }
     }
@@ -1771,17 +1758,16 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
 
   _outputsDirtied = true;
 
-  fprintf( fp, "RES");
+  printf( "RES");
   for ( unsigned i = 0; i < affectedPlugs.length(); ++i )
   {
     MPlug affectedPlug = affectedPlugs[i];
     MFnAttribute affectedAttrib( affectedPlug.attribute() );
-    fprintf( fp, " %s", affectedAttrib.name().asChar() );
+    printf( " %s", affectedAttrib.name().asChar() );
   }
-  fprintf( fp, "\n" );
+  printf( "\n" );
 
-  fprintf( fp, "END slow\n");
-  fflush( fp );
+  printf( "END slow\n");
   return MS::kSuccess;
 }
 
