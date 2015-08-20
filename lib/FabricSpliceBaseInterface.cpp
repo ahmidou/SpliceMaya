@@ -9,7 +9,9 @@
 #include <sstream>
 #include <algorithm>
 
+#if _SPLICE_MAYA_VERSION >= 2016
 #include <maya/MEvaluationManager.h>
+#endif
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnNumericAttribute.h>

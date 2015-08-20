@@ -75,6 +75,10 @@ MStatus FabricSpliceMayaNode::compute(const MPlug& plug, MDataBlock& data){
   return stat;
 }
 
+MStatus FabricSpliceMayaNode::setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs){
+  return FabricSpliceBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
+}
+
 MStatus FabricSpliceMayaNode::shouldSave(const MPlug &plug, bool &isSaving){
   // guarantee dynamically added attributes are saved
   isSaving = true;
