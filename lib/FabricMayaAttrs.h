@@ -2,8 +2,12 @@
 //  Copyright 2010-2015 Fabric Software Inc. All rights reserved.
 //
 
-#ifndef _FabricMayaHelpers_h
-#define _FabricMayaHelpers_h
+#ifndef _FabricMayaAttrs_h
+#define _FabricMayaAttrs_h
+
+#include <FabricSplice.h>
+#include <FTL/StrRef.h>
+#include <maya/MObject.h>
 
 namespace FabricMaya {
 
@@ -39,8 +43,8 @@ ArrayType ParseArrayType(
   FTL::StrRef arrayTypeStr
   );
 
-MObject CreateMayaAttriubte(
-  FTL::StrRef name,
+MObject CreateMayaAttribute(
+  FTL::CStrRef name,
   DataType dataType,
   FTL::StrRef dataTypeStr,
   ArrayType arrayType,
@@ -51,4 +55,4 @@ MObject CreateMayaAttriubte(
 
 } // namespace FabricMaya
 
-#endif //_FabricMayaHelpers_h
+#endif //_FabricMayaAttrs_h
