@@ -168,6 +168,12 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
 void FabricSpliceBaseInterface::evaluate(){
   MFnDependencyNode thisNode(getThisMObject());
 
+  printf(
+    "BEGIN evaluate %s graphConstructionActive=%s\n",
+    thisNode.name().asChar(),
+    MEvaluationManager::graphConstructionActive()? "true": "false"
+    );
+
   FabricSplice::Logging::AutoTimer globalTimer("Maya::evaluate()");
   std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::evaluate()").c_str();
   FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
@@ -259,7 +265,13 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
   }
 }
 
-void FabricSpliceBaseInterface::collectDirtyPlug(MPlug const &inPlug){
+void FabricSpliceBaseInterface::collectDirtyPlug(MPlug const &inPlug)
+{
+
+  printf(
+    "CALL collectDirtyPlug %s\n",
+    inPlug.name().asChar()
+    );
 
   FabricSplice::Logging::AutoTimer globalTimer("Maya::collectDirtyPlug()");
   std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::collectDirtyPlug()").c_str();
@@ -432,49 +444,49 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(MString portName, Fabr
   std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setupMayaAttributeAffects()").c_str();
   FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
-  MFnDependencyNode thisNode(getThisMObject());
-  MPxNode * userNode = thisNode.userNode();
-  if(userNode != NULL)
-  {
-    if(portMode != FabricSplice::Port_Mode_IN)
-    {
-      for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
-        std::string otherPortName = _spliceGraph.getDGPortName(i);
-        if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
-          continue;
-        FabricSplice::DGPort otherPort = _spliceGraph.getDGPort(otherPortName.c_str());
-        if(!otherPort.isValid())
-          continue;
-        if(otherPort.getMode() != FabricSplice::Port_Mode_IN)
-          continue;
-        MPlug plug = thisNode.findPlug(otherPortName.c_str());
-        if(plug.isNull())
-          continue;
-        userNode->attributeAffects(plug.attribute(), newAttribute);
-      }
+  // MFnDependencyNode thisNode(getThisMObject());
+  // MPxNode * userNode = thisNode.userNode();
+  // if(userNode != NULL)
+  // {
+  //   if(portMode != FabricSplice::Port_Mode_IN)
+  //   {
+  //     for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
+  //       std::string otherPortName = _spliceGraph.getDGPortName(i);
+  //       if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
+  //         continue;
+  //       FabricSplice::DGPort otherPort = _spliceGraph.getDGPort(otherPortName.c_str());
+  //       if(!otherPort.isValid())
+  //         continue;
+  //       if(otherPort.getMode() != FabricSplice::Port_Mode_IN)
+  //         continue;
+  //       MPlug plug = thisNode.findPlug(otherPortName.c_str());
+  //       if(plug.isNull())
+  //         continue;
+  //       userNode->attributeAffects(plug.attribute(), newAttribute);
+  //     }
 
-      MPlug evalIDPlug = thisNode.findPlug("evalID");
-      if(!evalIDPlug.isNull())
-        userNode->attributeAffects(evalIDPlug.attribute(), newAttribute);
-    }
-    else
-    {
-      for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
-        std::string otherPortName = _spliceGraph.getDGPortName(i);
-        if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
-          continue;
-        FabricSplice::DGPort otherPort = _spliceGraph.getDGPort(otherPortName.c_str());
-        if(!otherPort.isValid())
-          continue;
-        if(otherPort.getMode() == FabricSplice::Port_Mode_IN)
-          continue;
-        MPlug plug = thisNode.findPlug(otherPortName.c_str());
-        if(plug.isNull())
-          continue;
-        userNode->attributeAffects(newAttribute, plug.attribute());
-      }
-    }
-  }
+  //     MPlug evalIDPlug = thisNode.findPlug("evalID");
+  //     if(!evalIDPlug.isNull())
+  //       userNode->attributeAffects(evalIDPlug.attribute(), newAttribute);
+  //   }
+  //   else
+  //   {
+  //     for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
+  //       std::string otherPortName = _spliceGraph.getDGPortName(i);
+  //       if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
+  //         continue;
+  //       FabricSplice::DGPort otherPort = _spliceGraph.getDGPort(otherPortName.c_str());
+  //       if(!otherPort.isValid())
+  //         continue;
+  //       if(otherPort.getMode() == FabricSplice::Port_Mode_IN)
+  //         continue;
+  //       MPlug plug = thisNode.findPlug(otherPortName.c_str());
+  //       if(plug.isNull())
+  //         continue;
+  //       userNode->attributeAffects(newAttribute, plug.attribute());
+  //     }
+  //   }
+  // }
   MAYASPLICE_CATCH_END(stat);
 }
 
@@ -1172,84 +1184,86 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
   MPlugArray &affectedPlugs
   )
 {
-  MFnAttribute inAttrib( inPlug.attribute() );
-  if ( inAttrib.isHidden()
-    || !inAttrib.isDynamic()
-    || !inAttrib.isWritable() )
-    return MS::kSuccess;
+  printf(
+    "BEG setDependentsDirty %s graphConstructionActive=%s\n",
+    inPlug.name().asChar(),
+    MEvaluationManager::graphConstructionActive()? "true": "false"
+    );
 
-  // printf(
-  //   "BEGIN setDependentsDirty %s graphConstructionActive=%s\n",
-  //   inAttrib.name().asChar(),
-  //   MEvaluationManager::graphConstructionActive()? "true": "false"
-  //   );
-
-  MFnDependencyNode thisNode(thisMObject);
-
-  FabricSplice::Logging::AutoTimer globalTimer("Maya::setDependentsDirty()");
-  std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setDependentsDirty()").c_str();
-  FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
-
-  // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
-  collectDirtyPlug(inPlug);
-
-  if ( MEvaluationManager::graphConstructionActive() )
+  MFnAttribute inAttr( inPlug.attribute() );
+  if ( !inAttr.isHidden()
+    && inAttr.isDynamic()
+    && inAttr.isWritable() )
   {
-    _outputsDirtied = false;
-    _affectedPlugsDirty = true;
-  }
+    MFnDependencyNode thisNode(thisMObject);
 
-  if(_outputsDirtied)
-  {
-    // printf( "END fast\n");
-    return MS::kSuccess;
-  }
+    FabricSplice::Logging::AutoTimer globalTimer("Maya::setDependentsDirty()");
+    std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setDependentsDirty()").c_str();
+    FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
-  if(_affectedPlugsDirty)
-  {
-    _affectedPlugs.clear();
+    if ( !MEvaluationManager::graphConstructionActive() )
+    {
+      if ( _outputsDirtied )
+      {
+        printf( "END _outputsDirtied\n");
+        return MS::kSuccess;
+      }
 
-    for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
-      MFnAttribute attrib(thisNode.attribute(i));
+      // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
+      collectDirtyPlug(inPlug);
+    }
 
-      // printf(
-      //   "%u %s isReadable=%s isWritable=%s\n",
-      //   i, attrib.name().asChar(),
-      //   attrib.isReadable()? "true": "false",
-      //   attrib.isWritable()? "true": "false"
-      //   );
-      if(attrib.isHidden())
-        continue;
-      if(!attrib.isDynamic())
-        continue;
-      if(!attrib.isReadable())
-        continue;
+    if ( _affectedPlugsDirty )
+    {
+      _affectedPlugs.clear();
 
-      MPlug outPlug = thisNode.findPlug(attrib.name());
-      if(!outPlug.isNull()){
-        if(!plugInArray(outPlug, _affectedPlugs)){
-          _affectedPlugs.append(outPlug);
-          affectChildPlugs(outPlug, _affectedPlugs);
+      for ( unsigned i = 0; i < thisNode.attributeCount(); ++i )
+      {
+        MFnAttribute attr( thisNode.attribute( i ) );
+
+        // FTL::CStrRef attrNameCStr = attr.name().asChar();
+        // printf(
+        //   "%u %s isReadable=%s isWritable=%s\n",
+        //   i, attrNameCStr.c_str(),
+        //   attr.isReadable()? "true": "false",
+        //   attr.isWritable()? "true": "false"
+        //   );
+        if ( attr.isHidden() )
+          continue;
+        if ( !attr.isDynamic() )
+          continue;
+        if ( !attr.isReadable() )
+          continue;
+        if ( !attr.parent().isNull() )
+          continue;
+
+        MPlug outPlug( thisMObject, attr.object() );
+        assert( !outPlug.isNull() );
+        if ( !plugInArray( outPlug, _affectedPlugs ) )
+        {
+          _affectedPlugs.append( outPlug );
+          affectChildPlugs( outPlug, _affectedPlugs );
         }
       }
+
+      _affectedPlugsDirty = false;
     }
-    _affectedPlugsDirty = false;
+
+    affectedPlugs = _affectedPlugs;
+
+    if ( !MEvaluationManager::graphConstructionActive() )
+      _outputsDirtied = true;
   }
 
-  affectedPlugs = _affectedPlugs;
+  printf( "END [");
+  for ( unsigned i = 0; i < affectedPlugs.length(); ++i )
+  {
+    MPlug affectedPlug = affectedPlugs[i];
+    printf( "%s%s", (i==0? "": ","), affectedPlug.name().asChar() );
+  }
+  printf( "]\n" );
+  fflush( stdout );
 
-  _outputsDirtied = true;
-
-  // printf( "RES");
-  // for ( unsigned i = 0; i < affectedPlugs.length(); ++i )
-  // {
-  //   MPlug affectedPlug = affectedPlugs[i];
-  //   MFnAttribute affectedAttrib( affectedPlug.attribute() );
-  //   printf( " %s", affectedAttrib.name().asChar() );
-  // }
-  // printf( "\n" );
-
-  // printf( "END slow\n");
   return MS::kSuccess;
 }
 
@@ -1362,6 +1376,12 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
 #if _SPLICE_MAYA_VERSION >= 2016
 MStatus FabricSpliceBaseInterface::preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode)
 {
+  MFnDependencyNode thisNode( thisMObject );
+  printf(
+    "CALL preEvaluation %s\n",
+    thisNode.name().asChar()
+    );
+
   MStatus status;
   if(!context.isNormal()) 
     return MStatus::kFailure;

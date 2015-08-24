@@ -441,6 +441,19 @@ MObject CreateMayaAttribute(
         {
           MFnNumericAttribute numAttr;
           obj = numAttr.createColor(name, name);
+          for ( unsigned i = 0; i < 3; ++i )
+          {
+            MFnAttribute childAttr( numAttr.child( i ) );
+            SetupMayaAttribute(
+              childAttr,
+              DT_Scalar,
+              FTL_STR("Float32"),
+              AT_Single,
+              FTL_STR("Single Value"),
+              isInput,
+              isOutput
+              );
+          }
         }
         break;
 
@@ -458,6 +471,19 @@ MObject CreateMayaAttribute(
         {
           MFnNumericAttribute numAttr;
           obj = numAttr.createPoint(name, name);
+          for ( unsigned i = 0; i < 3; ++i )
+          {
+            MFnAttribute childAttr( numAttr.child( i ) );
+            SetupMayaAttribute(
+              childAttr,
+              DT_Scalar,
+              FTL_STR("Float32"),
+              AT_Single,
+              FTL_STR("Single Value"),
+              isInput,
+              isOutput
+              );
+          }
         }
         break;
 
