@@ -732,20 +732,25 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding 
       }
 
       binding.setArgValue(argName, rtVal, false);
-    }else{
-      if(scalarUnit == "time")
-        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asTime().as(MTime::kSeconds)), false);
-      else if(scalarUnit == "angle")
-        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asAngle().as(MAngle::kRadians)), false);
-      else if(scalarUnit == "distance")
-        binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(handle.asDistance().as(MDistance::kMillimeters)), false);
+    }
+    else
+    {
+      // get the value of the source Maya plug.
+      double plugValue = 0;
+      if      (scalarUnit == "time")      plugValue = handle.asTime().as(MTime::kSeconds);
+      else if (scalarUnit == "angle")     plugValue = handle.asAngle().as(MAngle::kRadians);
+      else if (scalarUnit == "distance")  plugValue = handle.asDistance().as(MDistance::kMillimeters);
       else
       {
-        if(handle.numericType() == MFnNumericData::kFloat)
-          binding.setArgValue(argName, FabricSplice::constructFloat32RTVal(handle.asFloat()), false);
-        else
-          binding.setArgValue(argName, FabricSplice::constructFloat32RTVal((float)handle.asDouble()), false);
+        if(handle.numericType() == MFnNumericData::kFloat)  plugValue = handle.asFloat();
+        else                                                plugValue = handle.asDouble();
       }
+
+      // get the resolved data type of the destination exec port and set its value.
+      std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+      if      (resolvedType == "Scalar")  binding.setArgValue(argName, FabricSplice::constructFloat32RTVal((float)plugValue), false);
+      else if (resolvedType == "Float32") binding.setArgValue(argName, FabricSplice::constructFloat32RTVal((float)plugValue), false);
+      else if (resolvedType == "Float64") binding.setArgValue(argName, FabricSplice::constructFloat64RTVal(       plugValue), false);
     }
   }
 }
