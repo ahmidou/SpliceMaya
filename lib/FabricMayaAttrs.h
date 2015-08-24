@@ -49,7 +49,8 @@ MObject CreateMayaAttribute(
   FTL::StrRef dataTypeStr,
   ArrayType arrayType,
   FTL::StrRef arrayTypeStr,
-  FabricSplice::Port_Mode portMode,
+  bool isInput,
+  bool isOutput,
   FabricCore::Variant compoundStructure
   );
 

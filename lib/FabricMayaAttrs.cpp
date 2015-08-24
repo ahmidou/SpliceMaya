@@ -110,11 +110,12 @@ static void SetupMayaAttribute(
   FTL::StrRef dataTypeStr,
   ArrayType arrayType,
   FTL::StrRef arrayTypeStr,
-  FabricSplice::Port_Mode portMode
+  bool isInput,
+  bool isOutput
   )
 {
-  attr.setReadable( portMode != FabricSplice::Port_Mode_IN );
-  attr.setWritable( portMode != FabricSplice::Port_Mode_OUT );
+  attr.setReadable( isOutput );
+  attr.setWritable( isInput );
 
   switch ( dataType )
   {
@@ -126,8 +127,8 @@ static void SetupMayaAttribute(
       break;
 
     default:
-      attr.setStorable( portMode == FabricSplice::Port_Mode_IN );
-      attr.setKeyable( portMode == FabricSplice::Port_Mode_IN );
+      attr.setStorable( isInput && !isOutput );
+      attr.setKeyable( isInput && !isOutput );
       break;
   }
 
@@ -238,7 +239,8 @@ MObject CreateMayaAttribute(
   FTL::StrRef dataTypeStr,
   ArrayType arrayType,
   FTL::StrRef arrayTypeStr,
-  FabricSplice::Port_Mode portMode,
+  bool isInput,
+  bool isOutput,
   FabricCore::Variant compoundStructure
   )
 {
@@ -293,7 +295,8 @@ MObject CreateMayaAttribute(
                     childDataTypeStr,
                     ParseArrayType( childArrayTypeStr ),
                     childArrayTypeStr,
-                    portMode,
+                    isInput,
+                    isOutput,
                     *value // compoundStructure
                     )
                   );
@@ -308,7 +311,8 @@ MObject CreateMayaAttribute(
                     FTL_STR("CompoundParam"),
                     AT_Single,
                     FTL_STR("Single Value"),
-                    portMode,
+                    isInput,
+                    isOutput,
                     *value // compoundStructure
                     )
                   );
@@ -484,7 +488,8 @@ MObject CreateMayaAttribute(
             FTL_STR("Float32"),
             AT_Single,
             FTL_STR("Single Value"),
-            portMode
+            isInput,
+            isOutput
             );
           MFnUnitAttribute uAttrY;
           MObject objY = uAttrY.create( name+"Y", name+"Y", MFnUnitAttribute::kAngle );
@@ -494,7 +499,8 @@ MObject CreateMayaAttribute(
             FTL_STR("Float32"),
             AT_Single,
             FTL_STR("Single Value"),
-            portMode
+            isInput,
+            isOutput
             );
           MFnUnitAttribute uAttrZ;
           MObject objZ = uAttrZ.create( name+"Z", name+"Z", MFnUnitAttribute::kAngle );
@@ -504,7 +510,8 @@ MObject CreateMayaAttribute(
             FTL_STR("Float32"),
             AT_Single,
             FTL_STR("Single Value"),
-            portMode
+            isInput,
+            isOutput
             );
           MFnNumericAttribute numAttr;
           obj = numAttr.create(name, name, objX, objY, objZ);
@@ -614,7 +621,8 @@ MObject CreateMayaAttribute(
     dataTypeStr,
     arrayType,
     arrayTypeStr,
-    portMode
+    isInput,
+    isOutput
     );
 
   return obj;

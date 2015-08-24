@@ -1,10 +1,11 @@
 
 #include "FabricDFGBaseInterface.h"
 #include "FabricDFGConversion.h"
-#include "FabricSpliceBaseInterface.h"
-#include "FabricSpliceMayaData.h"
 #include "FabricDFGWidget.h"
+#include "FabricMayaAttrs.h"
+#include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricSpliceMayaData.h"
 
 #include <string>
 #include <fstream>
@@ -794,592 +795,90 @@ void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherP
   _affectedPlugsDirty = true;
 }
 
-MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType, bool compoundChild, MStatus * stat)
+MObject FabricDFGBaseInterface::addMayaAttribute(
+  MString portName,
+  MString dataTypeMString, 
+  FabricCore::DFGPortType portType,
+  MString arrayTypeMString,
+  MStatus * stat
+  )
 {
   MAYADFG_CATCH_BEGIN(stat);
 
   FabricSplice::Logging::AutoTimer timer("Maya::addMayaAttribute()");
-  MObject newAttribute;
+
+  MFnDependencyNode thisNode( getThisMObject() );
+  MString plugName = getPlugName( portName );
+  MPlug plug = thisNode.findPlug( plugName );
+  if ( !plug.isNull() )
+  {
+    if ( _isReferenced )
+      return plug.attribute();
+
+    std::string error;
+    error += "Attribute '";
+    error += portName.asChar();
+    error += "' already exists on node '";
+    error += thisNode.name().asChar();
+    error += "'";
+    throw FabricCore::Exception( error.c_str() );
+  }
+
+  FTL::CStrRef dataTypeCStr = dataTypeMString.asChar();
 
   // skip if disabled by used in the EditPortDialog
-  if(!m_addAttributeForNextAttribute)
+  if ( !m_addAttributeForNextAttribute )
   {
     m_addAttributeForNextAttribute = true;
     FabricCore::DFGExec exec = m_binding.getExec();
-    exec.setExecPortMetadata(portName.asChar(), "addAttribute", "false", false);
-    return newAttribute;
+    exec.setExecPortMetadata(
+      portName.asChar(), "addAttribute", "false", false
+      );
+    return MObject();
   }
 
-  MString dataTypeOverride = dataType;
-
-  if(m_useOpaqueForNextAttribute)
+  if ( m_useOpaqueForNextAttribute )
   {
-    dataTypeOverride = "SpliceMayaData";
+    dataTypeCStr = FTL_STR("SpliceMayaData");
     FabricCore::DFGExec exec = m_binding.getExec();
     exec.setExecPortMetadata(portName.asChar(), "opaque", "true", false);
     m_useOpaqueForNextAttribute = false;
   }
 
-  // remove []
-  MStringArray splitBuffer;
-  dataTypeOverride.split('[', splitBuffer);
-  if(splitBuffer.length()){
-    dataTypeOverride = splitBuffer[0];
-    if(splitBuffer.length() > 1 && arrayType.length() == 0)
-    {
-      if(m_useNativeArrayForNextAttribute)
-      {
-        m_useNativeArrayForNextAttribute = false;
-        arrayType = "Array (Native)";
+  FabricMaya::DataType dataType = FabricMaya::ParseDataType( dataTypeCStr );
 
-        FabricCore::DFGExec exec = m_binding.getExec();
-        exec.setExecPortMetadata(portName.asChar(), "nativeArray", "true", false);
-      }
-      else
-        arrayType = "Array (Multi)";
-    }
-  }
-
-  if(arrayType.length() == 0)
-    arrayType = "Single Value";
-
-  MFnDependencyNode thisNode(getThisMObject());
-  MString plugName = getPlugName(portName);
-  MPlug plug = thisNode.findPlug(plugName);
-  if(!plug.isNull()){
-    if(_isReferenced)
-      return plug.attribute();
-
-    mayaLogFunc("Attribute '"+portName+"' already exists on node '"+thisNode.name()+"'.");
-    return newAttribute;
-  }
-
-  MFnNumericAttribute nAttr;
-  MFnTypedAttribute tAttr;
-  MFnUnitAttribute uAttr;
-  MFnMatrixAttribute mAttr;
-  MFnMessageAttribute pAttr;
-  MFnCompoundAttribute cAttr;
-  MFnStringData emptyStringData;
-  MObject emptyStringObject = emptyStringData.create("");
-
-  bool storable = true;
-
-
-  // if(dataTypeOverride == "CompoundParam")
-  // {
-  //   if(compoundStructure.isNull())
-  //   {
-  //     mayaLogErrorFunc("CompoundParam used for a maya attribute but no compound structure provided.");
-  //     return newAttribute;
-  //   }
-
-  //   if(!compoundStructure.isDict())
-  //   {
-  //     mayaLogErrorFunc("CompoundParam used for a maya attribute but compound structure does not contain a dictionary.");
-  //     return newAttribute;
-  //   }
-
-  //   if(arrayType == "Single Value" || arrayType == "Array (Multi)")
-  //   {
-  //     MObjectArray children;
-  //     for(FabricCore::Variant::DictIter childIter(compoundStructure); !childIter.isDone(); childIter.next())
-  //     {
-  //       MString childNameStr = childIter.getKey()->getStringData();
-  //       const FabricCore::Variant * value = childIter.getValue();
-  //       if(!value)
-  //         continue;
-  //       if(value->isNull())
-  //         continue;
-  //       if(value->isDict()) {
-  //         const FabricCore::Variant * childDataType = value->getDictValue("dataType");
-  //         if(childDataType)
-  //         {
-  //           if(childDataType->isString())
-  //           {
-  //             MString childArrayTypeStr = "Single Value";
-  //             MString childDataTypeStr = childDataType->getStringData();
-  //             MStringArray childDataTypeStrParts;
-  //             childDataTypeStr.split('[', childDataTypeStrParts);
-  //             if(childDataTypeStrParts.length() > 1)
-  //               childArrayTypeStr = "Array (Multi)";
-
-  //             MObject child = addMayaAttribute(childNameStr, childDataTypeStr, childArrayTypeStr, portType, true, *value, stat);
-  //             if(child.isNull())
-  //               return newAttribute;
-              
-  //             children.append(child);
-  //             continue;
-  //           }
-  //         }
-
-  //         // we assume it's a nested compound param
-  //         MObject child = addMayaAttribute(childNameStr, "CompoundParam", "Single Value", portType, true, *value, stat);
-  //         if(child.isNull())
-  //           return newAttribute;
-  //         children.append(child);
-  //       }
-  //     }
-
-  //     /// now create the compound attribute
-  //     newAttribute = cAttr.create(plugName, plugName);
-  //     if(arrayType == "Array (Multi)")
-  //     {
-  //       cAttr.setArray(true);
-  //       cAttr.setUsesArrayDataBuilder(true);
-  //     }
-  //     for(unsigned int i=0;i<children.length();i++)
-  //     {
-  //       cAttr.addChild(children[i]);
-  //     }
-
-  //     // initialize the compound param
-  //     _dirtyPlugs.append(portName);
-  //   }
-  //   else
-  //   {
-  //     mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-  //     return newAttribute;
-  //   }
-  // }
-  // else if(dataTypeOverride == "Boolean")
-  if(dataTypeOverride == "Boolean")
+  FTL::CStrRef arrayTypeCStr = arrayTypeMString.asChar();
+  if ( m_useNativeArrayForNextAttribute )
   {
-    if(arrayType == "Single Value")
-    {
-      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kBoolean);
-    }
-    else if(arrayType == "Array (Multi)")
-    {
-      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kBoolean);
-      nAttr.setArray(true);
-      nAttr.setUsesArrayDataBuilder(true);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
+    m_useNativeArrayForNextAttribute = false;
+    arrayTypeCStr = FTL_STR("Array (Native)");
+    FabricCore::DFGExec exec = m_binding.getExec();
+    exec.setExecPortMetadata(portName.asChar(), "nativeArray", "true", false);
   }
-  else if(dataTypeOverride == "Integer" || dataTypeOverride == "SInt32" || dataTypeOverride == "UInt32")
-  {
-    if(arrayType == "Single Value")
-    {
-      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt);
-    }
-    else if(arrayType == "Array (Multi)")
-    {
-      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt);
-      nAttr.setArray(true);
-      nAttr.setUsesArrayDataBuilder(true);
-    }
-    else if(arrayType == "Array (Native)")
-    {
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kIntArray);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
+  else if ( arrayTypeCStr.empty() )
+    arrayTypeCStr = FTL_STR("Single Value");
+  FabricMaya::ArrayType arrayType =
+    FabricMaya::ParseArrayType( arrayTypeCStr );
 
-    // float uiMin = getScalarOption("uiMin", compoundStructure);
-    // float uiMax = getScalarOption("uiMax", compoundStructure);
-    // if(uiMin < uiMax) 
-    // {
-    //   nAttr.setMin(uiMin);
-    //   nAttr.setMax(uiMax);
-    //   float uiSoftMin = getScalarOption("uiSoftMin", compoundStructure);
-    //   float uiSoftMax = getScalarOption("uiSoftMax", compoundStructure);
-    //   if(uiSoftMin < uiSoftMax) 
-    //   {
-    //     nAttr.setSoftMin(uiSoftMin);
-    //     nAttr.setSoftMax(uiSoftMax);
-    //   }
-    //   else
-    //   {
-    //     nAttr.setSoftMin(uiMin);
-    //     nAttr.setSoftMax(uiMax);
-    //   }
-    // }
-  }
-  else if(dataTypeOverride == "Scalar" || dataTypeOverride == "Float32" || dataTypeOverride == "Float64")
-  {
-    bool isUnitAttr = true;
-    // std::string scalarUnit = getStringOption("scalarUnit", compoundStructure);
-    std::string scalarUnit = "";
-    if(arrayType == "Single Value" || arrayType == "Array (Multi)")
-    {
-      if(scalarUnit == "time")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kTime);
-      else if(scalarUnit == "angle")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kAngle);
-      else if(scalarUnit == "distance")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kDistance);
-      else
-      {
-        newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kDouble);
-        isUnitAttr = false;
-      }
+  FabricCore::Variant compoundStructure;
+  MObject obj =
+    FabricMaya::CreateMayaAttribute(
+      portName.asChar(),
+      dataType,
+      dataTypeCStr,
+      arrayType,
+      arrayTypeCStr,
+      portType != FabricCore::DFGPortType_Out,
+      portType != FabricCore::DFGPortType_In,
+      compoundStructure
+      );
 
-      if(arrayType == "Array (Multi)") 
-      {
-        if(isUnitAttr)
-        {
-          uAttr.setArray(true);
-          uAttr.setUsesArrayDataBuilder(true);
-        }
-        else
-        {
-          nAttr.setArray(true);
-          nAttr.setUsesArrayDataBuilder(true);
-        }
-      }
-    }
-    else if(arrayType == "Array (Native)")
-    {
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kDoubleArray);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
+  thisNode.addAttribute( obj );
 
-    // float uiMin = getScalarOption("uiMin", compoundStructure);
-    // float uiMax = getScalarOption("uiMax", compoundStructure);
-    // if(uiMin < uiMax) 
-    // {
-    //   if(isUnitAttr)
-    //   {
-    //     uAttr.setMin(uiMin);
-    //     uAttr.setMax(uiMax);
-    //   }
-    //   else
-    //   {
-    //     nAttr.setMin(uiMin);
-    //     nAttr.setMax(uiMax);
-    //   }
-    //   float uiSoftMin = getScalarOption("uiSoftMin", compoundStructure);
-    //   float uiSoftMax = getScalarOption("uiSoftMax", compoundStructure);
-    //   if(isUnitAttr)
-    //   {
-    //     if(uiSoftMin < uiSoftMax) 
-    //     {
-    //       uAttr.setSoftMin(uiSoftMin);
-    //       uAttr.setSoftMax(uiSoftMax);
-    //     }
-    //     else
-    //     {
-    //       uAttr.setSoftMin(uiMin);
-    //       uAttr.setSoftMax(uiMax);
-    //     }
-    //   }
-    //   else
-    //   {
-    //     if(uiSoftMin < uiSoftMax) 
-    //     {
-    //       nAttr.setSoftMin(uiSoftMin);
-    //       nAttr.setSoftMax(uiSoftMax);
-    //     }
-    //     else
-    //     {
-    //       nAttr.setSoftMin(uiMin);
-    //       nAttr.setSoftMax(uiMax);
-    //     }
-    //   }
-    // }
-  }
-  else if(dataTypeOverride == "String")
-  {
-    if(arrayType == "Single Value")
-    {
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kString, emptyStringObject);
-    }
-    else if(arrayType == "Array (Multi)"){
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kString, emptyStringObject);
-      tAttr.setArray(true);
-      tAttr.setUsesArrayDataBuilder(true);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
-  }
-  else if(dataTypeOverride == "Color")
-  {
-    if(arrayType == "Single Value")
-    {
-      newAttribute = nAttr.createColor(plugName, plugName);
-    }
-    else if(arrayType == "Array (Multi)")
-    {
-      newAttribute = nAttr.createColor(plugName, plugName);
-      nAttr.setArray(true);
-      nAttr.setUsesArrayDataBuilder(true);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
-  }
-  else if(dataTypeOverride == "Vec3")
-  {
-    if(arrayType == "Single Value")
-    {
-      MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-    }
-    else if(arrayType == "Array (Multi)")
-    {
-      MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-      cAttr.setArray(true);
-      cAttr.setUsesArrayDataBuilder(true);
-    }
-    else if(arrayType == "Array (Native)")
-    {
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kVectorArray);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
-  }
-  else if(dataTypeOverride == "Euler")
-  {
-    if(arrayType == "Single Value")
-    {
-      MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      uAttr.setKeyable(true);
-      MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      uAttr.setKeyable(true);
-      MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      uAttr.setKeyable(true);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-    }
-    else if(arrayType == "Array (Multi)")
-    {
-      MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-      cAttr.setArray(true);
-      cAttr.setUsesArrayDataBuilder(true);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
-  }
-  else if(dataTypeOverride == "Mat44")
-  {
-    if(arrayType == "Single Value")
-    {
-      newAttribute = mAttr.create(plugName, plugName);
-    }
-    else if(arrayType == "Array (Multi)")
-    {
-      newAttribute = mAttr.create(plugName, plugName);
-      mAttr.setArray(true);
-      mAttr.setUsesArrayDataBuilder(true);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
-  }
-  else if(dataTypeOverride == "PolygonMesh")
-  {
-    if(arrayType == "Single Value")
-    {
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kMesh);
-      storable = false;
-    }
-    else if(arrayType == "Array (Multi)")
-    {
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kMesh);
-      storable = false;
-      tAttr.setArray(true);
-      tAttr.setUsesArrayDataBuilder(true);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
-  }
-  else if(dataTypeOverride == "Lines")
-  {
-    if(arrayType == "Single Value")
-    {
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kNurbsCurve);
-      storable = false;
-    }
-    else if(arrayType == "Array (Multi)")
-    {
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kNurbsCurve);
-      storable = false;
-      tAttr.setArray(true);
-      tAttr.setUsesArrayDataBuilder(true);
-    }
-    else
-    {
-      mayaLogErrorFunc("DataType '"+dataType+"' incompatible with ArrayType '"+arrayType+"'.");
-      return newAttribute;
-    }
-  }
-  else if(dataTypeOverride == "KeyframeTrack"){
-    
-    if(arrayType == "Single Value")
-    {
-      if(getDFGExec().haveExecPort(portName.asChar())) {
-        newAttribute = pAttr.create(plugName, plugName);
-        pAttr.setStorable(true);
-        pAttr.setKeyable(true);
-        pAttr.setCached(false);
-      }
-      else{
-        mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
-        return newAttribute;
-      }
-    }
-    else
-    {
-      if(getDFGExec().haveExecPort(portName.asChar())) {
-        newAttribute = pAttr.create(plugName, plugName);
-        pAttr.setStorable(true);
-        pAttr.setKeyable(true);
-        pAttr.setArray(true);
-        pAttr.setCached(false);
-      }
-      else{
-        mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
-        return newAttribute;
-      }
-    }
-  }
-  else if(dataTypeOverride == "SpliceMayaData"){
-    
-    if(arrayType == "Single Value")
-    {
-      if(getDFGExec().haveExecPort(portName.asChar())) {
-        newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
-        mSpliceMayaDataOverride.push_back(portName.asChar());
-        storable = false;
-      }
-      else{
-        mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
-        return newAttribute;
-      }
-    }
-    else
-    {
-      if(getDFGExec().haveExecPort(portName.asChar())) {
-        newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
-        mSpliceMayaDataOverride.push_back(portName.asChar());
-        storable = false;
-        tAttr.setArray(true);
-        tAttr.setUsesArrayDataBuilder(true);
-      }
-      else{
-        mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
-        return newAttribute;
-      }
-    }
-  }
-  else
-  {
-    // mayaLogErrorFunc("DataType '"+dataType+"' not supported.");
-    return newAttribute;
-  }
-
-  // set the mode
-  if(!newAttribute.isNull())
-  {
-    if(portType != FabricCore::DFGPortType_In)
-    {
-      nAttr.setReadable(true);
-      tAttr.setReadable(true);
-      mAttr.setReadable(true);
-      uAttr.setReadable(true);
-      cAttr.setReadable(true);
-      pAttr.setReadable(true);
-    }
-    if(portType != FabricCore::DFGPortType_Out)
-    {
-      nAttr.setWritable(true);
-      tAttr.setWritable(true);
-      mAttr.setWritable(true);
-      uAttr.setWritable(true);
-      cAttr.setWritable(true);
-      pAttr.setWritable(true);
-    }
-    if(portType == FabricCore::DFGPortType_In && storable)
-    {
-      nAttr.setKeyable(true);
-      tAttr.setKeyable(true);
-      mAttr.setKeyable(true);
-      uAttr.setKeyable(true);
-      cAttr.setKeyable(true);
-      pAttr.setKeyable(true);
-
-      nAttr.setStorable(true);
-      tAttr.setStorable(true);
-      mAttr.setStorable(true);
-      uAttr.setStorable(true);
-      cAttr.setStorable(true);
-      pAttr.setStorable(true);
-    }
-
-    if(!compoundChild)
-      thisNode.addAttribute(newAttribute);
-  }
-
-  if(!compoundChild)
-    setupMayaAttributeAffects(portName, portType, newAttribute);
+  setupMayaAttributeAffects( portName, portType, obj );
 
   _affectedPlugsDirty = true;
-  return newAttribute;
+  return obj;
 
   MAYADFG_CATCH_END(stat);
 

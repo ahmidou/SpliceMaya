@@ -127,7 +127,13 @@ protected:
   MStatus preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode);
 #endif
 
-  MObject addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType = "", bool compoundChild = false, MStatus * stat = NULL);
+  MObject addMayaAttribute(
+    MString portName,
+    MString dataType,
+    FabricCore::DFGPortType portType,
+    MString arrayType = "",
+    MStatus * stat = NULL
+    );
   void removeMayaAttribute(MString portName, MStatus * stat = NULL);
 
   // static MString sManipulationCommand;

@@ -400,23 +400,24 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(
     throw FabricCore::Exception( error.c_str() );
   }
 
-  MObject newAttribute =
+  MObject obj =
     FabricMaya::CreateMayaAttribute(
       portName.asChar(),
       FabricMaya::ParseDataType( dataType.asChar() ),
       dataType.asChar(),
       FabricMaya::ParseArrayType( arrayType.asChar() ),
       arrayType.asChar(),
-      portMode,
+      portMode != FabricSplice::Port_Mode_OUT, // isInput
+      portMode != FabricSplice::Port_Mode_IN, // isOutput
       compoundStructure
       );
 
-  thisNode.addAttribute(newAttribute);
+  thisNode.addAttribute(obj);
 
-  setupMayaAttributeAffects(portName, portMode, newAttribute);
+  setupMayaAttributeAffects(portName, portMode, obj);
 
   _affectedPlugsDirty = true;
-  return newAttribute;
+  return obj;
 
   MAYASPLICE_CATCH_END(stat);
 
@@ -1177,11 +1178,11 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
     || !inAttrib.isWritable() )
     return MS::kSuccess;
 
-  printf(
-    "BEGIN setDependentsDirty %s graphConstructionActive=%s\n",
-    inAttrib.name().asChar(),
-    MEvaluationManager::graphConstructionActive()? "true": "false"
-    );
+  // printf(
+  //   "BEGIN setDependentsDirty %s graphConstructionActive=%s\n",
+  //   inAttrib.name().asChar(),
+  //   MEvaluationManager::graphConstructionActive()? "true": "false"
+  //   );
 
   MFnDependencyNode thisNode(thisMObject);
 
@@ -1200,7 +1201,7 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
 
   if(_outputsDirtied)
   {
-    printf( "END fast\n");
+    // printf( "END fast\n");
     return MS::kSuccess;
   }
 
@@ -1211,12 +1212,12 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
     for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
       MFnAttribute attrib(thisNode.attribute(i));
 
-      printf(
-        "%u %s isReadable=%s isWritable=%s\n",
-        i, attrib.name().asChar(),
-        attrib.isReadable()? "true": "false",
-        attrib.isWritable()? "true": "false"
-        );
+      // printf(
+      //   "%u %s isReadable=%s isWritable=%s\n",
+      //   i, attrib.name().asChar(),
+      //   attrib.isReadable()? "true": "false",
+      //   attrib.isWritable()? "true": "false"
+      //   );
       if(attrib.isHidden())
         continue;
       if(!attrib.isDynamic())
@@ -1239,16 +1240,16 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
 
   _outputsDirtied = true;
 
-  printf( "RES");
-  for ( unsigned i = 0; i < affectedPlugs.length(); ++i )
-  {
-    MPlug affectedPlug = affectedPlugs[i];
-    MFnAttribute affectedAttrib( affectedPlug.attribute() );
-    printf( " %s", affectedAttrib.name().asChar() );
-  }
-  printf( "\n" );
+  // printf( "RES");
+  // for ( unsigned i = 0; i < affectedPlugs.length(); ++i )
+  // {
+  //   MPlug affectedPlug = affectedPlugs[i];
+  //   MFnAttribute affectedAttrib( affectedPlug.attribute() );
+  //   printf( " %s", affectedAttrib.name().asChar() );
+  // }
+  // printf( "\n" );
 
-  printf( "END slow\n");
+  // printf( "END slow\n");
   return MS::kSuccess;
 }
 
