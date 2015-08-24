@@ -1179,9 +1179,9 @@ bool FabricSpliceBaseInterface::plugInArray(const MPlug &plug, const MPlugArray 
 }
 
 MStatus FabricSpliceBaseInterface::setDependentsDirty(
-  MObject thisMObject,
+  MObject thisObject,
   MPlug const &inPlug,
-  MPlugArray &affectedPlugs
+  MPlugArray &outPlugs
   )
 {
   printf(
@@ -1195,7 +1195,7 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
     && inAttr.isDynamic()
     && inAttr.isWritable() )
   {
-    MFnDependencyNode thisNode(thisMObject);
+    MFnDependencyNode thisNode( thisObject );
 
     FabricSplice::Logging::AutoTimer globalTimer("Maya::setDependentsDirty()");
     std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setDependentsDirty()").c_str();
@@ -1237,7 +1237,7 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
         if ( !attr.parent().isNull() )
           continue;
 
-        MPlug outPlug( thisMObject, attr.object() );
+        MPlug outPlug( thisObject, attr.object() );
         assert( !outPlug.isNull() );
         if ( !plugInArray( outPlug, _affectedPlugs ) )
         {
@@ -1249,17 +1249,17 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
       _affectedPlugsDirty = false;
     }
 
-    affectedPlugs = _affectedPlugs;
+    outPlugs = _affectedPlugs;
 
     if ( !MEvaluationManager::graphConstructionActive() )
       _outputsDirtied = true;
   }
 
   printf( "END [");
-  for ( unsigned i = 0; i < affectedPlugs.length(); ++i )
+  for ( unsigned i = 0; i < outPlugs.length(); ++i )
   {
-    MPlug affectedPlug = affectedPlugs[i];
-    printf( "%s%s", (i==0? "": ","), affectedPlug.name().asChar() );
+    MPlug outPlug = outPlugs[i];
+    printf( "%s%s", (i==0? "": ", "), outPlug.name().asChar() );
   }
   printf( "]\n" );
   fflush( stdout );
