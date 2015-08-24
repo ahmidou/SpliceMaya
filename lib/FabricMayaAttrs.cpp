@@ -126,8 +126,8 @@ static void SetupMayaAttribute(
       break;
 
     default:
-      attr.setStorable( true );
-      attr.setKeyable( true );
+      attr.setStorable( portMode == FabricSplice::Port_Mode_IN );
+      attr.setKeyable( portMode == FabricSplice::Port_Mode_IN );
       break;
   }
 
