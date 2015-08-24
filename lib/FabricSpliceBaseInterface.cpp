@@ -913,7 +913,22 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(const MString &portName, con
       cAttr.setStorable(true);
       pAttr.setStorable(true);
     }
+    else
+    {
+      nAttr.setKeyable(false);
+      tAttr.setKeyable(false);
+      mAttr.setKeyable(false);
+      uAttr.setKeyable(false);
+      cAttr.setKeyable(false);
+      pAttr.setKeyable(false);
 
+      nAttr.setStorable(false);
+      tAttr.setStorable(false);
+      mAttr.setStorable(false);
+      uAttr.setStorable(false);
+      cAttr.setStorable(false);
+      pAttr.setStorable(false);
+    }
     if(!compoundChild)
       thisNode.addAttribute(newAttribute);
   }
