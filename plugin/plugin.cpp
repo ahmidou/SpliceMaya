@@ -31,6 +31,7 @@
 #include "FabricDFGMayaNode.h"
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricUpgradeAttrCommand.h"
 
 #ifdef _MSC_VER
   #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
@@ -439,6 +440,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
     FabricDFGExportJSONCommand::newSyntax
     );
 
+  plugin.registerCommand("fabricUpgradeAttrs", FabricUpgradeAttrCommand::creator, FabricUpgradeAttrCommand::newSyntax);
+
   MString pluginPath = plugin.loadPath();
   MString lastFolder("plug-ins");
   MString moduleFolder = pluginPath.substring(0, pluginPath.length() - lastFolder.length() - 2);
@@ -469,6 +472,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   unloadMenu();
 
   plugin.deregisterCommand("fabricSplice");
+  plugin.deregisterCommand("fabricUpgradeAttrs");
   plugin.deregisterCommand("FabricSpliceEditor");
   plugin.deregisterCommand("proceedToNextScene");
   plugin.deregisterNode(FabricSpliceMayaNode::id);

@@ -51,7 +51,29 @@ DataType ParseDataType( FTL::StrRef dataTypeStr )
     return DT_Boolean;
   else if ( dataTypeOverride == FTL_STR("Integer" ) )
     return DT_Integer;
+  else if ( dataTypeOverride == FTL_STR("Size" ) )
+    return DT_Integer;
+  else if ( dataTypeOverride == FTL_STR("SInt8" ) )
+    return DT_Integer;
+  else if ( dataTypeOverride == FTL_STR("SInt16" ) )
+    return DT_Integer;
+  else if ( dataTypeOverride == FTL_STR("SInt32" ) )
+    return DT_Integer;
+  else if ( dataTypeOverride == FTL_STR("SInt64" ) )
+    return DT_Integer;
+  else if ( dataTypeOverride == FTL_STR("UInt8" ) )
+    return DT_Integer;
+  else if ( dataTypeOverride == FTL_STR("UInt16" ) )
+    return DT_Integer;
+  else if ( dataTypeOverride == FTL_STR("UInt32" ) )
+    return DT_Integer;
+  else if ( dataTypeOverride == FTL_STR("UInt64" ) )
+    return DT_Integer;
   else if ( dataTypeOverride == FTL_STR("Scalar" ) )
+    return DT_Scalar;
+  else if ( dataTypeOverride == FTL_STR("Float32" ) )
+    return DT_Scalar;
+  else if ( dataTypeOverride == FTL_STR("Float64" ) )
     return DT_Scalar;
   else if ( dataTypeOverride == FTL_STR("String" ) )
     return DT_String;

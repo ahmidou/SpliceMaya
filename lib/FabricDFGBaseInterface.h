@@ -96,6 +96,7 @@ public:
   void setAddAttributeForNextAttribute(bool state) { m_addAttributeForNextAttribute = state; }
   void setUseNativeArrayForNextAttribute(bool state) { m_useNativeArrayForNextAttribute = state; }
   void setUseOpaqueForNextAttribute(bool state) { m_useOpaqueForNextAttribute = state; }
+  MObject createAttributeForPort(MString portName);
 
 protected:
   MString getPlugName(MString portName);

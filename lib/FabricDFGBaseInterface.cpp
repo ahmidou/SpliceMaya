@@ -463,30 +463,8 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     if(!plug.isNull())
       continue;
 
-    FabricCore::DFGPortType portType = exec.getExecPortType(i);
-    std::string dataType = exec.getExecPortResolvedType(i);
-
-    FTL::StrRef opaque = exec.getExecPortMetadata(portName.c_str(), "opaque");
-    if(opaque == "true")
-      dataType = "SpliceMayaData";
-
-    FabricServices::CodeCompletion::KLTypeDesc typeDesc(dataType);
-
-    std::string arrayType = "Single Value";
-    if(typeDesc.isArray())
-    {
-      arrayType = "Array (Multi)";
-      FTL::StrRef nativeArray = exec.getExecPortMetadata(portName.c_str(), "nativeArray");
-      if(nativeArray == "true")
-      {
-        arrayType = "Array (Native)";
-        exec.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false);
-      }
-    }
-
-    FTL::StrRef addAttribute = exec.getExecPortMetadata(portName.c_str(), "addAttribute");
-    if(addAttribute != "false")
-      addMayaAttribute(portName.c_str(), dataType.c_str(), portType, arrayType.c_str());
+    createAttributeForPort(portName.c_str());
+    FabricCore::DFGPortType portType = exec.getExecPortType(portName.c_str());
 
     if(portType != FabricCore::DFGPortType_Out)
     {
@@ -899,6 +877,52 @@ void FabricDFGBaseInterface::removeMayaAttribute(MString portName, MStatus * sta
   }
 
   MAYASPLICE_CATCH_END(stat);
+}
+
+MObject FabricDFGBaseInterface::createAttributeForPort(MString portName)
+{
+  MStatus stat;
+  MAYASPLICE_CATCH_BEGIN(&stat);
+
+  MFnDependencyNode thisNode(getThisMObject());
+  MString plugName = getPlugName(portName);
+  MPlug plug = thisNode.findPlug(plugName);
+  if(plug.isNull())
+  {
+    FabricCore::DFGExec exec = getDFGExec();
+
+    FabricCore::DFGPortType portType = exec.getExecPortType(portName.asChar());
+    std::string dataType = exec.getExecPortResolvedType(portName.asChar());
+
+    FTL::StrRef opaque = exec.getExecPortMetadata(portName.asChar(), "opaque");
+    if(opaque == "true")
+      dataType = "SpliceMayaData";
+
+    FabricServices::CodeCompletion::KLTypeDesc typeDesc(dataType);
+
+    std::string arrayType = "Single Value";
+    if(typeDesc.isArray())
+    {
+      arrayType = "Array (Multi)";
+      FTL::StrRef nativeArray = exec.getExecPortMetadata(portName.asChar(), "nativeArray");
+      if(nativeArray == "true")
+      {
+        arrayType = "Array (Native)";
+        exec.setExecPortMetadata(portName.asChar(), "nativeArray", "true", false);
+      }
+    }
+
+    FTL::StrRef addAttribute = exec.getExecPortMetadata(portName.asChar(), "addAttribute");
+    if(addAttribute != "false")
+    {
+      _affectedPlugsDirty = true;
+      return addMayaAttribute(portName.asChar(), dataType.c_str(), portType, arrayType.c_str());
+    }
+
+  }
+
+  MAYASPLICE_CATCH_END(&stat);
+  return MObject();
 }
 
 void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat)
