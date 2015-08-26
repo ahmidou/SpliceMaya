@@ -121,8 +121,13 @@ FabricSpliceBaseInterface * FabricSpliceBaseInterface::getInstanceByName(const s
 }
 
 bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
+  printf( "BEG transferInputValuesToSplice\n" );
+
   if(_isTransferingInputs)
+  {
+    printf( "END returning false\n" );
     return false;
+  }
 
   managePortObjectValues(false); // recreate objects if not there yet
 
@@ -155,13 +160,17 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
         
         SplicePlugToPortFunc func = getSplicePlugToPortFunc(dataType, &port);
         if(func != NULL)
+        {
+          printf( "  transfering %s\n", plug.name().asChar() );
           (*func)(plug, data, port);
+        }
       }
     }
   }
 
   _dirtyPlugs.clear();
   _isTransferingInputs = false;
+  printf( "END returning true\n" );
   return true;
 }
 
