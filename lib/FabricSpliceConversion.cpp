@@ -2525,20 +2525,36 @@ void portToPlug_vec3(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data)
 
       MAYASPLICE_MEMORY_FREE();
       handle.set(MFnPointArrayData().create(arrayValues));
-    }else{
+    }
+    else
+    {
+      assert( !port.isArray() );
+
       FabricCore::RTVal rtVal = port.getRTVal();
-      if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
-        handle.set3Float(
-          getFloat64FromRTVal(rtVal.maybeGetMember("x")),
-          getFloat64FromRTVal(rtVal.maybeGetMember("y")),
-          getFloat64FromRTVal(rtVal.maybeGetMember("z"))
-        );
-      }else{
-        handle.set3Double(
-          getFloat64FromRTVal(rtVal.maybeGetMember("x")),
-          getFloat64FromRTVal(rtVal.maybeGetMember("y")),
-          getFloat64FromRTVal(rtVal.maybeGetMember("z"))
-        );
+      if ( handle.numericType() == MFnNumericData::k3Float
+        || handle.numericType() == MFnNumericData::kFloat )
+      {
+        float3 spliceVec3;
+        FabricCore::RTVal vecExtArray =
+          FabricSplice::constructExternalArrayRTVal(
+            "Float32",
+            3,
+            &spliceVec3
+            );
+        rtVal.callMethod( "", "get", 1, &vecExtArray );
+        handle.set3Float( spliceVec3[0], spliceVec3[1], spliceVec3[2] );
+      }
+      else
+      {
+        double3 spliceVec3;
+        FabricCore::RTVal vecExtArray =
+          FabricSplice::constructExternalArrayRTVal(
+            "Float64",
+            3,
+            &spliceVec3
+            );
+        rtVal.callMethod( "", "get", 1, &vecExtArray );
+        handle.set3Double( spliceVec3[0], spliceVec3[1], spliceVec3[2] );
       }
     }
   }
