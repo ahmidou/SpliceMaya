@@ -427,7 +427,7 @@ MObject CreateMayaAttribute(
         else
         {
           MFnNumericAttribute numAttr;
-          obj = numAttr.create( name, name, MFnNumericData::kFloat );
+          obj = numAttr.create( name, name, MFnNumericData::kDouble );
           ApplyMinMax( numAttr, compoundStructure );
         }
       }
@@ -491,21 +491,41 @@ MObject CreateMayaAttribute(
         case AT_Single:
         case AT_Array_Multi:
         {
+          MFnNumericAttribute nAttrX;
+          MObject objX = nAttrX.create( name+"X", name+"X", MFnNumericData::kDouble );
+          SetupMayaAttribute(
+            nAttrX,
+            DT_Scalar,
+            FTL_STR("Float32"),
+            AT_Single,
+            FTL_STR("Single Value"),
+            isInput,
+            isOutput
+            );
+          MFnNumericAttribute nAttrY;
+          MObject objY = nAttrY.create( name+"Y", name+"Y", MFnNumericData::kDouble );
+          SetupMayaAttribute(
+            nAttrY,
+            DT_Scalar,
+            FTL_STR("Float32"),
+            AT_Single,
+            FTL_STR("Single Value"),
+            isInput,
+            isOutput
+            );
+          MFnNumericAttribute nAttrZ;
+          MObject objZ = nAttrZ.create( name+"Z", name+"Z", MFnNumericData::kDouble );
+          SetupMayaAttribute(
+            nAttrZ,
+            DT_Scalar,
+            FTL_STR("Float32"),
+            AT_Single,
+            FTL_STR("Single Value"),
+            isInput,
+            isOutput
+            );
           MFnNumericAttribute numAttr;
-          obj = numAttr.createPoint(name, name);
-          for ( unsigned i = 0; i < 3; ++i )
-          {
-            MFnAttribute childAttr( numAttr.child( i ) );
-            SetupMayaAttribute(
-              childAttr,
-              DT_Scalar,
-              FTL_STR("Float32"),
-              AT_Single,
-              FTL_STR("Single Value"),
-              isInput,
-              isOutput
-              );
-          }
+          obj = numAttr.create(name, name, objX, objY, objZ);
         }
         break;
 
@@ -579,7 +599,7 @@ MObject CreateMayaAttribute(
         case AT_Array_Multi:
         {
           MFnMatrixAttribute mAttr;
-          obj = mAttr.create(name, name, MFnMatrixAttribute::kFloat);
+          obj = mAttr.create( name, name, MFnMatrixAttribute::kDouble );
         }
         break;
 

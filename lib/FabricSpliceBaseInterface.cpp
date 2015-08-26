@@ -1239,13 +1239,13 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
       {
         MFnAttribute attr( thisNode.attribute( i ) );
 
-        // FTL::CStrRef attrNameCStr = attr.name().asChar();
-        // printf(
-        //   "%u %s isReadable=%s isWritable=%s\n",
-        //   i, attrNameCStr.c_str(),
-        //   attr.isReadable()? "true": "false",
-        //   attr.isWritable()? "true": "false"
-        //   );
+        FTL::CStrRef attrNameCStr = attr.name().asChar();
+        printf(
+          "%u %s isReadable=%s isWritable=%s\n",
+          i, attrNameCStr.c_str(),
+          attr.isReadable()? "true": "false",
+          attr.isWritable()? "true": "false"
+          );
         if ( attr.isHidden() )
           continue;
         if ( !attr.isDynamic() )

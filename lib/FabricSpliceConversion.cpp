@@ -1017,12 +1017,11 @@ void plugToPort_mat44(MPlug &plug, MDataBlock &dataBlock, FabricSplice::DGPort &
     MAYASPLICE_MEMORY_FREE();
   }
   else{
-    if(port.isArray())
-      return;
+    assert( !port.isArray() );
 
     MDataHandle dataHandle = dataBlock.inputValue(plug);
     if ( !dataHandle.isNumeric() )
-      return;
+      throw FabricCore::Exception( "plugToPort_mat44: Unexpected MDataHandle" );
 
     MMatrix const &matrix = dataHandle.asMatrix();
     // printf(
@@ -2611,25 +2610,22 @@ void portToPlug_mat44(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
   }
-  else{
-    MDataHandle handle = data.outputValue(plug);
+  else
+  {
+    assert( !port.isArray() );
 
-    FabricCore::RTVal rtVal = port.getRTVal();
-    FabricCore::RTVal row0 = rtVal.maybeGetMember("row0");
-    FabricCore::RTVal row1 = rtVal.maybeGetMember("row1");
-    FabricCore::RTVal row2 = rtVal.maybeGetMember("row2");
-    FabricCore::RTVal row3 = rtVal.maybeGetMember("row3");
+    MDataHandle handle = data.outputValue( plug );
 
-    double vals[4][4] = {
-      { getFloat64FromRTVal(row0.maybeGetMember("x")), getFloat64FromRTVal(row1.maybeGetMember("x")), getFloat64FromRTVal(row2.maybeGetMember("x")), getFloat64FromRTVal(row3.maybeGetMember("x")) },
-      { getFloat64FromRTVal(row0.maybeGetMember("y")), getFloat64FromRTVal(row1.maybeGetMember("y")), getFloat64FromRTVal(row2.maybeGetMember("y")), getFloat64FromRTVal(row3.maybeGetMember("y")) },
-      { getFloat64FromRTVal(row0.maybeGetMember("z")), getFloat64FromRTVal(row1.maybeGetMember("z")), getFloat64FromRTVal(row2.maybeGetMember("z")), getFloat64FromRTVal(row3.maybeGetMember("z")) },
-      { getFloat64FromRTVal(row0.maybeGetMember("t")), getFloat64FromRTVal(row1.maybeGetMember("t")), getFloat64FromRTVal(row2.maybeGetMember("t")), getFloat64FromRTVal(row3.maybeGetMember("t")) }
-    };
+    double matrix[4][4];
+    FabricCore::RTVal matrixExtArray =
+      FabricSplice::constructExternalArrayRTVal(
+        "Float64",
+        16,
+        &matrix[0]
+        );
+    port.getRTVal().callMethod( "", "getTr", 1, &matrixExtArray );
 
-    MMatrix mayaMat(vals);
-
-    handle.setMMatrix(mayaMat);
+    handle.setMMatrix( MMatrix( matrix ) );
   }
 }
 
