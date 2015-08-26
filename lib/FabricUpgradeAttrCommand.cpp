@@ -91,8 +91,6 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
 
       MPlug plug = node.findPlug(attrName);
 
-      MGlobal::displayInfo("Inspecting attr '" + attrName + "'...");
-
       MPlugArray srcConn, dstConn;
       plug.connectedTo(srcConn, true, false);
       plug.connectedTo(dstConn, false, true);
@@ -109,7 +107,6 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
         MString attrType;
         MGlobal::executeCommand("getAttr -type \""+nodeName+"."+attrName+"\";", attrType);
         types.append(attrType);
-        MGlobal::displayInfo(attrType);
         if(attrType == "string")
         {
           MString value;
@@ -156,7 +153,7 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
         FabricSplice::DGPort port = spliceInterf->getPort(attrName);
         if(port.isValid())
         {
-          MGlobal::displayInfo("Recreating attr '" + attrName + "'...");
+          MGlobal::displayInfo("addAttr '" + attrName + "' ...");
           spliceInterf->createAttributeForPort(port);
         }
         else
@@ -167,7 +164,7 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
         FabricCore::DFGExec exec = dfgInterf->getDFGExec();
         if(exec.haveExecPort(attrName.asChar()))
         {
-          MGlobal::displayInfo("Recreating attr '" + attrName + "'...");
+          MGlobal::displayInfo("addAttr '" + attrName + "' ...");
           dfgInterf->createAttributeForPort(attrName.asChar());
         }
         else
@@ -200,6 +197,7 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
       if(plug.isNull())
         continue;
 
+      // set the previous value
       if(!plug.isCompound() && values[j].length() > 0)
       {
         if(types[j] == "string")
@@ -208,12 +206,21 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
           MGlobal::executeCommand("setAttr \""+nodeName+"."+attrName+"\" "+values[j]+";", true, false);
       }
 
-      // todo: reconnect everything
-      // MPlugArray srcConn, dstConn;
-      // plug.connectedTo(srcConn, true, false);
-      // plug.connectedTo(dstConn, false, true);
-      // srcConns.push_back(srcConn);
-      // dstConns.push_back(dstConn);
+      // reconnect all plugs
+      MPlugArray srcConn = srcConns[j];
+      MPlugArray dstConn = dstConns[j];
+      for(unsigned int k=0;k<srcConn.length();k++)
+      {
+        MString cmd = "connectAttr \"" + srcConn[k].name() + "\" ";
+        cmd += "\"" + plug.name() +"\";";
+        MGlobal::executeCommand(cmd, true, false);
+      }
+      for(unsigned int k=0;k<dstConn.length();k++)
+      {
+        MString cmd = "connectAttr \"" + plug.name() + "\" ";
+        cmd += "\"" + dstConn[k].name() +"\";";
+        MGlobal::executeCommand(cmd, true, false);
+      }
     }
 
     MGlobal::displayInfo("Completed node '"+nodeName+"'.");
