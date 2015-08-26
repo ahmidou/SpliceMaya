@@ -907,22 +907,35 @@ void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
 
       MAYASPLICE_MEMORY_SETPORT(port);
       MAYASPLICE_MEMORY_FREE();
-    }else{
-      if(port.isArray())
-        return;
-      FabricCore::RTVal spliceVec = FabricSplice::constructRTVal("Vec3");
-      if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
-        const float3& mayaVec = handle.asFloat3();
-        spliceVec.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
-        spliceVec.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
-        spliceVec.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
-      } else{
-        const double3& mayaVec = handle.asDouble3();
-        spliceVec.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
-        spliceVec.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
-        spliceVec.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
+    }else
+    {
+      assert( !port.isArray() );
+
+      FabricCore::RTVal spliceVec3 = FabricSplice::constructRTVal("Vec3");
+      if ( handle.numericType() == MFnNumericData::k3Float
+        || handle.numericType() == MFnNumericData::kFloat )
+      {
+        float3 const &mayaVec = handle.asFloat3();
+        FabricCore::RTVal vecExtArray =
+          FabricSplice::constructExternalArrayRTVal(
+            "Float32",
+            3,
+            const_cast<float3 *>( &mayaVec )
+            );
+        spliceVec3.callMethod( "", "set", 1, &vecExtArray );
       }
-      port.setRTVal(spliceVec);
+      else
+      {
+        double3 const &mayaVec = handle.asDouble3();
+        FabricCore::RTVal vecExtArray =
+          FabricSplice::constructExternalArrayRTVal(
+            "Float64",
+            3,
+            const_cast<double3 *>( &mayaVec )
+            );
+        spliceVec3.callMethod( "", "set", 1, &vecExtArray );
+      }
+      port.setRTVal( spliceVec3 );
     }
   }
 }
