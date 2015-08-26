@@ -121,13 +121,17 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
           valueStr.set(value);
           values.append(valueStr);
         }
-        else
+        else if(attrType.length() > 0)
         {
           double value;
           MGlobal::executeCommand("getAttr \""+nodeName+"."+attrName+"\";", value);
           MString valueStr;
           valueStr.set(value);
           values.append(valueStr);
+        }
+        else // this happens for PolygonMesh + Lines etc..
+        {
+          values.append("");
         }
       }
     }
