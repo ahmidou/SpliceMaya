@@ -26,12 +26,24 @@ FabricSpliceMayaDeformer::~FabricSpliceMayaDeformer()
 {
 }
 
-void FabricSpliceMayaDeformer::postConstructor(){
+void FabricSpliceMayaDeformer::postConstructor()
+{
   FabricSpliceBaseInterface::constructBaseInterface();
+
+  MObject object = thisMObject();
+
+  m_attributeAddedOrRemovedCallbackID =
+    MNodeMessage::addAttributeAddedOrRemovedCallback(
+      object,
+      &FabricSpliceBaseInterface::AttributeAddedOrRemoved,
+      (FabricSpliceBaseInterface *)this
+      );
+      
   FabricSpliceEditorWidget::postUpdateAll();
 }
 
-void* FabricSpliceMayaDeformer::creator(){
+void* FabricSpliceMayaDeformer::creator()
+{
   return new FabricSpliceMayaDeformer();
 }
 

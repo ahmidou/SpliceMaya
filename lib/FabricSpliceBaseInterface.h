@@ -119,6 +119,23 @@ protected:
   static std::map<std::string, int> _nodeCreatorCounts;
 #endif
 
+protected:
+
+  void attributeAddedOrRemoved(
+    MNodeMessage::AttributeMessage msg,
+    MPlug &plug
+    );
+
+  static void AttributeAddedOrRemoved(
+    MNodeMessage::AttributeMessage msg,
+    MPlug &plug,
+    void *clientData
+    )
+  {
+    static_cast<FabricSpliceBaseInterface *>( clientData )
+      ->attributeAddedOrRemoved( msg, plug );
+  }
+
 private:
   bool plugInArray(const MPlug &plug, const MPlugArray &array);
 };

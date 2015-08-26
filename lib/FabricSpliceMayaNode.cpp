@@ -1,4 +1,3 @@
-
 #include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceMayaNode.h"
 #include "FabricSpliceHelpers.h"
@@ -13,17 +12,31 @@ MObject FabricSpliceMayaNode::saveData;
 MObject FabricSpliceMayaNode::evalID;
 
 FabricSpliceMayaNode::FabricSpliceMayaNode()
-: FabricSpliceBaseInterface()
+  : FabricSpliceBaseInterface()
+  , m_attributeAddedOrRemovedCallbackID( 0 )
 {
 }
 
-void FabricSpliceMayaNode::postConstructor(){
+void FabricSpliceMayaNode::postConstructor()
+{
   FabricSpliceBaseInterface::constructBaseInterface();
+
+  MObject object = thisMObject();
+
+  m_attributeAddedOrRemovedCallbackID =
+    MNodeMessage::addAttributeAddedOrRemovedCallback(
+      object,
+      &FabricSpliceBaseInterface::AttributeAddedOrRemoved,
+      (FabricSpliceBaseInterface *)this
+      );
+      
   FabricSpliceEditorWidget::postUpdateAll();
 }
 
 FabricSpliceMayaNode::~FabricSpliceMayaNode()
 {
+  if ( m_attributeAddedOrRemovedCallbackID )
+    MMessage::removeCallback( m_attributeAddedOrRemovedCallbackID );
 }
 
 void* FabricSpliceMayaNode::creator(){

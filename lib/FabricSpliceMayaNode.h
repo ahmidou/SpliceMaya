@@ -43,6 +43,10 @@ public:
   static MTypeId id;
   static MObject saveData;
   static MObject evalID;
+
+private:
+
+  MCallbackId m_attributeAddedOrRemovedCallbackID;
 };
 
 #endif

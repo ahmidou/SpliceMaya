@@ -1419,3 +1419,14 @@ MStatus FabricSpliceBaseInterface::preEvaluation(MObject thisMObject, const MDGC
 }
 #endif
 
+void FabricSpliceBaseInterface::attributeAddedOrRemoved(
+  MNodeMessage::AttributeMessage msg,
+  MPlug &plug
+  )
+{
+  printf( "FabricSpliceBaseInterface::attributeAddedOrRemoved\n" );
+  
+  _affectedPlugsDirty = true;
+  _outputsDirtied = false;
+  _affectedPlugs.clear();
+}
