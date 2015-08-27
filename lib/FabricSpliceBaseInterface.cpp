@@ -1180,15 +1180,17 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
   MPlugArray &outPlugs
   )
 {
+  MStatus status;
+
 #if _SPLICE_MAYA_VERSION >= 2016
-    bool constructingEvaluationGraph =
-      MEvaluationManager::graphConstructionActive();
+  bool constructingEvaluationGraph =
+    MEvaluationManager::graphConstructionActive();
 #else
-    static const bool constructingEvaluationGraph = false;
+  static const bool constructingEvaluationGraph = false;
 #endif
 
   // printf(
-  //   "setDependentsDirty %s graphConstructionActive=%s\n = ",
+  //   "setDependentsDirty %s graphConstructionActive=%u\n = ",
   //   inPlug.name().asChar(),
   //   unsigned(constructingEvaluationGraph)
   //   );
@@ -1198,7 +1200,12 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
     && inAttr.isDynamic()
     && inAttr.isWritable() )
   {
-    MFnDependencyNode thisNode( thisObject );
+    MFnDependencyNode thisNode( thisObject, &status );
+    if ( status != MS::kSuccess )
+    {
+      mayaLogErrorFunc( "Unable to obtain MFnDependencyNode for " + inPlug.name() );
+      return status;
+    }
 
     FabricSplice::Logging::AutoTimer globalTimer("Maya::setDependentsDirty()");
     std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setDependentsDirty()").c_str();
@@ -1220,9 +1227,20 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
     {
       _affectedPlugs.clear();
 
-      for ( unsigned i = 0; i < thisNode.attributeCount(); ++i )
+      unsigned numAttrs = thisNode.attributeCount( &status );
+      if ( status != MS::kSuccess )
       {
-        MFnAttribute attr( thisNode.attribute( i ) );
+        mayaLogErrorFunc( "attributeCount(): failure" );
+        return status;
+      }
+      for ( unsigned i = 0; i < numAttrs; ++i )
+      {
+        MFnAttribute attr( thisNode.attribute( i, &status ) );
+        if ( status != MS::kSuccess )
+        {
+          mayaLogErrorFunc( "attribute(): failure" );
+          return status;
+        }
 
         // FTL::CStrRef attrNameCStr = attr.name().asChar();
         // printf(
@@ -1243,8 +1261,14 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
         MPlug outPlug =
           thisNode.findPlug(
             attr.object(),
-            false // wantNetworkedPlug
+            false, // wantNetworkedPlug
+            &status
             );
+        if ( status != MS::kSuccess )
+        {
+          mayaLogErrorFunc( "findPlug(): failure" );
+          return status;
+        }
         assert( !outPlug.isNull() );
         if ( !plugInArray( outPlug, _affectedPlugs ) )
         {
