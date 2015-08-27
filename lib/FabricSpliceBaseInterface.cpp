@@ -120,14 +120,12 @@ FabricSpliceBaseInterface * FabricSpliceBaseInterface::getInstanceByName(const s
   return NULL;
 }
 
-bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
-  printf( "BEG transferInputValuesToSplice\n" );
-
+bool FabricSpliceBaseInterface::transferInputValuesToSplice(
+  MDataBlock& data
+  )
+{
   if(_isTransferingInputs)
-  {
-    printf( "END returning false\n" );
     return false;
-  }
 
   managePortObjectValues(false); // recreate objects if not there yet
 
@@ -161,7 +159,6 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
         SplicePlugToPortFunc func = getSplicePlugToPortFunc(dataType, &port);
         if(func != NULL)
         {
-          printf( "  transfering %s\n", plug.name().asChar() );
           (*func)(plug, data, port);
         }
       }
@@ -170,20 +167,14 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(MDataBlock& data){
 
   _dirtyPlugs.clear();
   _isTransferingInputs = false;
-  printf( "END returning true\n" );
+  
   return true;
 }
 
-void FabricSpliceBaseInterface::evaluate(){
+void FabricSpliceBaseInterface::evaluate()
+{
   MFnDependencyNode thisNode(getThisMObject());
-
-#if _SPLICE_MAYA_VERSION >= 2016
-  printf(
-    "BEGIN evaluate %s graphConstructionActive=%s\n",
-    thisNode.name().asChar(),
-    MEvaluationManager::graphConstructionActive()? "true": "false"
-    );
-#endif 
+  // printf( "evaluate %s\n", thisNode.name().asChar() );
 
   FabricSplice::Logging::AutoTimer globalTimer("Maya::evaluate()");
   std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::evaluate()").c_str();
@@ -278,12 +269,6 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
 
 void FabricSpliceBaseInterface::collectDirtyPlug(MPlug const &inPlug)
 {
-
-  printf(
-    "CALL collectDirtyPlug %s\n",
-    inPlug.name().asChar()
-    );
-
   FabricSplice::Logging::AutoTimer globalTimer("Maya::collectDirtyPlug()");
   std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::collectDirtyPlug()").c_str();
   FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
@@ -1195,14 +1180,18 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
   MPlugArray &outPlugs
   )
 {
-
 #if _SPLICE_MAYA_VERSION >= 2016
-  printf(
-    "BEG setDependentsDirty %s graphConstructionActive=%s\n",
-    inPlug.name().asChar(),
-    MEvaluationManager::graphConstructionActive()? "true": "false"
-    );
+    bool constructingEvaluationGraph =
+      MEvaluationManager::graphConstructionActive();
+#else
+    static const bool constructingEvaluationGraph = false;
 #endif
+
+  // printf(
+  //   "setDependentsDirty %s graphConstructionActive=%s\n = ",
+  //   inPlug.name().asChar(),
+  //   unsigned(constructingEvaluationGraph)
+  //   );
 
   MFnAttribute inAttr( inPlug.attribute() );
   if ( !inAttr.isHidden()
@@ -1215,21 +1204,17 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
     std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setDependentsDirty()").c_str();
     FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
-#if _SPLICE_MAYA_VERSION >= 2016
-    if ( !MEvaluationManager::graphConstructionActive() )
+    if ( !constructingEvaluationGraph )
     {
-      if ( _outputsDirtied )
-      {
-        printf( "END _outputsDirtied\n");
-        return MS::kSuccess;
-      }
-
       // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
       collectDirtyPlug(inPlug);
+
+      if ( _outputsDirtied )
+      {
+        // printf( "_outputsDirtied\n");
+        return MS::kSuccess;
+      }
     }
-#else
-    collectDirtyPlug(inPlug);
-#endif
 
     if ( _affectedPlugsDirty )
     {
@@ -1239,13 +1224,13 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
       {
         MFnAttribute attr( thisNode.attribute( i ) );
 
-        FTL::CStrRef attrNameCStr = attr.name().asChar();
-        printf(
-          "%u %s isReadable=%s isWritable=%s\n",
-          i, attrNameCStr.c_str(),
-          attr.isReadable()? "true": "false",
-          attr.isWritable()? "true": "false"
-          );
+        // FTL::CStrRef attrNameCStr = attr.name().asChar();
+        // printf(
+        //   "%u %s isReadable=%s isWritable=%s\n",
+        //   i, attrNameCStr.c_str(),
+        //   attr.isReadable()? "true": "false",
+        //   attr.isWritable()? "true": "false"
+        //   );
         if ( attr.isHidden() )
           continue;
         if ( !attr.isDynamic() )
@@ -1255,7 +1240,11 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
         if ( !attr.parent().isNull() )
           continue;
 
-        MPlug outPlug( thisObject, attr.object() );
+        MPlug outPlug =
+          thisNode.findPlug(
+            attr.object(),
+            false // wantNetworkedPlug
+            );
         assert( !outPlug.isNull() );
         if ( !plugInArray( outPlug, _affectedPlugs ) )
         {
@@ -1269,22 +1258,18 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
 
     outPlugs = _affectedPlugs;
 
-#if _SPLICE_MAYA_VERSION >= 2016
-    if ( !MEvaluationManager::graphConstructionActive() )
+    if ( !constructingEvaluationGraph )
       _outputsDirtied = true;
-#else
-    _outputsDirtied = true;
-#endif    
   }
 
-  printf( "END [");
-  for ( unsigned i = 0; i < outPlugs.length(); ++i )
-  {
-    MPlug outPlug = outPlugs[i];
-    printf( "%s%s", (i==0? "": ", "), outPlug.name().asChar() );
-  }
-  printf( "]\n" );
-  fflush( stdout );
+  // printf( "[" );
+  // for ( unsigned i = 0; i < outPlugs.length(); ++i )
+  // {
+  //   MPlug outPlug = outPlugs[i];
+  //   printf( "%s%s", (i==0? "": ", "), outPlug.name().asChar() );
+  // }
+  // printf( "]\n" );
+  // fflush( stdout );
 
   return MS::kSuccess;
 }
@@ -1398,12 +1383,6 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
 #if _SPLICE_MAYA_VERSION >= 2016
 MStatus FabricSpliceBaseInterface::preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode)
 {
-  MFnDependencyNode thisNode( thisMObject );
-  printf(
-    "CALL preEvaluation %s\n",
-    thisNode.name().asChar()
-    );
-
   MStatus status;
   if(!context.isNormal()) 
     return MStatus::kFailure;
@@ -1424,8 +1403,6 @@ void FabricSpliceBaseInterface::attributeAddedOrRemoved(
   MPlug &plug
   )
 {
-  printf( "FabricSpliceBaseInterface::attributeAddedOrRemoved\n" );
-  
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
   _affectedPlugs.clear();

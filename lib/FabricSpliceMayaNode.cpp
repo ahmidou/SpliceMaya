@@ -63,8 +63,13 @@ MStatus FabricSpliceMayaNode::initialize(){
   return MS::kSuccess;
 }
 
-MStatus FabricSpliceMayaNode::compute(const MPlug& plug, MDataBlock& data){
-
+MStatus FabricSpliceMayaNode::compute(
+  const MPlug& plug,
+  MDataBlock& data
+  )
+{
+  // printf( "compute %s\n", plug.name().asChar() );
+  
   _outputsDirtied = false;
   
   MStatus stat;
