@@ -422,7 +422,7 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(
 
   thisNode.addAttribute(obj);
 
-  setupMayaAttributeAffects(portName, portMode, obj);
+  setupMayaAttributeAffects( portName, portMode, obj );
 
   _affectedPlugsDirty = true;
   return obj;
@@ -432,58 +432,97 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(
   return MObject();
 }
 
-void FabricSpliceBaseInterface::setupMayaAttributeAffects(MString portName, FabricSplice::Port_Mode portMode, MObject newAttribute, MStatus *stat)
+void FabricSpliceBaseInterface::setupMayaAttributeAffects(
+  MString portName,
+  FabricSplice::Port_Mode portMode,
+  MObject newAttribute
+  )
 {
-  MAYASPLICE_CATCH_BEGIN(stat);
-
   FabricSplice::Logging::AutoTimer globalTimer("Maya::setupMayaAttributeAffects()");
   std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::setupMayaAttributeAffects()").c_str();
   FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
-  // MFnDependencyNode thisNode(getThisMObject());
-  // MPxNode * userNode = thisNode.userNode();
-  // if(userNode != NULL)
-  // {
-  //   if(portMode != FabricSplice::Port_Mode_IN)
-  //   {
-  //     for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
-  //       std::string otherPortName = _spliceGraph.getDGPortName(i);
-  //       if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
-  //         continue;
-  //       FabricSplice::DGPort otherPort = _spliceGraph.getDGPort(otherPortName.c_str());
-  //       if(!otherPort.isValid())
-  //         continue;
-  //       if(otherPort.getMode() != FabricSplice::Port_Mode_IN)
-  //         continue;
-  //       MPlug plug = thisNode.findPlug(otherPortName.c_str());
-  //       if(plug.isNull())
-  //         continue;
-  //       userNode->attributeAffects(plug.attribute(), newAttribute);
-  //     }
+  MFnDependencyNode thisNode( getThisMObject() );
+  MPxNode * userNode = thisNode.userNode();
+  if(userNode != NULL)
+  {
+    if(portMode != FabricSplice::Port_Mode_IN)
+    {
+      for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
+        std::string otherPortName = _spliceGraph.getDGPortName(i);
+        if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
+          continue;
+        FabricSplice::DGPort otherPort = _spliceGraph.getDGPort(otherPortName.c_str());
+        if(!otherPort.isValid())
+          continue;
+        if(otherPort.getMode() != FabricSplice::Port_Mode_IN)
+          continue;
+        MPlug plug = thisNode.findPlug(otherPortName.c_str());
+        if(plug.isNull())
+          continue;
+        if ( userNode->attributeAffects(
+          plug.attribute(),
+          newAttribute
+          ) != MS::kSuccess )
+        {
+          std::string error;
+          error += "failure calling attributeAffects( ";
+          error += MFnAttribute( plug.attribute() ).name().asChar();
+          error += ", ";
+          error += MFnAttribute( newAttribute ).name().asChar();
+          error += " )";
+          throw FabricCore::Exception( error.c_str() );
+        }
+      }
 
-  //     MPlug evalIDPlug = thisNode.findPlug("evalID");
-  //     if(!evalIDPlug.isNull())
-  //       userNode->attributeAffects(evalIDPlug.attribute(), newAttribute);
-  //   }
-  //   else
-  //   {
-  //     for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
-  //       std::string otherPortName = _spliceGraph.getDGPortName(i);
-  //       if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
-  //         continue;
-  //       FabricSplice::DGPort otherPort = _spliceGraph.getDGPort(otherPortName.c_str());
-  //       if(!otherPort.isValid())
-  //         continue;
-  //       if(otherPort.getMode() == FabricSplice::Port_Mode_IN)
-  //         continue;
-  //       MPlug plug = thisNode.findPlug(otherPortName.c_str());
-  //       if(plug.isNull())
-  //         continue;
-  //       userNode->attributeAffects(newAttribute, plug.attribute());
-  //     }
-  //   }
-  // }
-  MAYASPLICE_CATCH_END(stat);
+      MPlug evalIDPlug = thisNode.findPlug("evalID");
+      if(!evalIDPlug.isNull())
+      {
+        if ( userNode->attributeAffects(
+          evalIDPlug.attribute(),
+          newAttribute
+          ) )
+        {
+          std::string error;
+          error += "failure calling attributeAffects( ";
+          error += MFnAttribute( evalIDPlug.attribute() ).name().asChar();
+          error += ", ";
+          error += MFnAttribute( newAttribute ).name().asChar();
+          error += " )";
+          throw FabricCore::Exception( error.c_str() );
+        }
+      }
+    }
+    else
+    {
+      for(uint32_t i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
+        std::string otherPortName = _spliceGraph.getDGPortName(i);
+        if(otherPortName == portName.asChar() && portMode != FabricSplice::Port_Mode_IO)
+          continue;
+        FabricSplice::DGPort otherPort = _spliceGraph.getDGPort(otherPortName.c_str());
+        if(!otherPort.isValid())
+          continue;
+        if(otherPort.getMode() == FabricSplice::Port_Mode_IN)
+          continue;
+        MPlug plug = thisNode.findPlug(otherPortName.c_str());
+        if(plug.isNull())
+          continue;
+        if ( userNode->attributeAffects(
+          newAttribute,
+          plug.attribute()
+          ) != MS::kSuccess )
+        {
+          std::string error;
+          error += "failure calling attributeAffects( ";
+          error += MFnAttribute( newAttribute ).name().asChar();
+          error += ", ";
+          error += MFnAttribute( plug.attribute() ).name().asChar();
+          error += " )";
+          throw FabricCore::Exception( error.c_str() );
+        }
+      }
+    }
+  }
 }
 
 void FabricSpliceBaseInterface::addPort(const MString &portName, const MString &dataType, const FabricSplice::Port_Mode &portMode, const MString & dgNode, bool autoInitObjects, const MString & extension, const FabricCore::Variant & defaultValue, MStatus *stat){

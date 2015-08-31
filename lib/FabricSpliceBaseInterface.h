@@ -80,7 +80,12 @@ protected:
   void invalidatePlug(MPlug & plug);
   virtual void invalidateNode();
   void incEvalID();
-  void setupMayaAttributeAffects(MString portName, FabricSplice::Port_Mode portMode, MObject newAttribute, MStatus *stat = 0);
+  
+  void setupMayaAttributeAffects(
+    MString portName,
+    FabricSplice::Port_Mode portMode,
+    MObject newAttribute
+    );
 
   // private members and helper methods
   static std::vector<FabricSpliceBaseInterface*> _instances;
