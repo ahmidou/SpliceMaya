@@ -137,30 +137,47 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(
 
   MFnDependencyNode thisNode(getThisMObject());
 
-  for(size_t i = 0; i < _dirtyPlugs.length(); ++i){
+  for(size_t i = 0; i < _dirtyPlugs.length(); ++i)
+  {
     MString plugName = _dirtyPlugs[i];
-    MPlug plug = thisNode.findPlug(plugName);
-    if(!plug.isNull()){
-      FabricSplice::DGPort port = _spliceGraph.getDGPort(plugName.asChar());
-      if(!port.isValid())
-        continue;
-      if(port.getMode() != FabricSplice::Port_Mode_OUT){
 
-        std::string dataType = port.getDataType();
-        for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
+    MStatus findPlugStatus;
+    MPlug plug =
+      thisNode.findPlug(
+        plugName,
+        false, // wantNetworkedPlug
+        &findPlugStatus
+        );
+    if ( findPlugStatus != MS::kSuccess )
+    {
+      mayaLogErrorFunc(
+          "Warning: transferInputValuesToSplice(): could not find plug "
+        + plugName
+        );
+      continue;
+    }
+    assert( !plug.isNull() );
+
+    FabricSplice::DGPort port = _spliceGraph.getDGPort(plugName.asChar());
+    if(!port.isValid())
+      continue;
+
+    if(port.getMode() != FabricSplice::Port_Mode_OUT){
+
+      std::string dataType = port.getDataType();
+      for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
+      {
+        if(mSpliceMayaDataOverride[j] == plugName.asChar())
         {
-          if(mSpliceMayaDataOverride[j] == plugName.asChar())
-          {
-            dataType = "SpliceMayaData";
-            break;
-          }
+          dataType = "SpliceMayaData";
+          break;
         }
-        
-        SplicePlugToPortFunc func = getSplicePlugToPortFunc(dataType, &port);
-        if(func != NULL)
-        {
-          (*func)(plug, data, port);
-        }
+      }
+      
+      SplicePlugToPortFunc func = getSplicePlugToPortFunc(dataType, &port);
+      if(func != NULL)
+      {
+        (*func)(plug, data, port);
       }
     }
   }
@@ -240,27 +257,43 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
     if(portMode != (int)FabricSplice::Port_Mode_IN){
       
       std::string portName = port.getName();
+      MString portNameMString( portName.c_str() );
+
+      MStatus findPlugStatus;
+      MPlug plug =
+        thisNode.findPlug(
+          portName.c_str(),
+          false, // wantNetworkedPlug
+          &findPlugStatus
+          );
+      if ( findPlugStatus != MS::kSuccess )
+      {
+        mayaLogErrorFunc(
+            "Warning: transferOutputValuesToMaya(): could not find plug "
+          + portNameMString
+          );
+        continue;
+      }
+      assert( !plug.isNull() );
+
       std::string portDataType = port.getDataType();
-
-      MPlug plug = thisNode.findPlug(portName.c_str());
-      if(!plug.isNull()){
-        for(size_t i=0;i<mSpliceMayaDataOverride.size();i++)
+      
+      for(size_t i=0;i<mSpliceMayaDataOverride.size();i++)
+      {
+        if(mSpliceMayaDataOverride[i] == portName)
         {
-          if(mSpliceMayaDataOverride[i] == portName)
-          {
-            portDataType = "SpliceMayaData";
-            break;
-          }
+          portDataType = "SpliceMayaData";
+          break;
         }
+      }
 
-        if(isDeformer && portDataType == "PolygonMesh") {
+      if(isDeformer && portDataType == "PolygonMesh") {
+        data.setClean(plug);
+      } else {
+        SplicePortToPlugFunc func = getSplicePortToPlugFunc(portDataType, &port);
+        if(func != NULL) {
+          (*func)(port, plug, data);
           data.setClean(plug);
-        } else {
-          SplicePortToPlugFunc func = getSplicePortToPlugFunc(portDataType, &port);
-          if(func != NULL) {
-            (*func)(port, plug, data);
-            data.setClean(plug);
-          }
         }
       }
     }
@@ -396,9 +429,16 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(
   FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
 
   MFnDependencyNode thisNode( getThisMObject() );
-  MPlug existingPlug = thisNode.findPlug( portName );
-  if ( !existingPlug.isNull() )
+  MStatus filePlugStatus;
+  MPlug existingPlug =
+    thisNode.findPlug(
+      portName,
+      false, // wantNetworkedPlug
+      &filePlugStatus
+      );
+  if ( filePlugStatus == MS::kSuccess )
   {
+    assert( !existingPlug.isNull() );
     std::string error;
     error += "Attribute '";
     error += portName.asChar();
@@ -464,9 +504,24 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(
           continue;
         if(otherPort.getMode() != FabricSplice::Port_Mode_IN)
           continue;
-        MPlug plug = thisNode.findPlug(otherPortName.c_str());
-        if(plug.isNull())
-          continue;
+
+        MStatus findPlugStatus;
+        MPlug plug =
+          thisNode.findPlug(
+            otherPortName.c_str(),
+            false, // wantNetworkedPlug
+            &findPlugStatus
+            );
+        if ( findPlugStatus != MS::kSuccess )
+        {
+          std::string error;
+          error += "findPlug( ";
+          error += otherPortName;
+          error += " ): failure";
+          throw FabricCore::Exception( error.c_str() );
+        }
+        assert( !plug.isNull() );
+
         if ( userNode->attributeAffects(
           plug.attribute(),
           newAttribute
@@ -482,22 +537,33 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(
         }
       }
 
-      MPlug evalIDPlug = thisNode.findPlug("evalID");
-      if(!evalIDPlug.isNull())
+      MStatus findPlugStatus;
+      MPlug evalIDPlug =
+        thisNode.findPlug(
+          "evalID",
+          false, // wantNetworkedPlug
+          &findPlugStatus
+          );
+      if ( findPlugStatus != MS::kSuccess )
       {
-        if ( userNode->attributeAffects(
-          evalIDPlug.attribute(),
-          newAttribute
-          ) )
-        {
-          std::string error;
-          error += "failure calling attributeAffects( ";
-          error += MFnAttribute( evalIDPlug.attribute() ).name().asChar();
-          error += ", ";
-          error += MFnAttribute( newAttribute ).name().asChar();
-          error += " )";
-          throw FabricCore::Exception( error.c_str() );
-        }
+        std::string error;
+        error += "findPlug( evalID ): failure";
+        throw FabricCore::Exception( error.c_str() );
+      }
+      assert( !evalIDPlug.isNull() );
+
+      if ( userNode->attributeAffects(
+        evalIDPlug.attribute(),
+        newAttribute
+        ) != MS::kSuccess )
+      {
+        std::string error;
+        error += "failure calling attributeAffects( ";
+        error += MFnAttribute( evalIDPlug.attribute() ).name().asChar();
+        error += ", ";
+        error += MFnAttribute( newAttribute ).name().asChar();
+        error += " )";
+        throw FabricCore::Exception( error.c_str() );
       }
     }
     else
@@ -511,9 +577,24 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(
           continue;
         if(otherPort.getMode() == FabricSplice::Port_Mode_IN)
           continue;
-        MPlug plug = thisNode.findPlug(otherPortName.c_str());
-        if(plug.isNull())
-          continue;
+
+        MStatus findPlugStatus;
+        MPlug plug =
+          thisNode.findPlug(
+            otherPortName.c_str(),
+            false, // wantNetworkedPlug
+            &findPlugStatus
+            );
+        if ( findPlugStatus != MS::kSuccess )
+        {
+          std::string error;
+          error += "findPlug( ";
+          error += otherPortName;
+          error += " ): failure";
+          throw FabricCore::Exception( error.c_str() );
+        }
+        assert( !plug.isNull() );
+
         if ( userNode->attributeAffects(
           newAttribute,
           plug.attribute()
