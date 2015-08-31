@@ -420,7 +420,14 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(
       compoundStructure
       );
 
-  thisNode.addAttribute(obj);
+  if ( thisNode.addAttribute( obj ) != MS::kSuccess )
+  {
+    std::string error;
+    error += "Failure calling .addAttribute( ";
+    error += MFnAttribute( obj ).name().asChar();
+    error += " )";
+    throw FabricCore::Exception( error.c_str() );
+  }
 
   setupMayaAttributeAffects( portName, portMode, obj );
 
