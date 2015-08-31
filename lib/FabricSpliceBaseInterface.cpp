@@ -429,7 +429,7 @@ MObject FabricSpliceBaseInterface::addMayaAttribute(
     throw FabricCore::Exception( error.c_str() );
   }
 
-  setupMayaAttributeAffects( portName, portMode, obj );
+  // setupMayaAttributeAffects( portName, portMode, obj );
 
   _affectedPlugsDirty = true;
   return obj;
