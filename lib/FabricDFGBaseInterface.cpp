@@ -630,6 +630,42 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
   }
 
   MGlobal::executeCommandOnIdle(command+plugName);
+
+  if(plugName.index('.') > -1)
+  {
+    plugName = plugName.substring(plugName.index('.')+1, plugName.length());
+  	if(plugName.index('[') > -1)
+	   plugName = plugName.substring(0, plugName.index('[')-1);
+
+    if (getDFGBinding().getExec().haveExecPort(plugName.asChar()))
+    {
+      std::string dataType = getDFGBinding().getExec().getExecPortResolvedType(plugName.asChar());
+      if(dataType.substr(0, 8) == "Compound")
+      {
+        // ensure to set the attribute values one more time
+        // to guarantee that the values are reflected within KL
+        MStringArray cmds;
+        plug.getSetAttrCmds(cmds);
+        for(unsigned int i=0;i<cmds.length();i++)
+        {
+          // strip
+          while(cmds[i].asChar()[0] == ' ' || cmds[i].asChar()[0] == '\t')
+            cmds[i] = cmds[i].substring(1, cmds[i].length());
+
+          // ensure to only use direct setAttr's
+          if(cmds[i].substring(0, 9) == "setAttr \".")
+          {
+            MFnDependencyNode node(plug.node());
+            MString cmdPlugName = cmds[i].substring(9, cmds[i].length());
+            cmdPlugName = cmdPlugName.substring(0, cmdPlugName.index('"')-1);
+            MString condition = "if(size(`listConnections -d no \"" + node.name() + cmdPlugName +"\"`) == 0)";
+            cmds[i] = condition + "{ setAttr \"" + node.name() + cmds[i].substring(9, cmds[i].length()) + " }";
+            MGlobal::executeCommandOnIdle(cmds[i]);
+          }
+        }
+      }
+    }
+  }
 }
 
 void FabricDFGBaseInterface::invalidateNode()
@@ -1453,43 +1489,39 @@ void FabricDFGBaseInterface::managePortObjectValues(bool destroy)
   if(_portObjectsDestroyed == destroy)
     return;
 
-  // for(unsigned int i = 0; i < _spliceGraph.getDGPortCount(); ++i) {
-  //   FabricSplice::DGPort port = _spliceGraph.getDGPort(i);
-  //   if(!port->isValid())
-  //     continue;
-  //   if(!port->isObject())
-  //     continue;
+   for(unsigned int i = 0; i < getDFGExec().getExecPortCount(); ++i) {
+     try
+     {
+      FabricCore::RTVal value  = getDFGBinding().getArgValue(i);
+       if(!value.isValid())
+         continue;
+       if(!value.isObject())
+         continue;
+       if(value.isNullObject())
+         continue;
 
-  //   try
-  //   {
-  //     FabricCore::RTVal value = port->getRTVal();
-  //     if(!value.isValid())
-  //       continue;
-  //     if(value.isNullObject())
-  //       continue;
+       FabricCore::RTVal objectRtVal = FabricSplice::constructRTVal("Object", 1, &value);
+       if(!objectRtVal.isValid())
+         continue;
 
-  //     FabricCore::RTVal objectRtVal = FabricSplice::constructRTVal("Object", 1, &value);
-  //     if(!objectRtVal.isValid())
-  //       continue;
+       FabricCore::RTVal detachable = FabricSplice::constructInterfaceRTVal("Detachable", objectRtVal);
+       if(detachable.isNullObject())
+         continue;
 
-  //     FabricCore::RTVal detachable = FabricSplice::constructInterfaceRTVal("Detachable", objectRtVal);
-  //     if(detachable.isNullObject())
-  //       continue;
-
-  //     if(destroy)
-  //       detachable.callMethod("", "detach", 0, 0);
-  //     else
-  //       detachable.callMethod("", "attach", 0, 0);
-  //   }
-  //   catch(FabricCore::Exception e)
-  //   {
-  //     // ignore errors, probably an object which does not implement deattach and attach
-  //   }
-  //   catch(FabricSplice::Exception e)
-  //   {
-  //     // ignore errors, probably an object which does not implement deattach and attach
-  //   }
-  // }
+       if(destroy)
+         detachable.callMethod("", "detach", 0, 0);
+       else
+         detachable.callMethod("", "attach", 0, 0);
+     }
+     catch(FabricCore::Exception e)
+     {
+       // ignore errors, probably an object which does not implement deattach and attach
+     }
+     catch(FabricSplice::Exception e)
+     {
+       // ignore errors, probably an object which does not implement deattach and attach
+     }
+   }
 
   _portObjectsDestroyed = destroy;
 }
