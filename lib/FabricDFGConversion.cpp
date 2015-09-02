@@ -1527,6 +1527,17 @@ void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricCore::DFGB
 
 void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & binding, char const * argName){
   try{
+
+    const char *option = binding.getExec().getExecPortMetadata(argName, "disableSpliceMayaDataConversion");
+    if(option)
+    {
+      if(std::string(option) == "true")
+      {
+        // this is an unconnected opaque port, exit early
+        return;
+      }
+    }
+
     if(!plug.isArray()){
       MDataHandle handle = data.inputValue(plug);
       MObject spliceMayaDataObj = handle.data();
