@@ -1474,14 +1474,13 @@ void FabricSpliceBaseInterface::onConnection(const MPlug &plug, const MPlug &oth
         FabricSplice::DGPort port = getPort(plugName.asChar());
         if(port.isValid())
         {
-          // if there are no connections, 
+          // if there are no connections,
           // ensure to disable the conversion
           port.setOption("disableSpliceMayaDataConversion", FabricCore::Variant::CreateBoolean(!made));
         }
         break;
       }
     }
-
   }
 }
 

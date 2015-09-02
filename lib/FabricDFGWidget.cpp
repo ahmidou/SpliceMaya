@@ -95,6 +95,16 @@ void FabricDFGWidget::onRecompilation()
   }
 }
 
+void FabricDFGWidget::onUndo()
+{
+  MGlobal::executeCommandOnIdle("undo");
+}
+
+void FabricDFGWidget::onRedo()
+{
+  MGlobal::executeCommandOnIdle("redo");
+}
+
 void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
 {
   DFG::DFGController * controller = dialog->getDFGController();

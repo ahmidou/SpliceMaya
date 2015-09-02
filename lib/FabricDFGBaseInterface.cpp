@@ -807,6 +807,32 @@ void FabricDFGBaseInterface::onNodeRemoved(MObject &node, void *clientData)
 void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made)
 {
   _affectedPlugsDirty = true;
+
+  if(!asSrc)
+  {
+    MString plugName = plug.name();
+
+    if(plugName.index('.') > -1)
+    {
+      plugName = plugName.substring(plugName.index('.')+1, plugName.length());
+      if(plugName.index('[') > -1)
+       plugName = plugName.substring(0, plugName.index('[')-1);
+    }
+
+    for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
+    {
+      if(mSpliceMayaDataOverride[j] == plugName.asChar())
+      {
+        if(getDFGExec().haveExecPort(plugName.asChar()))
+        {
+          // if there are no connections,
+          // ensure to disable the conversion
+          getDFGExec().setExecPortMetadata(plugName.asChar(), "disableSpliceMayaDataConversion", made ? "false" : "true", false);
+        }
+        break;
+      }
+    }
+  }
 }
 
 MObject FabricDFGBaseInterface::addMayaAttribute(
@@ -873,6 +899,18 @@ MObject FabricDFGBaseInterface::addMayaAttribute(
     arrayTypeCStr = FTL_STR("Single Value");
   FabricMaya::ArrayType arrayType =
     FabricMaya::ParseArrayType( arrayTypeCStr );
+
+  if ( dataType == FabricMaya::DT_SpliceMayaData )
+  {
+    // disable input conversion by default
+    // only enable it again if there is a connection to the port
+    getDFGExec().setExecPortMetadata(
+      portName.asChar(),
+      "disableSpliceMayaDataConversion",
+      "true",
+      false
+      );
+  }
 
   FabricCore::Variant compoundStructure;
   MObject obj =
