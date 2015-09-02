@@ -48,6 +48,8 @@ public:
   }
 
 public slots:
+  virtual void onUndo();
+  virtual void onRedo();
   virtual void onRecompilation();
 
 private slots:
