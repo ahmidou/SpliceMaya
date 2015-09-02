@@ -828,6 +828,32 @@ void FabricDFGBaseInterface::onNodeRemoved(MObject &node, void *clientData)
 void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made)
 {
   _affectedPlugsDirty = true;
+
+  if(!asSrc)
+  {
+    MString plugName = plug.name();
+
+    if(plugName.index('.') > -1)
+    {
+      plugName = plugName.substring(plugName.index('.')+1, plugName.length());
+      if(plugName.index('[') > -1)
+       plugName = plugName.substring(0, plugName.index('[')-1);
+    }
+
+    for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
+    {
+      if(mSpliceMayaDataOverride[j] == plugName.asChar())
+      {
+        if(getDFGExec().haveExecPort(plugName.asChar()))
+        {
+          // if there are no connections,
+          // ensure to disable the conversion
+          getDFGExec().setExecPortMetadata(plugName.asChar(), "disableSpliceMayaDataConversion", made ? "false" : "true", false);
+        }
+        break;
+      }
+    }
+  }
 }
 
 MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType, bool compoundChild, MStatus * stat)
@@ -1342,6 +1368,10 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
         newAttribute = tAttr.create(plugName, plugName, FabricSpliceMayaData::id);
         mSpliceMayaDataOverride.push_back(portName.asChar());
         storable = false;
+
+        // disable input conversion by default
+        // only enable it again if there is a connection to the port
+        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false);
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
@@ -1356,6 +1386,10 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
         storable = false;
         tAttr.setArray(true);
         tAttr.setUsesArrayDataBuilder(true);
+
+        // disable input conversion by default
+        // only enable it again if there is a connection to the port
+        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false);
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
