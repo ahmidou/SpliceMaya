@@ -608,7 +608,7 @@ void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
         paramArray.setArrayElement(0, compoundVal);
       }
     }
-    port.setRTVal(FabricSplice::LockType_None, compoundVals);
+    port.setRTVal_lockType(FabricSplice::LockType_None, compoundVals);
   }
   else{
   }
@@ -631,14 +631,14 @@ void plugToPort_compound(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & p
       plugToPort_compound_convertCompound(compound, handle, compoundVal);
       compoundVals.setArrayElement(j, compoundVal);
     }
-    port.setRTVal(FabricSplice::LockType_None, compoundVals);
+    port.setRTVal_lockType(FabricSplice::LockType_None, compoundVals);
   }
   else{
     MDataHandle handle = data.inputValue(plug);
     FabricCore::RTVal rtVal = FabricSplice::constructObjectRTVal("CompoundParam");
     MFnCompoundAttribute compound(plug.attribute());
     plugToPort_compound_convertCompound(compound, handle, rtVal);
-    port.setRTVal(FabricSplice::LockType_None, rtVal);
+    port.setRTVal_lockType(FabricSplice::LockType_None, rtVal);
   }
 }
 
@@ -660,7 +660,7 @@ void plugToPort_bool(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
   }
   else{
     MDataHandle handle = data.inputValue(plug);
-    port.setRTVal(FabricSplice::LockType_None, FabricSplice::constructBooleanRTVal(handle.asBool()));
+    port.setRTVal_lockType(FabricSplice::LockType_None, FabricSplice::constructBooleanRTVal(handle.asBool()));
   }
 }
 
@@ -695,7 +695,7 @@ void plugToPort_integer(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & po
       MAYASPLICE_MEMORY_FREE();
     }else{
       if(!port.isArray())
-        port.setRTVal(FabricSplice::LockType_None, FabricSplice::constructSInt32RTVal(handle.asLong()));
+        port.setRTVal_lockType(FabricSplice::LockType_None, FabricSplice::constructSInt32RTVal(handle.asLong()));
     }
   }
 }
@@ -749,17 +749,17 @@ void plugToPort_scalar(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & por
         return;
 
       if(scalarUnit == "time")
-        port.setRTVal(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asTime().as(MTime::kSeconds)));
+        port.setRTVal_lockType(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asTime().as(MTime::kSeconds)));
       else if(scalarUnit == "angle")
-        port.setRTVal(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asAngle().as(MAngle::kRadians)));
+        port.setRTVal_lockType(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asAngle().as(MAngle::kRadians)));
       else if(scalarUnit == "distance")
-        port.setRTVal(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asDistance().as(MDistance::kMillimeters)));
+        port.setRTVal_lockType(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asDistance().as(MDistance::kMillimeters)));
       else
       {
         if(handle.numericType() == MFnNumericData::kFloat)
-          port.setRTVal(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asFloat()));
+          port.setRTVal_lockType(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asFloat()));
         else
-          port.setRTVal(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asDouble()));
+          port.setRTVal_lockType(FabricSplice::LockType_None, FabricSplice::constructFloat64RTVal(handle.asDouble()));
       }
     }
   }
@@ -781,13 +781,13 @@ void plugToPort_string(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & por
       stringArrayVal.setArrayElement(i, FabricSplice::constructStringRTVal(stringVal.asChar()));
     }
 
-    port.setRTVal(FabricSplice::LockType_None, stringArrayVal);
+    port.setRTVal_lockType(FabricSplice::LockType_None, stringArrayVal);
   }
   else{
     if(port.isArray())
       return;
     MDataHandle handle = data.inputValue(plug);
-    port.setRTVal(FabricSplice::LockType_None, FabricSplice::constructStringRTVal(handle.asString().asChar()));
+    port.setRTVal_lockType(FabricSplice::LockType_None, FabricSplice::constructStringRTVal(handle.asString().asChar()));
   }
 
   CORE_CATCH_END;
@@ -823,7 +823,7 @@ void plugToPort_color(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
       arrayVal.setArrayElement(i, color);
     }
 
-    port.setRTVal(FabricSplice::LockType_None, arrayVal);
+    port.setRTVal_lockType(FabricSplice::LockType_None, arrayVal);
   }
   else {
     if(port.isArray())
@@ -844,7 +844,7 @@ void plugToPort_color(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
     }
     color.setMember("a", FabricSplice::constructFloat64RTVal(1.0));
 
-    port.setRTVal(FabricSplice::LockType_None, color);
+    port.setRTVal_lockType(FabricSplice::LockType_None, color);
   }
 
   CORE_CATCH_END;
@@ -935,7 +935,7 @@ void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
             );
         spliceVec3.callMethod( "", "set", 1, &vecExtArray );
       }
-      port.setRTVal(FabricSplice::LockType_None,  spliceVec3 );
+      port.setRTVal_lockType(FabricSplice::LockType_None,  spliceVec3 );
     }
   }
 }
@@ -969,7 +969,7 @@ void plugToPort_euler(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
       arrayVal.setArrayElement(i, euler);
     }
 
-    port.setRTVal(FabricSplice::LockType_None, arrayVal);
+    port.setRTVal_lockType(FabricSplice::LockType_None, arrayVal);
   }
   else {
     if(port.isArray())
@@ -989,7 +989,7 @@ void plugToPort_euler(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
       euler.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
     }
 
-    port.setRTVal(FabricSplice::LockType_None, euler);
+    port.setRTVal_lockType(FabricSplice::LockType_None, euler);
   }
 
   CORE_CATCH_END;
@@ -1053,7 +1053,7 @@ void plugToPort_mat44(MPlug &plug, MDataBlock &dataBlock, FabricSplice::DGPort &
 
     FabricCore::RTVal spliceMat = FabricSplice::constructRTVal("Mat44");
     spliceMat.callMethod( "", "setTr", 1, &matrixExtArray );
-    port.setRTVal(FabricSplice::LockType_None, spliceMat);
+    port.setRTVal_lockType(FabricSplice::LockType_None, spliceMat);
   }
 }
 
@@ -1067,7 +1067,7 @@ void plugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricSplice::DGPort 
   {
     if(plug.isArray())
     {
-      portRTVal = port.getRTVal( FabricSplice::LockType_None );
+      portRTVal = port.getRTVal_lockType( FabricSplice::LockType_None );
 
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -1108,7 +1108,7 @@ void plugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricSplice::DGPort 
       handles.push_back(data.inputValue(plug));
 
       if(port.getMode() == FabricSplice::Port_Mode_IO)
-        portRTVal = port.getRTVal( FabricSplice::LockType_None );
+        portRTVal = port.getRTVal_lockType( FabricSplice::LockType_None );
       if(!portRTVal.isValid() || portRTVal.isNullObject())
         portRTVal = FabricSplice::constructObjectRTVal("PolygonMesh");
       rtVals.push_back(portRTVal);
@@ -1233,7 +1233,7 @@ void plugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricSplice::DGPort 
       mayaIndices.clear();
     }
 
-    port.setRTVal(FabricSplice::LockType_None, portRTVal);
+    port.setRTVal_lockType(FabricSplice::LockType_None, portRTVal);
   }
   catch(FabricCore::Exception e)
   {
@@ -1257,7 +1257,7 @@ void plugToPort_Lines(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
   {
     if(plug.isArray())
     {
-      portRTVal = port.getRTVal( FabricSplice::LockType_None );
+      portRTVal = port.getRTVal_lockType( FabricSplice::LockType_None );
 
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
 
@@ -1289,7 +1289,7 @@ void plugToPort_Lines(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
       handles.push_back(data.inputValue(plug));
 
       if(port.getMode() == FabricSplice::Port_Mode_IO)
-        portRTVal = port.getRTVal( FabricSplice::LockType_None );
+        portRTVal = port.getRTVal_lockType( FabricSplice::LockType_None );
       if(!portRTVal.isValid() || portRTVal.isNullObject())
         portRTVal = FabricSplice::constructObjectRTVal("Lines");
       rtVals.push_back(portRTVal);
@@ -1337,7 +1337,7 @@ void plugToPort_Lines(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
       rtVal.callMethod("", "_setTopologyFromExternalArray", 1, &mayaIndicesVal);
     }
 
-    port.setRTVal(FabricSplice::LockType_None, portRTVal);
+    port.setRTVal_lockType(FabricSplice::LockType_None, portRTVal);
   }
   catch(FabricCore::Exception e)
   {
@@ -1487,7 +1487,7 @@ void plugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
 
     FabricCore::RTVal trackVal;
     plugToPort_KeyframeTrack_helper(curve, trackVal);
-    port.setRTVal(FabricSplice::LockType_None, trackVal);
+    port.setRTVal_lockType(FabricSplice::LockType_None, trackVal);
   } else {
 
     FabricCore::RTVal trackVals = FabricSplice::constructRTVal("KeyframeTrack[]");
@@ -1519,7 +1519,7 @@ void plugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
       trackVals.setArrayElement(j, trackVal);
     }
 
-    port.setRTVal(FabricSplice::LockType_None, trackVals);
+    port.setRTVal_lockType(FabricSplice::LockType_None, trackVals);
   }
 }
 
@@ -1544,12 +1544,12 @@ void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPo
       if(!spliceMayaData)
         return;
 
-      port.setRTVal(FabricSplice::LockType_None, spliceMayaData->getRTVal());
+      port.setRTVal_lockType(FabricSplice::LockType_None, spliceMayaData->getRTVal());
     }else{
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
       unsigned int elements = arrayHandle.elementCount();
 
-      FabricCore::RTVal value = port.getRTVal( FabricSplice::LockType_None );
+      FabricCore::RTVal value = port.getRTVal_lockType( FabricSplice::LockType_None );
       if(!value.isArray())
         return;
       value.setArraySize(elements);
@@ -1567,7 +1567,7 @@ void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPo
         value.setArrayElement(i, spliceMayaData->getRTVal());
       }
 
-      port.setRTVal(FabricSplice::LockType_None, value);
+      port.setRTVal_lockType(FabricSplice::LockType_None, value);
     }
   }
   catch(FabricCore::Exception e)
@@ -2226,7 +2226,7 @@ void portToPlug_compound(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &d
     return;
 
   MDataHandle handle = data.outputValue(plug);
-  FabricCore::RTVal rtVal = port.getRTVal( FabricSplice::LockType_None );
+  FabricCore::RTVal rtVal = port.getRTVal_lockType( FabricSplice::LockType_None );
   MFnCompoundAttribute compound(plug.attribute());
   portToPlug_compound_convertCompound(compound, handle, rtVal);
   handle.setClean();
@@ -2255,7 +2255,7 @@ void portToPlug_bool(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data)
   }
   else{
     MDataHandle handle = data.outputValue(plug);
-    handle.setBool(port.getRTVal( FabricSplice::LockType_None ).getBoolean());
+    handle.setBool(port.getRTVal_lockType( FabricSplice::LockType_None ).getBoolean());
   }
 }
 
@@ -2298,7 +2298,7 @@ void portToPlug_integer(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &da
       MAYASPLICE_MEMORY_FREE();
       handle.set(MFnIntArrayData().create(arrayValues));
     }else{
-      FabricCore::RTVal rtVal = port.getRTVal( FabricSplice::LockType_None );
+      FabricCore::RTVal rtVal = port.getRTVal_lockType( FabricSplice::LockType_None );
       handle.setInt((int)getFloat64FromRTVal(rtVal));
     }
   }
@@ -2344,7 +2344,7 @@ void portToPlug_scalar(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &dat
     MDataHandle handle = data.outputValue(plug);
     if(port.isArray()) {
 
-      FabricCore::RTVal rtVal = port.getRTVal( FabricSplice::LockType_None );
+      FabricCore::RTVal rtVal = port.getRTVal_lockType( FabricSplice::LockType_None );
       FabricCore::RTVal dataRTVal = rtVal.callMethod("Data", "data", 0, 0);
       float * floatValues = (float*)dataRTVal.getData();
 
@@ -2357,7 +2357,7 @@ void portToPlug_scalar(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &dat
 
       handle.set(MFnDoubleArrayData().create(doubleValues));
     }else{
-      FabricCore::RTVal rtVal = port.getRTVal( FabricSplice::LockType_None );
+      FabricCore::RTVal rtVal = port.getRTVal_lockType( FabricSplice::LockType_None );
       double value = getFloat64FromRTVal(rtVal);
       if(value == DBL_MAX)
         return;
@@ -2385,7 +2385,7 @@ void portToPlug_string(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &dat
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal arrayVal = port.getRTVal( FabricSplice::LockType_None );
+    FabricCore::RTVal arrayVal = port.getRTVal_lockType( FabricSplice::LockType_None );
     unsigned int elements = port.getArrayCount();
     for(unsigned int i = 0; i < elements; ++i){
       MDataHandle handle = arraybuilder.addElement(i);
@@ -2397,7 +2397,7 @@ void portToPlug_string(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &dat
   }
   else{
     MDataHandle handle = data.outputValue(plug);
-    handle.setString(MString(port.getRTVal( FabricSplice::LockType_None ).getStringCString()));
+    handle.setString(MString(port.getRTVal_lockType( FabricSplice::LockType_None ).getStringCString()));
   }
 }
 
@@ -2406,7 +2406,7 @@ void portToPlug_color(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal arrayVal = port.getRTVal( FabricSplice::LockType_None );
+    FabricCore::RTVal arrayVal = port.getRTVal_lockType( FabricSplice::LockType_None );
     unsigned int elements = port.getArrayCount();
     for(unsigned int i = 0; i < elements; ++i){
       MDataHandle handle = arraybuilder.addElement(i);
@@ -2432,7 +2432,7 @@ void portToPlug_color(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
   else{
     MDataHandle handle = data.outputValue(plug);
 
-    FabricCore::RTVal rtVal = port.getRTVal( FabricSplice::LockType_None );
+    FabricCore::RTVal rtVal = port.getRTVal_lockType( FabricSplice::LockType_None );
     if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
       MFloatVector v(
         (float)getFloat64FromRTVal(rtVal.maybeGetMember("r")),
@@ -2530,7 +2530,7 @@ void portToPlug_vec3(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data)
     {
       assert( !port.isArray() );
 
-      FabricCore::RTVal rtVal = port.getRTVal( FabricSplice::LockType_None );
+      FabricCore::RTVal rtVal = port.getRTVal_lockType( FabricSplice::LockType_None );
       if ( handle.numericType() == MFnNumericData::k3Float
         || handle.numericType() == MFnNumericData::kFloat )
       {
@@ -2565,7 +2565,7 @@ void portToPlug_euler(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal arrayVal = port.getRTVal( FabricSplice::LockType_None );
+    FabricCore::RTVal arrayVal = port.getRTVal_lockType( FabricSplice::LockType_None );
     unsigned int elements = port.getArrayCount();
     for(unsigned int i = 0; i < elements; ++i){
       MDataHandle handle = arraybuilder.addElement(i);
@@ -2591,7 +2591,7 @@ void portToPlug_euler(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
   else{
     MDataHandle handle = data.outputValue(plug);
 
-    FabricCore::RTVal rtVal = port.getRTVal( FabricSplice::LockType_None );
+    FabricCore::RTVal rtVal = port.getRTVal_lockType( FabricSplice::LockType_None );
     if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
       handle.set3Float(
         getFloat64FromRTVal(rtVal.maybeGetMember("x")),
@@ -2652,7 +2652,7 @@ void portToPlug_mat44(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
         16,
         &matrix[0]
         );
-    port.getRTVal( FabricSplice::LockType_None ).callMethod( "", "getTr", 1, &matrixExtArray );
+    port.getRTVal_lockType( FabricSplice::LockType_None ).callMethod( "", "getTr", 1, &matrixExtArray );
 
     handle.setMMatrix( MMatrix( matrix ) );
   }
@@ -2804,7 +2804,7 @@ void portToPlug_PolygonMesh(FabricSplice::DGPort & port, MPlug &plug, MDataBlock
       MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
       unsigned int elements = port.getArrayCount();
-      FabricCore::RTVal polygonMeshArray = port.getRTVal( FabricSplice::LockType_None );
+      FabricCore::RTVal polygonMeshArray = port.getRTVal_lockType( FabricSplice::LockType_None );
       for(unsigned int i = 0; i < elements; ++i)
         portToPlug_PolygonMesh_singleMesh(arraybuilder.addElement(i), polygonMeshArray.getArrayElement(i));
 
@@ -2814,7 +2814,7 @@ void portToPlug_PolygonMesh(FabricSplice::DGPort & port, MPlug &plug, MDataBlock
     else
     {
       MDataHandle handle = data.outputValue(plug.attribute());
-      portToPlug_PolygonMesh_singleMesh(handle, port.getRTVal( FabricSplice::LockType_None ));
+      portToPlug_PolygonMesh_singleMesh(handle, port.getRTVal_lockType( FabricSplice::LockType_None ));
     }
   }
   catch(FabricCore::Exception e)
@@ -2901,7 +2901,7 @@ void portToPlug_Lines(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
       MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
       unsigned int elements = port.getArrayCount();
-      FabricCore::RTVal rtVal = port.getRTVal( FabricSplice::LockType_None );
+      FabricCore::RTVal rtVal = port.getRTVal_lockType( FabricSplice::LockType_None );
       for(unsigned int i = 0; i < elements; ++i)
         portToPlug_Lines_singleLines(arraybuilder.addElement(i), rtVal.getArrayElement(i));
 
@@ -2911,7 +2911,7 @@ void portToPlug_Lines(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
     else
     {
       MDataHandle handle = data.outputValue(plug.attribute());
-      portToPlug_Lines_singleLines(handle, port.getRTVal( FabricSplice::LockType_None ));
+      portToPlug_Lines_singleLines(handle, port.getRTVal_lockType( FabricSplice::LockType_None ));
     }
   }
   catch(FabricCore::Exception e)
@@ -2933,14 +2933,14 @@ void portToPlug_spliceMayaData(FabricSplice::DGPort & port, MPlug &plug, MDataBl
       MFnFabricSpliceMayaData mfnpd;
       MObject spliceMayaDataObj = mfnpd.create(&status);
       FabricSpliceMayaData *spliceMayaData =(FabricSpliceMayaData *)mfnpd.data();
-      spliceMayaData->setRTVal(port.getRTVal( FabricSplice::LockType_None ));
+      spliceMayaData->setRTVal(port.getRTVal_lockType( FabricSplice::LockType_None ));
 
       MDataHandle handle = data.outputValue(plug);
       handle.set(spliceMayaDataObj);
     } else {
       if(!port.isArray())
         return;
-      FabricCore::RTVal value = port.getRTVal( FabricSplice::LockType_None );
+      FabricCore::RTVal value = port.getRTVal_lockType( FabricSplice::LockType_None );
 
       MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
       MArrayDataBuilder arraybuilder = arrayHandle.builder();
