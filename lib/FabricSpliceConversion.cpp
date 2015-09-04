@@ -1297,42 +1297,46 @@ void plugToPort_Lines(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
     {
       MObject curveObj = handles[handleIndex].asNurbsCurve();
       MFnNurbsCurve curve(curveObj);
-      FabricCore::RTVal rtVal = rtVals[handleIndex];
 
-      MPointArray mayaPoints;
-      curve.getCVs(mayaPoints);
-      std::vector<double> mayaDoubles(mayaPoints.length() * 3);
-
-      size_t nbSegments = (mayaPoints.length() - 1);
-      if(curve.form() == MFnNurbsCurve::kClosed)
-        nbSegments++;
-
-      std::vector<uint32_t> mayaIndices(nbSegments * 2);
-
-      size_t voffset = 0;
-      size_t coffset = 0;
-      for(unsigned int i=0;i<mayaPoints.length();i++)
+      if(!curveObj.isNull())
       {
-        mayaDoubles[voffset++] = mayaPoints[i].x;
-        mayaDoubles[voffset++] = mayaPoints[i].y;
-        mayaDoubles[voffset++] = mayaPoints[i].z;
-        if(i < mayaPoints.length() - 1)
+        FabricCore::RTVal rtVal = rtVals[handleIndex];
+
+        MPointArray mayaPoints;
+        curve.getCVs(mayaPoints);
+        std::vector<double> mayaDoubles(mayaPoints.length() * 3);
+
+        size_t nbSegments = (mayaPoints.length() - 1);
+        if(curve.form() == MFnNurbsCurve::kClosed)
+          nbSegments++;
+
+        std::vector<uint32_t> mayaIndices(nbSegments * 2);
+
+        size_t voffset = 0;
+        size_t coffset = 0;
+        for(unsigned int i=0;i<mayaPoints.length();i++)
         {
-          mayaIndices[coffset++] = i;
-          mayaIndices[coffset++] = i + 1;
+          mayaDoubles[voffset++] = mayaPoints[i].x;
+          mayaDoubles[voffset++] = mayaPoints[i].y;
+          mayaDoubles[voffset++] = mayaPoints[i].z;
+          if(i < mayaPoints.length() - 1)
+          {
+            mayaIndices[coffset++] = i;
+            mayaIndices[coffset++] = i + 1;
+          }
+          else if(curve.form() == MFnNurbsCurve::kClosed)
+          {
+            mayaIndices[coffset++] = i;
+            mayaIndices[coffset++] = 0;
+          }
         }
-        else if(curve.form() == MFnNurbsCurve::kClosed)
-        {
-          mayaIndices[coffset++] = i;
-          mayaIndices[coffset++] = 0;
-        }
+
+        FabricCore::RTVal mayaDoublesVal = FabricSplice::constructExternalArrayRTVal("Float64", mayaDoubles.size(), &mayaDoubles[0]);
+        rtVal.callMethod("", "_setPositionsFromExternalArray_d", 1, &mayaDoublesVal);
+
+        FabricCore::RTVal mayaIndicesVal = FabricSplice::constructExternalArrayRTVal("UInt32", mayaIndices.size(), &mayaIndices[0]);
+        rtVal.callMethod("", "_setTopologyFromExternalArray", 1, &mayaIndicesVal);
       }
-
-      FabricCore::RTVal mayaDoublesVal = FabricSplice::constructExternalArrayRTVal("Float64", mayaDoubles.size(), &mayaDoubles[0]);
-      rtVal.callMethod("", "_setPositionsFromExternalArray_d", 1, &mayaDoublesVal);
-
-      FabricCore::RTVal mayaIndicesVal = FabricSplice::constructExternalArrayRTVal("UInt32", mayaIndices.size(), &mayaIndices[0]);
-      rtVal.callMethod("", "_setTopologyFromExternalArray", 1, &mayaIndicesVal);
     }
 
     port.setRTVal(portRTVal);
@@ -2884,9 +2888,12 @@ void portToPlug_Lines_singleLines(MDataHandle handle, FabricCore::RTVal rtVal)
   MFnNurbsCurve curve;
   curveObject = curveDataFn.create();
 
+  bool closed = false;
+  if(mayaIndices.size() > 0)
+    closed = mayaIndices[0] == mayaIndices[mayaIndices.size()-1];
   curve.create(
     mayaPoints, mayaKnots, 1, 
-    mayaIndices[0] == mayaIndices[mayaIndices.size()-1] ? MFnNurbsCurve::kClosed : MFnNurbsCurve::kOpen, 
+    closed ? MFnNurbsCurve::kClosed : MFnNurbsCurve::kOpen, 
     false,
     false,
     curveObject);
