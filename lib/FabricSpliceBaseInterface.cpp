@@ -149,13 +149,7 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(
         &findPlugStatus
         );
     if ( findPlugStatus != MS::kSuccess )
-    {
-      mayaLogErrorFunc(
-          "Warning: transferInputValuesToSplice(): could not find plug "
-        + plugName
-        );
       continue;
-    }
     assert( !plug.isNull() );
 
     FabricSplice::DGPort port = _spliceGraph.getDGPort(plugName.asChar());
@@ -267,13 +261,7 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
           &findPlugStatus
           );
       if ( findPlugStatus != MS::kSuccess )
-      {
-        mayaLogErrorFunc(
-            "Warning: transferOutputValuesToMaya(): could not find plug "
-          + portNameMString
-          );
         continue;
-      }
       assert( !plug.isNull() );
 
       std::string portDataType = port.getDataType();
@@ -513,13 +501,7 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(
             &findPlugStatus
             );
         if ( findPlugStatus != MS::kSuccess )
-        {
-          std::string error;
-          error += "findPlug( ";
-          error += otherPortName;
-          error += " ): failure";
-          throw FabricCore::Exception( error.c_str() );
-        }
+          continue;
         assert( !plug.isNull() );
 
         if ( userNode->attributeAffects(
@@ -586,13 +568,7 @@ void FabricSpliceBaseInterface::setupMayaAttributeAffects(
             &findPlugStatus
             );
         if ( findPlugStatus != MS::kSuccess )
-        {
-          std::string error;
-          error += "findPlug( ";
-          error += otherPortName;
-          error += " ): failure";
-          throw FabricCore::Exception( error.c_str() );
-        }
+          continue;
         assert( !plug.isNull() );
 
         if ( userNode->attributeAffects(
@@ -1392,10 +1368,7 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
             &status
             );
         if ( status != MS::kSuccess )
-        {
-          mayaLogErrorFunc( "findPlug(): failure" );
-          return status;
-        }
+          continue;
         assert( !outPlug.isNull() );
         if ( !plugInArray( outPlug, _affectedPlugs ) )
         {
