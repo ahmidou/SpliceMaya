@@ -2656,133 +2656,176 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
 {
   CORE_CATCH_BEGIN;
 
-  unsigned int nbPoints = 0;
+  unsigned int nbPoints   = 0;
   unsigned int nbPolygons = 0;
-  unsigned int nbSamples = 0;
+  unsigned int nbSamples  = 0;
   if(!rtMesh.isNullObject())
   {
-    nbPoints = rtMesh.callMethod("UInt64", "pointCount", 0, 0).getUInt64();
-    nbPolygons = rtMesh.callMethod("UInt64", "polygonCount", 0, 0).getUInt64();
-    nbSamples = rtMesh.callMethod("UInt64", "polygonPointsCount", 0, 0).getUInt64();
+    nbPoints   = rtMesh.callMethod("UInt64", "pointCount",         0, 0).getUInt64();
+    nbPolygons = rtMesh.callMethod("UInt64", "polygonCount",       0, 0).getUInt64();
+    nbSamples  = rtMesh.callMethod("UInt64", "polygonPointsCount", 0, 0).getUInt64();
   }
 
-  MPointArray mayaPoints;
+  MPointArray  mayaPoints;
   MVectorArray mayaNormals;
-  MIntArray mayaCounts, mayaIndices;
+  MIntArray    mayaCounts;
+  MIntArray    mayaIndices;
 
-  mayaPoints.setLength(nbPoints);
-  if(mayaPoints.length() > 0)
+  #if _SPLICE_MAYA_VERSION < 2015         // FE-5118 ("crash when saving scene with an empty polygon mesh")
+
+  if (nbPoints < 3 || nbPolygons == 0)
   {
-    std::vector<FabricCore::RTVal> args(2);
-    args[0] = FabricSplice::constructExternalArrayRTVal("Float64", mayaPoints.length() * 4, &mayaPoints[0]);
-    args[1] = FabricSplice::constructUInt32RTVal(4); // components
-    rtMesh.callMethod("", "getPointsAsExternalArray_d", 2, &args[0]);
-  }
+    // the rtMesh is either empty or has no polygons, so in order to
+    // avoid a crash in Maya 2013 and 2014 we create a mesh with a
+    // single triangle (and try to preserve the vertices, if any).
 
-  mayaNormals.setLength(nbSamples);
-  if(mayaNormals.length() > 0)
-  {
-    FabricCore::RTVal normalsVar = 
-    FabricSplice::constructExternalArrayRTVal("Float64", mayaNormals.length() * 3, &mayaNormals[0]);
-    rtMesh.callMethod("", "getNormalsAsExternalArray_d", 1, &normalsVar);
-  }
-
-  mayaCounts.setLength(nbPolygons);
-  mayaIndices.setLength(nbSamples);
-  if(mayaCounts.length() > 0 && mayaIndices.length() > 0)
-  {
-    std::vector<FabricCore::RTVal> args(2);
-    args[0] = FabricSplice::constructExternalArrayRTVal("UInt32", mayaCounts.length(), &mayaCounts[0]);
-    args[1] = FabricSplice::constructExternalArrayRTVal("UInt32", mayaIndices.length(), &mayaIndices[0]);
-    rtMesh.callMethod("", "getTopologyAsCountsIndicesExternalArrays", 2, &args[0]);
-  }
-
-  MFnMeshData meshDataFn;
-  MObject meshObject;
-  MFnMesh mesh;
-  meshObject = meshDataFn.create();
-
-  MIntArray normalFace, normalVertex;
-  normalFace.setLength( mayaIndices.length() );
-  normalVertex.setLength( mayaIndices.length() );
-
-  int face = 0;
-  int vertex = 0;
-  int offset = 0;
-
-  for( unsigned int i = 0; i < mayaIndices.length(); i++ ) {
-    normalFace[i] = face;
-    normalVertex[i] = mayaIndices[offset + vertex];
-    vertex++;
-
-    if( vertex == mayaCounts[face] ) {
-      offset += mayaCounts[face];
-      face++;
-      vertex = 0;
+    if (nbPoints < 3)
+    {
+      // we only create three vertices only if there aren't enough.
+      // (note: Maya correctly set the vertices if at least one triangle is present).
+      mayaPoints.setLength(3);
+      mayaPoints[0] = MPoint(0, 0, 0, 0);
+      mayaPoints[1] = MPoint(0, 0, 0, 0);
+      mayaPoints[2] = MPoint(0, 0, 0, 0);
     }
+
+    mayaCounts.setLength(1);
+    mayaCounts[0] = 3;
+
+    mayaIndices.setLength(3);
+    mayaIndices[0] = 0;
+    mayaIndices[1] = 1;
+    mayaIndices[2] = 2;
+
+    MFnMeshData meshDataFn;
+    MObject meshObject;
+    MFnMesh mesh;
+    meshObject = meshDataFn.create();
+
+    mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+    mesh.updateSurface();
+
+    handle.set( meshObject );
+    handle.setClean();
   }
+  else
 
-  mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
-  mesh.updateSurface();
-  mayaPoints.clear();
-  mesh.setFaceVertexNormals( mayaNormals, normalFace, normalVertex );
+  #endif
+  {
+    mayaPoints.setLength(nbPoints);
+    if(mayaPoints.length() > 0)
+    {
+      std::vector<FabricCore::RTVal> args(2);
+      args[0] = FabricSplice::constructExternalArrayRTVal("Float64", mayaPoints.length() * 4, &mayaPoints[0]);
+      args[1] = FabricSplice::constructUInt32RTVal(4); // components
+      rtMesh.callMethod("", "getPointsAsExternalArray_d", 2, &args[0]);
+    }
 
-  if( !rtMesh.isNullObject() ) {
+    mayaNormals.setLength(nbSamples);
+    if(mayaNormals.length() > 0)
+    {
+      FabricCore::RTVal normalsVar = 
+      FabricSplice::constructExternalArrayRTVal("Float64", mayaNormals.length() * 3, &mayaNormals[0]);
+      rtMesh.callMethod("", "getNormalsAsExternalArray_d", 1, &normalsVar);
+    }
 
-    if( rtMesh.callMethod( "Boolean", "hasUVs", 0, 0 ).getBoolean() ) {
-      MFloatArray values( nbSamples * 2 );
-      std::vector<FabricCore::RTVal> args( 2 );
-      args[0] = FabricSplice::constructExternalArrayRTVal( "Float32", values.length(), &values[0] );
-      args[1] = FabricSplice::constructUInt32RTVal( 2 ); // components
-      rtMesh.callMethod( "", "getUVsAsExternalArray", 2, &args[0] );
+    mayaCounts.setLength(nbPolygons);
+    mayaIndices.setLength(nbSamples);
+    if(mayaCounts.length() > 0 && mayaIndices.length() > 0)
+    {
+      std::vector<FabricCore::RTVal> args(2);
+      args[0] = FabricSplice::constructExternalArrayRTVal("UInt32", mayaCounts.length(),  &mayaCounts[0]);
+      args[1] = FabricSplice::constructExternalArrayRTVal("UInt32", mayaIndices.length(), &mayaIndices[0]);
+      rtMesh.callMethod("", "getTopologyAsCountsIndicesExternalArrays", 2, &args[0]);
+    }
 
-      MFloatArray u, v;
-      u.setLength( nbSamples );
-      v.setLength( nbSamples );
-      unsigned int offset = 0;
-      for( unsigned int i = 0; i < u.length(); i++ ) {
-        u[i] = values[offset++];
-        v[i] = values[offset++];
+    MFnMeshData meshDataFn;
+    MObject meshObject;
+    MFnMesh mesh;
+    meshObject = meshDataFn.create();
+
+    MIntArray normalFace, normalVertex;
+    normalFace.setLength( mayaIndices.length() );
+    normalVertex.setLength( mayaIndices.length() );
+
+    int face = 0;
+    int vertex = 0;
+    int offset = 0;
+
+    for( unsigned int i = 0; i < mayaIndices.length(); i++ ) {
+      normalFace[i] = face;
+      normalVertex[i] = mayaIndices[offset + vertex];
+      vertex++;
+
+      if( vertex == mayaCounts[face] ) {
+        offset += mayaCounts[face];
+        face++;
+        vertex = 0;
       }
-      values.clear();
-      MString setName( "map1" );
-      mesh.createUVSet( setName );
-      mesh.setCurrentUVSetName( setName );
-
-      mesh.setUVs( u, v );
-
-      MIntArray indices( nbSamples );
-      for( unsigned int i = 0; i < nbSamples; i++ )
-        indices[i] = i;
-      mesh.assignUVs( mayaCounts, indices );
     }
 
-    if( rtMesh.callMethod( "Boolean", "hasVertexColors", 0, 0 ).getBoolean() ) {
-      MColorArray values( nbSamples );
-      std::vector<FabricCore::RTVal> args( 2 );
-      args[0] = FabricSplice::constructExternalArrayRTVal( "Float32", values.length() * 4, &values[0] );
-      args[1] = FabricSplice::constructUInt32RTVal( 4 ); // components
-      rtMesh.callMethod( "", "getVertexColorsAsExternalArray", 2, &args[0] );
+    mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+    mesh.updateSurface();
+    mayaPoints.clear();
+    mesh.setFaceVertexNormals( mayaNormals, normalFace, normalVertex );
 
-      MString setName( "colorSet" );
-      mesh.createColorSet( setName );
-      mesh.setCurrentColorSetName( setName );
+    if( !rtMesh.isNullObject() ) {
 
-      MIntArray face( nbSamples );
+      if( rtMesh.callMethod( "Boolean", "hasUVs", 0, 0 ).getBoolean() ) {
+        MFloatArray values( nbSamples * 2 );
+        std::vector<FabricCore::RTVal> args( 2 );
+        args[0] = FabricSplice::constructExternalArrayRTVal( "Float32", values.length(), &values[0] );
+        args[1] = FabricSplice::constructUInt32RTVal( 2 ); // components
+        rtMesh.callMethod( "", "getUVsAsExternalArray", 2, &args[0] );
 
-      unsigned int offset = 0;
-      for( unsigned int i = 0; i < mayaCounts.length(); i++ ) {
-        for( int j = 0; j < mayaCounts[i]; j++, offset++ ) {
-          face[offset] = i;
+        MFloatArray u, v;
+        u.setLength( nbSamples );
+        v.setLength( nbSamples );
+        unsigned int offset = 0;
+        for( unsigned int i = 0; i < u.length(); i++ ) {
+          u[i] = values[offset++];
+          v[i] = values[offset++];
         }
+        values.clear();
+        MString setName( "map1" );
+        mesh.createUVSet( setName );
+        mesh.setCurrentUVSetName( setName );
+
+        mesh.setUVs( u, v );
+
+        MIntArray indices( nbSamples );
+        for( unsigned int i = 0; i < nbSamples; i++ )
+          indices[i] = i;
+        mesh.assignUVs( mayaCounts, indices );
       }
 
-      mesh.setFaceVertexColors( values, face, mayaIndices );
-    }
-  }
+      if( rtMesh.callMethod( "Boolean", "hasVertexColors", 0, 0 ).getBoolean() ) {
+        MColorArray values( nbSamples );
+        std::vector<FabricCore::RTVal> args( 2 );
+        args[0] = FabricSplice::constructExternalArrayRTVal( "Float32", values.length() * 4, &values[0] );
+        args[1] = FabricSplice::constructUInt32RTVal( 4 ); // components
+        rtMesh.callMethod( "", "getVertexColorsAsExternalArray", 2, &args[0] );
 
-  handle.set( meshObject );
-  handle.setClean();
+        MString setName( "colorSet" );
+        mesh.createColorSet( setName );
+        mesh.setCurrentColorSetName( setName );
+
+        MIntArray face( nbSamples );
+
+        unsigned int offset = 0;
+        for( unsigned int i = 0; i < mayaCounts.length(); i++ ) {
+          for( int j = 0; j < mayaCounts[i]; j++, offset++ ) {
+            face[offset] = i;
+          }
+        }
+
+        mesh.setFaceVertexColors( values, face, mayaIndices );
+      }
+    }
+
+    handle.set( meshObject );
+    handle.setClean();
+  }
 
   CORE_CATCH_END;
 }
