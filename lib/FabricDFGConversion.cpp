@@ -2681,8 +2681,8 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
 
     if (nbPoints < 3)
     {
-      // we only create three vertices only if there aren't enough.
-      // (note: Maya correctly set the vertices if at least one triangle is present).
+      // we only create the three vertices if there aren't enough.
+      // (note: Maya correctly sets the vertices if at least one triangle is present).
       mayaPoints.setLength(3);
       mayaPoints[0] = MPoint(0, 0, 0, 0);
       mayaPoints[1] = MPoint(0, 0, 0, 0);
