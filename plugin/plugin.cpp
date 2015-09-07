@@ -343,7 +343,7 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
-  MFnPlugin plugin(obj, "FabricForMaya", FabricSplice::GetFabricVersionStr(), "Any");
+  MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status;
 
   status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
@@ -544,7 +544,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 void loadMenu()
 {
   MString cmd = "source \"FabricSpliceMenu.mel\"; FabricSpliceLoadMenu(\"";
-  cmd += "FabricForMaya";
+  cmd += "FabricMaya";
   cmd += "\");";
   MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
   if (commandStatus != MStatus::kSuccess)

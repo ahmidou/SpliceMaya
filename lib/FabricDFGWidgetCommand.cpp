@@ -60,7 +60,7 @@ MStatus FabricDFGWidgetCommand::doIt(const MArgList &args)
 
     // use mel to open a floating window
     MString cmd = "source \"FabricDFGUI.mel\"; showDFGWidget(\"";
-    cmd += "FabricForMaya";
+    cmd += "FabricMaya";
     cmd += "\");";
     MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
     if (commandStatus != MStatus::kSuccess)
