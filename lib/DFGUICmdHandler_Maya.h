@@ -215,6 +215,13 @@ protected:
     FTL::CStrRef varPath
     );
 
+  virtual void dfgDoReorderPorts(
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    const std::vector<unsigned int> & indices
+    );
+
 protected:
     
   void encodeMELStringChars(
