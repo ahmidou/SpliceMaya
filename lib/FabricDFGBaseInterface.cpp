@@ -1661,10 +1661,10 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   {
     FabricUI::DFG::DFGController::bindUnboundRTVals(m_client, m_binding);
   }
-  else
-  {
-    mayaLogFunc(jsonStr.c_str());
-  }
+  // else
+  // {
+  //   mayaLogFunc(jsonStr.c_str());
+  // }
 }
 
 void FabricDFGBaseInterface::renamePlug(const MPlug &plug, MString oldName, MString newName)
