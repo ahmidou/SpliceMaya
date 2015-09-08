@@ -86,15 +86,6 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
     getDfgWidget()->getUIController()->setBindingExec( binding, "", exec );
 }
 
-void FabricDFGWidget::onRecompilation()
-{
-  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(m_currentUINodeName.c_str());
-  if(interf)
-  {
-    interf->invalidateNode();
-  }
-}
-
 void FabricDFGWidget::onUndo()
 {
   MGlobal::executeCommandOnIdle("undo");
