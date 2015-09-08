@@ -1287,6 +1287,61 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetRefVarPathCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGReorderPortsCommand
+
+void FabricDFGReorderPortsCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-i", "-indices", MSyntax::kString);
+}
+
+void FabricDFGReorderPortsCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "indices" ) )
+    throw ArgException( MS::kFailure, "-i (-indices) not provided." );
+
+  std::string jsonStr = argParser.flagArgumentString( "indices", 0 ).asChar();
+
+  try
+  {
+    FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
+    FTL::OwnedPtr<FTL::JSONArray> jsonArray(
+      FTL::JSONValue::Decode( jsonStrWithLoc )->cast<FTL::JSONArray>()
+      );
+    for( size_t i=0; i < jsonArray->size(); i++ )
+    {
+      args.indices.push_back ( jsonArray->get(i)->getSInt32Value() );
+    }
+  }
+  catch ( FabricCore::Exception e )
+  {
+    throw ArgException( MS::kFailure, "-i (-indices) not valid json." );
+  }
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGReorderPortsCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_ReorderPorts *cmd =
+    new FabricUI::DFG::DFGUICmd_ReorderPorts(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.indices
+      );
+  cmd->doit();
+  return cmd;
+}
+
 // FabricDFGRenamePortCommand
 
 void FabricDFGRenamePortCommand::AddSyntax( MSyntax &syntax )

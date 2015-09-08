@@ -343,7 +343,7 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
-  MFnPlugin plugin(obj, "FabricForMaya", FabricSplice::GetFabricVersionStr(), "Any");
+  MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status;
 
   status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
@@ -422,6 +422,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeTitle );
   MAYA_REGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetRefVarPath );
+  MAYA_REGISTER_DFGUICMD( plugin, ReorderPorts );
 
   plugin.registerCommand(
     "dfgImportJSON",
@@ -525,6 +526,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeTitle );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetRefVarPath );
+  MAYA_DEREGISTER_DFGUICMD( plugin, ReorderPorts );
 
   plugin.deregisterCommand( "dfgImportJSON" );
   plugin.deregisterCommand( "dfgReloadJSON" );
@@ -544,7 +546,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 void loadMenu()
 {
   MString cmd = "source \"FabricSpliceMenu.mel\"; FabricSpliceLoadMenu(\"";
-  cmd += "FabricForMaya";
+  cmd += "FabricMaya";
   cmd += "\");";
   MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
   if (commandStatus != MStatus::kSuccess)

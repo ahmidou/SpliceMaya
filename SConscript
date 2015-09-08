@@ -138,20 +138,20 @@ env.MergeFlags(ADDITIONAL_FLAGS)
 if FABRIC_BUILD_OS == 'Linux':
   env.Append(LIBS=['boost_filesystem', 'boost_system'])
 
-target = 'FabricForMaya'
+target = 'FabricMaya'
 
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 
-libFabricForMaya = env.StaticLibrary('libFabricForMaya', libSources)
-env.Append(LIBS = [libFabricForMaya])
+libFabricMaya = env.StaticLibrary('libFabricMaya', libSources)
+env.Append(LIBS = [libFabricMaya])
 
 pluginSources = env.Glob('plugin/*.cpp')
 
 if FABRIC_BUILD_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
-  spliceAppName = 'FabricForMaya'+MAYA_VERSION
+  spliceAppName = 'FabricMaya'+MAYA_VERSION
   target += '.bundle'
   env.Append(SHLINKFLAGS = ','.join([
     '-Wl',
@@ -203,13 +203,13 @@ env.Append(BUILDERS = {
 })
 
 mayaModuleFile = env.SubstMayaModuleFile(
-  env.File('FabricForMaya.mod'),
-  env.Dir('Module').File('FabricForMaya.mod.template')
+  env.File('FabricMaya.mod'),
+  env.Dir('Module').File('FabricMaya.mod.template')
 )[0]
 
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
-mayaFiles.append(env.Install(STAGE_DIR, libFabricForMaya))
+mayaFiles.append(env.Install(STAGE_DIR, libFabricMaya))
 
 for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricDFGTool', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))

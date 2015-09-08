@@ -850,6 +850,36 @@ void DFGUICmdHandler_Maya::dfgDoSetRefVarPath(
     );
 }
 
+void DFGUICmdHandler_Maya::dfgDoReorderPorts(
+  FabricCore::DFGBinding const &binding,
+  FTL::CStrRef execPath,
+  FabricCore::DFGExec const &exec,
+  const std::vector<unsigned int> & indices
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_ReorderPorts::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+
+  cmd << " -i";
+  cmd << " \"[";
+  for(size_t i=0;i<indices.size();i++)
+  {
+    if(i > 0)
+      cmd << ", ";
+    cmd << (int)indices[i];
+  }
+  cmd << "]\"";
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+
+}
+
 MString DFGUICmdHandler_Maya::getNodeNameFromBinding(
   FabricCore::DFGBinding const &binding
   )
