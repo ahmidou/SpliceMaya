@@ -598,6 +598,32 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_SetRefVarPath
   > MayaDFGUICmd_SetRefVarPath;
 
+class FabricDFGReorderPortsCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::vector<unsigned int> indices;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGReorderPortsCommand,
+  FabricUI::DFG::DFGUICmd_ReorderPorts
+  > MayaDFGUICmd_ReorderPorts;
+
 class FabricDFGRenamePortCommand
   : public FabricDFGExecCommand
 {
