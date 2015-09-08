@@ -1657,6 +1657,14 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     MPlug plug = thisNode.findPlug(oldPlugName);
     renamePlug(plug, oldPlugName, newPlugName);
   }
+  else if( descStr == FTL_STR("argInserted") )
+  {
+    FabricUI::DFG::DFGController::bindUnboundRTVals(m_client, m_binding);
+  }
+  // else
+  // {
+  //   mayaLogFunc(jsonStr.c_str());
+  // }
 }
 
 void FabricDFGBaseInterface::renamePlug(const MPlug &plug, MString oldName, MString newName)
