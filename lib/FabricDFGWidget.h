@@ -50,7 +50,6 @@ public:
 public slots:
   virtual void onUndo();
   virtual void onRedo();
-  virtual void onRecompilation();
 
 private slots:
   void onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog * dialog);
