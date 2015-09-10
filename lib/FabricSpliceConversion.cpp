@@ -1006,7 +1006,7 @@ void plugToPort_mat44(MPlug &plug, MDataBlock &dataBlock, FabricSplice::DGPort &
     for(unsigned int i = 0; i < elements; ++i){
       arrayHandle.jumpToArrayElement(i);
       MDataHandle handle = arrayHandle.inputValue();
-      const MFloatMatrix& mayaMat = handle.asFloatMatrix();
+      const MMatrix& mayaMat = handle.asFloatMatrix();
 
       MAYASPLICE_MEMORY_SETITEM(offset++, (float)mayaMat[0][0]);
       MAYASPLICE_MEMORY_SETITEM(offset++, (float)mayaMat[1][0]);
