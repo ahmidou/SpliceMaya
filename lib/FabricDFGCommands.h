@@ -397,6 +397,7 @@ protected:
     FabricCore::DFGPortType portType;
     std::string typeSpec;
     std::string portToConnectWith;
+    std::string metaData;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );

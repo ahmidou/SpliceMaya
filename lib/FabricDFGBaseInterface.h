@@ -93,10 +93,6 @@ public:
   DFGUICmdHandler_Maya *getCmdHandler()
     { return &m_cmdHandler; }
 
-  void setAddAttributeForNextAttribute(bool state) { m_addAttributeForNextAttribute = state; }
-  void setUseNativeArrayForNextAttribute(bool state) { m_useNativeArrayForNextAttribute = state; }
-  void setUseOpaqueForNextAttribute(bool state) { m_useOpaqueForNextAttribute = state; }
-
 protected:
   MString getPlugName(MString portName);
   MString getPortName(MString plugName);
@@ -170,9 +166,6 @@ private:
 
   unsigned int m_id;
   static unsigned int s_maxID;
-  bool m_addAttributeForNextAttribute;
-  bool m_useNativeArrayForNextAttribute;
-  bool m_useOpaqueForNextAttribute;
   FabricDFGWidget *m_widget;
 };
 

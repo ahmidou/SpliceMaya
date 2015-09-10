@@ -49,9 +49,6 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(){
   _outputsDirtied = false;
   _isReferenced = false;
   _instances.push_back(this);
-  m_addAttributeForNextAttribute = true;
-  m_useNativeArrayForNextAttribute = false;
-  m_useOpaqueForNextAttribute = false;
 
   m_id = s_maxID++;
 
@@ -863,24 +860,17 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   FabricSplice::Logging::AutoTimer timer("Maya::addMayaAttribute()");
   MObject newAttribute;
 
+  FabricCore::DFGExec exec = m_binding.getExec();
+
   // skip if disabled by used in the EditPortDialog
-  if(!m_addAttributeForNextAttribute)
-  {
-    m_addAttributeForNextAttribute = true;
-    FabricCore::DFGExec exec = m_binding.getExec();
-    exec.setExecPortMetadata(portName.asChar(), "addAttribute", "false", false);
+  FTL::StrRef addAttributeMD = exec.getExecPortMetadata(portName.asChar(), "addAttribute");
+  if(addAttributeMD == "false")
     return newAttribute;
-  }
 
   MString dataTypeOverride = dataType;
-
-  if(m_useOpaqueForNextAttribute)
-  {
+  FTL::StrRef opaqueMD = exec.getExecPortMetadata(portName.asChar(), "opaque");
+  if(opaqueMD == "true")
     dataTypeOverride = "SpliceMayaData";
-    FabricCore::DFGExec exec = m_binding.getExec();
-    exec.setExecPortMetadata(portName.asChar(), "opaque", "true", false);
-    m_useOpaqueForNextAttribute = false;
-  }
 
   // remove []
   MStringArray splitBuffer;
@@ -889,14 +879,9 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     dataTypeOverride = splitBuffer[0];
     if(splitBuffer.length() > 1 && arrayType.length() == 0)
     {
-      if(m_useNativeArrayForNextAttribute)
-      {
-        m_useNativeArrayForNextAttribute = false;
+      FTL::StrRef nativeArrayMD = exec.getExecPortMetadata(portName.asChar(), "nativeArray");
+      if(nativeArrayMD == "true")
         arrayType = "Array (Native)";
-
-        FabricCore::DFGExec exec = m_binding.getExec();
-        exec.setExecPortMetadata(portName.asChar(), "nativeArray", "true", false);
-      }
       else
         arrayType = "Array (Multi)";
     }
@@ -925,8 +910,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   MFnStringData emptyStringData;
   MObject emptyStringObject = emptyStringData.create("");
 
-  bool storable = true;
-
+  bool storable = portType != FabricCore::DFGPortType_Out;
 
   // if(dataTypeOverride == "CompoundParam")
   // {
@@ -1192,14 +1176,14 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if(arrayType == "Single Value")
     {
       MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
       MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
       MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
       newAttribute = cAttr.create(plugName, plugName);
       cAttr.addChild(x);
       cAttr.addChild(y);
@@ -1208,14 +1192,14 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     else if(arrayType == "Array (Multi)")
     {
       MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
       MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
       MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
       newAttribute = cAttr.create(plugName, plugName);
       cAttr.addChild(x);
       cAttr.addChild(y);
@@ -1238,14 +1222,14 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if(arrayType == "Single Value")
     {
       MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      uAttr.setKeyable(true);
+      uAttr.setStorable(storable);
+      uAttr.setKeyable(storable);
       MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      uAttr.setKeyable(true);
+      uAttr.setStorable(storable);
+      uAttr.setKeyable(storable);
       MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      uAttr.setKeyable(true);
+      uAttr.setStorable(storable);
+      uAttr.setKeyable(storable);
       newAttribute = cAttr.create(plugName, plugName);
       cAttr.addChild(x);
       cAttr.addChild(y);
@@ -1254,11 +1238,11 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     else if(arrayType == "Array (Multi)")
     {
       MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
+      uAttr.setStorable(storable);
       MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
+      uAttr.setStorable(storable);
       MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
+      uAttr.setStorable(storable);
       newAttribute = cAttr.create(plugName, plugName);
       cAttr.addChild(x);
       cAttr.addChild(y);
@@ -1336,8 +1320,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     {
       if(getDFGExec().haveExecPort(portName.asChar())) {
         newAttribute = pAttr.create(plugName, plugName);
-        pAttr.setStorable(true);
-        pAttr.setKeyable(true);
+        pAttr.setStorable(storable);
+        pAttr.setKeyable(storable);
         pAttr.setCached(false);
       }
       else{
@@ -1349,8 +1333,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     {
       if(getDFGExec().haveExecPort(portName.asChar())) {
         newAttribute = pAttr.create(plugName, plugName);
-        pAttr.setStorable(true);
-        pAttr.setKeyable(true);
+        pAttr.setStorable(storable);
+        pAttr.setKeyable(storable);
         pAttr.setArray(true);
         pAttr.setCached(false);
       }
@@ -1406,40 +1390,33 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   // set the mode
   if(!newAttribute.isNull())
   {
-    if(portType != FabricCore::DFGPortType_In)
-    {
-      nAttr.setReadable(true);
-      tAttr.setReadable(true);
-      mAttr.setReadable(true);
-      uAttr.setReadable(true);
-      cAttr.setReadable(true);
-      pAttr.setReadable(true);
-    }
-    if(portType != FabricCore::DFGPortType_Out)
-    {
-      nAttr.setWritable(true);
-      tAttr.setWritable(true);
-      mAttr.setWritable(true);
-      uAttr.setWritable(true);
-      cAttr.setWritable(true);
-      pAttr.setWritable(true);
-    }
-    if(portType == FabricCore::DFGPortType_In && storable)
-    {
-      nAttr.setKeyable(true);
-      tAttr.setKeyable(true);
-      mAttr.setKeyable(true);
-      uAttr.setKeyable(true);
-      cAttr.setKeyable(true);
-      pAttr.setKeyable(true);
+    nAttr.setReadable(portType != FabricCore::DFGPortType_In);
+    tAttr.setReadable(portType != FabricCore::DFGPortType_In);
+    mAttr.setReadable(portType != FabricCore::DFGPortType_In);
+    uAttr.setReadable(portType != FabricCore::DFGPortType_In);
+    cAttr.setReadable(portType != FabricCore::DFGPortType_In);
+    pAttr.setReadable(portType != FabricCore::DFGPortType_In);
 
-      nAttr.setStorable(true);
-      tAttr.setStorable(true);
-      mAttr.setStorable(true);
-      uAttr.setStorable(true);
-      cAttr.setStorable(true);
-      pAttr.setStorable(true);
-    }
+    nAttr.setWritable(portType != FabricCore::DFGPortType_Out);
+    tAttr.setWritable(portType != FabricCore::DFGPortType_Out);
+    mAttr.setWritable(portType != FabricCore::DFGPortType_Out);
+    uAttr.setWritable(portType != FabricCore::DFGPortType_Out);
+    cAttr.setWritable(portType != FabricCore::DFGPortType_Out);
+    pAttr.setWritable(portType != FabricCore::DFGPortType_Out);
+
+    nAttr.setKeyable(storable);
+    tAttr.setKeyable(storable);
+    mAttr.setKeyable(storable);
+    uAttr.setKeyable(storable);
+    cAttr.setKeyable(storable);
+    pAttr.setKeyable(storable);
+
+    nAttr.setStorable(storable);
+    tAttr.setStorable(storable);
+    mAttr.setStorable(storable);
+    uAttr.setStorable(storable);
+    cAttr.setStorable(storable);
+    pAttr.setStorable(storable);
 
     if(!compoundChild)
       thisNode.addAttribute(newAttribute);
@@ -1659,7 +1636,8 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   }
   else if( descStr == FTL_STR("argInserted") )
   {
-    FabricUI::DFG::DFGController::bindUnboundRTVals(m_client, m_binding);
+    // this happens as the result of the addPortCommand
+    // FabricUI::DFG::DFGController::bindUnboundRTVals(m_client, m_binding);
   }
   // else
   // {

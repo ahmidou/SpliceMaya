@@ -53,7 +53,7 @@ public slots:
 
 private slots:
   void onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog * dialog);
-  void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog);
+  void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog, FTL::JSONObjectEnc<> * additionalMetaData);
 
 protected:
   void setCurrentUINodeName(const char * node);

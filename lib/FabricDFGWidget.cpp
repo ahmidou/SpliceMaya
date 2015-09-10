@@ -25,8 +25,8 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
     this, SIGNAL( portEditDialogCreated(FabricUI::DFG::DFGBaseDialog *)),
     this, SLOT( onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog *)) );
   QObject::connect(
-    this, SIGNAL( portEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *)),
-    this, SLOT( onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *)) );
+    this, SIGNAL( portEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, QString *)),
+    this, SLOT( onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, QString *)) );
 }
 
 FabricDFGWidget::~FabricDFGWidget()
@@ -139,20 +139,33 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
   dialog->addInput(opaqueCheckBox, "opaque in DCC", "maya specific");
 }
 
-void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog)
+void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog, FTL::JSONObjectEnc<> * additionalMetaData)
 {
   DFG::DFGController * controller = dialog->getDFGController();
   if(!controller->isViewingRootGraph())
     return;
 
-  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByName(m_currentUINodeName.c_str());
-  if(interf)
+  if(additionalMetaData)
   {
     QCheckBox * addAttributeCheckBox = (QCheckBox *)dialog->input("add attribute");
-    interf->setAddAttributeForNextAttribute(addAttributeCheckBox->checkState() == Qt::Checked);
+    if(addAttributeCheckBox->checkState() == Qt::Unchecked)
+    {
+      FTL::JSONEnc<> enc( *additionalMetaData, FTL_STR("addAttribute") );
+      FTL::JSONStringEnc<> valueEnc( enc, FTL_STR("false") );
+    }
+
     QCheckBox * nativeCheckBox = (QCheckBox *)dialog->input("native DCC array");
-    interf->setUseNativeArrayForNextAttribute(nativeCheckBox->checkState() == Qt::Checked);
+    if(nativeCheckBox->checkState() == Qt::Checked)
+    {
+      FTL::JSONEnc<> enc( *additionalMetaData, FTL_STR("nativeArray") );
+      FTL::JSONStringEnc<> valueEnc( enc, FTL_STR("true") );
+    }
+
     QCheckBox * opaqueCheckBox = (QCheckBox *)dialog->input("opaque in DCC");
-    interf->setUseOpaqueForNextAttribute(opaqueCheckBox->checkState() == Qt::Checked);
+    if(opaqueCheckBox->checkState() == Qt::Checked)
+    {
+      FTL::JSONEnc<> enc( *additionalMetaData, FTL_STR("opaque") );
+      FTL::JSONStringEnc<> valueEnc( enc, FTL_STR("true") );
+    }
   }
 }

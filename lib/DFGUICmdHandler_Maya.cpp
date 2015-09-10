@@ -10,6 +10,7 @@
 #include "FabricDFGBaseInterface.h"
 
 #include <FabricUI/DFG/DFGUICmd/DFGUICmds.h>
+#include <FabricUI/DFG/DFGController.h>
 
 #include <maya/MGlobal.h>
 
@@ -465,7 +466,8 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
   FTL::CStrRef desiredPortName,
   FabricCore::DFGPortType portType,
   FTL::CStrRef typeSpec,
-  FTL::CStrRef connectToPortPath
+  FTL::CStrRef connectToPortPath,
+  FTL::CStrRef metaData
   )
 {
   std::stringstream cmd;
@@ -487,7 +489,10 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
   }
   encodeStringArg( FTL_STR("p"), portTypeStr, cmd );
   encodeStringArg( FTL_STR("t"), typeSpec, cmd );
+  if(!connectToPortPath.empty())
   encodeStringArg( FTL_STR("c"), connectToPortPath, cmd );
+  if(!metaData.empty())
+    encodeStringArg( FTL_STR("a"), metaData, cmd );
   cmd << ';';
 
   MString mResult;
@@ -497,6 +502,17 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
     true, // displayEnabled
     true  // undoEnabled
     );
+
+  if(mResult.length() > 0)
+  {
+    FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
+    if(interf)
+    {
+      FabricCore::Client interfClient = interf->getCoreClient();
+      FabricCore::DFGBinding interfBinding = interf->getDFGBinding();
+      FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
+    }
+  }
 
   return mResult.asChar();
 }
@@ -880,17 +896,23 @@ void DFGUICmdHandler_Maya::dfgDoReorderPorts(
 
 }
 
-MString DFGUICmdHandler_Maya::getNodeNameFromBinding(
-  FabricCore::DFGBinding const &binding
-  )
+FabricDFGBaseInterface * DFGUICmdHandler_Maya::getInterfFromBinding( FabricCore::DFGBinding const &binding )
 {
   MString interfIdStr = binding.getMetadata("maya_id");
   if(interfIdStr.length() == 0)
-    return "";
+    return NULL;
   unsigned int interfId = (unsigned int)interfIdStr.asInt();
 
   FabricDFGBaseInterface * interf =
     FabricDFGBaseInterface::getInstanceById(interfId);
+  return interf;  
+}
+
+MString DFGUICmdHandler_Maya::getNodeNameFromBinding(
+  FabricCore::DFGBinding const &binding
+  )
+{
+  FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
   if(interf == NULL)
     return "";
 

@@ -4,8 +4,9 @@
 #define __UI_DFG_DFGUICmdHandler_Maya__
 
 #include <FabricUI/DFG/DFGUICmdHandler.h>
-
 #include <maya/MString.h>
+
+class FabricDFGBaseInterface;
 
 class DFGUICmdHandler_Maya : public FabricUI::DFG::DFGUICmdHandler
 {
@@ -98,7 +99,8 @@ protected:
     FTL::CStrRef desiredPortName,
     FabricCore::DFGPortType portType,
     FTL::CStrRef typeSpec,
-    FTL::CStrRef portToConnect
+    FTL::CStrRef portToConnect,
+    FTL::CStrRef metaData
     );
 
   virtual void dfgDoRemovePort(
@@ -301,7 +303,8 @@ protected:
     std::stringstream &cmd
     );
 
-  MString getNodeNameFromBinding( FabricCore::DFGBinding const &binding );
+  static FabricDFGBaseInterface * getInterfFromBinding( FabricCore::DFGBinding const &binding );
+  static MString getNodeNameFromBinding( FabricCore::DFGBinding const &binding );
 };
 
 #endif // __UI_DFG_DFGUICmdHandler_Maya__

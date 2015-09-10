@@ -954,6 +954,7 @@ void FabricDFGAddPortCommand::AddSyntax( MSyntax &syntax )
   syntax.addFlag("-p", "-portType", MSyntax::kString);
   syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
   syntax.addFlag("-c", "-connectToPortPath", MSyntax::kString);
+  syntax.addFlag("-a", "-additionalMetaData", MSyntax::kString);
 }
 
 void FabricDFGAddPortCommand::GetArgs(
@@ -985,6 +986,9 @@ void FabricDFGAddPortCommand::GetArgs(
 
   if ( argParser.isFlagSet( "connectToPortPath" ) )
     args.portToConnectWith = argParser.flagArgumentString( "connectToPortPath", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "additionalMetaData" ) )
+    args.metaData = argParser.flagArgumentString( "additionalMetaData", 0 ).asChar();
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
@@ -1002,7 +1006,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
       args.desiredPortName,
       args.portType,
       args.typeSpec,
-      args.portToConnectWith
+      args.portToConnectWith,
+      args.metaData
       );
   cmd->doit();
   setResult( cmd->getActualPortName().c_str() );
