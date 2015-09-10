@@ -93,7 +93,6 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Online Help" -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/\";");
   menuItem -p $fabricSpliceMenu -l "ThirdParty Licenses" -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/thirdpartylicenses.html\";");
-  menuItem -p $fabricSpliceMenu -l "License Tool" -c ("fabricSplice \"setupLicensing\";");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Start Profiling" -c ("fabricSplice \"startProfiling\";");
   menuItem -p $fabricSpliceMenu -l "End Profiling" -c ("fabricSplice \"stopProfiling\";");
