@@ -45,8 +45,9 @@ const MTypeId gFirstValidNodeID(0x0011AE40);
 // FabricSpliceInlineGeometry 0x0011AE43 /* no longer in use, but not available */
 // FabricSpliceMayaDebugger 0x0011AE44 /* no longer in use, but not available */
 // FabricSpliceMayaData 0x0011AE45
-// FabricDFGMayaNode 0x0011AE46
-const MTypeId gLastValidNodeID(0x0011AE49);
+// FabricDFGMayaNode 0x0011AE46 // dfgMayaNode
+// FabricDFGMayaNode 0x0011AE47 // canvasNode
+const MTypeId gLastValidNodeID(0x0011AF3F);
 
 MCallbackId gOnSceneNewCallbackId;
 MCallbackId gOnSceneLoadCallbackId;
@@ -392,7 +393,10 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   plugin.registerCommand("fabricDFG", FabricDFGWidgetCommand::creator, FabricDFGWidgetCommand::newSyntax);
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
-  plugin.registerNode("dfgMayaNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
+
+  // obsolete node
+  plugin.registerNode("dfgMayaNode", 0x0011AE46, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
+  plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
 
   plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
@@ -472,6 +476,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand("fabricSplice");
   plugin.deregisterCommand("FabricSpliceEditor");
   plugin.deregisterCommand("proceedToNextScene");
+  plugin.deregisterNode(0x0011AE46);
   plugin.deregisterNode(FabricSpliceMayaNode::id);
   plugin.deregisterNode(FabricSpliceMayaDeformer::id);
 

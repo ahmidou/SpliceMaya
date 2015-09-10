@@ -37,7 +37,7 @@ global proc reloadReferencedSpliceNode()
 
 global proc createReferencedDFGNode()
 {
-  $node = `createNode "dfgMayaNode"`;
+  $node = `createNode "canvasNode"`;
   dfgImportJSON -m $node -f "" -r true;
 }
 
@@ -66,7 +66,7 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   }
 
   // menu items
-  menuItem -p $fabricSpliceMenu -l "Create Graph" -c ("createNode \"dfgMayaNode\";");
+  menuItem -p $fabricSpliceMenu -l "Create Graph" -c ("createNode \"canvasNode\";");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Load Graph" -c ("source \"FabricDFGTool.mel\"; fabricLoadDFG();");
   menuItem -p $fabricSpliceMenu -l "Save Graph" -c ("source \"FabricDFGTool.mel\"; fabricSaveDFG();");

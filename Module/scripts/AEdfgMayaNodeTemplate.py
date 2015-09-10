@@ -29,7 +29,7 @@ class AEdfgMayaBaseTemplate(ui.AETemplate):
 
     nodes = cmds.ls(sl=True)
     for node in nodes:
-      if cmds.nodeType(node) == "dfgMayaNode":
+      if cmds.nodeType(node) == "canvasNode":
         nodeName = node
         break
       rels = cmds.listRelatives(node, shapes=True)
@@ -50,4 +50,4 @@ class AEdfgMayaBaseTemplate(ui.AETemplate):
     pass
 
 class AEdfgMayaNodeTemplate(AEdfgMayaBaseTemplate):
-  _nodeType = 'dfgMayaNode'
+  _nodeType = 'canvasNode'

@@ -2,6 +2,7 @@ import maya.cmds as cmds
 import maya.OpenMaya as om
 
 nodes = cmds.ls(type="dfgMayaNode")
+nodes += cmds.ls(type="canvasNode")
 
 sel = om.MSelectionList()
 for node in nodes:
