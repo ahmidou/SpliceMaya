@@ -901,6 +901,26 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     return newAttribute;
   }
 
+  // extract the ui range info
+  float uiMin = 0.0f;
+  float uiMax = 0.0f;
+  FTL::CStrRef uiRangeRef = exec.getExecPortMetadata(portName.asChar(), "uiRange");
+  if(uiRangeRef.size() > 2)
+  {
+    MString uiRangeStr = uiRangeRef.c_str();
+    if(uiRangeStr.asChar()[0] == '(')
+      uiRangeStr = uiRangeStr.substring(1, uiRangeStr.length()-1);
+    if(uiRangeStr.asChar()[uiRangeStr.length()-1] == ')')
+      uiRangeStr = uiRangeStr.substring(0, uiRangeStr.length()-2);
+    MStringArray parts;
+    uiRangeStr.split(',', parts);
+    if(parts.length() == 2)
+    {
+      uiMin = parts[0].asFloat();
+      uiMax = parts[1].asFloat();
+    }
+  }
+
   MFnNumericAttribute nAttr;
   MFnTypedAttribute tAttr;
   MFnUnitAttribute uAttr;
@@ -1011,7 +1031,12 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt);
+      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt, uiMin);
+      if(uiMin != uiMax)
+      {
+        nAttr.setMin(uiMin);
+        nAttr.setMax(uiMax);
+      }
     }
     else if(arrayType == "Array (Multi)")
     {
@@ -1057,15 +1082,21 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if(arrayType == "Single Value" || arrayType == "Array (Multi)")
     {
       if(scalarUnit == "time")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kTime);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kTime, uiMin);
       else if(scalarUnit == "angle")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kAngle);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kAngle, uiMin);
       else if(scalarUnit == "distance")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kDistance);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kDistance, uiMin);
       else
       {
-        newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kDouble);
+        newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kDouble, uiMin);
         isUnitAttr = false;
+      }
+
+      if(uiMin != uiMax)
+      {
+        nAttr.setMin(uiMin);
+        nAttr.setMax(uiMax);
       }
 
       if(arrayType == "Array (Multi)") 
