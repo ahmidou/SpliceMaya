@@ -1191,37 +1191,33 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
+      MObject x = nAttr.create(plugName+"X", plugName+"X", MFnNumericData::kDouble);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
+      MObject y = nAttr.create(plugName+"Y", plugName+"Y", MFnNumericData::kDouble);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
+      MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
     }
     else if(arrayType == "Array (Multi)")
     {
-      MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
-      nAttr.setStorable(true);
-      nAttr.setKeyable(true);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-      cAttr.setArray(true);
-      cAttr.setUsesArrayDataBuilder(true);
+      MObject x = nAttr.create(plugName+"X", plugName+"X", MFnNumericData::kDouble);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
+      MObject y = nAttr.create(plugName+"Y", plugName+"Y", MFnNumericData::kDouble);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
+      MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
+      nAttr.setArray(true);
+      nAttr.setUsesArrayDataBuilder(true);
     }
     else if(arrayType == "Array (Native)")
     {
@@ -1237,34 +1233,30 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      uAttr.setKeyable(true);
-      MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      uAttr.setKeyable(true);
-      MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      uAttr.setKeyable(true);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
+      MObject x = uAttr.create(plugName+"X", plugName+"X", MFnUnitAttribute::kAngle);
+      uAttr.setStorable(storable);
+      uAttr.setKeyable(storable);
+      MObject y = uAttr.create(plugName+"Y", plugName+"Y", MFnUnitAttribute::kAngle);
+      uAttr.setStorable(storable);
+      uAttr.setKeyable(storable);
+      MObject z = uAttr.create(plugName+"Z", plugName+"Z", MFnUnitAttribute::kAngle);
+      uAttr.setStorable(storable);
+      uAttr.setKeyable(storable);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
     }
     else if(arrayType == "Array (Multi)")
     {
-      MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
-      uAttr.setStorable(true);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-      cAttr.setArray(true);
-      cAttr.setUsesArrayDataBuilder(true);
+      MObject x = uAttr.create(plugName+"X", plugName+"X", MFnUnitAttribute::kAngle);
+      uAttr.setStorable(storable);
+      MObject y = uAttr.create(plugName+"Y", plugName+"Y", MFnUnitAttribute::kAngle);
+      uAttr.setStorable(storable);
+      MObject z = uAttr.create(plugName+"Z", plugName+"Z", MFnUnitAttribute::kAngle);
+      uAttr.setStorable(storable);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
+      nAttr.setArray(true);
+      nAttr.setUsesArrayDataBuilder(true);
     }
     else
     {
