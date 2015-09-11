@@ -29,11 +29,11 @@ void DFGUICmdHandler_Maya::encodeBooleanArg(
 }
 
 void DFGUICmdHandler_Maya::encodeMELStringChars(
-  FTL::CStrRef str,
+  FTL::StrRef str,
   std::stringstream &ss
   )
 {
-  for ( FTL::CStrRef::IT it = str.begin(); it != str.end(); ++it )
+  for ( FTL::StrRef::IT it = str.begin(); it != str.end(); ++it )
   {
     switch ( *it )
     {
@@ -65,7 +65,7 @@ void DFGUICmdHandler_Maya::encodeMELStringChars(
 }
 
 void DFGUICmdHandler_Maya::encodeMELString(
-  FTL::CStrRef str,
+  FTL::StrRef str,
   std::stringstream &ss
   )
 {
@@ -76,7 +76,7 @@ void DFGUICmdHandler_Maya::encodeMELString(
 
 void DFGUICmdHandler_Maya::encodeStringArg(
   FTL::CStrRef name,
-  FTL::CStrRef value,
+  FTL::StrRef value,
   std::stringstream &cmd
   )
 {
@@ -467,7 +467,8 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
   FabricCore::DFGPortType portType,
   FTL::CStrRef typeSpec,
   FTL::CStrRef connectToPortPath,
-  FTL::CStrRef metaData
+  FTL::StrRef extDep,
+  FTL::CStrRef uiMetadata
   )
 {
   std::stringstream cmd;
@@ -491,8 +492,57 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
   encodeStringArg( FTL_STR("t"), typeSpec, cmd );
   if(!connectToPortPath.empty())
   encodeStringArg( FTL_STR("c"), connectToPortPath, cmd );
-  if(!metaData.empty())
-    encodeStringArg( FTL_STR("a"), metaData, cmd );
+  if(!extDep.empty())
+    encodeStringArg( FTL_STR("xd"), extDep, cmd );
+  if(!uiMetadata.empty())
+    encodeStringArg( FTL_STR("ui"), uiMetadata, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+
+  if(mResult.length() > 0)
+  {
+    FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
+    if(interf)
+    {
+      FabricCore::Client interfClient = interf->getCoreClient();
+      FabricCore::DFGBinding interfBinding = interf->getDFGBinding();
+      FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
+    }
+  }
+
+  return mResult.asChar();
+}
+
+std::string DFGUICmdHandler_Maya::dfgDoEditPort(
+  FabricCore::DFGBinding const &binding,
+  FTL::CStrRef execPath,
+  FabricCore::DFGExec const &exec,
+  FTL::StrRef oldPortName,
+  FTL::StrRef desiredNewPortName,
+  FTL::StrRef typeSpec,
+  FTL::StrRef extDep,
+  FTL::StrRef uiMetadata
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_EditPort::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("n"), oldPortName, cmd );
+  if(!desiredNewPortName.empty())
+    encodeStringArg( FTL_STR("d"), desiredNewPortName, cmd );
+  if(!typeSpec.empty())
+    encodeStringArg( FTL_STR("t"), typeSpec, cmd );
+  if(!extDep.empty())
+    encodeStringArg( FTL_STR("xd"), extDep, cmd );
+  if(!uiMetadata.empty())
+    encodeStringArg( FTL_STR("ui"), uiMetadata, cmd );
   cmd << ';';
 
   MString mResult;

@@ -397,7 +397,8 @@ protected:
     FabricCore::DFGPortType portType;
     std::string typeSpec;
     std::string portToConnectWith;
-    std::string metaData;
+    std::string extDep;
+    std::string uiMetadata;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -411,6 +412,36 @@ typedef MayaDFGUICmdWrapper<
   FabricDFGAddPortCommand,
   FabricUI::DFG::DFGUICmd_AddPort
   > MayaDFGUICmd_AddPort;
+
+class FabricDFGEditPortCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string oldPortName;
+    std::string desiredNewPortName;
+    std::string typeSpec;
+    std::string extDep;
+    std::string uiMetadata;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGEditPortCommand,
+  FabricUI::DFG::DFGUICmd_EditPort
+  > MayaDFGUICmd_EditPort;
 
 class FabricDFGSetArgTypeCommand
   : public FabricDFGBindingCommand

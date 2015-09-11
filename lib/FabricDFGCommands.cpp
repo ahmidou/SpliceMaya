@@ -956,7 +956,8 @@ void FabricDFGAddPortCommand::AddSyntax( MSyntax &syntax )
   syntax.addFlag("-p", "-portType", MSyntax::kString);
   syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
   syntax.addFlag("-c", "-connectToPortPath", MSyntax::kString);
-  syntax.addFlag("-a", "-additionalMetaData", MSyntax::kString);
+  syntax.addFlag("-xd", "-extDep", MSyntax::kString);
+  syntax.addFlag("-ui", "-uiMetadata", MSyntax::kString);
 }
 
 void FabricDFGAddPortCommand::GetArgs(
@@ -989,8 +990,11 @@ void FabricDFGAddPortCommand::GetArgs(
   if ( argParser.isFlagSet( "connectToPortPath" ) )
     args.portToConnectWith = argParser.flagArgumentString( "connectToPortPath", 0 ).asChar();
 
-  if ( argParser.isFlagSet( "additionalMetaData" ) )
-    args.metaData = argParser.flagArgumentString( "additionalMetaData", 0 ).asChar();
+  if ( argParser.isFlagSet( "extDep" ) )
+    args.extDep = argParser.flagArgumentString( "extDep", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "uiMetadata" ) )
+    args.uiMetadata = argParser.flagArgumentString( "uiMetadata", 0 ).asChar();
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
@@ -1009,10 +1013,72 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
       args.portType,
       args.typeSpec,
       args.portToConnectWith,
-      args.metaData
+      args.extDep,
+      args.uiMetadata
       );
   cmd->doit();
   setResult( cmd->getActualPortName().c_str() );
+  return cmd;
+}
+
+// FabricDFGEditPortCommand
+
+void FabricDFGEditPortCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-oldPortName", MSyntax::kString);
+  syntax.addFlag("-d", "-desiredNewPortName", MSyntax::kString);
+  syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
+  syntax.addFlag("-xd", "-extDep", MSyntax::kString);
+  syntax.addFlag("-ui", "-uiMetadata", MSyntax::kString);
+}
+
+void FabricDFGEditPortCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "oldPortName" ) )
+    throw ArgException( MS::kFailure, "-n (-oldPortName) not provided." );
+  args.oldPortName = argParser.flagArgumentString( "oldPortName", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "desiredNewPortName" ) )
+    args.desiredNewPortName = argParser.flagArgumentString( "desiredNewPortName", 0 ).asChar();
+  else
+    args.desiredNewPortName = args.oldPortName;
+
+  if ( argParser.isFlagSet( "typeSpec" ) )
+    args.typeSpec = argParser.flagArgumentString( "typeSpec", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "extDep" ) )
+    args.extDep = argParser.flagArgumentString( "extDep", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "uiMetadata" ) )
+    args.uiMetadata = argParser.flagArgumentString( "uiMetadata", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGEditPortCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_EditPort *cmd =
+    new FabricUI::DFG::DFGUICmd_EditPort(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.oldPortName,
+      args.desiredNewPortName,
+      args.typeSpec,
+      args.extDep,
+      args.uiMetadata
+      );
+  cmd->doit();
+  setResult( cmd->getActualNewPortName().c_str() );
   return cmd;
 }
 

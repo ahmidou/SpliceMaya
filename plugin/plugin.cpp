@@ -410,6 +410,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, AddVar );
   MAYA_REGISTER_DFGUICMD( plugin, Connect );
   MAYA_REGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_REGISTER_DFGUICMD( plugin, EditPort );
   MAYA_REGISTER_DFGUICMD( plugin, ExplodeNode );
   MAYA_REGISTER_DFGUICMD( plugin, ImplodeNodes );
   MAYA_REGISTER_DFGUICMD( plugin, InstPreset );

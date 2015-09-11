@@ -100,7 +100,19 @@ protected:
     FabricCore::DFGPortType portType,
     FTL::CStrRef typeSpec,
     FTL::CStrRef portToConnect,
-    FTL::CStrRef metaData
+    FTL::StrRef extDep,
+    FTL::CStrRef uiMetadata
+    );
+
+  virtual std::string dfgDoEditPort(
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::StrRef oldPortName,
+    FTL::StrRef desiredNewPortName,
+    FTL::StrRef typeSpec,
+    FTL::StrRef extDep,
+    FTL::StrRef uiMetadata
     );
 
   virtual void dfgDoRemovePort(
@@ -227,12 +239,12 @@ protected:
 protected:
     
   void encodeMELStringChars(
-    FTL::CStrRef str,
+    FTL::StrRef str,
     std::stringstream &ss
     );
 
   void encodeMELString(
-    FTL::CStrRef str,
+    FTL::StrRef str,
     std::stringstream &ss
     );
 
@@ -244,7 +256,7 @@ protected:
 
   void encodeStringArg(
     FTL::CStrRef name,
-    FTL::CStrRef value,
+    FTL::StrRef value,
     std::stringstream &cmd
     );
 
