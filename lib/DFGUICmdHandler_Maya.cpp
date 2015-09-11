@@ -817,8 +817,10 @@ void DFGUICmdHandler_Maya::dfgDoSetPortDefaultValue(
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("p"), portPath, cmd );
   encodeStringArg( FTL_STR("t"), value.getTypeNameCStr(), cmd );
-  FabricCore::RTVal valueJSON = value.getJSON();
-  encodeStringArg( FTL_STR("v"), valueJSON.getStringCString(), cmd );
+
+  FabricCore::Context context = binding.getHost().getContext();
+  std::string json = encodeRTValToJSON(context, value);
+  encodeStringArg( FTL_STR("v"), json.c_str(), cmd );
   cmd << ';';
 
   MGlobal::executeCommand(
