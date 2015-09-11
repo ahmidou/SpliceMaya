@@ -4,6 +4,8 @@
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
 
+#include <FabricUI/DFG/DFGUICmdHandler.h>
+
 #include <maya/MStringArray.h>
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
@@ -1138,7 +1140,7 @@ void FabricDFGSetPortDefaultValueCommand::GetArgs(
   FabricCore::DFGHost host = args.binding.getHost();
   FabricCore::Context context = host.getContext();
   args.value = FabricCore::RTVal::Construct( context, type.asChar(), 0, NULL );
-  args.value.setJSON( valueJSON.asChar() );
+  FabricUI::DFG::DFGUICmdHandler::decodeRTValFromJSON(context, args.value, valueJSON.asChar());
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGSetPortDefaultValueCommand::executeDFGUICmd(
