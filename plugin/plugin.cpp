@@ -459,6 +459,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   MGlobal::executePythonCommandOnIdle("import AEspliceMayaNodeTemplate", true);
   MGlobal::executePythonCommandOnIdle("import AEdfgMayaNodeTemplate", true);
+  MGlobal::executePythonCommandOnIdle("import AEcanvasNodeTemplate", true);
 
   return status;
 }
