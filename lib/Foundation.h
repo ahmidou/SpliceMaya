@@ -13,6 +13,7 @@
 # undef CursorShape
 # undef KeyPress
 # undef KeyRelease
+# undef None
 #endif
 
 #include <utility>
