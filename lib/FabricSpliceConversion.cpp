@@ -2630,8 +2630,8 @@ void portToPlug_mat44(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
       };
       offset += 16;
 
-      MFloatMatrix mayaMat(vals);
-      handle.setMFloatMatrix(mayaMat);
+      MMatrix mayaMat(vals);
+      handle.setMMatrix(mayaMat);
     }
 
     MAYASPLICE_MEMORY_FREE();
