@@ -88,18 +88,18 @@ void DFGUICmdHandler_Maya::encodeStringArg(
 
 void DFGUICmdHandler_Maya::encodeStringsArg(
   FTL::CStrRef name,
-  FTL::ArrayRef<FTL::CStrRef> values,
+  FTL::ArrayRef<FTL::StrRef> values,
   std::stringstream &cmd
   )
 {
   cmd << " -";
   cmd << name.c_str();
   cmd << " \"";
-  FTL::ArrayRef<FTL::CStrRef>::IT itBegin = values.begin();
-  FTL::ArrayRef<FTL::CStrRef>::IT itEnd = values.end();
-  for ( FTL::ArrayRef<FTL::CStrRef>::IT it = itBegin; it != itEnd; ++it )
+  FTL::ArrayRef<FTL::StrRef>::IT itBegin = values.begin();
+  FTL::ArrayRef<FTL::StrRef>::IT itEnd = values.end();
+  for ( FTL::ArrayRef<FTL::StrRef>::IT it = itBegin; it != itEnd; ++it )
   {
-    FTL::CStrRef value = *it;
+    FTL::StrRef value = *it;
     if ( it != itBegin )
       cmd << '|';
     encodeMELStringChars( value, cmd );
@@ -108,7 +108,7 @@ void DFGUICmdHandler_Maya::encodeStringsArg(
 }
 
 void DFGUICmdHandler_Maya::encodeNamesArg(
-  FTL::ArrayRef<FTL::CStrRef> values,
+  FTL::ArrayRef<FTL::StrRef> values,
   std::stringstream &cmd
   )
 {
@@ -399,7 +399,7 @@ void DFGUICmdHandler_Maya::dfgDoRemoveNodes(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::ArrayRef<FTL::CStrRef> nodes
+  FTL::ArrayRef<FTL::StrRef> nodes
   )
 {
   std::stringstream cmd;
@@ -591,7 +591,7 @@ void DFGUICmdHandler_Maya::dfgDoMoveNodes(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::ArrayRef<FTL::CStrRef> nodes,
+  FTL::ArrayRef<FTL::StrRef> nodes,
   FTL::ArrayRef<QPointF> poss
   )
 {
@@ -637,7 +637,7 @@ std::string DFGUICmdHandler_Maya::dfgDoImplodeNodes(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::ArrayRef<FTL::CStrRef> nodeNames,
+  FTL::ArrayRef<FTL::StrRef> nodeNames,
   FTL::CStrRef desiredNodeName
   )
 {
@@ -946,6 +946,26 @@ void DFGUICmdHandler_Maya::dfgDoReorderPorts(
     true  // undoEnabled
     );
 
+}
+
+void DFGUICmdHandler_Maya::dfgDoSetExtDeps(
+  FabricCore::DFGBinding const &binding,
+  FTL::CStrRef execPath,
+  FabricCore::DFGExec const &exec,
+  FTL::ArrayRef<FTL::StrRef> extDeps
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_SetExtDeps::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringsArg( "xd", extDeps, cmd );
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
 }
 
 FabricDFGBaseInterface * DFGUICmdHandler_Maya::getInterfFromBinding( FabricCore::DFGBinding const &binding )

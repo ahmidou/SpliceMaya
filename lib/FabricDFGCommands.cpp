@@ -641,6 +641,58 @@ FabricUI::DFG::DFGUICmd *FabricDFGMoveNodesCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGSetExtDepsCommand
+
+void FabricDFGSetExtDepsCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag( "-xd", "-extDep", MSyntax::kString );
+}
+
+void FabricDFGSetExtDepsCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "extDep" ) )
+    throw ArgException( MS::kFailure, "-xd (-extDep) not provided." );
+  FTL::StrRef extDepStr =
+    argParser.flagArgumentString( "extDep", 0 ).asChar();
+  while ( !extDepStr.empty() )
+  {
+    FTL::StrRef::Split split = extDepStr.trimSplit('|');
+    args.extDeps.push_back( split.first );
+    extDepStr = split.second;
+  }
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGSetExtDepsCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  std::vector<FTL::StrRef> extDeps;
+  extDeps.insert(
+    extDeps.end(),
+    args.extDeps.begin(),
+    args.extDeps.end()
+    );
+
+  FabricUI::DFG::DFGUICmd_SetExtDeps *cmd =
+    new FabricUI::DFG::DFGUICmd_SetExtDeps(
+      args.binding,
+      args.execPath,
+      args.exec,
+      extDeps
+      );
+  cmd->doit();
+  return cmd;
+}
+
 // FabricDFGImplodeNodesCommand
 
 void FabricDFGImplodeNodesCommand::AddSyntax( MSyntax &syntax )

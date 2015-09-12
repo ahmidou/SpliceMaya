@@ -423,6 +423,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetCode );
+  MAYA_REGISTER_DFGUICMD( plugin, SetExtDeps );
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeTitle );
   MAYA_REGISTER_DFGUICMD( plugin, SetPortDefaultValue );
@@ -517,6 +518,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, AddVar );
   MAYA_DEREGISTER_DFGUICMD( plugin, Connect );
   MAYA_DEREGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_DEREGISTER_DFGUICMD( plugin, EditPort );
   MAYA_DEREGISTER_DFGUICMD( plugin, ExplodeNode );
   MAYA_DEREGISTER_DFGUICMD( plugin, ImplodeNodes );
   MAYA_DEREGISTER_DFGUICMD( plugin, InstPreset );
@@ -529,6 +531,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, SetArgType );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetArgValue );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetCode );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SetExtDeps );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeTitle );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetPortDefaultValue );

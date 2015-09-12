@@ -20,7 +20,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    FTL::ArrayRef<FTL::CStrRef> nodeNames
+    FTL::ArrayRef<FTL::StrRef> nodeNames
     );
 
   virtual void dfgDoConnect(
@@ -126,7 +126,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    FTL::ArrayRef<FTL::CStrRef> nodeNames,
+    FTL::ArrayRef<FTL::StrRef> nodeNames,
     FTL::ArrayRef<QPointF> newTopLeftPoss
     );
 
@@ -143,7 +143,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    FTL::ArrayRef<FTL::CStrRef> nodeNames,
+    FTL::ArrayRef<FTL::StrRef> nodeNames,
     FTL::CStrRef desiredNodeName
     );
 
@@ -236,6 +236,13 @@ protected:
     const std::vector<unsigned int> & indices
     );
 
+  virtual void dfgDoSetExtDeps(
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::ArrayRef<FTL::StrRef> extDeps
+    );
+
 protected:
     
   void encodeMELStringChars(
@@ -262,12 +269,12 @@ protected:
 
   void encodeStringsArg(
     FTL::CStrRef name,
-    FTL::ArrayRef<FTL::CStrRef> values,
+    FTL::ArrayRef<FTL::StrRef> values,
     std::stringstream &cmd
     );
 
   void encodeNamesArg(
-    FTL::ArrayRef<FTL::CStrRef> values,
+    FTL::ArrayRef<FTL::StrRef> values,
     std::stringstream &cmd
     );
 
