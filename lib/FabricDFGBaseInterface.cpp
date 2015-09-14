@@ -11,6 +11,8 @@
 #include <sstream>
 #include <algorithm>
 
+#include <FTL/AutoSet.h>
+
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnNumericAttribute.h>
@@ -167,7 +169,7 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
 
   FabricSplice::Logging::AutoTimer timer("Maya::transferInputValuesToDFG()");
 
-  _isTransferingInputs = true;
+  FTL::AutoSet<bool> transfersInputs(_isTransferingInputs, true);
 
   MFnDependencyNode thisNode(getThisMObject());
 
@@ -208,14 +210,13 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   }
 
   _dirtyPlugs.clear();
-  _isTransferingInputs = false;
 
   return true;
 }
 
 void FabricDFGBaseInterface::evaluate(){
 
-  _isEvaluating = true;
+  FTL::AutoSet<bool> transfersInputs(_isEvaluating, true);
 
   MFnDependencyNode thisNode(getThisMObject());
 
@@ -250,8 +251,6 @@ void FabricDFGBaseInterface::evaluate(){
   }
 
   m_binding.execute();
-
-  _isEvaluating = false;
 }
 
 void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
