@@ -1611,6 +1611,10 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   if ( descStr == FTL_STR("dirty") )
   {
     _outputsDirtied = false;
+
+    // when we receive this notification we need to 
+    // ensure that the DCC reevaluates the node
+    invalidateNode();
   }
   else if( descStr == FTL_STR("argTypeChanged") )
   {
