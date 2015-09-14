@@ -48,6 +48,7 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(){
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
   _isReferenced = false;
+  _isEvaluating = false;
   _instances.push_back(this);
 
   m_id = s_maxID++;
@@ -208,10 +209,14 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
 
   _dirtyPlugs.clear();
   _isTransferingInputs = false;
+
   return true;
 }
 
 void FabricDFGBaseInterface::evaluate(){
+
+  _isEvaluating = true;
+
   MFnDependencyNode thisNode(getThisMObject());
 
   FabricSplice::Logging::AutoTimer timer("Maya::evaluate()");
@@ -245,6 +250,8 @@ void FabricDFGBaseInterface::evaluate(){
   }
 
   m_binding.execute();
+
+  _isEvaluating = false;
 }
 
 void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
@@ -1612,9 +1619,14 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   {
     _outputsDirtied = false;
 
-    // when we receive this notification we need to 
-    // ensure that the DCC reevaluates the node
-    invalidateNode();
+    if(!_isEvaluating && !_isTransferingInputs)
+    {
+      MGlobal::displayInfo("dirty...");
+
+      // when we receive this notification we need to 
+      // ensure that the DCC reevaluates the node
+      invalidateNode();
+    }
   }
   else if( descStr == FTL_STR("argTypeChanged") )
   {
