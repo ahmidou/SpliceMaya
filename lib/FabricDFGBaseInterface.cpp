@@ -1621,8 +1621,6 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
 
     if(!_isEvaluating && !_isTransferingInputs)
     {
-      MGlobal::displayInfo("dirty...");
-
       // when we receive this notification we need to 
       // ensure that the DCC reevaluates the node
       invalidateNode();
