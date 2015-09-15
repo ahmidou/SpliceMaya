@@ -1644,7 +1644,7 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
           MQtUtil::mainWindow(), 
           "Choose DFG file", 
           QDir::currentPath(), 
-          "DFG files (*.dfg.json);;All files (*.*)"
+          "DFG files (*.canvas);;All files (*.*)"
         );
 
         if(qFileName.isNull())
@@ -1795,7 +1795,7 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
           MQtUtil::mainWindow(), 
           "Choose DFG file", 
           QDir::currentPath(), 
-          "DFG files (*.dfg.json);;All files (*.*)"
+          "DFG files (*.canvas);;All files (*.*)"
         );
 
         if(qFileName.isNull())
