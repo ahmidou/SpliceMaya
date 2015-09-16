@@ -93,11 +93,6 @@ public:
   DFGUICmdHandler_Maya *getCmdHandler()
     { return &m_cmdHandler; }
 
-  void setAddAttributeForNextAttribute(bool state) { m_addAttributeForNextAttribute = state; }
-  void setUseNativeArrayForNextAttribute(bool state) { m_useNativeArrayForNextAttribute = state; }
-  void setUseOpaqueForNextAttribute(bool state) { m_useOpaqueForNextAttribute = state; }
-  MObject createAttributeForPort(MString portName);
-
 protected:
   MString getPlugName(MString portName);
   MString getPortName(MString plugName);
@@ -128,13 +123,7 @@ protected:
   MStatus preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode);
 #endif
 
-  MObject addMayaAttribute(
-    MString portName,
-    MString dataType,
-    FabricCore::DFGPortType portType,
-    MString arrayType = "",
-    MStatus * stat = NULL
-    );
+  MObject addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType = "", bool compoundChild = false, MStatus * stat = NULL);
   void removeMayaAttribute(MString portName, MStatus * stat = NULL);
 
   // static MString sManipulationCommand;
@@ -143,6 +132,7 @@ protected:
   bool _affectedPlugsDirty;
   bool _outputsDirtied;
   bool _isReferenced;
+  bool _isEvaluating;
   MPlugArray _affectedPlugs;
 
 #if _SPLICE_MAYA_VERSION < 2013
@@ -177,9 +167,6 @@ private:
 
   unsigned int m_id;
   static unsigned int s_maxID;
-  bool m_addAttributeForNextAttribute;
-  bool m_useNativeArrayForNextAttribute;
-  bool m_useOpaqueForNextAttribute;
   FabricDFGWidget *m_widget;
 };
 

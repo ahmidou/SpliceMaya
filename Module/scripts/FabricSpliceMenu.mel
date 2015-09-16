@@ -37,7 +37,7 @@ global proc reloadReferencedSpliceNode()
 
 global proc createReferencedDFGNode()
 {
-  $node = `createNode "dfgMayaNode"`;
+  $node = `createNode "canvasNode"`;
   dfgImportJSON -m $node -f "" -r true;
 }
 
@@ -66,37 +66,36 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   }
 
   // menu items
-  menuItem -p $fabricSpliceMenu -l "Create Graph" -c ("createNode \"dfgMayaNode\";");
+  menuItem -p $fabricSpliceMenu -l "Create Graph" -ec 1 -c ("createNode \"canvasNode\";");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Load Graph" -c ("source \"FabricDFGTool.mel\"; fabricLoadDFG();");
-  menuItem -p $fabricSpliceMenu -l "Save Graph" -c ("source \"FabricDFGTool.mel\"; fabricSaveDFG();");
+  menuItem -p $fabricSpliceMenu -l "Load Graph" -ec 1 -c ("source \"FabricDFGTool.mel\"; fabricLoadDFG();");
+  menuItem -p $fabricSpliceMenu -l "Save Graph" -ec 1 -c ("source \"FabricDFGTool.mel\"; fabricSaveDFG();");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Create referenced Graph" -c ("createReferencedDFGNode();");
-  menuItem -p $fabricSpliceMenu -l "Reload referenced Graph" -c ("reloadReferencedDFGNode();");
+  menuItem -p $fabricSpliceMenu -l "Create referenced Graph" -ec 1 -c ("createReferencedDFGNode();");
+  menuItem -p $fabricSpliceMenu -l "Reload referenced Graph" -ec 1 -c ("reloadReferencedDFGNode();");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Splice Editor (legacy)" -c ("source \"FabricSpliceUI.mel\"; showSpliceEditor(\"" + $pluginName + "\");");
+  menuItem -p $fabricSpliceMenu -l "Splice Editor (legacy)" -ec 1 -c ("source \"FabricSpliceUI.mel\"; showSpliceEditor(\"" + $pluginName + "\");");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Create Splice Node (legacy)" -c ("createNode \"spliceMayaNode\";");
-  menuItem -p $fabricSpliceMenu -l "Create Splice Deformer (legacy)" -c ("addSpliceDeformer();");
-  menuItem -p $fabricSpliceMenu -l "Create Splice Debugger (legacy)" -c ("createNode \"spliceMayaDebugger\";");
+  menuItem -p $fabricSpliceMenu -l "Create Splice Node (legacy)" -ec 1 -c ("createNode \"spliceMayaNode\";");
+  menuItem -p $fabricSpliceMenu -l "Create Splice Deformer (legacy)" -ec 1 -c ("addSpliceDeformer();");
+  menuItem -p $fabricSpliceMenu -l "Create Splice Debugger (legacy)" -ec 1 -c ("createNode \"spliceMayaDebugger\";");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Export Splice Node (legacy)" -c ("source \"FabricSpliceTool.mel\"; fabricSpliceSaveSplice();");
-  menuItem -p $fabricSpliceMenu -l "Import Splice Node (legacy)" -c ("source \"FabricSpliceTool.mel\"; fabricSpliceLoadSplice();");
+  menuItem -p $fabricSpliceMenu -l "Export Splice Node (legacy)" -ec 1 -c ("source \"FabricSpliceTool.mel\"; fabricSpliceSaveSplice();");
+  menuItem -p $fabricSpliceMenu -l "Import Splice Node (legacy)" -ec 1 -c ("source \"FabricSpliceTool.mel\"; fabricSpliceLoadSplice();");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Create referenced Splice Node (legacy)" -c ("createReferencedSpliceNode();");
-  menuItem -p $fabricSpliceMenu -l "Create referenced Splice Deformer (legacy)" -c ("createReferencedSpliceDeformer();");
-  menuItem -p $fabricSpliceMenu -l "Reload referenced Splice Node (legacy)" -c ("reloadReferencedSpliceNode();");
+  menuItem -p $fabricSpliceMenu -l "Create referenced Splice Node (legacy)" -ec 1 -c ("createReferencedSpliceNode();");
+  menuItem -p $fabricSpliceMenu -l "Create referenced Splice Deformer (legacy)" -ec 1 -c ("createReferencedSpliceDeformer();");
+  menuItem -p $fabricSpliceMenu -l "Reload referenced Splice Node (legacy)" -ec 1 -c ("reloadReferencedSpliceNode();");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Enable Tool" -c $toolCmd;
+  menuItem -p $fabricSpliceMenu -l "Enable Tool" -ec 1 -c $toolCmd;
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Toggle Renderer" -c ("fabricSplice \"toggleRenderer\";");
+  menuItem -p $fabricSpliceMenu -l "Toggle Renderer" -ec 1 -c ("fabricSplice \"toggleRenderer\";");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Online Help" -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/\";");
-  menuItem -p $fabricSpliceMenu -l "ThirdParty Licenses" -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/thirdpartylicenses.html\";");
-  menuItem -p $fabricSpliceMenu -l "License Tool" -c ("fabricSplice \"setupLicensing\";");
+  menuItem -p $fabricSpliceMenu -l "Online Help" -ec 1 -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/\";");
+  menuItem -p $fabricSpliceMenu -l "ThirdParty Licenses" -ec 1 -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/thirdpartylicenses.html\";");
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -l "Start Profiling" -c ("fabricSplice \"startProfiling\";");
-  menuItem -p $fabricSpliceMenu -l "End Profiling" -c ("fabricSplice \"stopProfiling\";");
+  menuItem -p $fabricSpliceMenu -l "Start Profiling" -ec 1 -c ("fabricSplice \"startProfiling\";");
+  menuItem -p $fabricSpliceMenu -l "End Profiling" -ec 1 -c ("fabricSplice \"stopProfiling\";");
 }
 
 global proc FabricSpliceUnloadMenu()

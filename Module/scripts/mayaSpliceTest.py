@@ -603,9 +603,9 @@ if __name__ == '__main__':
   from maya import cmds
   import platform
   if platform.system() == 'Linux':
-    cmds.loadPlugin('libFabricSpliceMaya' + mayaVersion)
+    cmds.loadPlugin('libFabricMaya' + mayaVersion)
   else:
-    cmds.loadPlugin('FabricSpliceMaya' + mayaVersion)
+    cmds.loadPlugin('FabricMaya' + mayaVersion)
 
   testGenericAttributes()
   testVec()

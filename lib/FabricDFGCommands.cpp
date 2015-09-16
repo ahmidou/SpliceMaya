@@ -4,6 +4,8 @@
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
 
+#include <FabricUI/DFG/DFGUICmdHandler.h>
+
 #include <maya/MStringArray.h>
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
@@ -639,6 +641,58 @@ FabricUI::DFG::DFGUICmd *FabricDFGMoveNodesCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGSetExtDepsCommand
+
+void FabricDFGSetExtDepsCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag( "-xd", "-extDep", MSyntax::kString );
+}
+
+void FabricDFGSetExtDepsCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "extDep" ) )
+    throw ArgException( MS::kFailure, "-xd (-extDep) not provided." );
+  FTL::StrRef extDepStr =
+    argParser.flagArgumentString( "extDep", 0 ).asChar();
+  while ( !extDepStr.empty() )
+  {
+    FTL::StrRef::Split split = extDepStr.trimSplit('|');
+    args.extDeps.push_back( split.first );
+    extDepStr = split.second;
+  }
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGSetExtDepsCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  std::vector<FTL::StrRef> extDeps;
+  extDeps.insert(
+    extDeps.end(),
+    args.extDeps.begin(),
+    args.extDeps.end()
+    );
+
+  FabricUI::DFG::DFGUICmd_SetExtDeps *cmd =
+    new FabricUI::DFG::DFGUICmd_SetExtDeps(
+      args.binding,
+      args.execPath,
+      args.exec,
+      extDeps
+      );
+  cmd->doit();
+  return cmd;
+}
+
 // FabricDFGImplodeNodesCommand
 
 void FabricDFGImplodeNodesCommand::AddSyntax( MSyntax &syntax )
@@ -954,6 +1008,8 @@ void FabricDFGAddPortCommand::AddSyntax( MSyntax &syntax )
   syntax.addFlag("-p", "-portType", MSyntax::kString);
   syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
   syntax.addFlag("-c", "-connectToPortPath", MSyntax::kString);
+  syntax.addFlag("-xd", "-extDep", MSyntax::kString);
+  syntax.addFlag("-ui", "-uiMetadata", MSyntax::kString);
 }
 
 void FabricDFGAddPortCommand::GetArgs(
@@ -985,6 +1041,12 @@ void FabricDFGAddPortCommand::GetArgs(
 
   if ( argParser.isFlagSet( "connectToPortPath" ) )
     args.portToConnectWith = argParser.flagArgumentString( "connectToPortPath", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "extDep" ) )
+    args.extDep = argParser.flagArgumentString( "extDep", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "uiMetadata" ) )
+    args.uiMetadata = argParser.flagArgumentString( "uiMetadata", 0 ).asChar();
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
@@ -1002,10 +1064,73 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
       args.desiredPortName,
       args.portType,
       args.typeSpec,
-      args.portToConnectWith
+      args.portToConnectWith,
+      args.extDep,
+      args.uiMetadata
       );
   cmd->doit();
   setResult( cmd->getActualPortName().c_str() );
+  return cmd;
+}
+
+// FabricDFGEditPortCommand
+
+void FabricDFGEditPortCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-oldPortName", MSyntax::kString);
+  syntax.addFlag("-d", "-desiredNewPortName", MSyntax::kString);
+  syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
+  syntax.addFlag("-xd", "-extDep", MSyntax::kString);
+  syntax.addFlag("-ui", "-uiMetadata", MSyntax::kString);
+}
+
+void FabricDFGEditPortCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "oldPortName" ) )
+    throw ArgException( MS::kFailure, "-n (-oldPortName) not provided." );
+  args.oldPortName = argParser.flagArgumentString( "oldPortName", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "desiredNewPortName" ) )
+    args.desiredNewPortName = argParser.flagArgumentString( "desiredNewPortName", 0 ).asChar();
+  else
+    args.desiredNewPortName = args.oldPortName;
+
+  if ( argParser.isFlagSet( "typeSpec" ) )
+    args.typeSpec = argParser.flagArgumentString( "typeSpec", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "extDep" ) )
+    args.extDep = argParser.flagArgumentString( "extDep", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "uiMetadata" ) )
+    args.uiMetadata = argParser.flagArgumentString( "uiMetadata", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGEditPortCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_EditPort *cmd =
+    new FabricUI::DFG::DFGUICmd_EditPort(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.oldPortName,
+      args.desiredNewPortName,
+      args.typeSpec,
+      args.extDep,
+      args.uiMetadata
+      );
+  cmd->doit();
+  setResult( cmd->getActualNewPortName().c_str() );
   return cmd;
 }
 
@@ -1133,7 +1258,7 @@ void FabricDFGSetPortDefaultValueCommand::GetArgs(
   FabricCore::DFGHost host = args.binding.getHost();
   FabricCore::Context context = host.getContext();
   args.value = FabricCore::RTVal::Construct( context, type.asChar(), 0, NULL );
-  args.value.setJSON( valueJSON.asChar() );
+  FabricUI::DFG::DFGUICmdHandler::decodeRTValFromJSON(context, args.value, valueJSON.asChar());
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGSetPortDefaultValueCommand::executeDFGUICmd(
@@ -1282,6 +1407,61 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetRefVarPathCommand::executeDFGUICmd(
       args.exec,
       args.refName,
       args.varPath
+      );
+  cmd->doit();
+  return cmd;
+}
+
+// FabricDFGReorderPortsCommand
+
+void FabricDFGReorderPortsCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-i", "-indices", MSyntax::kString);
+}
+
+void FabricDFGReorderPortsCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "indices" ) )
+    throw ArgException( MS::kFailure, "-i (-indices) not provided." );
+
+  std::string jsonStr = argParser.flagArgumentString( "indices", 0 ).asChar();
+
+  try
+  {
+    FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
+    FTL::OwnedPtr<FTL::JSONArray> jsonArray(
+      FTL::JSONValue::Decode( jsonStrWithLoc )->cast<FTL::JSONArray>()
+      );
+    for( size_t i=0; i < jsonArray->size(); i++ )
+    {
+      args.indices.push_back ( jsonArray->get(i)->getSInt32Value() );
+    }
+  }
+  catch ( FabricCore::Exception e )
+  {
+    throw ArgException( MS::kFailure, "-i (-indices) not valid json." );
+  }
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGReorderPortsCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_ReorderPorts *cmd =
+    new FabricUI::DFG::DFGUICmd_ReorderPorts(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.indices
       );
   cmd->doit();
   return cmd;
@@ -1464,7 +1644,7 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
           MQtUtil::mainWindow(), 
           "Choose DFG file", 
           QDir::currentPath(), 
-          "DFG files (*.dfg.json);;All files (*.*)"
+          "DFG files (*.canvas);;All files (*.*)"
         );
 
         if(qFileName.isNull())
@@ -1615,7 +1795,7 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
           MQtUtil::mainWindow(), 
           "Choose DFG file", 
           QDir::currentPath(), 
-          "DFG files (*.dfg.json);;All files (*.*)"
+          "DFG files (*.canvas);;All files (*.*)"
         );
 
         if(qFileName.isNull())

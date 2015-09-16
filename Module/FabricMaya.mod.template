@@ -1,4 +1,4 @@
-+ FabricSpliceMaya 1.0 .
++ FabricMaya 1.0 .
 FABRIC_DIR := ../..
 FABRIC_EXTS_PATH +:= ../../Exts
 FABRIC_DFG_PATH +:= ../../Presets/DFG

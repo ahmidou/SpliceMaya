@@ -7,7 +7,7 @@
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 
-MTypeId FabricDFGMayaNode::id(0x0011AE46);
+MTypeId FabricDFGMayaNode::id(0x0011AE47);
 MObject FabricDFGMayaNode::saveData;
 MObject FabricDFGMayaNode::evalID;
 MObject FabricDFGMayaNode::refFilePath;

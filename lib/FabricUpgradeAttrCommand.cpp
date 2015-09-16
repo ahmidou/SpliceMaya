@@ -63,12 +63,17 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
     MGlobal::executeCommand("nodeType \""+nodeName+"\";", nodeType);
 
     FabricSpliceBaseInterface * spliceInterf = NULL;
-    FabricDFGBaseInterface * dfgInterf = NULL;
 
     if(nodeType == "spliceMayaNode")
+    {
+      MGlobal::displayInfo("Processing attributes on Splice node '"+nodeName+"'...");
       spliceInterf = FabricSpliceBaseInterface::getInstanceByName(nodeName.asChar());
-    else if(nodeType == "dfgMayaNode")
-      dfgInterf = FabricDFGBaseInterface::getInstanceByName(nodeName.asChar());
+    }
+    else
+    {
+      MGlobal::displayInfo("Skipping attributes on Canvas node '"+nodeName+"'");
+      continue;
+    }
 
     MStringArray attrNames;
     MGlobal::executeCommand("listAttr -userDefined \"" + nodeName + "\";", attrNames);
@@ -159,17 +164,6 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
         {
           MGlobal::displayInfo("addAttr '" + attrName + "' ...");
           spliceInterf->createAttributeForPort(port);
-        }
-        else
-          continue;
-      }
-      else if(dfgInterf)
-      {
-        FabricCore::DFGExec exec = dfgInterf->getDFGExec();
-        if(exec.haveExecPort(attrName.asChar()))
-        {
-          MGlobal::displayInfo("addAttr '" + attrName + "' ...");
-          dfgInterf->createAttributeForPort(attrName.asChar());
         }
         else
           continue;

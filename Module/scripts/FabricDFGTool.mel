@@ -1,13 +1,13 @@
 global proc fabricSaveDFG()
 {
-	string $selNodes[] = `ls -sl -et "dfgMayaNode"`;
+	string $selNodes[] = `ls -sl -et "canvasNode"`;
 	if(size($selNodes) > 0)
 		dfgExportJSON -m $selNodes[0] -f "";
 }
 
 global proc fabricLoadDFG()
 {
-	string $selNodes[] = `ls -sl -et "dfgMayaNode"`;
+	string $selNodes[] = `ls -sl -et "canvasNode"`;
 	if(size($selNodes) > 0)
 		dfgImportJSON -m $selNodes[0] -f "";
 }

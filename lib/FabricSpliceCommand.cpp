@@ -83,17 +83,6 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
       setResult(clientContextID);
       return mayaErrorOccured();
     }
-    else if(actionStr == "setupLicensing"){
-
-      MStatus stat;
-      MAYASPLICE_CATCH_BEGIN(&stat);
-      // FIXME [andrew 20150623]
-      // FabricSpliceLicenseDialog dialog(MQtUtil::mainWindow());
-      // dialog.exec();
-      MAYASPLICE_CATCH_END(&stat);
-
-      return mayaErrorOccured();
-    }
     else if(actionStr == "registerKLType"){
       MString rtStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "rt").c_str();
       MString extStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "extension", "", true).c_str();

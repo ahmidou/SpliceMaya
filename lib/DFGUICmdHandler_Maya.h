@@ -4,8 +4,9 @@
 #define __UI_DFG_DFGUICmdHandler_Maya__
 
 #include <FabricUI/DFG/DFGUICmdHandler.h>
-
 #include <maya/MString.h>
+
+class FabricDFGBaseInterface;
 
 class DFGUICmdHandler_Maya : public FabricUI::DFG::DFGUICmdHandler
 {
@@ -19,7 +20,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    FTL::ArrayRef<FTL::CStrRef> nodeNames
+    FTL::ArrayRef<FTL::StrRef> nodeNames
     );
 
   virtual void dfgDoConnect(
@@ -98,7 +99,20 @@ protected:
     FTL::CStrRef desiredPortName,
     FabricCore::DFGPortType portType,
     FTL::CStrRef typeSpec,
-    FTL::CStrRef portToConnect
+    FTL::CStrRef portToConnect,
+    FTL::StrRef extDep,
+    FTL::CStrRef uiMetadata
+    );
+
+  virtual std::string dfgDoEditPort(
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::StrRef oldPortName,
+    FTL::StrRef desiredNewPortName,
+    FTL::StrRef typeSpec,
+    FTL::StrRef extDep,
+    FTL::StrRef uiMetadata
     );
 
   virtual void dfgDoRemovePort(
@@ -112,7 +126,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    FTL::ArrayRef<FTL::CStrRef> nodeNames,
+    FTL::ArrayRef<FTL::StrRef> nodeNames,
     FTL::ArrayRef<QPointF> newTopLeftPoss
     );
 
@@ -129,7 +143,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    FTL::ArrayRef<FTL::CStrRef> nodeNames,
+    FTL::ArrayRef<FTL::StrRef> nodeNames,
     FTL::CStrRef desiredNodeName
     );
 
@@ -215,15 +229,29 @@ protected:
     FTL::CStrRef varPath
     );
 
+  virtual void dfgDoReorderPorts(
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    const std::vector<unsigned int> & indices
+    );
+
+  virtual void dfgDoSetExtDeps(
+    FabricCore::DFGBinding const &binding,
+    FTL::CStrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::ArrayRef<FTL::StrRef> extDeps
+    );
+
 protected:
     
   void encodeMELStringChars(
-    FTL::CStrRef str,
+    FTL::StrRef str,
     std::stringstream &ss
     );
 
   void encodeMELString(
-    FTL::CStrRef str,
+    FTL::StrRef str,
     std::stringstream &ss
     );
 
@@ -235,18 +263,18 @@ protected:
 
   void encodeStringArg(
     FTL::CStrRef name,
-    FTL::CStrRef value,
+    FTL::StrRef value,
     std::stringstream &cmd
     );
 
   void encodeStringsArg(
     FTL::CStrRef name,
-    FTL::ArrayRef<FTL::CStrRef> values,
+    FTL::ArrayRef<FTL::StrRef> values,
     std::stringstream &cmd
     );
 
   void encodeNamesArg(
-    FTL::ArrayRef<FTL::CStrRef> values,
+    FTL::ArrayRef<FTL::StrRef> values,
     std::stringstream &cmd
     );
 
@@ -294,7 +322,8 @@ protected:
     std::stringstream &cmd
     );
 
-  MString getNodeNameFromBinding( FabricCore::DFGBinding const &binding );
+  static FabricDFGBaseInterface * getInterfFromBinding( FabricCore::DFGBinding const &binding );
+  static MString getNodeNameFromBinding( FabricCore::DFGBinding const &binding );
 };
 
 #endif // __UI_DFG_DFGUICmdHandler_Maya__

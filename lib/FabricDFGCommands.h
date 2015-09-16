@@ -397,6 +397,8 @@ protected:
     FabricCore::DFGPortType portType;
     std::string typeSpec;
     std::string portToConnectWith;
+    std::string extDep;
+    std::string uiMetadata;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -410,6 +412,36 @@ typedef MayaDFGUICmdWrapper<
   FabricDFGAddPortCommand,
   FabricUI::DFG::DFGUICmd_AddPort
   > MayaDFGUICmd_AddPort;
+
+class FabricDFGEditPortCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string oldPortName;
+    std::string desiredNewPortName;
+    std::string typeSpec;
+    std::string extDep;
+    std::string uiMetadata;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGEditPortCommand,
+  FabricUI::DFG::DFGUICmd_EditPort
+  > MayaDFGUICmd_EditPort;
 
 class FabricDFGSetArgTypeCommand
   : public FabricDFGBindingCommand
@@ -597,6 +629,32 @@ typedef MayaDFGUICmdWrapper<
   FabricDFGSetRefVarPathCommand,
   FabricUI::DFG::DFGUICmd_SetRefVarPath
   > MayaDFGUICmd_SetRefVarPath;
+
+class FabricDFGReorderPortsCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::vector<unsigned int> indices;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGReorderPortsCommand,
+  FabricUI::DFG::DFGUICmd_ReorderPorts
+  > MayaDFGUICmd_ReorderPorts;
 
 class FabricDFGRenamePortCommand
   : public FabricDFGExecCommand
@@ -854,6 +912,37 @@ typedef MayaDFGUICmdWrapper<
   FabricDFGAddSetCommand,
   FabricUI::DFG::DFGUICmd_AddSet
   > MayaDFGUICmd_AddSet;
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGDisconnectCommand,
+  FabricUI::DFG::DFGUICmd_Disconnect
+  > MayaDFGUICmd_Disconnect;
+
+class FabricDFGSetExtDepsCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::vector<std::string> extDeps;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSetExtDepsCommand,
+  FabricUI::DFG::DFGUICmd_SetExtDeps
+  > MayaDFGUICmd_SetExtDeps;
 
 class FabricDFGImportJSONCommand
   : public FabricDFGBaseCommand

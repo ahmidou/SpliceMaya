@@ -220,7 +220,7 @@ FabricSpliceEditorWidget * FabricSpliceEditorWidget::getFirstOrOpen(bool onIdle)
   if(widget == NULL)
   {
     MString cmd = "source \"FabricSpliceUI.mel\"; showSpliceEditor(\"";
-    cmd += "FabricSpliceMaya";
+    cmd += "FabricMaya";
     cmd += "\");";
     MStatus commandStatus;
     if(onIdle)

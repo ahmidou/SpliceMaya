@@ -443,7 +443,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       // here we use the maya command to dirtify the specified dg node.
       MString dirtifyDCCNode(host.maybeGetMember("dirtifyNode").getStringCString());
       if(dirtifyDCCNode.length() > 0){
-        MGlobal::executeCommandOnIdle(MString("dgdirty \"") + dirtifyDCCNode + MString("\""));
+        MGlobal::executeCommand(MString("dgdirty \"") + dirtifyDCCNode + MString("\""));
       }
 
       // The manipulation system has requested that a custom command be invoked.
@@ -541,9 +541,9 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
                     x.set(value.maybeGetMember("x").getFloat32());
                     y.set(value.maybeGetMember("y").getFloat32());
                     z.set(value.maybeGetMember("z").getFloat32());
-                    MGlobal::executeCommandOnIdle(MString("setAttr ") + attribute + "_x " + x + ";", displayEnabled);
-                    MGlobal::executeCommandOnIdle(MString("setAttr ") + attribute + "_y " + y + ";", displayEnabled);
-                    MGlobal::executeCommandOnIdle(MString("setAttr ") + attribute + "_z " + z + ";", displayEnabled);
+                    MGlobal::executeCommand(MString("setAttr ") + attribute + "_x " + x + ";", displayEnabled);
+                    MGlobal::executeCommand(MString("setAttr ") + attribute + "_y " + y + ";", displayEnabled);
+                    MGlobal::executeCommand(MString("setAttr ") + attribute + "_z " + z + ";", displayEnabled);
                   }
                   else if(portResolvedType == "Euler")
                   {
@@ -565,7 +565,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
             args += MString(customCommandArgs.getArrayElement(i).getStringCString());
           }
           bool displayEnabled = true;
-          MGlobal::executeCommandOnIdle(customCommand + MString(" ") + args, displayEnabled);
+          MGlobal::executeCommand(customCommand + MString(" ") + args, displayEnabled);
         }
       }
 
@@ -577,7 +577,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
         FabricSpliceManipulationCmd::s_rtval_commands = host.callMethod("UndoRedoCommand[]", "getUndoRedoCommands", 0, 0);
 
         bool displayEnabled = true;
-        MGlobal::executeCommandOnIdle(MString("fabricSpliceManipulation"), displayEnabled);
+        MGlobal::executeCommand(MString("fabricSpliceManipulation"), displayEnabled);
       }
 
       klevent.invalidate();

@@ -50,11 +50,10 @@ public:
 public slots:
   virtual void onUndo();
   virtual void onRedo();
-  virtual void onRecompilation();
 
 private slots:
   void onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog * dialog);
-  void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog);
+  void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog, FTL::JSONObjectEnc<> * additionalMetaData);
 
 protected:
   void setCurrentUINodeName(const char * node);

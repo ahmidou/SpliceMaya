@@ -46,8 +46,9 @@ const MTypeId gFirstValidNodeID(0x0011AE40);
 // FabricSpliceInlineGeometry 0x0011AE43 /* no longer in use, but not available */
 // FabricSpliceMayaDebugger 0x0011AE44 /* no longer in use, but not available */
 // FabricSpliceMayaData 0x0011AE45
-// FabricDFGMayaNode 0x0011AE46
-const MTypeId gLastValidNodeID(0x0011AE49);
+// FabricDFGMayaNode 0x0011AE46 // dfgMayaNode
+// FabricDFGMayaNode 0x0011AE47 // canvasNode
+const MTypeId gLastValidNodeID(0x0011AF3F);
 
 MCallbackId gOnSceneNewCallbackId;
 MCallbackId gOnSceneLoadCallbackId;
@@ -344,7 +345,7 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
-  MFnPlugin plugin(obj, "FabricSpliceMaya", FabricSplice::GetFabricVersionStr(), "Any");
+  MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status;
 
   status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
@@ -393,7 +394,10 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   plugin.registerCommand("fabricDFG", FabricDFGWidgetCommand::creator, FabricDFGWidgetCommand::newSyntax);
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
-  plugin.registerNode("dfgMayaNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
+
+  // obsolete node
+  plugin.registerNode("dfgMayaNode", 0x0011AE46, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
+  plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
 
   plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
@@ -407,6 +411,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, AddVar );
   MAYA_REGISTER_DFGUICMD( plugin, Connect );
   MAYA_REGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_REGISTER_DFGUICMD( plugin, EditPort );
   MAYA_REGISTER_DFGUICMD( plugin, ExplodeNode );
   MAYA_REGISTER_DFGUICMD( plugin, ImplodeNodes );
   MAYA_REGISTER_DFGUICMD( plugin, InstPreset );
@@ -419,10 +424,12 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetCode );
+  MAYA_REGISTER_DFGUICMD( plugin, SetExtDeps );
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeTitle );
   MAYA_REGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetRefVarPath );
+  MAYA_REGISTER_DFGUICMD( plugin, ReorderPorts );
 
   plugin.registerCommand(
     "dfgImportJSON",
@@ -457,6 +464,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   MGlobal::executePythonCommandOnIdle("import AEspliceMayaNodeTemplate", true);
   MGlobal::executePythonCommandOnIdle("import AEdfgMayaNodeTemplate", true);
+  MGlobal::executePythonCommandOnIdle("import AEcanvasNodeTemplate", true);
 
   return status;
 }
@@ -475,6 +483,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand("fabricUpgradeAttrs");
   plugin.deregisterCommand("FabricSpliceEditor");
   plugin.deregisterCommand("proceedToNextScene");
+  plugin.deregisterNode(0x0011AE46);
   plugin.deregisterNode(FabricSpliceMayaNode::id);
   plugin.deregisterNode(FabricSpliceMayaDeformer::id);
 
@@ -513,6 +522,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, AddVar );
   MAYA_DEREGISTER_DFGUICMD( plugin, Connect );
   MAYA_DEREGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_DEREGISTER_DFGUICMD( plugin, EditPort );
   MAYA_DEREGISTER_DFGUICMD( plugin, ExplodeNode );
   MAYA_DEREGISTER_DFGUICMD( plugin, ImplodeNodes );
   MAYA_DEREGISTER_DFGUICMD( plugin, InstPreset );
@@ -525,10 +535,12 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, SetArgType );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetArgValue );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetCode );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SetExtDeps );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeTitle );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetRefVarPath );
+  MAYA_DEREGISTER_DFGUICMD( plugin, ReorderPorts );
 
   plugin.deregisterCommand( "dfgImportJSON" );
   plugin.deregisterCommand( "dfgReloadJSON" );
@@ -548,7 +560,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 void loadMenu()
 {
   MString cmd = "source \"FabricSpliceMenu.mel\"; FabricSpliceLoadMenu(\"";
-  cmd += "FabricSpliceMaya";
+  cmd += "FabricMaya";
   cmd += "\");";
   MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
   if (commandStatus != MStatus::kSuccess)
