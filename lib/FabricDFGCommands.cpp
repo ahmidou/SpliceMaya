@@ -1258,7 +1258,11 @@ void FabricDFGSetPortDefaultValueCommand::GetArgs(
   FabricCore::DFGHost host = args.binding.getHost();
   FabricCore::Context context = host.getContext();
   args.value = FabricCore::RTVal::Construct( context, type.asChar(), 0, NULL );
-  FabricUI::DFG::DFGUICmdHandler::decodeRTValFromJSON(context, args.value, valueJSON.asChar());
+  FabricUI::DFG::DFGUICmdHandler::decodeRTValFromJSON(
+    context,
+    args.value,
+    valueJSON.asChar()
+    );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGSetPortDefaultValueCommand::executeDFGUICmd(
