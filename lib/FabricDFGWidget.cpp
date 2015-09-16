@@ -25,8 +25,8 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
     this, SIGNAL( portEditDialogCreated(FabricUI::DFG::DFGBaseDialog *)),
     this, SLOT( onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog *)) );
   QObject::connect(
-    this, SIGNAL( portEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, QString *)),
-    this, SLOT( onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, QString *)) );
+    this, SIGNAL( portEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, FTL::JSONObjectEnc<>*)),
+    this, SLOT( onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, FTL::JSONObjectEnc<>*)) );
 }
 
 FabricDFGWidget::~FabricDFGWidget()
