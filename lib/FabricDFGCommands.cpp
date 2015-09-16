@@ -1642,9 +1642,9 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
       {
         QString qFileName = QFileDialog::getOpenFileName( 
           MQtUtil::mainWindow(), 
-          "Choose DFG file", 
+          "Choose canvas file", 
           QDir::currentPath(), 
-          "DFG files (*.canvas);;All files (*.*)"
+          "Canvas files (*.canvas);;All files (*.*)"
         );
 
         if(qFileName.isNull())
@@ -1793,9 +1793,9 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
       {
         QString qFileName = QFileDialog::getSaveFileName( 
           MQtUtil::mainWindow(), 
-          "Choose DFG file", 
+          "Choose Canvas file", 
           QDir::currentPath(), 
-          "DFG files (*.canvas);;All files (*.*)"
+          "Canvas files (*.canvas);;All files (*.*)"
         );
 
         if(qFileName.isNull())
