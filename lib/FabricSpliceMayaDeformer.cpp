@@ -99,7 +99,7 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
 
       if(port.getMode() != FabricSplice::Port_Mode_IO)
         return MStatus::kSuccess;
-      FabricCore::RTVal rtMeshes = port.getRTVal( FabricCore::LockType_None );
+      FabricCore::RTVal rtMeshes = port.getRTVal( FabricCore::LockType_Exclusive );
       if(!rtMeshes.isValid())
         return MStatus::kSuccess;
       if(!rtMeshes.isArray())
@@ -121,7 +121,7 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
 
       if(port.getMode() != FabricSplice::Port_Mode_IO)
         return MStatus::kSuccess;
-      rtMesh = port.getRTVal( FabricCore::LockType_None );
+      rtMesh = port.getRTVal( FabricCore::LockType_Exclusive );
       rtValToSet = rtMesh;
     }
     if(!rtMesh.isValid() || rtMesh.isNullObject())
@@ -167,7 +167,7 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
       mayaLogErrorFunc(e.getDesc_cstr());
       return MStatus::kSuccess;
     }
-    port.setRTVal_lockType( FabricCore::LockType_None, rtValToSet );
+    port.setRTVal_lockType( FabricCore::LockType_Exclusive, rtValToSet );
 
     evaluate();
 

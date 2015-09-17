@@ -1471,7 +1471,7 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
 
     try
     {
-      FabricCore::RTVal value = port.getRTVal( FabricCore::LockType_None );
+      FabricCore::RTVal value = port.getRTVal( FabricCore::LockType_Exclusive );
       if(!value.isValid())
         continue;
       if(value.isNullObject())
