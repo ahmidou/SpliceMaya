@@ -70,6 +70,7 @@ public:
   void setPortPersistence(const MString &portName, bool persistence);
   FabricSplice::DGGraph & getSpliceGraph() { return _spliceGraph; }
   void setDgDirtyEnabled(bool enabled) { _dgDirtyEnabled = enabled; }
+  void setEvaluateShared(bool evauateShared);
 
   static void onNodeAdded(MObject &node, void *clientData);
   static void onNodeRemoved(MObject &node, void *clientData);

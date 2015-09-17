@@ -1530,3 +1530,8 @@ void FabricSpliceBaseInterface::attributeAddedOrRemoved(
   _outputsDirtied = false;
   _affectedPlugs.clear();
 }
+
+void FabricSpliceBaseInterface::setEvaluateShared(bool evauateShared)
+{
+  _spliceGraph.setEvaluateShared( evauateShared );
+}
