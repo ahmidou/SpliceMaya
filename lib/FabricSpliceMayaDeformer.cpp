@@ -167,7 +167,7 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
       mayaLogErrorFunc(e.getDesc_cstr());
       return MStatus::kSuccess;
     }
-    port.setRTVal_lockType( FabricCore::LockType_Exclusive, rtValToSet );
+    port.setRTVal( rtValToSet );
 
     evaluate();
 

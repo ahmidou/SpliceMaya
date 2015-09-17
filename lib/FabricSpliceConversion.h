@@ -18,8 +18,8 @@
 #define MAYASPLICE_MEMORY_ALLOCATE(type, count) size_t valuesSize = sizeof(type) * count; type * values = (type*) malloc(valuesSize)
 #define MAYASPLICE_MEMORY_SETITEM(index, value) values[index] = value
 #define MAYASPLICE_MEMORY_GETITEM(index) values[index]
-#define MAYASPLICE_MEMORY_SETPORT(port) port.setArrayData_lockType(FabricSplice::LockType_Exclusive, values, valuesSize)
-#define MAYASPLICE_MEMORY_GETPORT(port) port.getArrayData_lockType(FabricSplice::LockType_Exclusive, values, valuesSize)
+#define MAYASPLICE_MEMORY_SETPORT(port) port.setArrayData(values, valuesSize)
+#define MAYASPLICE_MEMORY_GETPORT(port) port.getArrayData(values, valuesSize)
 #define MAYASPLICE_MEMORY_FREE() free(values)
 
 typedef void(*SplicePlugToPortFunc)(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port);

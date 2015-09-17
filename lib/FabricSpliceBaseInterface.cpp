@@ -228,7 +228,7 @@ void FabricSpliceBaseInterface::evaluate()
     }
   }
 
-  _spliceGraph.evaluate();
+  _spliceGraph.evaluate( FabricCore::LockType_Shared );
 }
 
 void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
