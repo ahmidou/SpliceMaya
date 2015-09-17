@@ -1258,7 +1258,11 @@ void FabricDFGSetPortDefaultValueCommand::GetArgs(
   FabricCore::DFGHost host = args.binding.getHost();
   FabricCore::Context context = host.getContext();
   args.value = FabricCore::RTVal::Construct( context, type.asChar(), 0, NULL );
-  FabricUI::DFG::DFGUICmdHandler::decodeRTValFromJSON(context, args.value, valueJSON.asChar());
+  FabricUI::DFG::DFGUICmdHandler::decodeRTValFromJSON(
+    context,
+    args.value,
+    valueJSON.asChar()
+    );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGSetPortDefaultValueCommand::executeDFGUICmd(
@@ -1642,9 +1646,9 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
       {
         QString qFileName = QFileDialog::getOpenFileName( 
           MQtUtil::mainWindow(), 
-          "Choose DFG file", 
+          "Choose canvas file", 
           QDir::currentPath(), 
-          "DFG files (*.canvas);;All files (*.*)"
+          "Canvas files (*.canvas);;All files (*.*)"
         );
 
         if(qFileName.isNull())
@@ -1793,9 +1797,9 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
       {
         QString qFileName = QFileDialog::getSaveFileName( 
           MQtUtil::mainWindow(), 
-          "Choose DFG file", 
+          "Choose Canvas file", 
           QDir::currentPath(), 
-          "DFG files (*.canvas);;All files (*.*)"
+          "Canvas files (*.canvas);;All files (*.*)"
         );
 
         if(qFileName.isNull())
