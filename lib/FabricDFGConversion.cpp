@@ -99,23 +99,22 @@ inline void Mat44ToMMatrix(FabricCore::RTVal &rtVal, MMatrix &matrix)
 
 inline void MMatrixToMat44_data(MMatrix const &matrix, float *data)
 {
-  unsigned int offset = 0;
-  data[offset++] = (float)matrix[0][0];
-  data[offset++] = (float)matrix[1][0];
-  data[offset++] = (float)matrix[2][0];
-  data[offset++] = (float)matrix[3][0];
-  data[offset++] = (float)matrix[0][1];
-  data[offset++] = (float)matrix[1][1];
-  data[offset++] = (float)matrix[2][1];
-  data[offset++] = (float)matrix[3][1];
-  data[offset++] = (float)matrix[0][2];
-  data[offset++] = (float)matrix[1][2];
-  data[offset++] = (float)matrix[2][2];
-  data[offset++] = (float)matrix[3][2];
-  data[offset++] = (float)matrix[0][3];
-  data[offset++] = (float)matrix[1][3];
-  data[offset++] = (float)matrix[2][3];
-  data[offset++] = (float)matrix[3][3];
+  data[0] = (float)matrix[0][0];
+  data[1] = (float)matrix[1][0];
+  data[2] = (float)matrix[2][0];
+  data[3] = (float)matrix[3][0];
+  data[4] = (float)matrix[0][1];
+  data[5] = (float)matrix[1][1];
+  data[6] = (float)matrix[2][1];
+  data[7] = (float)matrix[3][1];
+  data[8] = (float)matrix[0][2];
+  data[9] = (float)matrix[1][2];
+  data[10] = (float)matrix[2][2];
+  data[11] = (float)matrix[3][2];
+  data[12] = (float)matrix[0][3];
+  data[13] = (float)matrix[1][3];
+  data[14] = (float)matrix[2][3];
+  data[15] = (float)matrix[3][3];
 }
 
 inline void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal)
