@@ -1245,10 +1245,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
     }
     else if(arrayType == "Array (Multi)")
     {
@@ -1261,12 +1259,10 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-      cAttr.setArray(true);
-      cAttr.setUsesArrayDataBuilder(true);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
+      nAttr.setArray(true);
+      nAttr.setUsesArrayDataBuilder(true);
     }
     else if(arrayType == "Array (Native)")
     {
@@ -1291,10 +1287,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       MObject z = uAttr.create(plugName+"Z", plugName+"Z", MFnUnitAttribute::kAngle);
       uAttr.setStorable(storable);
       uAttr.setKeyable(storable);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
     }
     else if(arrayType == "Array (Multi)")
     {
@@ -1304,12 +1298,10 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       uAttr.setStorable(storable);
       MObject z = uAttr.create(plugName+"Z", plugName+"Z", MFnUnitAttribute::kAngle);
       uAttr.setStorable(storable);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-      cAttr.setArray(true);
-      cAttr.setUsesArrayDataBuilder(true);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
+      nAttr.setArray(true);
+      nAttr.setUsesArrayDataBuilder(true);
     }
     else
     {

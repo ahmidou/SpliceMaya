@@ -31,6 +31,8 @@
 #include <maya/MFloatVectorArray.h>
 #include <maya/MFnAnimCurve.h>
 
+#include <FTL/CStrRef.h>
+
 #define CORE_CATCH_BEGIN try {
 #define CORE_CATCH_END } \
   catch (FabricCore::Exception e) { \
@@ -699,8 +701,8 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data,
     binding.setArgValue_lockType(lockType, argName, rtVal, false);
   }else{
     MDataHandle handle = data.inputValue(plug);
-
-    if(handle.type() == MFnData::kIntArray) {
+    bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+    if(handle.type() == MFnData::kIntArray || isNativeArray) {
       MIntArray arrayValues = MFnIntArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
 
@@ -929,7 +931,8 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data,
     binding.setArgValue_lockType(lockType, argName, rtVal, false);
   }else{
     MDataHandle handle = data.inputValue(plug);
-    if(handle.type() == MFnData::kVectorArray){
+    bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+    if(handle.type() == MFnData::kVectorArray || isNativeArray){
       MVectorArray arrayValues = MFnVectorArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
 
@@ -2323,8 +2326,8 @@ void dfgPortToPlug_integer(
     arrayHandle.setAllClean();
   }else{
     MDataHandle handle = data.outputValue(plug);
-
-    if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {
+    bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+    if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray || isNativeArray) {
 
       FabricCore::RTVal rtVal = binding.getArgValue(argName);
       unsigned int elements = rtVal.getArraySize();
@@ -2550,7 +2553,8 @@ void dfgPortToPlug_vec3(
   else{
     MDataHandle handle = data.outputValue(plug);
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    if(handle.type() == MFnData::kVectorArray) {
+    bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+    if(handle.type() == MFnData::kVectorArray || isNativeArray) {
       unsigned int elements = rtVal.getArraySize();
 
       MVectorArray arrayValues;
