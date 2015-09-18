@@ -66,6 +66,8 @@ bool gRenderCallbacksSet[gRenderCallbackCount];
 // MString gRenderCallbackPanelName[gRenderCallbackCount];
 MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
+MCallbackId gOnNodeAddedDFGCallbackId;
+MCallbackId gOnNodeRemovedDFGCallbackId;
 MCallbackId gBeforeSceneOpenCallbackId;
 MCallbackId gOnModelPanelSetFocusCallbackId;
 
@@ -376,6 +378,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gRenderCallbacksSet[4] = true;
   gOnNodeAddedCallbackId = MDGMessage::addNodeAddedCallback(FabricSpliceBaseInterface::onNodeAdded);
   gOnNodeRemovedCallbackId = MDGMessage::addNodeRemovedCallback(FabricSpliceBaseInterface::onNodeRemoved);
+  gOnNodeAddedDFGCallbackId = MDGMessage::addNodeAddedCallback(FabricDFGBaseInterface::onNodeAdded);
+  gOnNodeRemovedDFGCallbackId = MDGMessage::addNodeRemovedCallback(FabricDFGBaseInterface::onNodeRemoved);
   gOnModelPanelSetFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
 
   plugin.registerData(FabricSpliceMayaData::typeName, FabricSpliceMayaData::id, FabricSpliceMayaData::creator);
@@ -508,6 +512,9 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 
   MDGMessage::removeCallback(gOnNodeAddedCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedCallbackId);
+
+  MDGMessage::removeCallback(gOnNodeAddedDFGCallbackId);
+  MDGMessage::removeCallback(gOnNodeRemovedDFGCallbackId);
 
   plugin.deregisterData(FabricSpliceMayaData::id);
 

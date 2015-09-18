@@ -61,8 +61,12 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
 }
 
 FabricDFGBaseInterface::~FabricDFGBaseInterface(){
-  // todo: eventually destroy the binding
-  // m_binding = DFGWrapper::Binding();
+
+  // Release cached values and variables, for example InlineDrawingHandle
+  if( m_binding )
+    m_binding.deallocValues();
+
+  m_binding = FabricCore::DFGBinding();
 
   m_evalContext = FabricCore::RTVal();
 
@@ -830,14 +834,20 @@ void FabricDFGBaseInterface::onNodeAdded(MObject &node, void *clientData)
 {
   MFnDependencyNode thisNode(node);
   FabricDFGBaseInterface * interf = getInstanceByName(thisNode.name().asChar());
-  if(interf)
-    interf->managePortObjectValues(false); // reattach
+  if( interf ) {
+    interf->managePortObjectValues( false ); // reattach
+
+    // In case it is from the delete of an undo, 
+    // needs to be re-evaluated since values were flushed
+    interf->invalidateNode();
+  }
 }
 
 void FabricDFGBaseInterface::onNodeRemoved(MObject &node, void *clientData)
 {
   MFnDependencyNode thisNode(node);
   FabricDFGBaseInterface * interf = getInstanceByName(thisNode.name().asChar());
+
   if(interf)
     interf->managePortObjectValues(true); // detach
 }
@@ -1584,6 +1594,11 @@ void FabricDFGBaseInterface::managePortObjectValues(bool destroy)
        // ignore errors, probably an object which does not implement deattach and attach
      }
    }
+
+  if( destroy && m_binding ) {
+    // Release cached values and variables, for example InlineDrawingHandle
+    m_binding.deallocValues();
+  }
 
   _portObjectsDestroyed = destroy;
 }
