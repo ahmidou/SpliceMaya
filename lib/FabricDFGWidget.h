@@ -37,9 +37,11 @@ public:
 
   static void SetCurrentUINodeName(const char * node);
 
-  FabricCore::Client &getCoreClient()
+  static FabricCore::Client &GetCoreClient()
   {
-    return m_coreClient;
+    if ( !s_coreClient )
+      s_coreClient = FabricSplice::ConstructClient();
+    return s_coreClient;
   }
 
   FabricCore::DFGHost &getDFGHost()
@@ -62,11 +64,14 @@ private:
 
   DFGUICmdHandler_Maya m_cmdHandler;
   std::string m_currentUINodeName;
-  FabricCore::Client m_coreClient;
   FabricCore::DFGHost m_dfgHost;
   bool m_initialized;
 
   static FabricDFGWidget *s_widget;
+
+  // [andrew 20150918] this must also be static as it may be required by the
+  // BaseInterface without initializing a FabricDFGWidget in Maya batch mode
+  static FabricCore::Client s_coreClient;
 };
 
 #endif 

@@ -101,8 +101,8 @@ void FabricDFGBaseInterface::constructBaseInterface(){
 
   FabricSplice::Logging::AutoTimer timer("Maya::FabricDFGBaseInterface()");
 
-  m_client = FabricDFGWidget::Instance()->getCoreClient();
-  FabricCore::DFGHost &dfgHost = FabricDFGWidget::Instance()->getDFGHost();
+  m_client = FabricDFGWidget::GetCoreClient();
+  FabricCore::DFGHost dfgHost = m_client.getDFGHost();
 
   m_binding = dfgHost.createBindingToNewGraph();
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
@@ -458,7 +458,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   FabricSplice::Logging::AutoTimer timer("Maya::restoreFromPersistenceData()");
 
-  FabricCore::DFGHost &dfgHost = FabricDFGWidget::Instance()->getDFGHost();
+  FabricCore::DFGHost dfgHost = m_client.getDFGHost();
   m_binding = dfgHost.createBindingFromJSON(json.asChar());
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
 
