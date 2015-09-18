@@ -204,7 +204,13 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
         
         DFGPlugToArgFunc func = getDFGPlugToArgFunc(portDataType);
         if(func != NULL)
-          (*func)(plug, data, m_binding, portName.asChar());
+          (*func)(
+            plug,
+            data,
+            m_binding,
+            getLockType(),
+            portName.asChar()
+            );
       }
     }
   }
@@ -250,7 +256,7 @@ void FabricDFGBaseInterface::evaluate(){
     }
   }
 
-  m_binding.execute();
+  m_binding.execute_lockType( getLockType() );
 }
 
 void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
@@ -294,7 +300,13 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
           DFGArgToPlugFunc func = getDFGArgToPlugFunc(portDataType);
           if(func != NULL) {
             FabricSplice::Logging::AutoTimer timer("Maya::transferOutputValuesToMaya::conversionFunc()");
-            (*func)(m_binding, portName.c_str(), plug, data);
+            (*func)(
+              m_binding,
+              getLockType(),
+              portName.c_str(),
+              plug,
+              data
+              );
             data.setClean(plug);
           }
         }
@@ -1736,6 +1748,11 @@ MString FabricDFGBaseInterface::resolveEnvironmentVariables(const MString & file
       output += text[text.length()-1];
   }
   return output.c_str();
+}
+
+FabricCore::LockType FabricDFGBaseInterface::getLockType()
+{
+  return FabricCore::LockType_Shared;
 }
 
 #if _SPLICE_MAYA_VERSION >= 2016

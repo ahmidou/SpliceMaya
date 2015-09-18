@@ -15,8 +15,21 @@
 
 #include <FabricCore.h>
 
-typedef void(*DFGPlugToArgFunc)(MPlug &plug, MDataBlock &data, FabricCore::DFGBinding & binding, char const * argName);
-typedef void(*DFGArgToPlugFunc)(FabricCore::DFGBinding & binding, char const * argName, MPlug &plug, MDataBlock &data);
+typedef void(*DFGPlugToArgFunc)(
+  MPlug &plug,
+  MDataBlock &data,
+  FabricCore::DFGBinding & binding,
+  FabricCore::LockType lockType,
+  char const * argName
+  );
+
+typedef void(*DFGArgToPlugFunc)(
+  FabricCore::DFGBinding & binding,
+  FabricCore::LockType lockType,
+  char const * argName,
+  MPlug &plug,
+  MDataBlock &data
+  );
 
 DFGPlugToArgFunc getDFGPlugToArgFunc(const std::string & dataType);
 DFGArgToPlugFunc getDFGArgToPlugFunc(const std::string & dataType);

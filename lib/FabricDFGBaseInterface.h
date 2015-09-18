@@ -126,6 +126,8 @@ protected:
   MObject addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType = "", bool compoundChild = false, MStatus * stat = NULL);
   void removeMayaAttribute(MString portName, MStatus * stat = NULL);
 
+  FabricCore::LockType getLockType();
+
   // static MString sManipulationCommand;
   // MString _manipulationCommand;
   bool _dgDirtyEnabled;
