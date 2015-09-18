@@ -447,6 +447,12 @@ MAYA_EXPORT initializePlugin(MObject obj)
     FabricDFGExportJSONCommand::newSyntax
     );
 
+  plugin.registerCommand(
+    "FabricCanvasSetExecuteShared",
+    FabricCanvasSetExecuteSharedCommand::creator,
+    FabricCanvasSetExecuteSharedCommand::newSyntax
+    );
+
   plugin.registerCommand("fabricUpgradeAttrs", FabricUpgradeAttrCommand::creator, FabricUpgradeAttrCommand::newSyntax);
 
   MString pluginPath = plugin.loadPath();

@@ -38,7 +38,9 @@ std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
 #endif
 unsigned int FabricDFGBaseInterface::s_maxID = 1;
 
-FabricDFGBaseInterface::FabricDFGBaseInterface(){
+FabricDFGBaseInterface::FabricDFGBaseInterface()
+  : m_executeSharedDirty( true )
+{
 
   MStatus stat;
   MAYADFG_CATCH_BEGIN(&stat);
@@ -1750,9 +1752,31 @@ MString FabricDFGBaseInterface::resolveEnvironmentVariables(const MString & file
   return output.c_str();
 }
 
-FabricCore::LockType FabricDFGBaseInterface::getLockType()
+bool FabricDFGBaseInterface::getExecuteShared()
 {
-  return FabricCore::LockType_Shared;
+  if ( m_executeSharedDirty )
+  {
+    FTL::CStrRef executeSharedMetadataCStr =
+      m_binding.getMetadata( "executeShared" );
+    if ( executeSharedMetadataCStr == FTL_STR("true") )
+      m_executeShared = true;
+    else if ( executeSharedMetadataCStr == FTL_STR("false") )
+      m_executeShared = false;
+    else
+    {
+      static bool haveDefaultExecuteShared = false;
+      static bool defaultExecuteShared;
+      if ( !haveDefaultExecuteShared )
+      {
+        char const *envvar = ::getenv( "FABRIC_CANVAS_PARALLEL_DEFAULT" );
+        defaultExecuteShared = envvar && atoi( envvar ) > 0;
+        haveDefaultExecuteShared = true;
+      }
+      m_executeShared = defaultExecuteShared;
+    }
+    m_executeSharedDirty = false;
+  }
+  return m_executeShared;
 }
 
 #if _SPLICE_MAYA_VERSION >= 2016

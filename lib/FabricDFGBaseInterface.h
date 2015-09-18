@@ -93,6 +93,10 @@ public:
   DFGUICmdHandler_Maya *getCmdHandler()
     { return &m_cmdHandler; }
 
+  bool getExecuteShared();
+  void setExecuteSharedDirty()
+    { m_executeSharedDirty = true; }
+
 protected:
   MString getPlugName(MString portName);
   MString getPortName(MString plugName);
@@ -126,7 +130,12 @@ protected:
   MObject addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType = "", bool compoundChild = false, MStatus * stat = NULL);
   void removeMayaAttribute(MString portName, MStatus * stat = NULL);
 
-  FabricCore::LockType getLockType();
+  FabricCore::LockType getLockType()
+  {
+    return getExecuteShared()?
+      FabricCore::LockType_Shared:
+      FabricCore::LockType_Exclusive;
+  }
 
   // static MString sManipulationCommand;
   // MString _manipulationCommand;
@@ -170,6 +179,8 @@ private:
   unsigned int m_id;
   static unsigned int s_maxID;
   FabricDFGWidget *m_widget;
+  bool m_executeSharedDirty;
+  bool m_executeShared;
 };
 
 #endif

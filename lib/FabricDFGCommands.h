@@ -992,4 +992,28 @@ public:
   virtual bool isUndoable() const { return false; }
 };
 
+class FabricCanvasSetExecuteSharedCommand
+  : public FabricDFGBaseCommand
+{
+public:
+
+  static void* creator()
+    { return new FabricCanvasSetExecuteSharedCommand; }
+
+  virtual MString getName()
+    { return "FabricCanvasSetExecuteShared"; }
+
+  static MSyntax newSyntax();
+  virtual MStatus doIt( const MArgList &args );
+  virtual MStatus undoIt();
+  virtual MStatus redoIt();
+  virtual bool isUndoable() const { return true; }
+
+private:
+
+  FabricDFGBaseInterface *m_interf;
+  std::string m_oldMetadataValue;
+  std::string m_newMetadataValue;
+};
+
 #endif 
