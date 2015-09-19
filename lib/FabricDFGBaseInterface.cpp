@@ -5,6 +5,7 @@
 #include "FabricSpliceMayaData.h"
 #include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
+#include <Persistence/RTValToJSONEncoder.hpp>
 
 #include <string>
 #include <fstream>
@@ -1432,6 +1433,15 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     // mayaLogErrorFunc("DataType '"+dataType+"' not supported.");
     return newAttribute;
+  }
+
+  if( storable ) {
+    // Set ports added with a "storable type" as persistable so their values are 
+    // exported if saving the graph
+    // TODO: handle this in a "clean" way; here we are not in the context of an undo-able command.
+    //       We would need that the DFG knows which binding types are "stored" as attributes on the
+    //       DCC side and set these as persistable in the source "addPort" command.
+    exec.setExecPortMetadata( portName.asChar(), DFG_METADATA_UIPERSISTVALUE, "true" );
   }
 
   // set the mode
