@@ -70,6 +70,7 @@ public:
   void setPortPersistence(const MString &portName, bool persistence);
   FabricSplice::DGGraph & getSpliceGraph() { return _spliceGraph; }
   void setDgDirtyEnabled(bool enabled) { _dgDirtyEnabled = enabled; }
+  void setEvaluateShared(bool evauateShared);
 
   static void onNodeAdded(MObject &node, void *clientData);
   static void onNodeRemoved(MObject &node, void *clientData);
@@ -80,7 +81,12 @@ protected:
   void invalidatePlug(MPlug & plug);
   virtual void invalidateNode();
   void incEvalID();
-  void setupMayaAttributeAffects(MString portName, FabricSplice::Port_Mode portMode, MObject newAttribute, MStatus *stat = 0);
+  
+  void setupMayaAttributeAffects(
+    MString portName,
+    FabricSplice::Port_Mode portMode,
+    MObject newAttribute
+    );
 
   // private members and helper methods
   static std::vector<FabricSpliceBaseInterface*> _instances;
@@ -118,6 +124,23 @@ protected:
 #if _SPLICE_MAYA_VERSION < 2014
   static std::map<std::string, int> _nodeCreatorCounts;
 #endif
+
+protected:
+
+  void attributeAddedOrRemoved(
+    MNodeMessage::AttributeMessage msg,
+    MPlug &plug
+    );
+
+  static void AttributeAddedOrRemoved(
+    MNodeMessage::AttributeMessage msg,
+    MPlug &plug,
+    void *clientData
+    )
+  {
+    static_cast<FabricSpliceBaseInterface *>( clientData )
+      ->attributeAddedOrRemoved( msg, plug );
+  }
 
 private:
   bool plugInArray(const MPlug &plug, const MPlugArray &array);

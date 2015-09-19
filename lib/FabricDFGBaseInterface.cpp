@@ -39,7 +39,9 @@ std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
 #endif
 unsigned int FabricDFGBaseInterface::s_maxID = 1;
 
-FabricDFGBaseInterface::FabricDFGBaseInterface(){
+FabricDFGBaseInterface::FabricDFGBaseInterface()
+  : m_executeSharedDirty( true )
+{
 
   MStatus stat;
   MAYADFG_CATCH_BEGIN(&stat);
@@ -100,8 +102,8 @@ void FabricDFGBaseInterface::constructBaseInterface(){
 
   FabricSplice::Logging::AutoTimer timer("Maya::FabricDFGBaseInterface()");
 
-  m_client = FabricDFGWidget::Instance()->getCoreClient();
-  FabricCore::DFGHost &dfgHost = FabricDFGWidget::Instance()->getDFGHost();
+  m_client = FabricDFGWidget::GetCoreClient();
+  FabricCore::DFGHost dfgHost = m_client.getDFGHost();
 
   m_binding = dfgHost.createBindingToNewGraph();
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
@@ -209,7 +211,13 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
         
         DFGPlugToArgFunc func = getDFGPlugToArgFunc(portDataType);
         if(func != NULL)
-          (*func)(plug, data, m_binding, portName.asChar());
+          (*func)(
+            plug,
+            data,
+            m_binding,
+            getLockType(),
+            portName.asChar()
+            );
       }
     }
   }
@@ -255,7 +263,7 @@ void FabricDFGBaseInterface::evaluate(){
     }
   }
 
-  m_binding.execute();
+  m_binding.execute_lockType( getLockType() );
 }
 
 void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
@@ -299,7 +307,13 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
           DFGArgToPlugFunc func = getDFGArgToPlugFunc(portDataType);
           if(func != NULL) {
             FabricSplice::Logging::AutoTimer timer("Maya::transferOutputValuesToMaya::conversionFunc()");
-            (*func)(m_binding, portName.c_str(), plug, data);
+            (*func)(
+              m_binding,
+              getLockType(),
+              portName.c_str(),
+              plug,
+              data
+              );
             data.setClean(plug);
           }
         }
@@ -445,7 +459,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   FabricSplice::Logging::AutoTimer timer("Maya::restoreFromPersistenceData()");
 
-  FabricCore::DFGHost &dfgHost = FabricDFGWidget::Instance()->getDFGHost();
+  FabricCore::DFGHost dfgHost = m_client.getDFGHost();
   m_binding = dfgHost.createBindingFromJSON(json.asChar());
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
 
@@ -1223,37 +1237,33 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
+      MObject x = nAttr.create(plugName+"X", plugName+"X", MFnNumericData::kDouble);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
+      MObject y = nAttr.create(plugName+"Y", plugName+"Y", MFnNumericData::kDouble);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
+      MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
     }
     else if(arrayType == "Array (Multi)")
     {
-      MObject x = nAttr.create(plugName+"_x", plugName+"_x", MFnNumericData::kDouble);
+      MObject x = nAttr.create(plugName+"X", plugName+"X", MFnNumericData::kDouble);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      MObject y = nAttr.create(plugName+"_y", plugName+"_y", MFnNumericData::kDouble);
+      MObject y = nAttr.create(plugName+"Y", plugName+"Y", MFnNumericData::kDouble);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      MObject z = nAttr.create(plugName+"_z", plugName+"_z", MFnNumericData::kDouble);
+      MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-      cAttr.setArray(true);
-      cAttr.setUsesArrayDataBuilder(true);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
+      nAttr.setArray(true);
+      nAttr.setUsesArrayDataBuilder(true);
     }
     else if(arrayType == "Array (Native)")
     {
@@ -1269,34 +1279,30 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
+      MObject x = uAttr.create(plugName+"X", plugName+"X", MFnUnitAttribute::kAngle);
       uAttr.setStorable(storable);
       uAttr.setKeyable(storable);
-      MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
+      MObject y = uAttr.create(plugName+"Y", plugName+"Y", MFnUnitAttribute::kAngle);
       uAttr.setStorable(storable);
       uAttr.setKeyable(storable);
-      MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
+      MObject z = uAttr.create(plugName+"Z", plugName+"Z", MFnUnitAttribute::kAngle);
       uAttr.setStorable(storable);
       uAttr.setKeyable(storable);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
     }
     else if(arrayType == "Array (Multi)")
     {
-      MObject x = uAttr.create(plugName+"_x", plugName+"_x", MFnUnitAttribute::kAngle);
+      MObject x = uAttr.create(plugName+"X", plugName+"X", MFnUnitAttribute::kAngle);
       uAttr.setStorable(storable);
-      MObject y = uAttr.create(plugName+"_y", plugName+"_y", MFnUnitAttribute::kAngle);
+      MObject y = uAttr.create(plugName+"Y", plugName+"Y", MFnUnitAttribute::kAngle);
       uAttr.setStorable(storable);
-      MObject z = uAttr.create(plugName+"_z", plugName+"_z", MFnUnitAttribute::kAngle);
+      MObject z = uAttr.create(plugName+"Z", plugName+"Z", MFnUnitAttribute::kAngle);
       uAttr.setStorable(storable);
-      newAttribute = cAttr.create(plugName, plugName);
-      cAttr.addChild(x);
-      cAttr.addChild(y);
-      cAttr.addChild(z);
-      cAttr.setArray(true);
-      cAttr.setUsesArrayDataBuilder(true);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
+      nAttr.setArray(true);
+      nAttr.setUsesArrayDataBuilder(true);
     }
     else
     {
@@ -1761,6 +1767,33 @@ MString FabricDFGBaseInterface::resolveEnvironmentVariables(const MString & file
       output += text[text.length()-1];
   }
   return output.c_str();
+}
+
+bool FabricDFGBaseInterface::getExecuteShared()
+{
+  if ( m_executeSharedDirty )
+  {
+    FTL::CStrRef executeSharedMetadataCStr =
+      m_binding.getMetadata( "executeShared" );
+    if ( executeSharedMetadataCStr == FTL_STR("true") )
+      m_executeShared = true;
+    else if ( executeSharedMetadataCStr == FTL_STR("false") )
+      m_executeShared = false;
+    else
+    {
+      static bool haveDefaultExecuteShared = false;
+      static bool defaultExecuteShared;
+      if ( !haveDefaultExecuteShared )
+      {
+        char const *envvar = ::getenv( "FABRIC_CANVAS_PARALLEL_DEFAULT" );
+        defaultExecuteShared = envvar && atoi( envvar ) > 0;
+        haveDefaultExecuteShared = true;
+      }
+      m_executeShared = defaultExecuteShared;
+    }
+    m_executeSharedDirty = false;
+  }
+  return m_executeShared;
 }
 
 #if _SPLICE_MAYA_VERSION >= 2016

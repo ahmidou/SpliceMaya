@@ -1845,3 +1845,120 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
   
   return status;
 }
+
+// FabricCanvasSetExecuteSharedCommand
+
+MSyntax FabricCanvasSetExecuteSharedCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag("-m", "-mayaNode", MSyntax::kString);
+  syntax.addFlag("-e", "-enable", MSyntax::kBoolean);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+MStatus FabricCanvasSetExecuteSharedCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argParser( syntax(), args, &status );
+  if ( status != MS::kSuccess )
+    return status;
+
+  try
+  {
+    if ( !argParser.isFlagSet("mayaNode") )
+      throw ArgException( MS::kFailure, "-m (-mayaNode) not provided." );
+    MString mayaNodeName = argParser.flagArgumentString("mayaNode", 0);
+
+    m_interf =
+      FabricDFGBaseInterface::getInstanceByName( mayaNodeName.asChar() );
+    if ( !m_interf )
+      throw ArgException(
+        MS::kNotFound, "Maya node '" + mayaNodeName + "' not found."
+        );
+    FabricCore::DFGBinding binding = m_interf->getDFGBinding();
+
+    if(!argParser.isFlagSet("enable"))
+      throw ArgException( MS::kFailure, "-e (-enable) not provided." );
+    bool enable = argParser.flagArgumentBool("enable", 0);
+    
+    char const *oldMetadataValueCStr =
+      binding.getMetadata( "executeShared" );
+    if ( oldMetadataValueCStr )
+      m_oldMetadataValue = oldMetadataValueCStr;
+
+    m_newMetadataValue = enable? "true": "false";
+
+    binding.setMetadata(
+      "executeShared",
+      m_newMetadataValue.c_str(),
+      false // canUndo
+      );
+
+    m_interf->setExecuteSharedDirty();
+
+    status = MS::kSuccess;
+  }
+  catch ( ArgException e )
+  {
+    logError( e.getDesc() );
+    status = e.getStatus();
+  }
+  catch ( FabricCore::Exception e )
+  {
+    logError( e.getDesc_cstr() );
+    status = MS::kFailure;
+  }
+  
+  // this command isn't issued through the UI
+  // m_cmdInfo = FabricDFGCommandStack::consumeCommandToIgnore(getName());
+  
+  return status;
+}
+
+MStatus FabricCanvasSetExecuteSharedCommand::undoIt()
+{
+  MStatus status = MS::kSuccess;
+
+  try
+  {
+    m_interf->getDFGBinding().setMetadata(
+      "executeShared",
+      m_oldMetadataValue.c_str(),
+      false // canUndo
+      );
+
+    m_interf->setExecuteSharedDirty();
+  }
+  catch ( FabricCore::Exception e )
+  {
+    logError( e.getDesc_cstr() );
+    status = MS::kFailure;
+  }
+
+  return MS::kSuccess;
+}
+
+MStatus FabricCanvasSetExecuteSharedCommand::redoIt()
+{
+  MStatus status = MS::kSuccess;
+
+  try
+  {
+    m_interf->getDFGBinding().setMetadata(
+      "executeShared",
+      m_newMetadataValue.c_str(),
+      false // canUndo
+      );
+
+    m_interf->setExecuteSharedDirty();
+  }
+  catch ( FabricCore::Exception e )
+  {
+    logError( e.getDesc_cstr() );
+    status = MS::kFailure;
+  }
+
+  return MS::kSuccess;
+}

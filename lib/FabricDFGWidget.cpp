@@ -13,13 +13,14 @@
 #include <maya/MGlobal.h>
 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
+FabricCore::Client FabricDFGWidget::s_coreClient;
 
 FabricDFGWidget::FabricDFGWidget(QWidget * parent)
   : DFG::DFGCombinedWidget(parent)
   , m_initialized( false )
 {
-  m_coreClient = FabricSplice::ConstructClient();
-  m_dfgHost = m_coreClient.getDFGHost();
+  GetCoreClient();
+  m_dfgHost = s_coreClient.getDFGHost();
 
   QObject::connect(
     this, SIGNAL( portEditDialogCreated(FabricUI::DFG::DFGBaseDialog *)),
@@ -72,12 +73,12 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
   if ( !m_initialized )
   {
     FabricServices::ASTWrapper::KLASTManager *manager =
-      ASTWrapper::KLASTManager::retainGlobalManager( &m_coreClient );
+      ASTWrapper::KLASTManager::retainGlobalManager( &s_coreClient );
 
     DFG::DFGConfig config;
     config.graphConfig.useOpenGL = false;
 
-    init( m_coreClient, manager, m_dfgHost, binding, "", exec, &m_cmdHandler,
+    init( s_coreClient, manager, m_dfgHost, binding, "", exec, &m_cmdHandler,
           false, config );
 
     m_initialized = true;

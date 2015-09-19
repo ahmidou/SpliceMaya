@@ -18,7 +18,7 @@
 #include <maya/MVectorArray.h>
 #include <maya/MPointArray.h>
 #include <maya/MFloatVector.h>
-#include <maya/MMatrix.h>
+#include <maya/MFloatMatrix.h>
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MAngle.h>
 #include <maya/MDistance.h>
@@ -79,7 +79,7 @@ double getFloat64FromRTVal(FabricCore::RTVal rtVal)
   return DBL_MAX;
 }
 
-void plugToPort_compound_convertMat44(const MMatrix & matrix, FabricCore::RTVal & rtVal)
+void plugToPort_compound_convertMat44(const MFloatMatrix & matrix, FabricCore::RTVal & rtVal)
 {
   CORE_CATCH_BEGIN;
 
@@ -537,7 +537,7 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
 
             childRTVal = FabricSplice::constructObjectRTVal("Mat44Param", 1, &childNameRTVal);
             FabricCore::RTVal matrixRTVal;
-            plugToPort_compound_convertMat44(childHandle.asMatrix(), matrixRTVal);
+            plugToPort_compound_convertMat44(childHandle.asFloatMatrix(), matrixRTVal);
             childRTVal.callMethod("", "setValue", 1, &matrixRTVal);
           }
           else
@@ -550,7 +550,7 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             for(unsigned int j=0;j<childHandle.elementCount();j++)
             {
               args[0] = FabricSplice::constructUInt32RTVal(j);
-              plugToPort_compound_convertMat44(childHandle.inputValue().asMatrix(), args[1]);
+              plugToPort_compound_convertMat44(childHandle.inputValue().asFloatMatrix(), args[1]);
               childRTVal.callMethod("", "setValue", 2, &args[0]);
               childHandle.next();
             }
@@ -907,22 +907,35 @@ void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
 
       MAYASPLICE_MEMORY_SETPORT(port);
       MAYASPLICE_MEMORY_FREE();
-    }else{
-      if(port.isArray())
-        return;
-      FabricCore::RTVal spliceVec = FabricSplice::constructRTVal("Vec3");
-      if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
-        const float3& mayaVec = handle.asFloat3();
-        spliceVec.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
-        spliceVec.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
-        spliceVec.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
-      } else{
-        const double3& mayaVec = handle.asDouble3();
-        spliceVec.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
-        spliceVec.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
-        spliceVec.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
+    }else
+    {
+      assert( !port.isArray() );
+
+      FabricCore::RTVal spliceVec3 = FabricSplice::constructRTVal("Vec3");
+      if ( handle.numericType() == MFnNumericData::k3Float
+        || handle.numericType() == MFnNumericData::kFloat )
+      {
+        float3 const &mayaVec = handle.asFloat3();
+        FabricCore::RTVal vecExtArray =
+          FabricSplice::constructExternalArrayRTVal(
+            "Float32",
+            3,
+            const_cast<float3 *>( &mayaVec )
+            );
+        spliceVec3.callMethod( "", "set", 1, &vecExtArray );
       }
-      port.setRTVal(spliceVec);
+      else
+      {
+        double3 const &mayaVec = handle.asDouble3();
+        FabricCore::RTVal vecExtArray =
+          FabricSplice::constructExternalArrayRTVal(
+            "Float64",
+            3,
+            const_cast<double3 *>( &mayaVec )
+            );
+        spliceVec3.callMethod( "", "set", 1, &vecExtArray );
+      }
+      port.setRTVal( spliceVec3 );
     }
   }
 }
@@ -982,9 +995,9 @@ void plugToPort_euler(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
   CORE_CATCH_END;
 }
 
-void plugToPort_mat44(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_mat44(MPlug &plug, MDataBlock &dataBlock, FabricSplice::DGPort & port){
   if(plug.isArray()){
-    MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    MArrayDataHandle arrayHandle = dataBlock.inputArrayValue(plug);
 
     unsigned int elements = arrayHandle.elementCount();
     MAYASPLICE_MEMORY_ALLOCATE(float, elements * 16);
@@ -1017,38 +1030,29 @@ void plugToPort_mat44(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
     MAYASPLICE_MEMORY_FREE();
   }
   else{
-    if(port.isArray())
-      return;
-    MDataHandle handle = data.inputValue(plug);
-    const MMatrix& mayaMat = handle.asMatrix();
+    assert( !port.isArray() );
+
+    MDataHandle dataHandle = dataBlock.inputValue(plug);
+    if ( !dataHandle.isNumeric() )
+      throw FabricCore::Exception( "plugToPort_mat44: Unexpected MDataHandle" );
+
+    MMatrix const &matrix = dataHandle.asMatrix();
+    // printf(
+    //   "[%lf %lf %lf %lf]\n[%lf %lf %lf %lf]\n[%lf %lf %lf %lf]\n[%lf %lf %lf %lf]\n",
+    //   matrix.matrix[0][0], matrix.matrix[0][1], matrix.matrix[0][2], matrix.matrix[0][3],
+    //   matrix.matrix[1][0], matrix.matrix[1][1], matrix.matrix[1][2], matrix.matrix[1][3],
+    //   matrix.matrix[2][0], matrix.matrix[2][1], matrix.matrix[2][2], matrix.matrix[2][3],
+    //   matrix.matrix[3][0], matrix.matrix[3][1], matrix.matrix[3][2], matrix.matrix[3][3]
+    //   );
+    FabricCore::RTVal matrixExtArray = 
+      FabricSplice::constructExternalArrayRTVal(
+        "Float64",
+        16,
+        const_cast<double *>( &matrix.matrix[0][0] )
+        );
 
     FabricCore::RTVal spliceMat = FabricSplice::constructRTVal("Mat44");
-    FabricCore::RTVal spliceMatRow = FabricSplice::constructRTVal("Vec4");
-
-    spliceMatRow.setMember("x", FabricSplice::constructFloat64RTVal(mayaMat.matrix[0][0]));
-    spliceMatRow.setMember("y", FabricSplice::constructFloat64RTVal(mayaMat.matrix[1][0]));
-    spliceMatRow.setMember("z", FabricSplice::constructFloat64RTVal(mayaMat.matrix[2][0]));
-    spliceMatRow.setMember("t", FabricSplice::constructFloat64RTVal(mayaMat.matrix[3][0]));
-    spliceMat.setMember("row0", spliceMatRow);
-
-    spliceMatRow.setMember("x", FabricSplice::constructFloat64RTVal(mayaMat.matrix[0][1]));
-    spliceMatRow.setMember("y", FabricSplice::constructFloat64RTVal(mayaMat.matrix[1][1]));
-    spliceMatRow.setMember("z", FabricSplice::constructFloat64RTVal(mayaMat.matrix[2][1]));
-    spliceMatRow.setMember("t", FabricSplice::constructFloat64RTVal(mayaMat.matrix[3][1]));
-    spliceMat.setMember("row1", spliceMatRow);
-
-    spliceMatRow.setMember("x", FabricSplice::constructFloat64RTVal(mayaMat.matrix[0][2]));
-    spliceMatRow.setMember("y", FabricSplice::constructFloat64RTVal(mayaMat.matrix[1][2]));
-    spliceMatRow.setMember("z", FabricSplice::constructFloat64RTVal(mayaMat.matrix[2][2]));
-    spliceMatRow.setMember("t", FabricSplice::constructFloat64RTVal(mayaMat.matrix[3][2]));
-    spliceMat.setMember("row2", spliceMatRow);
-
-    spliceMatRow.setMember("x", FabricSplice::constructFloat64RTVal(mayaMat.matrix[0][3]));
-    spliceMatRow.setMember("y", FabricSplice::constructFloat64RTVal(mayaMat.matrix[1][3]));
-    spliceMatRow.setMember("z", FabricSplice::constructFloat64RTVal(mayaMat.matrix[2][3]));
-    spliceMatRow.setMember("t", FabricSplice::constructFloat64RTVal(mayaMat.matrix[3][3]));
-    spliceMat.setMember("row3", spliceMatRow);
-
+    spliceMat.callMethod( "", "setTr", 1, &matrixExtArray );
     port.setRTVal(spliceMat);
   }
 }
@@ -1554,7 +1558,7 @@ void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPo
         arrayHandle.jumpToArrayElement(i);
         MDataHandle childHandle = arrayHandle.inputValue();
 
-        childHandle.asMatrix();
+        childHandle.asFloatMatrix();
         MObject spliceMayaDataObj = childHandle.data();
         MFnPluginData mfn(spliceMayaDataObj);
         FabricSpliceMayaData *spliceMayaData = (FabricSpliceMayaData*)mfn.data();
@@ -1573,7 +1577,7 @@ void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPo
   }
 }
 
-void portToPlug_compound_convertMat44(MMatrix & matrix, FabricCore::RTVal & rtVal)
+void portToPlug_compound_convertMat44(MFloatMatrix & matrix, FabricCore::RTVal & rtVal)
 {
   CORE_CATCH_BEGIN;
 
@@ -1586,7 +1590,7 @@ void portToPlug_compound_convertMat44(MMatrix & matrix, FabricCore::RTVal & rtVa
     { data[2], data[6], data[10], data[14] },
     { data[3], data[7], data[11], data[15] }
   };
-  matrix = MMatrix(vals);
+  matrix = MFloatMatrix(vals);
 
   CORE_CATCH_END;
 }
@@ -2160,9 +2164,9 @@ void portToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             MDataHandle childHandle(handle.child(child.object()));
 
             FabricCore::RTVal value = childRTVal.maybeGetMember("value");
-            MMatrix m;
+            MFloatMatrix m;
             portToPlug_compound_convertMat44(m, value);
-            childHandle.setMMatrix(m);
+            childHandle.setMFloatMatrix(m);
           }
           else
           {
@@ -2181,9 +2185,9 @@ void portToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
             {
               FabricCore::RTVal value = childRTVal.maybeGetMember("value");
               MDataHandle elementHandle = arraybuilder.addElement(i);
-              MMatrix m;
+              MFloatMatrix m;
               portToPlug_compound_convertMat44(m, value);
-              elementHandle.setMMatrix(m);
+              elementHandle.setMFloatMatrix(m);
             }
 
             childHandle.set(arraybuilder);
@@ -2521,20 +2525,36 @@ void portToPlug_vec3(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data)
 
       MAYASPLICE_MEMORY_FREE();
       handle.set(MFnPointArrayData().create(arrayValues));
-    }else{
+    }
+    else
+    {
+      assert( !port.isArray() );
+
       FabricCore::RTVal rtVal = port.getRTVal();
-      if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
-        handle.set3Float(
-          getFloat64FromRTVal(rtVal.maybeGetMember("x")),
-          getFloat64FromRTVal(rtVal.maybeGetMember("y")),
-          getFloat64FromRTVal(rtVal.maybeGetMember("z"))
-        );
-      }else{
-        handle.set3Double(
-          getFloat64FromRTVal(rtVal.maybeGetMember("x")),
-          getFloat64FromRTVal(rtVal.maybeGetMember("y")),
-          getFloat64FromRTVal(rtVal.maybeGetMember("z"))
-        );
+      if ( handle.numericType() == MFnNumericData::k3Float
+        || handle.numericType() == MFnNumericData::kFloat )
+      {
+        float3 spliceVec3;
+        FabricCore::RTVal vecExtArray =
+          FabricSplice::constructExternalArrayRTVal(
+            "Float32",
+            3,
+            &spliceVec3
+            );
+        rtVal.callMethod( "", "get", 1, &vecExtArray );
+        handle.set3Float( spliceVec3[0], spliceVec3[1], spliceVec3[2] );
+      }
+      else
+      {
+        double3 spliceVec3;
+        FabricCore::RTVal vecExtArray =
+          FabricSplice::constructExternalArrayRTVal(
+            "Float64",
+            3,
+            &spliceVec3
+            );
+        rtVal.callMethod( "", "get", 1, &vecExtArray );
+        handle.set3Double( spliceVec3[0], spliceVec3[1], spliceVec3[2] );
       }
     }
   }
@@ -2619,25 +2639,22 @@ void portToPlug_mat44(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
   }
-  else{
-    MDataHandle handle = data.outputValue(plug);
+  else
+  {
+    assert( !port.isArray() );
 
-    FabricCore::RTVal rtVal = port.getRTVal();
-    FabricCore::RTVal row0 = rtVal.maybeGetMember("row0");
-    FabricCore::RTVal row1 = rtVal.maybeGetMember("row1");
-    FabricCore::RTVal row2 = rtVal.maybeGetMember("row2");
-    FabricCore::RTVal row3 = rtVal.maybeGetMember("row3");
+    MDataHandle handle = data.outputValue( plug );
 
-    double vals[4][4] = {
-      { getFloat64FromRTVal(row0.maybeGetMember("x")), getFloat64FromRTVal(row1.maybeGetMember("x")), getFloat64FromRTVal(row2.maybeGetMember("x")), getFloat64FromRTVal(row3.maybeGetMember("x")) },
-      { getFloat64FromRTVal(row0.maybeGetMember("y")), getFloat64FromRTVal(row1.maybeGetMember("y")), getFloat64FromRTVal(row2.maybeGetMember("y")), getFloat64FromRTVal(row3.maybeGetMember("y")) },
-      { getFloat64FromRTVal(row0.maybeGetMember("z")), getFloat64FromRTVal(row1.maybeGetMember("z")), getFloat64FromRTVal(row2.maybeGetMember("z")), getFloat64FromRTVal(row3.maybeGetMember("z")) },
-      { getFloat64FromRTVal(row0.maybeGetMember("t")), getFloat64FromRTVal(row1.maybeGetMember("t")), getFloat64FromRTVal(row2.maybeGetMember("t")), getFloat64FromRTVal(row3.maybeGetMember("t")) }
-    };
+    double matrix[4][4];
+    FabricCore::RTVal matrixExtArray =
+      FabricSplice::constructExternalArrayRTVal(
+        "Float64",
+        16,
+        &matrix[0]
+        );
+    port.getRTVal().callMethod( "", "getTr", 1, &matrixExtArray );
 
-    MMatrix mayaMat(vals);
-
-    handle.setMMatrix(mayaMat);
+    handle.setMMatrix( MMatrix( matrix ) );
   }
 }
 

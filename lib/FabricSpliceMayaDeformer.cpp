@@ -26,12 +26,24 @@ FabricSpliceMayaDeformer::~FabricSpliceMayaDeformer()
 {
 }
 
-void FabricSpliceMayaDeformer::postConstructor(){
+void FabricSpliceMayaDeformer::postConstructor()
+{
   FabricSpliceBaseInterface::constructBaseInterface();
+
+  MObject object = thisMObject();
+
+  m_attributeAddedOrRemovedCallbackID =
+    MNodeMessage::addAttributeAddedOrRemovedCallback(
+      object,
+      &FabricSpliceBaseInterface::AttributeAddedOrRemoved,
+      (FabricSpliceBaseInterface *)this
+      );
+      
   FabricSpliceEditorWidget::postUpdateAll();
 }
 
-void* FabricSpliceMayaDeformer::creator(){
+void* FabricSpliceMayaDeformer::creator()
+{
   return new FabricSpliceMayaDeformer();
 }
 
@@ -87,7 +99,7 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
 
       if(port.getMode() != FabricSplice::Port_Mode_IO)
         return MStatus::kSuccess;
-      FabricCore::RTVal rtMeshes = port.getRTVal();
+      FabricCore::RTVal rtMeshes = port.getRTVal( FabricCore::LockType_Exclusive );
       if(!rtMeshes.isValid())
         return MStatus::kSuccess;
       if(!rtMeshes.isArray())
@@ -109,7 +121,7 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
 
       if(port.getMode() != FabricSplice::Port_Mode_IO)
         return MStatus::kSuccess;
-      rtMesh = port.getRTVal();
+      rtMesh = port.getRTVal( FabricCore::LockType_Exclusive );
       rtValToSet = rtMesh;
     }
     if(!rtMesh.isValid() || rtMesh.isNullObject())
@@ -155,7 +167,7 @@ MStatus FabricSpliceMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, c
       mayaLogErrorFunc(e.getDesc_cstr());
       return MStatus::kSuccess;
     }
-    port.setRTVal(rtValToSet);
+    port.setRTVal( rtValToSet );
 
     evaluate();
 

@@ -105,8 +105,8 @@ void mayaKLStatusFunc(const char * topicData, unsigned int topicLength,  const c
       FabricUI::DFG::DFGLogWidget::log(e.getDesc_cstr());
     }
   }
-  else
-    FabricUI::DFG::DFGLogWidget::log(composed.asChar());
+  // else
+  //   FabricUI::DFG::DFGLogWidget::log(composed.asChar());
 }
 
 void mayaRefreshFunc()

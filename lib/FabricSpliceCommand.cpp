@@ -246,6 +246,11 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
       bool enabled = FabricSplice::Scripting::consumeBooleanArgument(scriptArgs, "enabled");
       interf->setDgDirtyEnabled(enabled);
     }
+    else if(actionStr == "setEvaluateShared")
+    {
+      bool enabled = FabricSplice::Scripting::consumeBooleanArgument(scriptArgs, "enabled");
+      interf->setEvaluateShared(enabled);
+    }
     else if(actionStr == "addDGNode")
     {
       MString dgNodeStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "dgNode").c_str();
