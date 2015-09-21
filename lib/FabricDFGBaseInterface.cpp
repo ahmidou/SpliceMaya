@@ -656,8 +656,8 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
   if(plugName.index('.') > -1)
   {
     plugName = plugName.substring(plugName.index('.')+1, plugName.length());
-  	if(plugName.index('[') > -1)
-	   plugName = plugName.substring(0, plugName.index('[')-1);
+    if(plugName.index('[') > -1)
+      plugName = plugName.substring(0, plugName.index('[')-1);
 
     if (getDFGBinding().getExec().haveExecPort(plugName.asChar()))
     {
@@ -719,6 +719,7 @@ void FabricDFGBaseInterface::invalidateNode()
   }
 
   // ensure that the node is invalidated
+  unsigned int dirtiedInputs = 0;
   for(unsigned int i = 0; i < exec.getExecPortCount(); ++i){
     std::string portName = exec.getExecPortName(i);
     MString plugName = getPortName(portName.c_str());
@@ -733,6 +734,7 @@ void FabricDFGBaseInterface::invalidateNode()
         plug.connectedTo(plugs,true,false);
         for(size_t j=0;j<plugs.length();j++)
           invalidatePlug(plugs[j]);
+        dirtiedInputs++;
       }
       else
       {
@@ -745,6 +747,14 @@ void FabricDFGBaseInterface::invalidateNode()
       }
     }
   }
+
+  // if there are no inputs on this 
+  // node, let's rely on the eval id attribute
+  if(dirtiedInputs == 0)
+  {
+    incrementEvalID();
+  }
+
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
 }
