@@ -47,6 +47,7 @@ void FabricDFGWidget::Destroy()
   if ( s_widget )
     delete s_widget;
   s_widget = NULL;
+  s_coreClient = FabricCore::Client();
 }
 
 QWidget * FabricDFGWidget::creator(QWidget * parent, const QString & name)
