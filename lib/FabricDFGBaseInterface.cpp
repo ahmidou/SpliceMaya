@@ -812,12 +812,22 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
     // todo: performance considerations
     for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
       MFnAttribute attrib(thisNode.attribute(i));
-      if(attrib.isHidden())
-        continue;
       if(!attrib.isDynamic())
         continue;
-      if(!attrib.isReadable())
+
+      // check if the attribute is an output
+      // otherwise continue
+      try
+      {
+        FabricCore::DFGExec exec = getDFGExec();
+        FabricCore::DFGPortType portType = exec.getExecPortType(attrib.name().asChar());
+        if(portType == FabricCore::DFGPortType_In)
+          continue;
+      }
+      catch(FabricCore::Exception e)
+      {
         continue;
+      }
 
       MPlug outPlug = thisNode.findPlug(attrib.name());
       if(!outPlug.isNull()){
