@@ -54,7 +54,6 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
   _outputsDirtied = false;
   _isReferenced = false;
   _isEvaluating = false;
-  _dgDirtyQueued = false;
   _instances.push_back(this);
 
   m_id = s_maxID++;
@@ -265,7 +264,6 @@ void FabricDFGBaseInterface::evaluate(){
   }
 
   m_binding.execute_lockType( getLockType() );
-  _dgDirtyQueued = false;
 }
 
 void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
@@ -636,15 +634,12 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
 {
   if(!_dgDirtyEnabled)
     return;
-  if(_dgDirtyQueued)
-    return;
   if(plug.isNull())
     return;
   if(plug.attribute().isNull())
     return;
 
   MString command("dgdirty ");
-  _dgDirtyQueued = true;
 
   // filter plugs containing [-1]
   MString plugName = plug.name();
@@ -776,6 +771,9 @@ void FabricDFGBaseInterface::incrementEvalID()
 
   MString idStr;
   idStr.set(id);
+
+  _affectedPlugsDirty = true;
+  _outputsDirtied = false;
 }
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
@@ -1668,7 +1666,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     {
       // when we receive this notification we need to 
       // ensure that the DCC reevaluates the node
-      invalidateNode();
+      incrementEvalID();
     }
   }
   else if( descStr == FTL_STR("argTypeChanged") )
