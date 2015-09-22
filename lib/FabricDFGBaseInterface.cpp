@@ -54,6 +54,7 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
   _outputsDirtied = false;
   _isReferenced = false;
   _isEvaluating = false;
+  _dgDirtyQueued = false;
   _instances.push_back(this);
 
   m_id = s_maxID++;
@@ -264,6 +265,7 @@ void FabricDFGBaseInterface::evaluate(){
   }
 
   m_binding.execute_lockType( getLockType() );
+  _dgDirtyQueued = false;
 }
 
 void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
@@ -634,12 +636,15 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
 {
   if(!_dgDirtyEnabled)
     return;
+  if(_dgDirtyQueued)
+    return;
   if(plug.isNull())
     return;
   if(plug.attribute().isNull())
     return;
 
   MString command("dgdirty ");
+  _dgDirtyQueued = true;
 
   // filter plugs containing [-1]
   MString plugName = plug.name();

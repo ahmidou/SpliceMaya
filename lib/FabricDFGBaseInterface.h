@@ -144,6 +144,7 @@ protected:
   bool _outputsDirtied;
   bool _isReferenced;
   bool _isEvaluating;
+  bool _dgDirtyQueued;
   MPlugArray _affectedPlugs;
 
 #if _SPLICE_MAYA_VERSION < 2013
