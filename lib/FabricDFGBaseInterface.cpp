@@ -1573,6 +1573,10 @@ void FabricDFGBaseInterface::managePortObjectValues(bool destroy)
   if(_portObjectsDestroyed == destroy)
     return;
 
+  // check if we have a valid client
+  if(FTL::StrRef(FabricSplice::GetClientContextID()).empty())
+    return;
+
    for(unsigned int i = 0; i < getDFGExec().getExecPortCount(); ++i) {
      try
      {
