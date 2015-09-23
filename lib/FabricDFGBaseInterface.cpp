@@ -54,6 +54,9 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
   _outputsDirtied = false;
   _isReferenced = false;
   _isEvaluating = false;
+  _dgDirtyQueued = false;
+  m_evalID = 0;
+  m_evalIDAtLastEvaluate = 0;
   _instances.push_back(this);
 
   m_id = s_maxID++;
@@ -230,6 +233,8 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
 void FabricDFGBaseInterface::evaluate(){
 
   FTL::AutoSet<bool> transfersInputs(_isEvaluating, true);
+  _dgDirtyQueued = false;
+  m_evalIDAtLastEvaluate = m_evalID;
 
   MFnDependencyNode thisNode(getThisMObject());
 
@@ -639,8 +644,6 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
   if(plug.attribute().isNull())
     return;
 
-  MString command("dgdirty ");
-
   // filter plugs containing [-1]
   MString plugName = plug.name();
   MStringArray plugNameParts;
@@ -651,7 +654,12 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
       return;
   }
 
-  MGlobal::executeCommandOnIdle(command+plugName);
+  if(!_dgDirtyQueued)
+  {
+    _dgDirtyQueued = true;
+    MString command("dgdirty ");
+    MGlobal::executeCommandOnIdle(command+plugName);
+  }
 
   if(plugName.index('.') > -1)
   {
@@ -761,16 +769,15 @@ void FabricDFGBaseInterface::invalidateNode()
 
 void FabricDFGBaseInterface::incrementEvalID()
 {
-  MFnDependencyNode thisNode(getThisMObject());
-  MPlug evalIDPlug = thisNode.findPlug("evalID");
-  if(evalIDPlug.isNull())
-    return;
+  if( m_evalID == m_evalIDAtLastEvaluate )
+  {
+    MFnDependencyNode thisNode(getThisMObject());
+    MPlug evalIDPlug = thisNode.findPlug("evalID");
+    if(evalIDPlug.isNull())
+      return;
 
-  int id = evalIDPlug.asInt();
-  evalIDPlug.setValue(id+1);
-
-  MString idStr;
-  idStr.set(id);
+    evalIDPlug.setValue( (int)++m_evalID );
+  } 
 }
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
@@ -805,12 +812,22 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
     // todo: performance considerations
     for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
       MFnAttribute attrib(thisNode.attribute(i));
-      if(attrib.isHidden())
-        continue;
       if(!attrib.isDynamic())
         continue;
-      if(!attrib.isReadable())
+
+      // check if the attribute is an output
+      // otherwise continue
+      try
+      {
+        FabricCore::DFGExec exec = getDFGExec();
+        FabricCore::DFGPortType portType = exec.getExecPortType(attrib.name().asChar());
+        if(portType == FabricCore::DFGPortType_In)
+          continue;
+      }
+      catch(FabricCore::Exception e)
+      {
         continue;
+      }
 
       MPlug outPlug = thisNode.findPlug(attrib.name());
       if(!outPlug.isNull()){
@@ -1661,13 +1678,11 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
 
   if ( descStr == FTL_STR("dirty") )
   {
-    _outputsDirtied = false;
-
     if(!_isEvaluating && !_isTransferingInputs)
     {
       // when we receive this notification we need to 
       // ensure that the DCC reevaluates the node
-      invalidateNode();
+      incrementEvalID();
     }
   }
   else if( descStr == FTL_STR("argTypeChanged") )

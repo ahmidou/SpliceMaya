@@ -2288,8 +2288,6 @@ void dfgPortToPlug_bool(
       handle.setBool(values[i]);
     }
 
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
-
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
   }
@@ -2320,8 +2318,6 @@ void dfgPortToPlug_integer(
       handle.setInt(values[i]);
     }
 
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
-
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
   }else{
@@ -2342,7 +2338,6 @@ void dfgPortToPlug_integer(
         arrayValues[i] = values[i];
       }
 
-      binding.setArgValue_lockType(lockType, argName, rtVal, false);
       handle.set(MFnIntArrayData().create(arrayValues));
     }else{
       FabricCore::RTVal rtVal = binding.getArgValue(argName);
@@ -2386,8 +2381,6 @@ void dfgPortToPlug_scalar(
           handle.setDouble(values[i]);
       }
     }
-
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
@@ -2545,8 +2538,6 @@ void dfgPortToPlug_vec3(
       offset+=3;
     }
 
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
-
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
   }
@@ -2570,7 +2561,6 @@ void dfgPortToPlug_vec3(
         arrayValues[i].z = values[offset++];
       }
 
-      binding.setArgValue_lockType(lockType, argName, rtVal, false);
       handle.set(MFnVectorArrayData().create(arrayValues));
     }else if(handle.type() == MFnData::kPointArray) {
       unsigned int elements = rtVal.getArraySize();
@@ -2588,7 +2578,6 @@ void dfgPortToPlug_vec3(
         arrayValues[i].z = values[offset++];
       }
 
-      binding.setArgValue_lockType(lockType, argName, rtVal, false);
       handle.set(MFnPointArrayData().create(arrayValues));
     }else{
       FabricCore::RTVal rtVal = binding.getArgValue(argName);
@@ -2686,8 +2675,6 @@ void dfgPortToPlug_mat44(
 
       handle.setMMatrix(mayaMat);
     }
-
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
 
     arrayHandle.set(arraybuilder);
     arrayHandle.setAllClean();
