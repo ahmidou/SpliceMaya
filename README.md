@@ -21,6 +21,7 @@ A scons (http://www.scons.org/) build script is provided. Fabric Splice for Maya
 * A static build of boost (http://www.boost.org/), version 1.55 or higher.
 * A dynamic build of Fabric Core (matching the latest version).
 * The SpliceAPI repository checked out one level above (http://github.com/fabric-engine/SpliceAPI)
+* The FTL (Fabric Template Library) repository (it can be pulled here: https://github.com/fabric-engine/FTL).
 
 Fabric Splice for Maya requires a certain folder structure to build properly. You will need to have the SpliceAPI cloned as well on your drive, as such:
 
