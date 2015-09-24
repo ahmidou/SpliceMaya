@@ -403,8 +403,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerNode("dfgMayaNode", 0x0011AE46, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
   plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
 
-  plugin.registerCommand("dfgGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
-  plugin.registerCommand("dfgGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
+  plugin.registerCommand("FabricCanvasGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
+  plugin.registerCommand("FabricCanvasGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
 
   MAYA_REGISTER_DFGUICMD( plugin, AddBackDrop );
   MAYA_REGISTER_DFGUICMD( plugin, AddFunc );

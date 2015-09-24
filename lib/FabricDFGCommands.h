@@ -20,7 +20,7 @@ class FabricDFGGetContextIDCommand: public MPxCommand
 {
 public:
 
-  virtual const char * getName() { return "dfgGetContextID"; }
+  virtual const char * getName() { return "FabricCanvasGetContextID"; }
   static void* creator();
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);
@@ -31,7 +31,7 @@ class FabricDFGGetBindingIDCommand: public MPxCommand
 {
 public:
 
-  virtual const char * getName() { return "dfgGetBindingID"; }
+  virtual const char * getName() { return "FabricCanvasGetBindingID"; }
   static void* creator();
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);
