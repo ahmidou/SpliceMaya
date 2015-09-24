@@ -1,3 +1,11 @@
+global proc hideWidget()
+{
+  if (`dockControl -exists FabricDFGUIPane` && `dockControl -q -io FabricDFGUIPane`)
+  {
+    evalDeferred "if (`dockControl -exists FabricDFGUIPane` && `dockControl -q -io FabricDFGUIPane`) catchQuiet(`deleteUI FabricDFGUIPane`)";
+  }
+}
+
 global proc showDFGWidget(string $pluginName)
 {
   string $mayaVersion = `about -version`;
@@ -15,14 +23,14 @@ global proc showDFGWidget(string $pluginName)
 
   if (`dockControl -exists FabricDFGUIPane`)
   {
-    showWindow FabricDFGUIPane;
+    catchQuiet(`showWindow FabricDFGUIPane`);
   }
   else
   {
     string $layOut1 = `paneLayout -configuration "single"`;
     string $widget = `loadUI -uiFile ($uiDirectory+"/FabricDFGWidget.ui")`;
     control -e -parent $layOut1 $widget;
-    dockControl -allowedArea "all" -area "bottom" -floating on -content $layOut1 -label "Fabric Engine - Canvas" -width 1000 -height 500 -vcc "if (`window -exists FabricDFGUIPane` && `dockControl -q -io FabricDFGUIPane`) {evalDeferred \"if (`window -exists FabricDFGUIPane` && `dockControl -q -io FabricDFGUIPane`) catchQuiet(`deleteUI FabricDFGUIPane`)\";}" FabricDFGUIPane;
+    dockControl -allowedArea "all" -area "bottom" -floating on -content $layOut1 -label "Fabric Engine - Canvas" -width 1000 -height 500 -vcc "hideWidget();" FabricDFGUIPane;
   }
 }
 
