@@ -693,6 +693,38 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetExtDepsCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGSplitFromPresetCommand
+
+void FabricDFGSplitFromPresetCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+}
+
+void FabricDFGSplitFromPresetCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGSplitFromPresetCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_SplitFromPreset *cmd =
+    new FabricUI::DFG::DFGUICmd_SplitFromPreset(
+      args.binding,
+      args.execPath,
+      args.exec
+      );
+  cmd->doit();
+  return cmd;
+}
+
 // FabricDFGImplodeNodesCommand
 
 void FabricDFGImplodeNodesCommand::AddSyntax( MSyntax &syntax )

@@ -944,6 +944,32 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_SetExtDeps
   > MayaDFGUICmd_SetExtDeps;
 
+class FabricDFGSplitFromPresetCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::vector<std::string> extDeps;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSplitFromPresetCommand,
+  FabricUI::DFG::DFGUICmd_SplitFromPreset
+  > MayaDFGUICmd_SplitFromPreset;
+
 class FabricDFGImportJSONCommand
   : public FabricDFGBaseCommand
 {

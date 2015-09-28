@@ -433,6 +433,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeTitle );
   MAYA_REGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetRefVarPath );
+  MAYA_REGISTER_DFGUICMD( plugin, SplitFromPreset );
   MAYA_REGISTER_DFGUICMD( plugin, ReorderPorts );
 
   plugin.registerCommand(
@@ -553,6 +554,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeTitle );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetRefVarPath );
+  MAYA_DEREGISTER_DFGUICMD( plugin, SplitFromPreset );
   MAYA_DEREGISTER_DFGUICMD( plugin, ReorderPorts );
 
   plugin.deregisterCommand( "dfgImportJSON" );

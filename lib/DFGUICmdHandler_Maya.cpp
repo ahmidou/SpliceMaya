@@ -968,6 +968,24 @@ void DFGUICmdHandler_Maya::dfgDoSetExtDeps(
     );
 }
 
+void DFGUICmdHandler_Maya::dfgDoSplitFromPreset(
+  FabricCore::DFGBinding const &binding,
+  FTL::CStrRef execPath,
+  FabricCore::DFGExec const &exec
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_SplitFromPreset::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+}
+
 FabricDFGBaseInterface * DFGUICmdHandler_Maya::getInterfFromBinding( FabricCore::DFGBinding const &binding )
 {
   MString interfIdStr = binding.getMetadata("maya_id");
