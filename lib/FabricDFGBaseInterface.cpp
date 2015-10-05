@@ -178,6 +178,8 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   managePortObjectValues(false); // recreate objects if not there yet
 
   FabricSplice::Logging::AutoTimer timer("Maya::transferInputValuesToDFG()");
+  DFGConversionTimers timers;
+  timers.globalTimer = &timer;
 
   FTL::AutoSet<bool> transfersInputs(_isTransferingInputs, true);
 
@@ -219,7 +221,8 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
             data,
             m_binding,
             getLockType(),
-            portName.asChar()
+            portName.asChar(),
+            &timers
             );
       }
     }

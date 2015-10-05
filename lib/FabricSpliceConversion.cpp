@@ -581,7 +581,7 @@ void plugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDataH
 }
 
 
-void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
@@ -594,7 +594,9 @@ void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
     for(unsigned int j=0;j<plug.numElements();j++) {
 
       MPlug element = plug.elementByPhysicalIndex(j);
+      timers->stop();
       MDataHandle handle = data.inputValue(element);
+      timers->resume();
       MFnCompoundAttribute compound(element.attribute());
 
       FabricCore::RTVal compoundVal = FabricSplice::constructObjectRTVal("CompoundParam");
@@ -616,7 +618,7 @@ void plugToPort_compoundArray(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
   CORE_CATCH_END;
 }
 
-void plugToPort_compound(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_compound(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   if(plug.isArray()){
     FabricCore::RTVal compoundVals = FabricSplice::constructObjectRTVal("CompoundParam[]");
     compoundVals.setArraySize(plug.numElements());
@@ -624,7 +626,9 @@ void plugToPort_compound(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & p
     for(unsigned int j=0;j<plug.numElements();j++) {
 
       MPlug element = plug.elementByPhysicalIndex(j);
+      timers->stop();
       MDataHandle handle = data.inputValue(element);
+      timers->resume();
       MFnCompoundAttribute compound(element.attribute());
 
       FabricCore::RTVal compoundVal;
@@ -634,7 +638,9 @@ void plugToPort_compound(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & p
     port.setRTVal(compoundVals);
   }
   else{
+    timers->stop();
     MDataHandle handle = data.inputValue(plug);
+    timers->resume();
     FabricCore::RTVal rtVal = FabricSplice::constructObjectRTVal("CompoundParam");
     MFnCompoundAttribute compound(plug.attribute());
     plugToPort_compound_convertCompound(compound, handle, rtVal);
@@ -642,9 +648,11 @@ void plugToPort_compound(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & p
   }
 }
 
-void plugToPort_bool(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_bool(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   if(plug.isArray()){
+    timers->stop();
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    timers->resume();
 
     unsigned int elements = arrayHandle.elementCount();
     MAYASPLICE_MEMORY_ALLOCATE(bool, elements);
@@ -659,14 +667,18 @@ void plugToPort_bool(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
     MAYASPLICE_MEMORY_FREE();
   }
   else{
+    timers->stop();
     MDataHandle handle = data.inputValue(plug);
+    timers->resume();
     port.setRTVal(FabricSplice::constructBooleanRTVal(handle.asBool()));
   }
 }
 
-void plugToPort_integer(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_integer(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   if(plug.isArray()){
+    timers->stop();
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    timers->resume();
 
     unsigned int elements = arrayHandle.elementCount();
     MAYASPLICE_MEMORY_ALLOCATE(int32_t, elements);
@@ -680,7 +692,9 @@ void plugToPort_integer(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & po
     MAYASPLICE_MEMORY_SETPORT(port);
     MAYASPLICE_MEMORY_FREE();
   }else{
+    timers->stop();
     MDataHandle handle = data.inputValue(plug);
+    timers->resume();
 
     if(handle.type() == MFnData::kIntArray) {
       MIntArray arrayValues = MFnIntArrayData(handle.data()).array();
@@ -700,11 +714,13 @@ void plugToPort_integer(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & po
   }
 }
 
-void plugToPort_scalar(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_scalar(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
 
   std::string scalarUnit = port.getStringOption("scalarUnit");
   if(plug.isArray()){
+    timers->stop();
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    timers->resume();
 
     unsigned int elements = arrayHandle.elementCount();
     MAYASPLICE_MEMORY_ALLOCATE(float, elements);
@@ -732,7 +748,9 @@ void plugToPort_scalar(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & por
     MAYASPLICE_MEMORY_SETPORT(port);
     MAYASPLICE_MEMORY_FREE();
   }else{
+    timers->stop();
     MDataHandle handle = data.inputValue(plug);
+    timers->resume();
     if(port.isArray()){
       MDoubleArray arrayValues = MFnDoubleArrayData(handle.data()).array();
       unsigned int elements = arrayValues.length();
@@ -765,11 +783,13 @@ void plugToPort_scalar(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & por
   }
 }
 
-void plugToPort_string(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_string(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
+    timers->stop();
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    timers->resume();
     unsigned int elements = arrayHandle.elementCount();
     FabricCore::RTVal stringArrayVal = FabricSplice::constructVariableArrayRTVal("String");
     FabricCore::RTVal elementsVal = FabricSplice::constructUInt32RTVal(elements);
@@ -786,18 +806,22 @@ void plugToPort_string(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & por
   else{
     if(port.isArray())
       return;
+    timers->stop();
     MDataHandle handle = data.inputValue(plug);
+    timers->resume();
     port.setRTVal(FabricSplice::constructStringRTVal(handle.asString().asChar()));
   }
 
   CORE_CATCH_END;
 }
 
-void plugToPort_color(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_color(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
+    timers->stop();
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    timers->resume();
 
     unsigned int elements = arrayHandle.elementCount();
     FabricCore::RTVal arrayVal = FabricSplice::constructVariableArrayRTVal("Color");
@@ -828,7 +852,9 @@ void plugToPort_color(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
   else {
     if(port.isArray())
       return;
+    timers->stop();
     MDataHandle handle = data.inputValue(plug);
+    timers->resume();
 
     FabricCore::RTVal color = FabricSplice::constructRTVal("Color");
     if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
@@ -850,9 +876,11 @@ void plugToPort_color(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
   CORE_CATCH_END;
 }
 
-void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   if(plug.isArray()){
+    timers->stop();
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    timers->resume();
 
     unsigned int elements = arrayHandle.elementCount();
     MAYASPLICE_MEMORY_ALLOCATE(float, elements * 3);
@@ -877,7 +905,9 @@ void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
     MAYASPLICE_MEMORY_SETPORT(port);
     MAYASPLICE_MEMORY_FREE();
   }else{
+    timers->stop();
     MDataHandle handle = data.inputValue(plug);
+    timers->resume();
     MFnTypedAttribute tAttr(plug.attribute());
     if(handle.type() == MFnData::kVectorArray || tAttr.attrType() == MFnData::kVectorArray){
       MVectorArray arrayValues = MFnVectorArrayData(handle.data()).array();
@@ -940,11 +970,13 @@ void plugToPort_vec3(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port)
   }
 }
 
-void plugToPort_euler(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_euler(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
+    timers->stop();
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    timers->resume();
 
     unsigned int elements = arrayHandle.elementCount();
     FabricCore::RTVal arrayVal = FabricSplice::constructVariableArrayRTVal("Euler");
@@ -974,7 +1006,9 @@ void plugToPort_euler(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
   else {
     if(port.isArray())
       return;
+    timers->stop();
     MDataHandle handle = data.inputValue(plug);
+    timers->resume();
 
     FabricCore::RTVal euler = FabricSplice::constructRTVal("Euler");
     if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
@@ -995,9 +1029,11 @@ void plugToPort_euler(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
   CORE_CATCH_END;
 }
 
-void plugToPort_mat44(MPlug &plug, MDataBlock &dataBlock, FabricSplice::DGPort & port){
+void plugToPort_mat44(MPlug &plug, MDataBlock &dataBlock, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   if(plug.isArray()){
+    timers->stop();
     MArrayDataHandle arrayHandle = dataBlock.inputArrayValue(plug);
+    timers->resume();
 
     unsigned int elements = arrayHandle.elementCount();
     MAYASPLICE_MEMORY_ALLOCATE(float, elements * 16);
@@ -1032,7 +1068,9 @@ void plugToPort_mat44(MPlug &plug, MDataBlock &dataBlock, FabricSplice::DGPort &
   else{
     assert( !port.isArray() );
 
+    timers->stop();
     MDataHandle dataHandle = dataBlock.inputValue(plug);
+    timers->resume();
     if ( !dataHandle.isNumeric() )
       throw FabricCore::Exception( "plugToPort_mat44: Unexpected MDataHandle" );
 
@@ -1057,7 +1095,7 @@ void plugToPort_mat44(MPlug &plug, MDataBlock &dataBlock, FabricSplice::DGPort &
   }
 }
 
-void plugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
 
   std::vector<MDataHandle> handles;
   std::vector<FabricCore::RTVal> rtVals;
@@ -1069,7 +1107,9 @@ void plugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricSplice::DGPort 
     {
       portRTVal = port.getRTVal();
 
+      timers->stop();
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+      timers->resume();
 
       unsigned int elements = arrayHandle.elementCount();
       for(unsigned int i = 0; i < elements; ++i){
@@ -1105,7 +1145,9 @@ void plugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricSplice::DGPort 
     }
     else
     {
+      timers->stop();
       handles.push_back(data.inputValue(plug));
+      timers->resume();
 
       if(port.getMode() == FabricSplice::Port_Mode_IO)
         portRTVal = port.getRTVal();
@@ -1247,7 +1289,7 @@ void plugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, FabricSplice::DGPort 
   }
 }
 
-void plugToPort_Lines(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_Lines(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
 
   std::vector<MDataHandle> handles;
   std::vector<FabricCore::RTVal> rtVals;
@@ -1259,7 +1301,9 @@ void plugToPort_Lines(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
     {
       portRTVal = port.getRTVal();
 
+      timers->stop();
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+      timers->resume();
 
       unsigned int elements = arrayHandle.elementCount();
       for(unsigned int i = 0; i < elements; ++i){
@@ -1286,7 +1330,9 @@ void plugToPort_Lines(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port
     }
     else
     {
+      timers->stop();
       handles.push_back(data.inputValue(plug));
+      timers->resume();
 
       if(port.getMode() == FabricSplice::Port_Mode_IO)
         portRTVal = port.getRTVal();
@@ -1466,7 +1512,7 @@ void plugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal & t
   CORE_CATCH_END;
 }
 
-void plugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   if(!plug.isArray()){
     
     MPlugArray plugs;
@@ -1523,7 +1569,7 @@ void plugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, FabricSplice::DGPor
   }
 }
 
-void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port){
+void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers){
   try{
 
     FabricCore::Variant option = port.getOption("disableSpliceMayaDataConversion");
@@ -1537,7 +1583,9 @@ void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPo
     }
 
     if(!plug.isArray()){
+      timers->stop();
       MDataHandle handle = data.inputValue(plug);
+      timers->resume();
       MObject spliceMayaDataObj = handle.data();
       MFnPluginData mfn(spliceMayaDataObj);
       FabricSpliceMayaData *spliceMayaData = (FabricSpliceMayaData*)mfn.data();
@@ -1546,7 +1594,9 @@ void plugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, FabricSplice::DGPo
 
       port.setRTVal(spliceMayaData->getRTVal());
     }else{
+      timers->stop();
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+      timers->resume();
       unsigned int elements = arrayHandle.elementCount();
 
       FabricCore::RTVal value = port.getRTVal();

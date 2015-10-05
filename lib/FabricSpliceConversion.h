@@ -22,10 +22,44 @@
 #define MAYASPLICE_MEMORY_GETPORT(port) port.getArrayData(values, valuesSize)
 #define MAYASPLICE_MEMORY_FREE() free(values)
 
-typedef void(*SplicePlugToPortFunc)(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port);
+struct SpliceConversionTimers
+{
+  FabricSplice::Logging::AutoTimer * globalTimer;
+  FabricSplice::Logging::AutoTimer * localTimer;
+
+  SpliceConversionTimers()
+  {
+    globalTimer = NULL;
+    localTimer = NULL;
+  }
+
+  void stop()
+  {
+    if(globalTimer != NULL)
+      globalTimer->stop();
+    if(localTimer != NULL)
+      localTimer->stop();
+  }
+
+  void resume()
+  {
+    if(globalTimer != NULL)
+      globalTimer->resume();
+    if(localTimer != NULL)
+      localTimer->resume();
+  }
+};
+
+typedef void(*SplicePlugToPortFunc)(MPlug &plug, MDataBlock &data, FabricSplice::DGPort & port, SpliceConversionTimers * timers);
 typedef void(*SplicePortToPlugFunc)(FabricSplice::DGPort & port, MPlug &plug, MDataBlock &data);
 
-SplicePlugToPortFunc getSplicePlugToPortFunc(const std::string & dataType, const FabricSplice::DGPort * port = NULL);
-SplicePortToPlugFunc getSplicePortToPlugFunc(const std::string & dataType, const FabricSplice::DGPort * port = NULL);
+SplicePlugToPortFunc getSplicePlugToPortFunc(
+  const std::string & dataType, 
+  const FabricSplice::DGPort * port = NULL
+  );
+SplicePortToPlugFunc getSplicePortToPlugFunc(
+  const std::string & dataType, 
+  const FabricSplice::DGPort * port = NULL
+  );
 
 #endif

@@ -132,6 +132,9 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(
   FabricSplice::Logging::AutoTimer globalTimer("Maya::transferInputValuesToSplice()");
   std::string localTimerName = (std::string("Maya::")+_spliceGraph.getName()+"::transferInputValuesToSplice()").c_str();
   FabricSplice::Logging::AutoTimer localTimer(localTimerName.c_str());
+  SpliceConversionTimers timers;
+  timers.globalTimer = &globalTimer;
+  timers.localTimer = &localTimer;
 
   _isTransferingInputs = true;
 
@@ -171,7 +174,7 @@ bool FabricSpliceBaseInterface::transferInputValuesToSplice(
       SplicePlugToPortFunc func = getSplicePlugToPortFunc(dataType, &port);
       if(func != NULL)
       {
-        (*func)(plug, data, port);
+        (*func)(plug, data, port, &timers);
       }
     }
   }

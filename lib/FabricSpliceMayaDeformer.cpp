@@ -265,7 +265,8 @@ int FabricSpliceMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataB
     return -1;
   }
 
-  getSplicePlugToPortFunc("PolygonMesh")(meshPlug, data, port);
+  SpliceConversionTimers timers;
+  getSplicePlugToPortFunc("PolygonMesh")(meshPlug, data, port, &timers);
   invalidatePlug(meshPlug);
   _spliceGraph.requireEvaluate();
   return 1;
