@@ -524,7 +524,7 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_SetPortDefaultValue
   > MayaDFGUICmd_SetPortDefaultValue;
 
-class FabricDFGSetNodeTitleCommand
+class FabricDFGSetTitleCommand
   : public FabricDFGExecCommand
 {
   typedef FabricDFGExecCommand Parent;
@@ -535,7 +535,6 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string nodeName;
     std::string title;
   };
 
@@ -547,9 +546,9 @@ protected:
 };
 
 typedef MayaDFGUICmdWrapper<
-  FabricDFGSetNodeTitleCommand,
-  FabricUI::DFG::DFGUICmd_SetNodeTitle
-  > MayaDFGUICmd_SetNodeTitle;
+  FabricDFGSetTitleCommand,
+  FabricUI::DFG::DFGUICmd_SetTitle
+  > MayaDFGUICmd_SetTitle;
 
 class FabricDFGRemovePortCommand
   : public FabricDFGExecCommand
@@ -655,6 +654,33 @@ typedef MayaDFGUICmdWrapper<
   FabricDFGReorderPortsCommand,
   FabricUI::DFG::DFGUICmd_ReorderPorts
   > MayaDFGUICmd_ReorderPorts;
+
+class FabricDFGRenameNodeCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string oldNodeName;
+    std::string desiredNewNodeName;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGRenameNodeCommand,
+  FabricUI::DFG::DFGUICmd_RenameNode
+  > MayaDFGUICmd_RenameNode;
 
 class FabricDFGRenamePortCommand
   : public FabricDFGExecCommand
