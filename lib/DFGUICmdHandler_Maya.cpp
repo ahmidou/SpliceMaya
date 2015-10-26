@@ -770,19 +770,21 @@ void DFGUICmdHandler_Maya::dfgDoSetCode(
     );
 }
 
-std::string DFGUICmdHandler_Maya::dfgDoRenameNode(
+std::string DFGUICmdHandler_Maya::dfgDoEditNode(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef name,
-  FTL::CStrRef desiredName
+  FTL::StrRef oldNodeName,
+  FTL::StrRef desiredNewNodeName,
+  FTL::StrRef uiMetadata
   )
 {
   std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_RenameNode::CmdName();
+  cmd << FabricUI::DFG::DFGUICmd_EditNode::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("n"), name, cmd );
-  encodeStringArg( FTL_STR("d"), desiredName, cmd );
+  encodeStringArg( FTL_STR("n"), oldNodeName, cmd );
+  encodeStringArg( FTL_STR("d"), desiredNewNodeName, cmd );
+  encodeStringArg( FTL_STR("ui"), uiMetadata, cmd );
   cmd << ';';
 
   MString mResult;

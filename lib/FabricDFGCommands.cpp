@@ -1497,16 +1497,17 @@ FabricUI::DFG::DFGUICmd *FabricDFGReorderPortsCommand::executeDFGUICmd(
   return cmd;
 }
 
-// FabricDFGRenameNodeCommand
+// FabricDFGEditNodeCommand
 
-void FabricDFGRenameNodeCommand::AddSyntax( MSyntax &syntax )
+void FabricDFGEditNodeCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
   syntax.addFlag("-n", "-oldNodeName", MSyntax::kString);
   syntax.addFlag("-d", "-desiredNewNodeName", MSyntax::kString);
+  syntax.addFlag("-ui", "-uiMetadata", MSyntax::kString);
 }
 
-void FabricDFGRenameNodeCommand::GetArgs(
+void FabricDFGEditNodeCommand::GetArgs(
   MArgParser &argParser,
   Args &args
   )
@@ -1520,22 +1521,26 @@ void FabricDFGRenameNodeCommand::GetArgs(
   if ( !argParser.isFlagSet( "desiredNewNodeName" ) )
     throw ArgException( MS::kFailure, "-d (-desiredNewNodeName) not provided." );
   args.desiredNewNodeName = argParser.flagArgumentString( "desiredNewNodeName", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "uiMetadata" ) )
+    args.uiMetadata = argParser.flagArgumentString( "uiMetadata", 0 ).asChar();
 }
 
-FabricUI::DFG::DFGUICmd *FabricDFGRenameNodeCommand::executeDFGUICmd(
+FabricUI::DFG::DFGUICmd *FabricDFGEditNodeCommand::executeDFGUICmd(
   MArgParser &argParser
   )
 {
   Args args;
   GetArgs( argParser, args );
 
-  FabricUI::DFG::DFGUICmd_RenameNode *cmd =
-    new FabricUI::DFG::DFGUICmd_RenameNode(
+  FabricUI::DFG::DFGUICmd_EditNode *cmd =
+    new FabricUI::DFG::DFGUICmd_EditNode(
       args.binding,
       args.execPath,
       args.exec,
       args.oldNodeName,
-      args.desiredNewNodeName
+      args.desiredNewNodeName,
+      args.uiMetadata
       );
   cmd->doit();
   setResult( cmd->getActualNewNodeName().c_str() );

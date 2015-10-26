@@ -655,7 +655,7 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_ReorderPorts
   > MayaDFGUICmd_ReorderPorts;
 
-class FabricDFGRenameNodeCommand
+class FabricDFGEditNodeCommand
   : public FabricDFGExecCommand
 {
   typedef FabricDFGExecCommand Parent;
@@ -668,6 +668,7 @@ protected:
   {
     std::string oldNodeName;
     std::string desiredNewNodeName;
+    std::string uiMetadata;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -678,9 +679,9 @@ protected:
 };
 
 typedef MayaDFGUICmdWrapper<
-  FabricDFGRenameNodeCommand,
-  FabricUI::DFG::DFGUICmd_RenameNode
-  > MayaDFGUICmd_RenameNode;
+  FabricDFGEditNodeCommand,
+  FabricUI::DFG::DFGUICmd_EditNode
+  > MayaDFGUICmd_EditNode;
 
 class FabricDFGRenamePortCommand
   : public FabricDFGExecCommand
