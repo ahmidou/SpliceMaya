@@ -98,7 +98,7 @@ void mayaKLStatusFunc(const char * topicData, unsigned int topicLength,  const c
   {
     try
     {
-      FabricUI::HandleLicenseData(
+      FabricUI_HandleLicenseData(
         NULL,
         *client,
         message,
