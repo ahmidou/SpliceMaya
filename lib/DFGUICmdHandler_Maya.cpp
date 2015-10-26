@@ -776,7 +776,8 @@ std::string DFGUICmdHandler_Maya::dfgDoEditNode(
   FabricCore::DFGExec const &exec,
   FTL::StrRef oldNodeName,
   FTL::StrRef desiredNewNodeName,
-  FTL::StrRef uiMetadata
+  FTL::StrRef nodeMetadata,
+  FTL::StrRef execMetadata
   )
 {
   std::stringstream cmd;
@@ -784,7 +785,8 @@ std::string DFGUICmdHandler_Maya::dfgDoEditNode(
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("n"), oldNodeName, cmd );
   encodeStringArg( FTL_STR("d"), desiredNewNodeName, cmd );
-  encodeStringArg( FTL_STR("ui"), uiMetadata, cmd );
+  encodeStringArg( FTL_STR("nm"), nodeMetadata, cmd );
+  encodeStringArg( FTL_STR("xm"), execMetadata, cmd );
   cmd << ';';
 
   MString mResult;

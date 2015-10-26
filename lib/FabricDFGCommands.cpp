@@ -1504,7 +1504,8 @@ void FabricDFGEditNodeCommand::AddSyntax( MSyntax &syntax )
   Parent::AddSyntax( syntax );
   syntax.addFlag("-n", "-oldNodeName", MSyntax::kString);
   syntax.addFlag("-d", "-desiredNewNodeName", MSyntax::kString);
-  syntax.addFlag("-ui", "-uiMetadata", MSyntax::kString);
+  syntax.addFlag("-nm", "-nodeMetadata", MSyntax::kString);
+  syntax.addFlag("-xm", "-execMetadata", MSyntax::kString);
 }
 
 void FabricDFGEditNodeCommand::GetArgs(
@@ -1522,8 +1523,11 @@ void FabricDFGEditNodeCommand::GetArgs(
     throw ArgException( MS::kFailure, "-d (-desiredNewNodeName) not provided." );
   args.desiredNewNodeName = argParser.flagArgumentString( "desiredNewNodeName", 0 ).asChar();
 
-  if ( argParser.isFlagSet( "uiMetadata" ) )
-    args.uiMetadata = argParser.flagArgumentString( "uiMetadata", 0 ).asChar();
+  if ( argParser.isFlagSet( "nodeMetadata" ) )
+    args.nodeMetadata = argParser.flagArgumentString( "nodeMetadata", 0 ).asChar();
+
+  if ( argParser.isFlagSet( "execMetadata" ) )
+    args.execMetadata = argParser.flagArgumentString( "execMetadata", 0 ).asChar();
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGEditNodeCommand::executeDFGUICmd(
@@ -1540,7 +1544,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGEditNodeCommand::executeDFGUICmd(
       args.exec,
       args.oldNodeName,
       args.desiredNewNodeName,
-      args.uiMetadata
+      args.nodeMetadata,
+      args.execMetadata
       );
   cmd->doit();
   setResult( cmd->getActualNewNodeName().c_str() );

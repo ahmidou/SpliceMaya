@@ -668,7 +668,8 @@ protected:
   {
     std::string oldNodeName;
     std::string desiredNewNodeName;
-    std::string uiMetadata;
+    std::string nodeMetadata;
+    std::string execMetadata;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
