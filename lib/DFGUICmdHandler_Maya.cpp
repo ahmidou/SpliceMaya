@@ -708,18 +708,16 @@ void DFGUICmdHandler_Maya::dfgDoAddBackDrop(
     );
 }
 
-void DFGUICmdHandler_Maya::dfgDoSetNodeTitle(
+void DFGUICmdHandler_Maya::dfgDoSetTitle(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef node,
   FTL::CStrRef title
   )
 {
   std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_SetNodeTitle::CmdName();
+  cmd << FabricUI::DFG::DFGUICmd_SetTitle::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("n"), node, cmd );
   encodeStringArg( FTL_STR("t"), title, cmd );
   cmd << ';';
 
@@ -770,6 +768,32 @@ void DFGUICmdHandler_Maya::dfgDoSetCode(
     true, // displayEnabled
     true  // undoEnabled
     );
+}
+
+std::string DFGUICmdHandler_Maya::dfgDoRenameNode(
+  FabricCore::DFGBinding const &binding,
+  FTL::CStrRef execPath,
+  FabricCore::DFGExec const &exec,
+  FTL::CStrRef name,
+  FTL::CStrRef desiredName
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_RenameNode::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("n"), name, cmd );
+  encodeStringArg( FTL_STR("d"), desiredName, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+
+  return mResult.asChar();
 }
 
 std::string DFGUICmdHandler_Maya::dfgDoRenamePort(
