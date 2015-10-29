@@ -104,6 +104,15 @@ protected:
     FTL::CStrRef uiMetadata
     );
 
+  virtual std::string dfgDoCreatePreset(
+    FabricCore::DFGBinding const &binding,
+    FTL::StrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::StrRef nodeName,
+    FTL::StrRef presetDirPath,
+    FTL::StrRef presetName
+    );
+
   virtual std::string dfgDoEditPort(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
@@ -332,7 +341,7 @@ protected:
 
   void encodeExec(
     FabricCore::DFGBinding const &binding,
-    FTL::CStrRef execPath,
+    FTL::StrRef execPath,
     FabricCore::DFGExec const &exec,
     std::stringstream &cmd
     );

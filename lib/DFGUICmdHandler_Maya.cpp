@@ -226,7 +226,7 @@ void DFGUICmdHandler_Maya::encodeBinding(
 
 void DFGUICmdHandler_Maya::encodeExec(
   FabricCore::DFGBinding const &binding,
-  FTL::CStrRef execPath,
+  FTL::StrRef execPath,
   FabricCore::DFGExec const &exec,
   std::stringstream &cmd
   )
@@ -517,6 +517,33 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
     }
   }
 
+  return mResult.asChar();
+}
+
+std::string DFGUICmdHandler_Maya::dfgDoCreatePreset(
+  FabricCore::DFGBinding const &binding,
+  FTL::StrRef execPath,
+  FabricCore::DFGExec const &exec,
+  FTL::StrRef nodeName,
+  FTL::StrRef presetDirPath,
+  FTL::StrRef presetName
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_CreatePreset::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("n"), nodeName, cmd );
+  encodeStringArg( FTL_STR("pd"), presetDirPath, cmd );
+  encodeStringArg( FTL_STR("pn"), presetName, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
   return mResult.asChar();
 }
 

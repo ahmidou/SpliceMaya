@@ -1105,6 +1105,57 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGCreatePresetCommand
+
+void FabricDFGCreatePresetCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
+  syntax.addFlag("-pd", "-presetDirPath", MSyntax::kString);
+  syntax.addFlag("-pn", "-presetName", MSyntax::kString);
+}
+
+void FabricDFGCreatePresetCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "nodeName" ) )
+    throw ArgException( MS::kFailure, "-n (-nodeName) not provided." );
+  args.nodeName = argParser.flagArgumentString( "nodeName", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "presetDirPath" ) )
+    throw ArgException( MS::kFailure, "-n (-presetDirPath) not provided." );
+  args.presetDirPath = argParser.flagArgumentString( "presetDirPath", 0 ).asChar();
+
+  if ( !argParser.isFlagSet( "presetName" ) )
+    throw ArgException( MS::kFailure, "-n (-presetName) not provided." );
+  args.presetName = argParser.flagArgumentString( "presetName", 0 ).asChar();
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGCreatePresetCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_CreatePreset *cmd =
+    new FabricUI::DFG::DFGUICmd_CreatePreset(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.nodeName,
+      args.presetDirPath,
+      args.presetName
+      );
+  cmd->doit();
+  setResult( cmd->getPathname().c_str() );
+  return cmd;
+}
+
 // FabricDFGEditPortCommand
 
 void FabricDFGEditPortCommand::AddSyntax( MSyntax &syntax )
