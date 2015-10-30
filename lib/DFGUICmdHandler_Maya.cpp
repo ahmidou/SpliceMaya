@@ -226,7 +226,7 @@ void DFGUICmdHandler_Maya::encodeBinding(
 
 void DFGUICmdHandler_Maya::encodeExec(
   FabricCore::DFGBinding const &binding,
-  FTL::CStrRef execPath,
+  FTL::StrRef execPath,
   FabricCore::DFGExec const &exec,
   std::stringstream &cmd
   )
@@ -520,6 +520,33 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
   return mResult.asChar();
 }
 
+std::string DFGUICmdHandler_Maya::dfgDoCreatePreset(
+  FabricCore::DFGBinding const &binding,
+  FTL::StrRef execPath,
+  FabricCore::DFGExec const &exec,
+  FTL::StrRef nodeName,
+  FTL::StrRef presetDirPath,
+  FTL::StrRef presetName
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_CreatePreset::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("n"), nodeName, cmd );
+  encodeStringArg( FTL_STR("pd"), presetDirPath, cmd );
+  encodeStringArg( FTL_STR("pn"), presetName, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+  return mResult.asChar();
+}
+
 std::string DFGUICmdHandler_Maya::dfgDoEditPort(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
@@ -770,19 +797,23 @@ void DFGUICmdHandler_Maya::dfgDoSetCode(
     );
 }
 
-std::string DFGUICmdHandler_Maya::dfgDoRenameNode(
+std::string DFGUICmdHandler_Maya::dfgDoEditNode(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef name,
-  FTL::CStrRef desiredName
+  FTL::StrRef oldNodeName,
+  FTL::StrRef desiredNewNodeName,
+  FTL::StrRef nodeMetadata,
+  FTL::StrRef execMetadata
   )
 {
   std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_RenameNode::CmdName();
+  cmd << FabricUI::DFG::DFGUICmd_EditNode::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("n"), name, cmd );
-  encodeStringArg( FTL_STR("d"), desiredName, cmd );
+  encodeStringArg( FTL_STR("n"), oldNodeName, cmd );
+  encodeStringArg( FTL_STR("d"), desiredNewNodeName, cmd );
+  encodeStringArg( FTL_STR("nm"), nodeMetadata, cmd );
+  encodeStringArg( FTL_STR("xm"), execMetadata, cmd );
   cmd << ';';
 
   MString mResult;
