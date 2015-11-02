@@ -144,10 +144,14 @@ mayaModule = None
 libSources = env.Glob('lib/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 
-libFabricMaya = env.StaticLibrary('libFabricMaya', libSources)
-env.Append(LIBS = [libFabricMaya])
-
 pluginSources = env.Glob('plugin/*.cpp')
+
+libEnv = env.Clone()
+if FABRIC_BUILD_OS == 'Linux':
+  libEnv.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../lib/')])
+if FABRIC_BUILD_OS == 'Darwin':
+  libEnv.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../..')])
+libFabricMaya = libEnv.SharedLibrary('libFabricMaya', libSources)
 
 if FABRIC_BUILD_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
@@ -209,7 +213,6 @@ mayaModuleFile = env.SubstMayaModuleFile(
 
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
-mayaFiles.append(env.Install(STAGE_DIR, libFabricMaya))
 
 for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricDFGTool', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
@@ -223,28 +226,20 @@ for xpm in ['FE_tool']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'ui'), os.path.join('Module', 'ui', xpm+'.xpm')))
 installedModule = env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), mayaModule)
 mayaFiles.append(installedModule)
+mayaFiles.append(env.Install(STAGE_DIR, libFabricMaya))
 
 # also install the FabricCore dynamic library
 if FABRIC_BUILD_OS == 'Linux':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../../lib/')])
+  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/..')])
 if FABRIC_BUILD_OS == 'Darwin':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../../..')])
-# if FABRIC_BUILD_OS == 'Windows':
-#   FABRIC_CORE_VERSION = FABRIC_SPLICE_VERSION.rpartition('.')[0]
-#   mayaFiles.append(
-#     env.Install(
-#       os.path.join(STAGE_DIR.abspath, 'plug-ins'),
-#       os.path.join(FABRIC_DIR, 'lib', 'FabricCore-' + FABRIC_CORE_VERSION + '.dll')
-#       )
-#     )
-#   mayaFiles.append(
-#     env.Install(
-#       os.path.join(STAGE_DIR.abspath, 'plug-ins'),
-#       os.path.join(FABRIC_DIR, 'lib', 'FabricCore-' + FABRIC_CORE_VERSION + '.pdb')
-#       )
-#     )
-
+  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/..')])
 # todo: install the python client
+
+env.Append(LIBPATH = [env.Dir('.')])
+env.Append(LIBS = ['FabricMaya'])
+env.Depends(mayaModule, libFabricMaya)
 
 alias = env.Alias('splicemaya', mayaFiles)
 spliceData = (alias, mayaFiles)
