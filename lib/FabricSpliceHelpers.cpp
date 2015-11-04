@@ -98,12 +98,15 @@ void mayaKLStatusFunc(const char * topicData, unsigned int topicLength,  const c
   {
     try
     {
-      FabricUI_HandleLicenseData(
-        NULL,
-        *client,
-        message,
-        false // modalDialogs
-        );
+      if (MGlobal::mayaState() == MGlobal::kInteractive)
+      {
+        FabricUI_HandleLicenseData(
+          NULL,
+          *client,
+          message,
+          false // modalDialogs
+          );
+      }
     }
     catch ( FabricCore::Exception e )
     {
