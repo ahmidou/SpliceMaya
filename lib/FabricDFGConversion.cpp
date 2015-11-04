@@ -31,8 +31,6 @@
 #include <maya/MFloatVectorArray.h>
 #include <maya/MFnAnimCurve.h>
 
-#include <FTL/CStrRef.h>
-
 #define CORE_CATCH_BEGIN try {
 #define CORE_CATCH_END } \
   catch (FabricCore::Exception e) { \
@@ -3117,7 +3115,7 @@ void dfgPortToPlug_spliceMayaData(
   }
 }
 
-DFGPlugToArgFunc getDFGPlugToArgFunc(const std::string & dataType)
+DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::CStrRef &dataType)
 {
   if(dataType == "CompoundParam")
     return dfgPlugToPort_compound;
@@ -3151,7 +3149,7 @@ DFGPlugToArgFunc getDFGPlugToArgFunc(const std::string & dataType)
   return NULL;  
 }
 
-DFGArgToPlugFunc getDFGArgToPlugFunc(const std::string & dataType)
+DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::CStrRef &dataType)
 {
   if(dataType == "CompoundParam")
     return dfgPortToPlug_compound;

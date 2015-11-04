@@ -16,6 +16,8 @@
 #include <FabricCore.h>
 #include <FabricSplice.h>
 
+#include <FTL/CStrRef.h>
+
 struct DFGConversionTimers
 {
   FabricSplice::Logging::AutoTimer * globalTimer;
@@ -55,7 +57,7 @@ typedef void(*DFGArgToPlugFunc)(
   MDataBlock &data
   );
 
-DFGPlugToArgFunc getDFGPlugToArgFunc(const std::string & dataType);
-DFGArgToPlugFunc getDFGArgToPlugFunc(const std::string & dataType);
+DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::CStrRef &dataType);
+DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::CStrRef &dataType);
 
 #endif
