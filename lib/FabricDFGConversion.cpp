@@ -815,7 +815,7 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data,
       }
 
       // get the resolved data type of the destination exec port and set its value.
-      std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+      FTL::CStrRef resolvedType = binding.getExec().getExecPortResolvedType(argName);
       if      (resolvedType == "Scalar")  binding.setArgValue_lockType(lockType, argName, FabricSplice::constructFloat32RTVal((float)plugValue), false);
       else if (resolvedType == "Float32") binding.setArgValue_lockType(lockType, argName, FabricSplice::constructFloat32RTVal((float)plugValue), false);
       else if (resolvedType == "Float64") binding.setArgValue_lockType(lockType, argName, FabricSplice::constructFloat64RTVal(       plugValue), false);
