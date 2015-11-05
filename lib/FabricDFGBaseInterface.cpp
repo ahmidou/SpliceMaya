@@ -616,7 +616,7 @@ void FabricDFGBaseInterface::reloadFromReferencedFilePath()
   restoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
-MString FabricDFGBaseInterface::getPlugName(MString portName)
+MString FabricDFGBaseInterface::getPlugName(const MString &portName)
 {
   if(portName == "message")
     return "dfg_message";
@@ -627,7 +627,7 @@ MString FabricDFGBaseInterface::getPlugName(MString portName)
   return portName;
 }
 
-MString FabricDFGBaseInterface::getPortName(MString plugName)
+MString FabricDFGBaseInterface::getPortName(const MString &plugName)
 {
   if(plugName == "dfg_message")
     return "message";
