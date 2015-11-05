@@ -82,9 +82,9 @@ double dfgGetFloat64FromRTVal(FabricCore::RTVal rtVal)
 inline void Mat44ToMMatrix_data(float const *data, MMatrix &matrix)
 {
   double vals[4][4] ={
-    { data[0], data[4], data[8], data[12] }, 
-    { data[1], data[5], data[9], data[13] }, 
-    { data[2], data[6], data[10], data[14] }, 
+    { data[0], data[4], data[8],  data[12] },
+    { data[1], data[5], data[9],  data[13] },
+    { data[2], data[6], data[10], data[14] },
     { data[3], data[7], data[11], data[15] }
   };
   matrix = MMatrix(vals);
@@ -99,16 +99,16 @@ inline void Mat44ToMMatrix(FabricCore::RTVal &rtVal, MMatrix &matrix)
 
 inline void MMatrixToMat44_data(MMatrix const &matrix, float *data)
 {
-  data[0] = (float)matrix[0][0];
-  data[1] = (float)matrix[1][0];
-  data[2] = (float)matrix[2][0];
-  data[3] = (float)matrix[3][0];
-  data[4] = (float)matrix[0][1];
-  data[5] = (float)matrix[1][1];
-  data[6] = (float)matrix[2][1];
-  data[7] = (float)matrix[3][1];
-  data[8] = (float)matrix[0][2];
-  data[9] = (float)matrix[1][2];
+  data[0]  = (float)matrix[0][0];
+  data[1]  = (float)matrix[1][0];
+  data[2]  = (float)matrix[2][0];
+  data[3]  = (float)matrix[3][0];
+  data[4]  = (float)matrix[0][1];
+  data[5]  = (float)matrix[1][1];
+  data[6]  = (float)matrix[2][1];
+  data[7]  = (float)matrix[3][1];
+  data[8]  = (float)matrix[0][2];
+  data[9]  = (float)matrix[1][2];
   data[10] = (float)matrix[2][2];
   data[11] = (float)matrix[3][2];
   data[12] = (float)matrix[0][3];
@@ -748,7 +748,7 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data,
     DFGConversionTimers * timers)
 {
 
-  MString scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
+  FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
   if(plug.isArray()){
     timers->stop();
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
@@ -842,8 +842,7 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data,
     for(unsigned int i = 0; i < elements; ++i){
       arrayHandle.jumpToArrayElement(i);
       MDataHandle handle = arrayHandle.inputValue();
-      MString stringVal = handle.asString();
-      stringArrayVal.setArrayElement(i, FabricSplice::constructStringRTVal(stringVal.asChar()));
+      stringArrayVal.setArrayElement(i, FabricSplice::constructStringRTVal(handle.asString().asChar()));
     }
 
     binding.setArgValue_lockType(lockType, argName, stringArrayVal, false);
@@ -1630,7 +1629,7 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data,
     const char *option = binding.getExec().getExecPortMetadata(argName, "disableSpliceMayaDataConversion");
     if(option)
     {
-      if(std::string(option) == "true")
+      if(FTL::CStrRef(option) == "true")
       {
         // this is an unconnected opaque port, exit early
         return;
@@ -1694,7 +1693,7 @@ void dfgPortToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDa
   CORE_CATCH_BEGIN;
 
   std::vector<FabricCore::RTVal> args(5);
-  std::string valueType;
+  FTL::CStrRef valueType;
 
   valueType = rtVal.callMethod("String", "getValueType", 0, 0).getStringCString();
 
@@ -2415,7 +2414,7 @@ void dfgPortToPlug_scalar(
 {
   CORE_CATCH_BEGIN;
 
-  MString scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
+  FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2977,8 +2976,8 @@ void dfgPortToPlug_Lines_singleLines(MDataHandle handle, FabricCore::RTVal rtVal
   unsigned int nbSegments = 0;
   if(!rtVal.isNullObject())
   {
-    nbPoints = rtVal.callMethod("UInt64", "pointCount", 0, 0).getUInt64();
-    nbSegments = rtVal.callMethod("UInt64", "lineCount", 0, 0).getUInt64();
+    nbPoints   = rtVal.callMethod("UInt64", "pointCount", 0, 0).getUInt64();
+    nbSegments = rtVal.callMethod("UInt64", "lineCount",  0, 0).getUInt64();
   }
 
   MPointArray mayaPoints(nbPoints);
