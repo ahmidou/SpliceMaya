@@ -261,8 +261,12 @@ void FabricDFGBaseInterface::evaluate(){
   {
     try
     {
+      double playbackBy = MAnimControl::playbackBy();
       m_evalContext.setMember("graph", FabricCore::RTVal::ConstructString(m_client, thisNode.name().asChar()));
       m_evalContext.setMember("time", FabricCore::RTVal::ConstructFloat32(m_client, MAnimControl::currentTime().as(MTime::kSeconds)));
+      m_evalContext.setMember("frameRate", FabricCore::RTVal::ConstructFloat32(m_client, playbackBy));
+      m_evalContext.setMember("startFrame", FabricCore::RTVal::ConstructFloat32(m_client, MAnimControl::minTime().value()));
+      m_evalContext.setMember("endFrame", FabricCore::RTVal::ConstructFloat32(m_client, MAnimControl::maxTime().value()));
       m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, mayaGetLastLoadedScene().asChar()));
     }
     catch(FabricCore::Exception e)
