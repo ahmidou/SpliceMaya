@@ -479,6 +479,11 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MGlobal::executePythonCommandOnIdle("import AEdfgMayaNodeTemplate", true);
   MGlobal::executePythonCommandOnIdle("import AEcanvasNodeTemplate", true);
 
+  if (MGlobal::mayaState() == MGlobal::kInteractive)
+    FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Interactive);
+  else
+    FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
+
   return status;
 }
 
