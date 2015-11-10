@@ -4,4 +4,3 @@ FABRIC_EXTS_PATH +:= ../../Exts
 FABRIC_DFG_PATH +:= ../../Presets/DFG
 PYTHONPATH +:= python/{{PYTHON_VERSION}}
 PATH +:= ../../bin
-PATH +:= ..

@@ -147,11 +147,12 @@ libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 pluginSources = env.Glob('plugin/*.cpp')
 
 libEnv = env.Clone()
+# [andrew 20151110] see FE-5693
 if FABRIC_BUILD_OS == 'Linux':
   libEnv.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../lib/')])
-if FABRIC_BUILD_OS == 'Darwin':
-  libEnv.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../..')])
-libFabricMaya = libEnv.SharedLibrary('libFabricMaya', libSources)
+  libFabricMaya = libEnv.SharedLibrary('libFabricMaya', libSources)
+else:
+  libFabricMaya = libEnv.StaticLibrary('libFabricMaya', libSources)
 
 if FABRIC_BUILD_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
@@ -213,6 +214,7 @@ mayaModuleFile = env.SubstMayaModuleFile(
 
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
+mayaFiles.append(env.Install(STAGE_DIR, libFabricMaya))
 
 for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricDFGTool', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
@@ -226,7 +228,6 @@ for xpm in ['FE_tool']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'ui'), os.path.join('Module', 'ui', xpm+'.xpm')))
 installedModule = env.Install(os.path.join(STAGE_DIR.abspath, 'plug-ins'), mayaModule)
 mayaFiles.append(installedModule)
-mayaFiles.append(env.Install(STAGE_DIR, libFabricMaya))
 
 # also install the FabricCore dynamic library
 if FABRIC_BUILD_OS == 'Linux':
@@ -234,11 +235,15 @@ if FABRIC_BUILD_OS == 'Linux':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/..')])
 if FABRIC_BUILD_OS == 'Darwin':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../../..')])
-  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/..')])
 # todo: install the python client
 
 env.Append(LIBPATH = [env.Dir('.')])
-env.Append(LIBS = ['FabricMaya'])
+if FABRIC_BUILD_OS == 'Linux':
+  # [andrew 20151110] want to find only symbols in libFabricMaya.so
+  env['LIBS'] = ['FabricMaya']
+  env.Append(LIBS=['boost_filesystem', 'boost_system'])
+else:
+  env.Append(LIBS = [libFabricMaya])
 env.Depends(mayaModule, libFabricMaya)
 
 alias = env.Alias('splicemaya', mayaFiles)
