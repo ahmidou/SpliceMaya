@@ -616,26 +616,20 @@ void FabricDFGBaseInterface::reloadFromReferencedFilePath()
   restoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
-MString FabricDFGBaseInterface::getPlugName(MString portName)
+MString FabricDFGBaseInterface::getPlugName(const MString &portName)
 {
-  if(portName == "message")
-    return "dfg_message";
-  else if(portName == "saveData")
-    return "dfg_saveData";
-  else if(portName == "refFilePath")
-    return "dfg_refFilePath";
-  return portName;
+  if      (portName == "message")       return "dfg_message";
+  else if (portName == "saveData")      return "dfg_saveData";
+  else if (portName == "refFilePath")   return "dfg_refFilePath";
+  else                                  return portName;
 }
 
-MString FabricDFGBaseInterface::getPortName(MString plugName)
+MString FabricDFGBaseInterface::getPortName(const MString &plugName)
 {
-  if(plugName == "dfg_message")
-    return "message";
-  else if(plugName == "dfg_saveData")
-    return "saveData";
-  else if(plugName == "dfg_refFilePath")
-    return "refFilePath";
-  return plugName;
+  if      (plugName == "dfg_message")     return "message";
+  else if (plugName == "dfg_saveData")    return "saveData";
+  else if (plugName == "dfg_refFilePath") return "refFilePath";
+  else                                    return plugName;
 }
 
 void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)

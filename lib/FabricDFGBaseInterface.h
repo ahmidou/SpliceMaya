@@ -98,8 +98,8 @@ public:
     { m_executeSharedDirty = true; }
 
 protected:
-  MString getPlugName(MString portName);
-  MString getPortName(MString plugName);
+  inline MString getPlugName(const MString &portName);
+  inline MString getPortName(const MString &plugName);
   void invalidatePlug(MPlug & plug);
   void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
 
