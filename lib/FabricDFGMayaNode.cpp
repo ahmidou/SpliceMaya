@@ -37,6 +37,7 @@ MStatus FabricDFGMayaNode::initialize(){
 
   saveData = typedAttr.create("saveData", "svd", MFnData::kString);
   typedAttr.setHidden(true);
+  typedAttr.setInternal(true);
   addAttribute(saveData);
 
   evalID = nAttr.create("evalID", "evalID", MFnNumericData::kInt);
@@ -87,6 +88,14 @@ MStatus FabricDFGMayaNode::shouldSave(const MPlug &plug, bool &isSaving){
 
 void FabricDFGMayaNode::copyInternalData(MPxNode *node){
   FabricDFGBaseInterface::copyInternalData(node);
+}
+
+bool FabricDFGMayaNode::getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx){
+  return FabricDFGBaseInterface::getInternalValueInContext(plug, dataHandle, ctx);
+}
+
+bool FabricDFGMayaNode::setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx){
+  return FabricDFGBaseInterface::setInternalValueInContext(plug, dataHandle, ctx);
 }
 
 MStatus FabricDFGMayaNode::connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc)

@@ -28,6 +28,8 @@ public:
   MStatus setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs);
   MStatus shouldSave(const MPlug &plug, bool &isSaving);
   void copyInternalData(MPxNode *node);
+  bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);
+  bool setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx);
 
   virtual MStatus connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
   virtual MStatus connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
