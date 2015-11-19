@@ -98,8 +98,8 @@ public:
     { m_executeSharedDirty = true; }
 
 protected:
-  MString getPlugName(MString portName);
-  MString getPortName(MString plugName);
+  inline MString getPlugName(const MString &portName);
+  inline MString getPortName(const MString &plugName);
   void invalidatePlug(MPlug & plug);
   void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
 
@@ -120,6 +120,8 @@ protected:
   void collectDirtyPlug(MPlug const &inPlug);
   void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
   void copyInternalData(MPxNode *node);
+  bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);
+  bool setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx);
   void onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made);
   MStatus setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
 
@@ -184,6 +186,7 @@ private:
   FabricDFGWidget *m_widget;
   bool m_executeSharedDirty;
   bool m_executeShared;
+  MString m_lastJson;
 };
 
 #endif

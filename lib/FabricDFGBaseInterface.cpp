@@ -462,6 +462,8 @@ void FabricDFGBaseInterface::restoreFromPersistenceData(MString file, MStatus *s
 void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   if(_restoredFromPersistenceData)
     return;
+  if(m_lastJson == json)
+    return;
 
   MAYADFG_CATCH_BEGIN(stat);
 
@@ -588,6 +590,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     }
   }
 
+  m_lastJson = json;
   // todo... set values?
 
   MAYADFG_CATCH_END(stat);
@@ -616,26 +619,20 @@ void FabricDFGBaseInterface::reloadFromReferencedFilePath()
   restoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
-MString FabricDFGBaseInterface::getPlugName(MString portName)
+MString FabricDFGBaseInterface::getPlugName(const MString &portName)
 {
-  if(portName == "message")
-    return "dfg_message";
-  else if(portName == "saveData")
-    return "dfg_saveData";
-  else if(portName == "refFilePath")
-    return "dfg_refFilePath";
-  return portName;
+  if      (portName == "message")       return "dfg_message";
+  else if (portName == "saveData")      return "dfg_saveData";
+  else if (portName == "refFilePath")   return "dfg_refFilePath";
+  else                                  return portName;
 }
 
-MString FabricDFGBaseInterface::getPortName(MString plugName)
+MString FabricDFGBaseInterface::getPortName(const MString &plugName)
 {
-  if(plugName == "dfg_message")
-    return "message";
-  else if(plugName == "dfg_saveData")
-    return "saveData";
-  else if(plugName == "dfg_refFilePath")
-    return "refFilePath";
-  return plugName;
+  if      (plugName == "dfg_message")     return "message";
+  else if (plugName == "dfg_saveData")    return "saveData";
+  else if (plugName == "dfg_refFilePath") return "refFilePath";
+  else                                    return plugName;
 }
 
 void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
@@ -859,6 +856,35 @@ void FabricDFGBaseInterface::copyInternalData(MPxNode *node){
 
   // std::string jsonData = otherSpliceInterface->_spliceGraph.getPersistenceDataJSON();
   // _spliceGraph.setFromPersistenceDataJSON(jsonData.c_str());
+}
+
+bool FabricDFGBaseInterface::getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx){
+  if(plug.partialName() == "saveData" || plug.partialName() == "svd"){
+    // somebody is pulling on the save data, let's persist it either way
+    MStatus stat = MS::kSuccess;
+    MAYADFG_CATCH_BEGIN(&stat);
+    dataHandle.setString(m_binding.exportJSON().getCString());
+    MAYADFG_CATCH_END(&stat); 
+    return stat == MS::kSuccess;
+  }
+  return false;
+}
+
+bool FabricDFGBaseInterface::setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx){
+  if(plug.partialName() == "saveData" || plug.partialName() == "svd"){
+    MString json = dataHandle.asString();
+    if(json.length() > 0)
+    {
+      if(m_lastJson != json)
+      {
+        MStatus st;
+        restoreFromJSON(json, &st);
+        _restoredFromPersistenceData = false;
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 void FabricDFGBaseInterface::onNodeAdded(MObject &node, void *clientData)

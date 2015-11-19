@@ -144,10 +144,15 @@ mayaModule = None
 libSources = env.Glob('lib/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 
-libFabricMaya = env.StaticLibrary('libFabricMaya', libSources)
-env.Append(LIBS = [libFabricMaya])
-
 pluginSources = env.Glob('plugin/*.cpp')
+
+libEnv = env.Clone()
+# [andrew 20151110] see FE-5693
+if FABRIC_BUILD_OS == 'Linux':
+  libEnv.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../lib/')])
+  libFabricMaya = libEnv.SharedLibrary('libFabricMaya', libSources)
+else:
+  libFabricMaya = libEnv.StaticLibrary('libFabricMaya', libSources)
 
 if FABRIC_BUILD_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
@@ -227,24 +232,19 @@ mayaFiles.append(installedModule)
 # also install the FabricCore dynamic library
 if FABRIC_BUILD_OS == 'Linux':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../../lib/')])
+  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/..')])
 if FABRIC_BUILD_OS == 'Darwin':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../../..')])
-# if FABRIC_BUILD_OS == 'Windows':
-#   FABRIC_CORE_VERSION = FABRIC_SPLICE_VERSION.rpartition('.')[0]
-#   mayaFiles.append(
-#     env.Install(
-#       os.path.join(STAGE_DIR.abspath, 'plug-ins'),
-#       os.path.join(FABRIC_DIR, 'lib', 'FabricCore-' + FABRIC_CORE_VERSION + '.dll')
-#       )
-#     )
-#   mayaFiles.append(
-#     env.Install(
-#       os.path.join(STAGE_DIR.abspath, 'plug-ins'),
-#       os.path.join(FABRIC_DIR, 'lib', 'FabricCore-' + FABRIC_CORE_VERSION + '.pdb')
-#       )
-#     )
-
 # todo: install the python client
+
+env.Append(LIBPATH = [env.Dir('.')])
+if FABRIC_BUILD_OS == 'Linux':
+  # [andrew 20151110] want to find only symbols in libFabricMaya.so
+  env['LIBS'] = ['FabricMaya']
+  env.Append(LIBS=['boost_filesystem', 'boost_system'])
+else:
+  env.Append(LIBS = [libFabricMaya])
+env.Depends(mayaModule, libFabricMaya)
 
 alias = env.Alias('splicemaya', mayaFiles)
 spliceData = (alias, mayaFiles)

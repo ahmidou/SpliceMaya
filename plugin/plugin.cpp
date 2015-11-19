@@ -414,7 +414,9 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, AddSet );
   MAYA_REGISTER_DFGUICMD( plugin, AddVar );
   MAYA_REGISTER_DFGUICMD( plugin, Connect );
+  MAYA_REGISTER_DFGUICMD( plugin, CreatePreset );
   MAYA_REGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_REGISTER_DFGUICMD( plugin, EditNode );
   MAYA_REGISTER_DFGUICMD( plugin, EditPort );
   MAYA_REGISTER_DFGUICMD( plugin, ExplodeNode );
   MAYA_REGISTER_DFGUICMD( plugin, ImplodeNodes );
@@ -478,6 +480,11 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MGlobal::executePythonCommandOnIdle("import AEdfgMayaNodeTemplate", true);
   MGlobal::executePythonCommandOnIdle("import AEcanvasNodeTemplate", true);
 
+  if (MGlobal::mayaState() == MGlobal::kInteractive)
+    FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Interactive);
+  else
+    FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
+
   return status;
 }
 
@@ -536,7 +543,9 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, AddSet );
   MAYA_DEREGISTER_DFGUICMD( plugin, AddVar );
   MAYA_DEREGISTER_DFGUICMD( plugin, Connect );
+  MAYA_DEREGISTER_DFGUICMD( plugin, CreatePreset );
   MAYA_DEREGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_DEREGISTER_DFGUICMD( plugin, EditNode );
   MAYA_DEREGISTER_DFGUICMD( plugin, EditPort );
   MAYA_DEREGISTER_DFGUICMD( plugin, ExplodeNode );
   MAYA_DEREGISTER_DFGUICMD( plugin, ImplodeNodes );

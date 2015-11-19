@@ -104,6 +104,15 @@ protected:
     FTL::CStrRef uiMetadata
     );
 
+  virtual std::string dfgDoCreatePreset(
+    FabricCore::DFGBinding const &binding,
+    FTL::StrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::StrRef nodeName,
+    FTL::StrRef presetDirPath,
+    FTL::StrRef presetName
+    );
+
   virtual std::string dfgDoEditPort(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
@@ -184,12 +193,14 @@ protected:
     FTL::CStrRef code
     );
 
-  virtual std::string dfgDoRenameNode(
+  virtual std::string dfgDoEditNode(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    FTL::CStrRef oldName,
-    FTL::CStrRef desiredNewName
+    FTL::StrRef oldNodeName,
+    FTL::StrRef desiredNewNodeName,
+    FTL::StrRef nodeMetadata,
+    FTL::StrRef execMetadata
     );
 
   virtual std::string dfgDoRenamePort(
@@ -330,7 +341,7 @@ protected:
 
   void encodeExec(
     FabricCore::DFGBinding const &binding,
-    FTL::CStrRef execPath,
+    FTL::StrRef execPath,
     FabricCore::DFGExec const &exec,
     std::stringstream &cmd
     );
