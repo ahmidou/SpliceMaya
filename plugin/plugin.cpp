@@ -425,7 +425,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, Paste );
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, RemovePort );
-  MAYA_REGISTER_DFGUICMD( plugin, RenameNode );
   MAYA_REGISTER_DFGUICMD( plugin, RenamePort );
   MAYA_REGISTER_DFGUICMD( plugin, ReorderPorts );
   MAYA_REGISTER_DFGUICMD( plugin, ResizeBackDrop );
@@ -554,7 +553,6 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, Paste );
   MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes );
   MAYA_DEREGISTER_DFGUICMD( plugin, RemovePort );
-  MAYA_DEREGISTER_DFGUICMD( plugin, RenameNode );
   MAYA_DEREGISTER_DFGUICMD( plugin, RenamePort );
   MAYA_DEREGISTER_DFGUICMD( plugin, ReorderPorts );
   MAYA_DEREGISTER_DFGUICMD( plugin, ResizeBackDrop );
