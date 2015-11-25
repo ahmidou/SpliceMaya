@@ -59,16 +59,6 @@ public:
   FabricCore::DFGBinding getDFGBinding();
   FabricCore::DFGExec getDFGExec();
 
-  FabricDFGWidget *getWidget() const
-  {
-    return m_widget;
-  }
-
-  void setWidget( FabricDFGWidget *widget )
-  {
-    m_widget = widget;
-  }
- 
   void storePersistenceData(MString file, MStatus *stat = 0);
   void restoreFromPersistenceData(MString file, MStatus *stat = 0);
   void restoreFromJSON(MString json, MStatus *stat = 0);
@@ -183,7 +173,6 @@ private:
 
   unsigned int m_id;
   static unsigned int s_maxID;
-  FabricDFGWidget *m_widget;
   bool m_executeSharedDirty;
   bool m_executeShared;
   MString m_lastJson;
