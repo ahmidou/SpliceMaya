@@ -105,8 +105,13 @@ void onSceneNew(void *userData){
   // rather than destroying the client via
   // FabricSplice::DestroyClient() we only
   // remove all singleton objects.
-  FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
-  handleVal.callMethod("", "removeAllObjects", 0, NULL);
+  const FabricCore::Client * client = NULL;
+  FECS_DGGraph_getClient(&client);
+  if (client)
+  {
+    FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
+    handleVal.callMethod("", "removeAllObjects", 0, NULL);
+  }
 }
 
 void onSceneLoad(void *userData){
