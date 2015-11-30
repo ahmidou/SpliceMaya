@@ -101,7 +101,10 @@ void onSceneNew(void *userData){
   MGlobal::executeCommandOnIdle(cmd, false);
   FabricDFGWidget::Destroy();
  
-  //[FE-5508] (before it was "FabricSplice::DestroyClient();")
+  // [FE-5508]
+  // rather than destroying the client via
+  // FabricSplice::DestroyClient() we only
+  // remove all singleton objects.
   FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
   handleVal.callMethod("", "removeAllObjects", 0, NULL);
 }
