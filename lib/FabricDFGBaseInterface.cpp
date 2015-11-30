@@ -495,6 +495,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       continue;
 
     FabricCore::DFGPortType portType = exec.getExecPortType(i);
+    if (!exec.getExecPortResolvedType(i)) continue; // [FE-5538]
     std::string dataType = exec.getExecPortResolvedType(i);
 
     FTL::StrRef opaque = exec.getExecPortMetadata(portName.c_str(), "opaque");
