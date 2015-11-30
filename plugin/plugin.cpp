@@ -101,7 +101,7 @@ void onSceneNew(void *userData){
   MGlobal::executeCommandOnIdle(cmd, false);
   FabricDFGWidget::Destroy();
  
-  //FabricSplice::DestroyClient();
+  //[FE-5508] (before it was "FabricSplice::DestroyClient();")
   FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
   handleVal.callMethod("", "removeAllObjects", 0, NULL);
 }
