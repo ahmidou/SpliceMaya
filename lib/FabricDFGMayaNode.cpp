@@ -83,6 +83,7 @@ MStatus FabricDFGMayaNode::compute(const MPlug& plug, MDataBlock& data){
   else if (stateData.asShort() == 1)  // 1: HasNoEffect.
   {
     stat = MS::kNotImplemented;
+    //transferOutputValuesToMaya(data);
   }
   else                                // not supported by Canvas node.
   {
