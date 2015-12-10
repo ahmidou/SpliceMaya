@@ -29,7 +29,8 @@ class AEcanvasBaseTemplate(ui.AETemplate):
 
     nodes = cmds.ls(sl=True)
     for node in nodes:
-      if cmds.nodeType(node) == "canvasNode":
+      nodeType = cmds.nodeType(node)
+      if nodeType.startswith('canvas'):
         nodeName = node
         break
       rels = cmds.listRelatives(node, shapes=True)
@@ -51,3 +52,6 @@ class AEcanvasBaseTemplate(ui.AETemplate):
 
 class AEcanvasNodeTemplate(AEcanvasBaseTemplate):
   _nodeType = 'canvasNode'
+
+class AEcanvasDeformerTemplate(AEcanvasBaseTemplate):
+  _nodeType = 'canvasDeformer'
