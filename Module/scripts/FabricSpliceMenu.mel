@@ -4,7 +4,7 @@ global proc addCanvasDeformer()
   $sel = `ls -selection -exactType transform`;
   $d=`deformer -type "canvasDeformer"`;
   select -r $d;
-  FabricCanvasAddPort -m $d -e "" -d "meshes" -p "IO" -t "PolygonMesh[]" -xd "Geometry:*";
+  FabricCanvasAddPort -m $d -e "" -d "meshes" -p "IO" -t "PolygonMesh[]" -xd "Geometry";
 }
 
 global proc addSpliceDeformer()
