@@ -1,3 +1,12 @@
+global proc addCanvasDeformer()
+{
+  string $sel[];
+  $sel = `ls -selection -exactType transform`;
+  $d=`deformer -type "canvasDeformer"`;
+  select -r $d;
+  FabricCanvasAddPort -m $d -e "" -d "meshes" -p "IO" -t "PolygonMesh[]" -xd "Geometry:*";
+}
+
 global proc addSpliceDeformer()
 {
   string $sel[];
@@ -66,7 +75,8 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   }
 
   // menu items
-  menuItem -p $fabricSpliceMenu -l "Create Graph" -ec 1 -c ("createNode \"canvasNode\";");
+  menuItem -p $fabricSpliceMenu -l "Create Graph (Node)" -ec 1 -c ("createNode \"canvasNode\";");
+  menuItem -p $fabricSpliceMenu -l "Create Graph (Deformer)" -ec 1 -c ("addCanvasDeformer();");
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -l "Load Graph" -ec 1 -c ("source \"FabricDFGTool.mel\"; fabricLoadDFG();");
   menuItem -p $fabricSpliceMenu -l "Save Graph" -ec 1 -c ("source \"FabricDFGTool.mel\"; fabricSaveDFG();");
