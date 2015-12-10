@@ -83,7 +83,7 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
         return MStatus::kFailure;
       }
     }
-  
+
     if(transferInputValuesToDFG(block))
     {
       FabricCore::RTVal rtValToSet;
@@ -91,8 +91,7 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
 
       MString portName = "meshes";
       if (!exec.haveExecPort(portName.asChar()))
-      { mayaLogFunc("FabricDFGMayaDeformer: port \"meshes\" not found");
-        return MStatus::kSuccess; }
+        return MStatus::kSuccess;
       if (exec.getExecPortType(portName.asChar()) != FabricCore::DFGPortType_IO)
       { mayaLogFunc("FabricDFGMayaDeformer: port \"meshes\" is not an IO port");
         return MStatus::kSuccess; }
@@ -126,8 +125,7 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
         mayaLogErrorFunc(e.getDesc_cstr());
         return MStatus::kSuccess;
       }
-      binding.setArgValue(portName.asChar(), rtValToSet /*, canUndo = ??? */);
-      //binding.setArgValue_lockType   ???
+      binding.setArgValue(portName.asChar(), rtValToSet, false);
 
       evaluate();
 
@@ -163,7 +161,17 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
 }
 
 MStatus FabricDFGMayaDeformer::setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs){
-  return FabricDFGBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
+  MStatus stat = FabricDFGBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
+
+  MFnDependencyNode thisNode(thisMObject());
+  MPlug output = thisNode.findPlug("outputGeometry");
+  affectedPlugs.append(output);
+
+  for(uint32_t i = 0; i < output.numElements(); ++i){
+    affectedPlugs.append(output.elementByPhysicalIndex(i));
+  }
+
+  return stat;
 }
 
 void FabricDFGMayaDeformer::invalidateNode()
@@ -201,8 +209,10 @@ int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBloc
     return 0;
 
   MString portName = "meshes";
-  if (!exec.haveExecPort(portName.asChar()))
+  if (!exec.haveExecPort(portName.asChar())){
+    MGlobal::displayWarning("FabricDFGMayaDeformer: missing port: " + portName);
     return 0;
+  }
 
   std::string dataType = exec.getExecPortResolvedType(portName.asChar());
   if(dataType != "PolygonMesh[]"){
