@@ -100,7 +100,10 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
         return MStatus::kSuccess; }
 
       FabricCore::RTVal rtMeshes = binding.getArgValue(portName.asChar());
-      //FabricCore::LockType_Exclusive   ???
+      //FabricCore::RTVal rtMeshes = port.getRTVal( FabricCore::LockType_Exclusive );
+      /* [mootzoid] as far as I can see the exclusive flag in Canvas/DFG is handled by
+                    the FabricDFGBaseInterface through its the member m_executeSharedDirty.
+      */
 
       if(!rtMeshes.isValid()) return MStatus::kSuccess;
       if(!rtMeshes.isArray()) return MStatus::kSuccess;
@@ -223,7 +226,6 @@ int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBloc
   DFGConversionTimers timers;
   getDFGPlugToArgFunc("PolygonMesh")(meshPlug, data, m_binding, getLockType(), portName.asChar(), &timers);
   invalidatePlug(meshPlug);
-  //_spliceGraph.requireEvaluate();
   return 1;
 }
 
