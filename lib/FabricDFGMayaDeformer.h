@@ -52,7 +52,7 @@ protected:
 
 private:
 
-  MCallbackId m_attributeAddedOrRemovedCallbackID;
+  // MCallbackId m_attributeAddedOrRemovedCallbackID;
   int initializePolygonMeshPorts(MPlug &meshPlug, MDataBlock &data);
   // void initializeGeometry(MObject &meshObj);
   int mGeometryInitialized;

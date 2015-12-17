@@ -159,7 +159,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string execPath;
+    QString execPath;
     FabricCore::DFGExec exec;
   };
 
@@ -180,8 +180,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string srcPort;
-    std::string dstPort;
+    QString srcPort;
+    QString dstPort;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -232,8 +232,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<std::string> nodeNames;
-    std::vector<QPointF> poss;
+    QStringList nodeNames;
+    QList<QPointF> poss;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -259,8 +259,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<std::string> nodeNames;
-    std::string desiredImplodedNodeName;
+    QStringList nodeNames;
+    QString desiredImplodedNodeName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -286,7 +286,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string node;
+    QString node;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -312,7 +312,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string text;
+    QString text;
     QPointF xy;
   };
 
@@ -339,7 +339,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string nodeName;
+    QString nodeName;
     QPointF xy;
     QSizeF wh;
   };
@@ -367,7 +367,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<std::string> nodeNames;
+    QStringList nodeNames;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -393,12 +393,12 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string desiredPortName;
+    QString desiredPortName;
     FabricCore::DFGPortType portType;
-    std::string typeSpec;
-    std::string portToConnectWith;
-    std::string extDep;
-    std::string uiMetadata;
+    QString typeSpec;
+    QString portToConnectWith;
+    QString extDep;
+    QString uiMetadata;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -424,9 +424,9 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string nodeName;
-    std::string presetDirPath;
-    std::string presetName;
+    QString nodeName;
+    QString presetDirPath;
+    QString presetName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -452,11 +452,11 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string oldPortName;
-    std::string desiredNewPortName;
-    std::string typeSpec;
-    std::string extDep;
-    std::string uiMetadata;
+    QString oldPortName;
+    QString desiredNewPortName;
+    QString typeSpec;
+    QString extDep;
+    QString uiMetadata;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -471,33 +471,6 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_EditPort
   > MayaDFGUICmd_EditPort;
 
-class FabricDFGSetArgTypeCommand
-  : public FabricDFGBindingCommand
-{
-  typedef FabricDFGBindingCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    std::string argName;
-    std::string typeName;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGSetArgTypeCommand,
-  FabricUI::DFG::DFGUICmd_SetArgType
-  > MayaDFGUICmd_SetArgType;
-
 class FabricDFGSetArgValueCommand
   : public FabricDFGBindingCommand
 {
@@ -509,7 +482,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string argName;
+    QString argName;
     FabricCore::RTVal value;
   };
 
@@ -536,7 +509,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string portPath;
+    QString portPath;
     FabricCore::RTVal value;
   };
 
@@ -552,32 +525,6 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_SetPortDefaultValue
   > MayaDFGUICmd_SetPortDefaultValue;
 
-class FabricDFGSetTitleCommand
-  : public FabricDFGExecCommand
-{
-  typedef FabricDFGExecCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    std::string title;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGSetTitleCommand,
-  FabricUI::DFG::DFGUICmd_SetTitle
-  > MayaDFGUICmd_SetTitle;
-
 class FabricDFGRemovePortCommand
   : public FabricDFGExecCommand
 {
@@ -589,7 +536,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string portName;
+    QString portName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -615,7 +562,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string code;
+    QString code;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -641,8 +588,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string refName;
-    std::string varPath;
+    QString refName;
+    QString varPath;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -668,7 +615,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<unsigned int> indices;
+    QList<int> indices;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -694,10 +641,10 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string oldNodeName;
-    std::string desiredNewNodeName;
-    std::string nodeMetadata;
-    std::string execMetadata;
+    QString oldNodeName;
+    QString desiredNewNodeName;
+    QString nodeMetadata;
+    QString execMetadata;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -723,8 +670,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string oldPortName;
-    std::string desiredNewPortName;
+    QString oldPortName;
+    QString desiredNewPortName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -750,8 +697,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string nodeName;
-    std::string comment;
+    QString nodeName;
+    QString comment;
     bool expanded;
   };
 
@@ -795,7 +742,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string title;
+    QString title;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -821,7 +768,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string presetPath;
+    QString presetPath;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -847,7 +794,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string title;
+    QString title;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -873,8 +820,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string title;
-    std::string code;
+    QString title;
+    QString code;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -900,9 +847,9 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string desiredName;
-    std::string type;
-    std::string extDep;
+    QString desiredName;
+    QString type;
+    QString extDep;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -928,8 +875,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::string desiredName;
-    std::string varPath;
+    QString desiredName;
+    QString varPath;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -985,7 +932,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<std::string> extDeps;
+    QStringList extDeps;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -1011,7 +958,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    std::vector<std::string> extDeps;
+    QStringList extDeps;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -1094,8 +1041,8 @@ public:
 private:
 
   FabricDFGBaseInterface *m_interf;
-  std::string m_oldMetadataValue;
-  std::string m_newMetadataValue;
+  QString m_oldMetadataValue;
+  QString m_newMetadataValue;
 };
 
 #endif 
