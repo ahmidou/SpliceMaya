@@ -1,7 +1,7 @@
 #include "FabricSpliceEditorWidget.h" // [pzion 20150519] Must come first because of some stupid macro definition somewhere
 #include "FabricSpliceHelpers.h"
-#include <DFG/DFGLogWidget.h>
-#include <DFG/DFGCombinedWidget.h>
+#include <Canvas/DFG/DFGLogWidget.h>
+#include <Canvas/DFG/DFGCombinedWidget.h>
 #include <Licensing/Licensing.h>
 #include <FabricSplice.h>
 

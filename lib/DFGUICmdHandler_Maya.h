@@ -3,7 +3,7 @@
 #ifndef __UI_DFG_DFGUICmdHandler_Maya__
 #define __UI_DFG_DFGUICmdHandler_Maya__
 
-#include <FabricUI/DFG/DFGUICmdHandler.h>
+#include <FabricUI/Canvas/DFG/DFGUICmdHandler.h>
 #include <maya/MString.h>
 
 class FabricDFGBaseInterface;

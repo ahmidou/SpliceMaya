@@ -11,9 +11,9 @@
 #include <maya/MPxCommand.h>
 
 #include "FabricDFGBaseInterface.h"
-#include <DFG/DFGController.h>
-#include <DFG/DFGUICmd/DFGUICmds.h>
-#include <DFG/DFGUICmdHandler.h>
+#include <Canvas/DFG/DFGController.h>
+#include <Canvas/DFG/DFGUICmd/DFGUICmds.h>
+#include <Canvas/DFG/DFGUICmdHandler.h>
 #include <FTL/OwnedPtr.h>
 
 class FabricDFGGetContextIDCommand: public MPxCommand
