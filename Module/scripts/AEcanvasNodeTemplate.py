@@ -26,20 +26,6 @@ class AEcanvasBaseTemplate(ui.AETemplate):
 
   def __openDFGEditor(self, arg):
     nodeName = self.__nodeName
-
-    nodes = cmds.ls(sl=True)
-    for node in nodes:
-      nodeType = cmds.nodeType(node)
-      if nodeType.startswith('canvas'):
-        nodeName = node
-        break
-      rels = cmds.listRelatives(node, shapes=True)
-      if rels:
-          nodes += rels
-      conns = cmds.listConnections(node, destination=True)
-      if conns:
-        nodes += conns        
-
     cmds.fabricDFG(action="showUI", node=nodeName)
    
   def new(self, attr):
