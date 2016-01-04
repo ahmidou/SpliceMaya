@@ -25,8 +25,32 @@ class AEcanvasBaseTemplate(ui.AETemplate):
     cmds.editorTemplate(endScrollLayout = True)
 
   def __openDFGEditor(self, arg):
-    nodeName = self.__nodeName
-    cmds.fabricDFG(action="showUI", node=nodeName)
+
+    # [FE-5728]
+    # look for the first 'canvas' node in the current selection and store its name in the variable nodeName.
+    # (note: we cannot use self.__nodeName as it only gets set once per session)
+    nodeName = ""
+    nodes = cmds.ls(sl=True)
+    for node in nodes:
+      nodeType = cmds.nodeType(node)
+      if nodeType.startswith('canvas'):
+        nodeName = node
+        break
+      rels = cmds.listRelatives(node, shapes=True)
+      if rels:
+          nodes += rels
+
+    # check the result.
+    if not nodeName:
+      # no matching node was found.
+      cmds.warning("cannot open Canvas: there is no Canvas node selected.")
+    else:
+      if cmds.referenceQuery(nodeName, isNodeReferenced=True):
+        # the node is a reference node.
+        cmds.confirmDialog(t="Canvas", m="Editing Canvas graphs is not possible with referenced nodes.", ma="center", b="Okay", icn="information")
+      else:
+        # looking good => open Canvas.
+        cmds.fabricDFG(action="showUI", node=nodeName)
    
   def new(self, attr):
     cmds.setUITemplate("attributeEditorTemplate", pushTemplate=True)
