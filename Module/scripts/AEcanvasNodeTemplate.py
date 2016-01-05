@@ -32,13 +32,27 @@ class AEcanvasBaseTemplate(ui.AETemplate):
     nodeName = ""
     nodes = cmds.ls(sl=True)
     for node in nodes:
+      # is this a Canvas node?
       nodeType = cmds.nodeType(node)
       if nodeType.startswith('canvas'):
         nodeName = node
         break
-      rels = cmds.listRelatives(node, shapes=True)
-      if rels:
-          nodes += rels
+      # add relatives to nodes.
+      relcons = cmds.listRelatives(node, shapes=True)
+      if relcons:
+        relcons = list(set(relcons))
+        for rc in relcons:
+          if rc in nodes:
+            relcons.remove(rc)
+        nodes += relcons
+      # add connections to nodes.
+      relcons = cmds.listConnections(node, destination=True)
+      if relcons:
+        relcons = list(set(relcons))
+        for rc in relcons:
+          if rc in nodes:
+            relcons.remove(rc)
+        nodes += relcons
 
     # check the result.
     if not nodeName:

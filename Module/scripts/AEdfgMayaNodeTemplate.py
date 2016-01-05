@@ -35,6 +35,9 @@ class AEdfgMayaBaseTemplate(ui.AETemplate):
       rels = cmds.listRelatives(node, shapes=True)
       if rels:
           nodes += rels
+      conns = cmds.listConnections(node, destination=True)
+      if conns:
+        nodes += conns
 
     cmds.fabricDFG(action="showUI", node=nodeName)
    
