@@ -29,35 +29,37 @@ class AEcanvasBaseTemplate(ui.AETemplate):
     # [FE-5728]
     # look for the first 'canvas' node in the current selection and store its name in the variable nodeName.
     # (note: we cannot use self.__nodeName as it only gets set once per session)
+    nodes = list(set(cmds.ls(sl=True)))
+    numRel = 3 + len(nodes)
     nodeName = ""
-    nodes = cmds.ls(sl=True)
     for node in nodes:
       # is this a Canvas node?
       nodeType = cmds.nodeType(node)
       if nodeType.startswith('canvas'):
         nodeName = node
         break
-      # add relatives to nodes.
-      relcons = cmds.listRelatives(node, shapes=True)
-      if relcons:
-        relcons = list(set(relcons))
-        for rc in relcons:
-          if rc in nodes:
-            relcons.remove(rc)
-        nodes += relcons
-      # add connections to nodes.
-      relcons = cmds.listConnections(node, destination=True)
-      if relcons:
-        relcons = list(set(relcons))
-        for rc in relcons:
-          if rc in nodes:
-            relcons.remove(rc)
-        nodes += relcons
+      # add relative/connected nodes to 'nodes'.
+      if numRel:
+        numRel -= 1
+        relcons = cmds.listRelatives(node, shapes=True)
+        if relcons:
+          relcons = list(set(relcons))
+          for rc in relcons:
+            if rc in nodes:
+              relcons.remove(rc)
+          nodes += relcons
+        relcons = cmds.listConnections(node, destination=True)
+        if relcons:
+          relcons = list(set(relcons))
+          for rc in relcons:
+            if rc in nodes:
+              relcons.remove(rc)
+          nodes += relcons
 
     # check the result.
     if not nodeName:
       # no matching node was found.
-      cmds.warning("cannot open Canvas: there is no Canvas node selected.")
+      cmds.warning("unable to find a Canvas node in the current selection.")
     else:
       if cmds.referenceQuery(nodeName, isNodeReferenced=True):
         # the node is a reference node.
