@@ -1770,8 +1770,6 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   }
   else if( descStr == FTL_STR("argInserted") )
   {
-    // this happens as the result of the addPortCommand
-    // FabricUI::DFG::DFGController::bindUnboundRTVals(m_client, m_binding);
   }
   else if(   descStr == FTL_STR("varInserted")
           || descStr == FTL_STR("varRemoved") )

@@ -506,17 +506,6 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
     true  // undoEnabled
     );
 
-  if(mResult.length() > 0)
-  {
-    FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
-    if(interf)
-    {
-      FabricCore::Client interfClient = interf->getCoreClient();
-      FabricCore::DFGBinding interfBinding = interf->getDFGBinding();
-      FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
-    }
-  }
-
   return mResult.asChar();
 }
 
@@ -579,17 +568,6 @@ std::string DFGUICmdHandler_Maya::dfgDoEditPort(
     true, // displayEnabled
     true  // undoEnabled
     );
-
-  if(mResult.length() > 0)
-  {
-    FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
-    if(interf)
-    {
-      FabricCore::Client interfClient = interf->getCoreClient();
-      FabricCore::DFGBinding interfBinding = interf->getDFGBinding();
-      FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
-    }
-  }
 
   return mResult.asChar();
 }
