@@ -853,10 +853,17 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
 }
 
 void FabricDFGBaseInterface::copyInternalData(MPxNode *node){
-  // FabricDFGBaseInterface *otherSpliceInterface = getInstanceByName(node->name().asChar());
-
-  // std::string jsonData = otherSpliceInterface->_spliceGraph.getPersistenceDataJSON();
-  // _spliceGraph.setFromPersistenceDataJSON(jsonData.c_str());
+  if (node)
+  {
+    FabricDFGBaseInterface *otherInterface = getInstanceByName(node->name().asChar());
+    if (otherInterface)
+    {
+      MStatus stat = MS::kSuccess;
+      MAYADFG_CATCH_BEGIN(&stat);
+      restoreFromJSON(otherInterface->getDFGBinding().exportJSON().getCString(), &stat);
+      MAYADFG_CATCH_END(&stat); 
+    }
+  }
 }
 
 bool FabricDFGBaseInterface::getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx){
