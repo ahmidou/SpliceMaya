@@ -99,7 +99,7 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c $toolCmd "Enable Tool";
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -ec 1 -c ("fabricSplice \"toggleRenderer\";") "Toggle Renderer";
+  menuItem -p $fabricSpliceMenu -ec 1 -c ("fabricSplice \"toggleRenderer\";") -checkBox true "Toggle Renderer";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/\";") "Online Help";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/thirdpartylicenses.html\";") "ThirdParty Licenses";
