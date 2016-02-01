@@ -87,7 +87,7 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -ec 1 -c ("source \"FabricSpliceUI.mel\"; showSpliceEditor(\"" + $pluginName + "\");") "Splice Editor (legacy)";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("createNode \"spliceMayaNode\";") "Create Splice Node (legacy)";
-  menuItem -p $fabricSpliceMenu -ec 1 -c ("addSpliceDeformer();") "Create Splice Deformer (legacy)" ;
+  menuItem -p $fabricSpliceMenu -ec 1 -c ("addSpliceDeformer();") "Create Splice Deformer (legacy)";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("createNode \"spliceMayaDebugger\";") "Create Splice Debugger (legacy)";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("source \"FabricSpliceTool.mel\"; fabricSpliceSaveSplice();") "Export Splice Node (legacy)";
@@ -99,7 +99,7 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c $toolCmd "Enable Tool";
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -ec 1 -c ("fabricSplice \"toggleRenderer\";") -checkBox true "Toggle Renderer";
+  menuItem -p $fabricSpliceMenu -ec 1 -c ("fabricSplice \"toggleRenderer\";") "Toggle Renderer";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/\";") "Online Help";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("launch -web \"http://documentation.fabricengine.com/Splice/latest/HTML/thirdpartylicenses.html\";") "ThirdParty Licenses";
