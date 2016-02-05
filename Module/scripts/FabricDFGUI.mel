@@ -30,7 +30,7 @@ global proc showDFGWidget(string $pluginName)
     string $layOut1 = `paneLayout -configuration "single"`;
     string $widget = `loadUI -uiFile ($uiDirectory+"/FabricDFGWidget.ui")`;
     control -e -parent $layOut1 $widget;
-    dockControl -allowedArea "all" -area "bottom" -floating on -content $layOut1 -label "Fabric Engine - Canvas" -width 1000 -height 500 -vcc "hideWidget();" FabricDFGUIPane;
+    dockControl -allowedArea "all" -area "bottom" -floating on -content $layOut1 -label "Fabric Engine - Canvas" -vcc "hideWidget();" FabricDFGUIPane;
   }
 }
 
