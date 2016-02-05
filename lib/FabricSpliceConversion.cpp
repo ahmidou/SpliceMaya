@@ -54,28 +54,22 @@ typedef float floatVec[3];
 double getFloat64FromRTVal(FabricCore::RTVal rtVal)
 {
   FabricCore::RTVal::SimpleData simpleData;
-  if(!rtVal.maybeGetSimpleData(&simpleData))
-    return DBL_MAX;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_FLOAT32)
-    return simpleData.value.float32;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_FLOAT64)
-    return simpleData.value.float64;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT32)
-    return simpleData.value.sint32;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT32)
-    return simpleData.value.uint32;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT8)
-    return simpleData.value.uint8;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT16)
-    return simpleData.value.uint16;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT64)
-    return double(simpleData.value.uint64);
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT8)
-    return simpleData.value.sint8;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT16)
-    return simpleData.value.sint16;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT64)
-    return double(simpleData.value.sint64);
+  if(!rtVal.maybeGetSimpleData(&simpleData))            return DBL_MAX;
+
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_FLOAT32)  return simpleData.value.float32;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_FLOAT64)  return simpleData.value.float64;
+
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT32)   return simpleData.value.sint32;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT32)   return simpleData.value.uint32;
+
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT8)    return simpleData.value.uint8;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT16)   return simpleData.value.uint16;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT64)   return double(simpleData.value.uint64);
+
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT8)    return simpleData.value.sint8;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT16)   return simpleData.value.sint16;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT64)   return double(simpleData.value.sint64);
+
   return DBL_MAX;
 }
 
@@ -3019,64 +3013,38 @@ void portToPlug_spliceMayaData(FabricSplice::DGPort & port, MPlug &plug, MDataBl
 
 SplicePlugToPortFunc getSplicePlugToPortFunc(const std::string & dataType, const FabricSplice::DGPort * port)
 {
-  if(dataType == "CompoundParam")
-    return plugToPort_compound;
-  if(dataType == "CompoundArrayParam")
-    return plugToPort_compoundArray;
-  if(dataType == "Boolean")
-    return plugToPort_bool;
-  if(dataType == "Integer")
-    return plugToPort_integer;
-  if(dataType == "Scalar")
-    return plugToPort_scalar;
-  if(dataType == "String")
-    return plugToPort_string;
-  if(dataType == "Color")
-    return plugToPort_color;
-  if(dataType == "Vec3")
-    return plugToPort_vec3;
-  if(dataType == "Euler")
-    return plugToPort_euler;
-  if(dataType == "Mat44")
-    return plugToPort_mat44;
-  if(dataType == "PolygonMesh")
-    return plugToPort_PolygonMesh;
-  if(dataType == "Lines")
-    return plugToPort_Lines;
-  if(dataType == "KeyframeTrack")
-    return plugToPort_KeyframeTrack;
-  if(dataType == "SpliceMayaData")
-    return plugToPort_spliceMayaData;
+  if(dataType == "CompoundParam")       return plugToPort_compound;
+  if(dataType == "CompoundArrayParam")  return plugToPort_compoundArray;
+  if(dataType == "Boolean")             return plugToPort_bool;
+  if(dataType == "Integer")             return plugToPort_integer;
+  if(dataType == "Scalar")              return plugToPort_scalar;
+  if(dataType == "String")              return plugToPort_string;
+  if(dataType == "Color")               return plugToPort_color;
+  if(dataType == "Vec3")                return plugToPort_vec3;
+  if(dataType == "Euler")               return plugToPort_euler;
+  if(dataType == "Mat44")               return plugToPort_mat44;
+  if(dataType == "PolygonMesh")         return plugToPort_PolygonMesh;
+  if(dataType == "Lines")               return plugToPort_Lines;
+  if(dataType == "KeyframeTrack")       return plugToPort_KeyframeTrack;
+  if(dataType == "SpliceMayaData")      return plugToPort_spliceMayaData;
 
   return NULL;  
 }
 
 SplicePortToPlugFunc getSplicePortToPlugFunc(const std::string & dataType, const FabricSplice::DGPort * port)
 {
-  if(dataType == "CompoundParam")
-    return portToPlug_compound;
-  if(dataType == "Boolean")
-    return portToPlug_bool;
-  if(dataType == "Integer")
-    return portToPlug_integer;
-  if(dataType == "Scalar")
-    return portToPlug_scalar;
-  if(dataType == "String")
-    return portToPlug_string;
-  if(dataType == "Color")
-    return portToPlug_color;
-  if(dataType == "Vec3")
-    return portToPlug_vec3;
-  if(dataType == "Euler")
-    return portToPlug_euler;
-  if(dataType == "Mat44")
-    return portToPlug_mat44;
-  if(dataType == "PolygonMesh")
-    return portToPlug_PolygonMesh;
-  if(dataType == "Lines")
-    return portToPlug_Lines;
-  if(dataType == "SpliceMayaData")
-    return portToPlug_spliceMayaData;
+  if(dataType == "CompoundParam")       return portToPlug_compound;
+  if(dataType == "Boolean")             return portToPlug_bool;
+  if(dataType == "Integer")             return portToPlug_integer;
+  if(dataType == "Scalar")              return portToPlug_scalar;
+  if(dataType == "String")              return portToPlug_string;
+  if(dataType == "Color")               return portToPlug_color;
+  if(dataType == "Vec3")                return portToPlug_vec3;
+  if(dataType == "Euler")               return portToPlug_euler;
+  if(dataType == "Mat44")               return portToPlug_mat44;
+  if(dataType == "PolygonMesh")         return portToPlug_PolygonMesh;
+  if(dataType == "Lines")               return portToPlug_Lines;
+  if(dataType == "SpliceMayaData")      return portToPlug_spliceMayaData;
 
   return NULL;  
 }
