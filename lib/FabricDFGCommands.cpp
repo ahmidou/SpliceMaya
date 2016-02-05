@@ -4,7 +4,7 @@
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
 
-#include <FabricUI/Canvas/DFG/DFGUICmdHandler.h>
+#include <FabricUI/DFG/DFGUICmdHandler.h>
 
 #include <maya/MStringArray.h>
 #include <maya/MSyntax.h>

@@ -9,8 +9,8 @@
 #include "DFGUICmdHandler_Maya.h"
 #include "FabricDFGBaseInterface.h"
 
-#include <FabricUI/Canvas/DFG/DFGUICmd/DFGUICmds.h>
-#include <FabricUI/Canvas/DFG/DFGController.h>
+#include <FabricUI/DFG/DFGUICmd/DFGUICmds.h>
+#include <FabricUI/DFG/DFGController.h>
 
 #include <maya/MGlobal.h>
 
