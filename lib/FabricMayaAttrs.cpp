@@ -47,54 +47,47 @@ DataType ParseDataType( FTL::StrRef dataTypeStr )
 {
   FTL::StrRef dataTypeOverride = dataTypeStr.split('[').first;
 
-  if ( dataTypeOverride == FTL_STR("Boolean" ) )
-    return DT_Boolean;
-  else if ( dataTypeOverride == FTL_STR("Integer" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("Size" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("SInt8" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("SInt16" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("SInt32" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("SInt64" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("UInt8" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("UInt16" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("UInt32" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("UInt64" ) )
-    return DT_Integer;
-  else if ( dataTypeOverride == FTL_STR("Scalar" ) )
-    return DT_Scalar;
-  else if ( dataTypeOverride == FTL_STR("Float32" ) )
-    return DT_Scalar;
-  else if ( dataTypeOverride == FTL_STR("Float64" ) )
-    return DT_Scalar;
-  else if ( dataTypeOverride == FTL_STR("String" ) )
-    return DT_String;
-  else if ( dataTypeOverride == FTL_STR("Vec3" ) )
-    return DT_Vec3;
-  else if ( dataTypeOverride == FTL_STR("Euler" ) )
-    return DT_Euler;
-  else if ( dataTypeOverride == FTL_STR("Mat44" ) )
-    return DT_Mat44;
-  else if ( dataTypeOverride == FTL_STR("Color" ) )
-    return DT_Color;
-  else if ( dataTypeOverride == FTL_STR("PolygonMesh" ) )
-    return DT_PolygonMesh;
-  else if ( dataTypeOverride == FTL_STR("Lines" ) )
-    return DT_Lines;
-  else if ( dataTypeOverride == FTL_STR("KeyframeTrack" ) )
-    return DT_KeyframeTrack;
-  else if ( dataTypeOverride == FTL_STR("SpliceMayaData" ) )
-    return DT_SpliceMayaData;
-  else if ( dataTypeOverride == FTL_STR("CompoundParam" ) )
-    return DT_CompoundParam;
+  if      (dataTypeOverride == FTL_STR("Boolean"))          return DT_Boolean;
+
+  else if (dataTypeOverride == FTL_STR("Scalar"))           return DT_Scalar;
+  else if (dataTypeOverride == FTL_STR("Float32"))          return DT_Scalar;
+  else if (dataTypeOverride == FTL_STR("Float64"))          return DT_Scalar;
+
+  else if (dataTypeOverride == FTL_STR("Integer"))          return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("SInt8"))            return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("SInt16"))           return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("SInt32"))           return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("SInt64"))           return DT_Integer;
+
+  else if (dataTypeOverride == FTL_STR("Byte"))             return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("UInt8"))            return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("UInt16"))           return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("Count"))            return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("Index"))            return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("Size"))             return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("UInt32"))           return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("DataSize"))         return DT_Integer;
+  else if (dataTypeOverride == FTL_STR("UInt64"))           return DT_Integer;
+
+  else if ( dataTypeOverride == FTL_STR("String"))          return DT_String;
+
+  else if ( dataTypeOverride == FTL_STR("Vec3"))            return DT_Vec3;
+
+  else if ( dataTypeOverride == FTL_STR("Euler"))           return DT_Euler;
+
+  else if ( dataTypeOverride == FTL_STR("Mat44"))           return DT_Mat44;
+
+  else if ( dataTypeOverride == FTL_STR("Color"))           return DT_Color;
+
+  else if ( dataTypeOverride == FTL_STR("PolygonMesh"))     return DT_PolygonMesh;
+
+  else if ( dataTypeOverride == FTL_STR("Lines"))           return DT_Lines;
+
+  else if ( dataTypeOverride == FTL_STR("KeyframeTrack"))   return DT_KeyframeTrack;
+
+  else if ( dataTypeOverride == FTL_STR("SpliceMayaData"))  return DT_SpliceMayaData;
+
+  else if ( dataTypeOverride == FTL_STR("CompoundParam"))   return DT_CompoundParam;
 
   ThrowInvalidDataType( dataTypeStr );
 
@@ -113,12 +106,9 @@ static void ThrowInvalidArrayType( FTL::StrRef arrayTypeStr )
 
 ArrayType ParseArrayType( FTL::StrRef arrayTypeStr )
 {
-  if ( arrayTypeStr == FTL_STR("Single Value" ) )
-    return AT_Single;
-  else if ( arrayTypeStr == FTL_STR("Array (Multi)" ) )
-    return AT_Array_Multi;
-  else if ( arrayTypeStr == FTL_STR("Array (Native)" ) )
-    return AT_Array_Native;
+  if      (arrayTypeStr == FTL_STR("Single Value"))     return AT_Single;
+  else if (arrayTypeStr == FTL_STR("Array (Multi)"))    return AT_Array_Multi;
+  else if (arrayTypeStr == FTL_STR("Array (Native)"))   return AT_Array_Native;
 
   ThrowInvalidArrayType( arrayTypeStr );
 
@@ -180,33 +170,24 @@ static float GetScalarOption(
   float defaultValue = 0.0f
   )
 {
-  if(options.isNull())
-    return defaultValue;
-  if(!options.isDict())
-    return defaultValue;
+  if(options.isNull())      return defaultValue;
+  if(!options.isDict())     return defaultValue;
+
   const FabricCore::Variant * option = options.getDictValue(key);
   if(!option)
     return defaultValue;
-  if(option->isSInt8())
-    return (float)option->getSInt8();
-  if(option->isSInt16())
-    return (float)option->getSInt8();
-  if(option->isSInt32())
-    return (float)option->getSInt8();
-  if(option->isSInt64())
-    return (float)option->getSInt8();
-  if(option->isUInt8())
-    return (float)option->getUInt8();
-  if(option->isUInt16())
-    return (float)option->getUInt8();
-  if(option->isUInt32())
-    return (float)option->getUInt8();
-  if(option->isUInt64())
-    return (float)option->getUInt8();
-  if(option->isFloat32())
-    return (float)option->getFloat32();
-  if(option->isFloat64())
-    return (float)option->getFloat64();
+
+  if(option->isSInt8())     return (float)option->getSInt8();
+  if(option->isSInt16())    return (float)option->getSInt16();
+  if(option->isSInt32())    return (float)option->getSInt32();
+  if(option->isSInt64())    return (float)option->getSInt64();
+  if(option->isUInt8())     return (float)option->getUInt8();
+  if(option->isUInt16())    return (float)option->getUInt16();
+  if(option->isUInt32())    return (float)option->getUInt32();
+  if(option->isUInt64())    return (float)option->getUInt64();
+  if(option->isFloat32())   return (float)option->getFloat32();
+  if(option->isFloat64())   return (float)option->getFloat64();
+
   return defaultValue;
 } 
 
@@ -216,15 +197,15 @@ static const char *GetStringOption(
   const char *defaultValue = ""
   )
 {
-  if(options.isNull())
-    return defaultValue;
-  if(!options.isDict())
-    return defaultValue;
+  if(options.isNull())    return defaultValue;
+  if(!options.isDict())   return defaultValue;
+
   const FabricCore::Variant * option = options.getDictValue(key);
   if(!option)
     return defaultValue;
-  if(option->isString())
-    return option->getString_cstr();
+
+  if(option->isString())  return option->getString_cstr();
+
   return defaultValue;
 } 
 
