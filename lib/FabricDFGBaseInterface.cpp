@@ -5,6 +5,7 @@
 #include "FabricSpliceMayaData.h"
 #include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricMayaAttrs.h"
 #include <Persistence/RTValToJSONEncoder.hpp>
 
 #include <string>
@@ -1104,7 +1105,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   //   }
   // }
   // else if(dataTypeOverride == "Boolean")
-  if(dataTypeOverride == "Boolean")
+  if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Boolean)
   {
     if(arrayType == "Single Value")
     {
@@ -1122,7 +1123,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Integer" || dataTypeOverride == "SInt32" || dataTypeOverride == "UInt32")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Integer)
   {
     if(arrayType == "Single Value")
     {
@@ -1169,7 +1170,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     //   }
     // }
   }
-  else if(dataTypeOverride == "Scalar" || dataTypeOverride == "Float32" || dataTypeOverride == "Float64")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Scalar)
   {
     bool isUnitAttr = true;
     // std::string scalarUnit = getStringOption("scalarUnit", compoundStructure);
@@ -1262,7 +1263,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     //   }
     // }
   }
-  else if(dataTypeOverride == "String")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_String)
   {
     if(arrayType == "Single Value")
     {
@@ -1279,7 +1280,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Color")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Color)
   {
     if(arrayType == "Single Value")
     {
@@ -1297,7 +1298,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Vec3")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Vec3)
   {
     if(arrayType == "Single Value")
     {
@@ -1339,7 +1340,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Euler")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Euler)
   {
     if(arrayType == "Single Value")
     {
@@ -1374,7 +1375,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Mat44")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Mat44)
   {
     if(arrayType == "Single Value")
     {
@@ -1392,7 +1393,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "PolygonMesh")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_PolygonMesh)
   {
     if(arrayType == "Single Value")
     {
@@ -1412,7 +1413,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Lines")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Lines)
   {
     if(arrayType == "Single Value")
     {
@@ -1432,7 +1433,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "KeyframeTrack"){
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_KeyframeTrack){
     
     if(arrayType == "Single Value")
     {
@@ -1462,7 +1463,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       }
     }
   }
-  else if(dataTypeOverride == "SpliceMayaData"){
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_SpliceMayaData){
     
     if(arrayType == "Single Value")
     {
