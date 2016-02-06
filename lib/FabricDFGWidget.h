@@ -12,8 +12,8 @@
 #include <maya/MStatus.h>
 #include <maya/MString.h>
 
-#include <Canvas/DFG/DFGCombinedWidget.h>
-#include <Canvas/DFG/Dialogs/DFGBaseDialog.h>
+#include <DFG/DFGCombinedWidget.h>
+#include <DFG/Dialogs/DFGBaseDialog.h>
 
 #include <FabricSplice.h>
 

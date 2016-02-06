@@ -4,7 +4,7 @@
 #include <QtGui/QLabel>
 #include <QtGui/QCheckBox>
 
-#include <Canvas/DFG/Dialogs/DFGEditPortDialog.h>
+#include <DFG/Dialogs/DFGEditPortDialog.h>
 
 #include "FabricDFGWidget.h"
 #include "FabricDFGBaseInterface.h"

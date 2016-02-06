@@ -1,7 +1,7 @@
 #ifndef _FABRICDFGBASEINTERFACE_H_
 #define _FABRICDFGBASEINTERFACE_H_
 
-#include <Canvas/DFG/DFGUI.h>
+#include <DFG/DFGUI.h>
 
 #include "FabricSpliceConversion.h"
 #include "DFGUICmdHandler_Maya.h"
@@ -17,7 +17,7 @@
 #include <maya/MFnCompoundAttribute.h>
 
 #include <FabricSplice.h>
-#include <Canvas/DFG/DFGValueEditor.h>
+#include <DFG/DFGValueEditor.h>
 #include <Commands/CommandStack.h>
 
 using namespace FabricServices;
