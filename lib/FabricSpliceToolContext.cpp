@@ -135,26 +135,23 @@ bool FabricSpliceToolCmd::isUndoable() const
 
 class EventFilterObject : public QObject
 {
-public:
-  FabricSpliceToolContext *tool;
-  bool eventFilter(QObject *object, QEvent *event);
+  public:
+    FabricSpliceToolContext *tool;
+    bool eventFilter(QObject *object, QEvent *event);
 };
 
 static EventFilterObject sEventFilterObject;
 
 const char helpString[] = "Click and drag to interact with Fabric:Splice.";
 
-FabricSpliceToolContext::FabricSpliceToolContext() 
-{
+FabricSpliceToolContext::FabricSpliceToolContext() {
 }
 
-void FabricSpliceToolContext::getClassName( MString & name ) const
-{
+void FabricSpliceToolContext::getClassName( MString & name ) const {
   name.set("FabricSpliceTool");
 }
 
-void FabricSpliceToolContext::toolOnSetup(MEvent &)
-{
+void FabricSpliceToolContext::toolOnSetup(MEvent &) {
   M3dView view = M3dView::active3dView();
 
   const FabricCore::Client * client = NULL;
@@ -202,8 +199,7 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &)
   view.refresh(true, true);
 }
 
-void FabricSpliceToolContext::toolOffCleanup()
-{
+void FabricSpliceToolContext::toolOffCleanup() {
   try
   {
     M3dView view = M3dView::active3dView();
@@ -228,47 +224,37 @@ void FabricSpliceToolContext::toolOffCleanup()
   }
 }
 
-MStatus FabricSpliceToolContext::doPress(MEvent & event)
-{
+MStatus FabricSpliceToolContext::doPress(MEvent & event) {
   return MS::kSuccess;
 }
 
-MStatus FabricSpliceToolContext::doDrag(MEvent & event)
-{
+MStatus FabricSpliceToolContext::doDrag(MEvent & event) {
   return MS::kSuccess;
 }
 
-MStatus FabricSpliceToolContext::doRelease( MEvent & event)
-{
+MStatus FabricSpliceToolContext::doRelease( MEvent & event) {
   return MS::kSuccess;
 }
 
-MStatus FabricSpliceToolContext::doEnterRegion( MEvent & event)
-{
+MStatus FabricSpliceToolContext::doEnterRegion( MEvent & event) {
   return setHelpString( helpString );
 }
 
-MPxContext* FabricSpliceToolContextCmd::makeObj()
-{
+MPxContext* FabricSpliceToolContextCmd::makeObj() {
   return new FabricSpliceToolContext;
 }
 
-void* FabricSpliceToolContextCmd::creator()
-{
+void* FabricSpliceToolContextCmd::creator() {
   return new FabricSpliceToolContextCmd;
 }
 
-
-bool EventFilterObject::eventFilter(QObject *object, QEvent *event)
-{
+bool EventFilterObject::eventFilter(QObject *object, QEvent *event) {
   return tool->onEvent(event);
 }
 
-
-
-bool FabricSpliceToolContext::onEvent(QEvent *event)
-{
-  if(!mEventDispatcher.isValid()){
+bool FabricSpliceToolContext::onEvent(QEvent *event) {
+  if(!mEventDispatcher.isValid())
+  {
     mayaLogFunc("Fabric Client not constructed yet.");
     return false;
   }
@@ -279,60 +265,66 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
     M3dView view = M3dView::active3dView();
     FabricCore::RTVal klevent;
 
-    if(event->type() == QEvent::Enter){
-      klevent = FabricSplice::constructObjectRTVal("MouseEvent");
-    }
-    else if(event->type() == QEvent::Leave){
-      klevent = FabricSplice::constructObjectRTVal("MouseEvent");
-    }
-    else if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
-      QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+    /*
+      if(event->type() == QEvent::Enter)
+      {
+        klevent = FabricSplice::constructObjectRTVal("MouseEvent");
+      }
+      else if(event->type() == QEvent::Leave)
+      {
+        klevent = FabricSplice::constructObjectRTVal("MouseEvent");
+      }
+      else if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) 
+      {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
 
-      klevent = FabricSplice::constructObjectRTVal("KeyEvent");
+        klevent = FabricSplice::constructObjectRTVal("KeyEvent");
 
-      klevent.setMember("key", FabricSplice::constructUInt32RTVal(keyEvent->key()));
-      klevent.setMember("count", FabricSplice::constructUInt32RTVal(keyEvent->count()));
-      klevent.setMember("isAutoRepeat", FabricSplice::constructBooleanRTVal(keyEvent->isAutoRepeat()));
+        klevent.setMember("key", FabricSplice::constructUInt32RTVal(keyEvent->key()));
+        klevent.setMember("count", FabricSplice::constructUInt32RTVal(keyEvent->count()));
+        klevent.setMember("isAutoRepeat", FabricSplice::constructBooleanRTVal(keyEvent->isAutoRepeat()));
 
-    }
-    else if ( event->type() == QEvent::MouseMove || 
-              event->type() == QEvent::MouseButtonDblClick || 
-              event->type() == QEvent::MouseButtonPress || 
-              event->type() == QEvent::MouseButtonRelease
-    ) {
-      QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+      }
+      else if ( event->type() == QEvent::MouseMove || 
+                event->type() == QEvent::MouseButtonDblClick || 
+                event->type() == QEvent::MouseButtonPress || 
+                event->type() == QEvent::MouseButtonRelease
+      ) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
 
-      klevent = FabricSplice::constructObjectRTVal("MouseEvent");
+        klevent = FabricSplice::constructObjectRTVal("MouseEvent");
 
-      FabricCore::RTVal klpos = FabricSplice::constructRTVal("Vec2");
-      klpos.setMember("x", FabricSplice::constructFloat32RTVal(mouseEvent->pos().x()));
-      klpos.setMember("y", FabricSplice::constructFloat32RTVal(mouseEvent->pos().y()));
+        FabricCore::RTVal klpos = FabricSplice::constructRTVal("Vec2");
+        klpos.setMember("x", FabricSplice::constructFloat32RTVal(mouseEvent->pos().x()));
+        klpos.setMember("y", FabricSplice::constructFloat32RTVal(mouseEvent->pos().y()));
 
-      klevent.setMember("button", FabricSplice::constructUInt32RTVal(mouseEvent->button()));
-      klevent.setMember("buttons", FabricSplice::constructUInt32RTVal(mouseEvent->buttons()));
-      klevent.setMember("pos", klpos);
-    }
-    else if (event->type() == QEvent::Wheel) {
-      QWheelEvent *mouseWheelEvent = static_cast<QWheelEvent *>(event);
+        klevent.setMember("button", FabricSplice::constructUInt32RTVal(mouseEvent->button()));
+        klevent.setMember("buttons", FabricSplice::constructUInt32RTVal(mouseEvent->buttons()));
+        klevent.setMember("pos", klpos);
+      }
+      else if (event->type() == QEvent::Wheel) 
+      {
+        QWheelEvent *mouseWheelEvent = static_cast<QWheelEvent *>(event);
 
-      klevent = FabricSplice::constructObjectRTVal("MouseWheelEvent");
+        klevent = FabricSplice::constructObjectRTVal("MouseWheelEvent");
 
-      FabricCore::RTVal klpos = FabricSplice::constructRTVal("Vec2");
-      klpos.setMember("x", FabricSplice::constructFloat32RTVal(mouseWheelEvent->pos().x()));
-      klpos.setMember("y", FabricSplice::constructFloat32RTVal(mouseWheelEvent->pos().y()));
+        FabricCore::RTVal klpos = FabricSplice::constructRTVal("Vec2");
+        klpos.setMember("x", FabricSplice::constructFloat32RTVal(mouseWheelEvent->pos().x()));
+        klpos.setMember("y", FabricSplice::constructFloat32RTVal(mouseWheelEvent->pos().y()));
 
-      klevent.setMember("buttons", FabricSplice::constructUInt32RTVal(mouseWheelEvent->buttons()));
-      klevent.setMember("delta", FabricSplice::constructSInt32RTVal(mouseWheelEvent->delta()));
-      klevent.setMember("pos", klpos);
-    }
+        klevent.setMember("buttons", FabricSplice::constructUInt32RTVal(mouseWheelEvent->buttons()));
+        klevent.setMember("delta", FabricSplice::constructSInt32RTVal(mouseWheelEvent->delta()));
+        klevent.setMember("pos", klpos);
+      }
 
-    if(klevent.isValid()){
+      if(klevent.isValid()) {
 
       int eventType = int(event->type());
       QInputEvent *inputEvent = static_cast<QInputEvent *>(event);
 
       //////////////////////////
       // Setup the viewport
+     
       FabricCore::RTVal inlineViewport = FabricSplice::constructObjectRTVal("InlineViewport");
       {
         double width = view.portWidth();
@@ -414,7 +406,8 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
 
           inlineViewport.callMethod("", "setCamera", 1, &inlineCamera);
         }
-      }
+      } 
+     
 
       //////////////////////////
       // Setup the Host
@@ -424,6 +417,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
 
       //////////////////////////
       // Configure the event...
+      /*
       std::vector<FabricCore::RTVal> args(4);
       args[0] = host;
       args[1] = inlineViewport;
@@ -434,11 +428,12 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       //////////////////////////
       // Invoke the event...
       mEventDispatcher.callMethod("Boolean", "onEvent", 1, &klevent);
-
+    
       bool result = klevent.callMethod("Boolean", "isAccepted", 0, 0).getBoolean();
-      if(result)
-        event->accept();
+      //if(result)
+      //  event->accept();
 
+      
       // The manipulation system has requested that a node is dirtified.
       // here we use the maya command to dirtify the specified dg node.
       MString dirtifyDCCNode(host.maybeGetMember("dirtifyNode").getStringCString());
@@ -579,17 +574,18 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
         bool displayEnabled = true;
         MGlobal::executeCommand(MString("fabricSpliceManipulation"), displayEnabled);
       }
-
+    
       klevent.invalidate();
 
       return result;
     }
+    */ 
   }
-  catch(FabricCore::Exception e)    {
+  catch(FabricCore::Exception e) {
     mayaLogErrorFunc(e.getDesc_cstr());
     return false;
   }
-  catch(FabricSplice::Exception e){
+  catch(FabricSplice::Exception e) {
     mayaLogErrorFunc(e.what());
     return false;
   }
