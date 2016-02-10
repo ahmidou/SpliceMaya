@@ -28,7 +28,7 @@ void FabricSpliceRenderCallback::invalidateMayaToRTRCallback() {
   sDrawContext.invalidate(); 
 }
 
-void FabricSpliceRenderCallback::setCameraTranformFromMaya(M3dView &view, FabricCore::RTVal &camera) {
+void FabricSpliceRenderCallback::setCameraTranformFromMaya(M3dView &view, FabricCore::RTVal &camera, FabricCore::RTVal &inlineCamera) {
 
   MDagPath mayaCameraDag;
   view.getCamera(mayaCameraDag);
@@ -56,10 +56,12 @@ void FabricSpliceRenderCallback::setCameraTranformFromMaya(M3dView &view, Fabric
     cameraMatFloats[14] = (float)mayaCameraMatrix[2][3];
     cameraMatFloats[15] = (float)mayaCameraMatrix[3][3];
   }
+
+  inlineCamera.callMethod("", "setFromMat44", 1, &cameraMat);
   camera.callMethod("", "setTransform", 1, &cameraMat);
 }
 
-void FabricSpliceRenderCallback::setCameraProjectionFromMaya(M3dView &view, FabricCore::RTVal &camera) {
+void FabricSpliceRenderCallback::setCameraProjectionFromMaya(M3dView &view, FabricCore::RTVal &camera, FabricCore::RTVal &inlineCamera) {
 
   MMatrix projectionMatrix;
   view.projectionMatrix(projectionMatrix);
@@ -87,10 +89,11 @@ void FabricSpliceRenderCallback::setCameraProjectionFromMaya(M3dView &view, Fabr
     projectionFloats[15] = (float)projectionMatrix[3][3];
   }
  
+  inlineCamera.setMember("projection", projectionMat);
   camera.callMethod("", "setProjMatrix", 1, &projectionMat);
 }
 
-void FabricSpliceRenderCallback::setCameraParamtersFromMaya(M3dView &view, FabricCore::RTVal &camera) {
+void FabricSpliceRenderCallback::setCameraParamtersFromMaya(M3dView &view, FabricCore::RTVal &camera, FabricCore::RTVal &inlineCamera) {
 
   MDagPath mayaCameraDag;
   view.getCamera(mayaCameraDag);
@@ -98,6 +101,7 @@ void FabricSpliceRenderCallback::setCameraParamtersFromMaya(M3dView &view, Fabri
   MFnCamera mayaCamera(mayaCameraDag);
   bool isOrthographic = mayaCamera.isOrtho();
   FabricCore::RTVal param = FabricSplice::constructBooleanRTVal(isOrthographic);
+  inlineCamera.callMethod("", "setOrthographic", 1, &param);
   camera.callMethod("", "setOrthographic", 1, &param);
 
   if(isOrthographic) 
@@ -107,6 +111,7 @@ void FabricSpliceRenderCallback::setCameraParamtersFromMaya(M3dView &view, Fabri
     bool applyOverscan = false, applySqueeze = false, applyPanZoom = false;
     mayaCamera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
     param = FabricSplice::constructFloat32RTVal(top-bottom);
+    inlineCamera.callMethod("", "setOrthographicFrustumHeight", 1, &param);
     camera.callMethod("", "setOrthographicFrustumHeight", 1, &param);
   }
   else 
@@ -114,6 +119,7 @@ void FabricSpliceRenderCallback::setCameraParamtersFromMaya(M3dView &view, Fabri
     double fovX, fovY;
     mayaCamera.getPortFieldOfView(view.portWidth(), view.portHeight(), fovX, fovY);    
     param = FabricSplice::constructFloat64RTVal(fovY);
+    inlineCamera.callMethod("", "setFovY", 1, &param);
     camera.callMethod("", "setFovY", 1, &param);
   }
 
@@ -121,6 +127,8 @@ void FabricSpliceRenderCallback::setCameraParamtersFromMaya(M3dView &view, Fabri
   args[0] = FabricSplice::constructFloat32RTVal(mayaCamera.nearClippingPlane());
   args[1] = FabricSplice::constructFloat32RTVal(mayaCamera.farClippingPlane());
   camera.callMethod("", "setRange", 2, &args[0]);
+  inlineCamera.callMethod("", "setNearDistance", 1, &args[0]);
+  inlineCamera.callMethod("", "setFarDistance", 1, &args[1]);
 }
  
 FabricCore::RTVal &FabricSpliceRenderCallback::getMayaToRTRCallback(const MString &str, M3dView &view) {
@@ -148,6 +156,7 @@ FabricCore::RTVal &FabricSpliceRenderCallback::getMayaToRTRCallback(const MStrin
  
 void FabricSpliceRenderCallback::preRenderCallback(const MString &str, void *clientData) {
 
+  /*
   if(!gMayaToRTRCallbackEnabled)
     return;
 
@@ -167,7 +176,6 @@ void FabricSpliceRenderCallback::preRenderCallback(const MString &str, void *cli
 
   M3dView view;
   M3dView::getM3dViewFromModelPanel(str, view);
-  //view.beginGL();
 
   try
   {
@@ -198,8 +206,10 @@ void FabricSpliceRenderCallback::preRenderCallback(const MString &str, void *cli
     mayaLogErrorFunc(e.getDesc_cstr());
     return;
   }
+  */
 }
 
+/*
 void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *clientData) {
 
   if(!gMayaToRTRCallbackEnabled)
@@ -247,5 +257,76 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
     mayaLogErrorFunc(e.getDesc_cstr());
     return;
   }
+  view.endGL();
+}
+*/
+
+void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *clientData){
+
+  if(!gMayaToRTRCallbackEnabled)
+    return;
+
+  try
+  {
+    if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
+      return;
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(e.what());
+  }
+
+  M3dView view;
+  M3dView::getM3dViewFromModelPanel(str, view);
+  view.beginGL();
+
+  // draw all gizmos
+  try
+  {
+    FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()");
+ 
+    FabricCore::RTVal callback = getMayaToRTRCallback(str, view);
+
+    //////////////////////////
+    // Setup the viewport
+    FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(str.asChar());
+    FabricCore::RTVal inlineViewport = sDrawContext.maybeGetMember("viewport");
+    FabricCore::RTVal inlineCamera = inlineViewport.callMethod("InlineCamera", "getCamera", 0, 0);
+
+    FabricCore::RTVal rtrViewport = callback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
+    FabricCore::RTVal rtrCamera = rtrViewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
+
+    FabricSpliceRenderCallback::setCameraTranformFromMaya(view, rtrCamera, inlineCamera);
+    FabricSpliceRenderCallback::setCameraProjectionFromMaya(view, rtrCamera, inlineCamera);
+    FabricSpliceRenderCallback::setCameraParamtersFromMaya(view, rtrCamera, inlineCamera);
+ 
+    callback.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
+    sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
+    
+    std::vector<FabricCore::RTVal> args(4);
+    args[0] = FabricSplice::constructStringRTVal(str.asChar());
+    args[1] = FabricSplice::constructFloat64RTVal(view.portWidth());
+    args[2] = FabricSplice::constructFloat64RTVal(view.portHeight());
+    args[3] = FabricSplice::constructUInt32RTVal(2);
+    callback.callMethod("", "render", 4, &args[0]);   
+
+    //FabricSplice::SceneManagement::drawOpenGL(sDrawContext);
+    //FabricSplice::SceneManagement::draw(sDrawContext, args);//getDrawContext(str, view));
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(e.what());
+    return;
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return;
+  }
+
   view.endGL();
 }
