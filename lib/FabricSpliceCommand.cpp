@@ -97,13 +97,13 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     }
     else if(actionStr == "toggleRenderer")
     {
-      enableMayaToRTRCallback(!isMayaToRTRCallbackEnabled());
+      enableHostToRTRCallback(!isHostToRTRCallbackEnabled());
       mayaRefreshFunc();
       return mayaErrorOccured();
     }
     else if(actionStr == "isRendererEnabled")
     {
-      setResult(isMayaToRTRCallbackEnabled());
+      setResult(isHostToRTRCallbackEnabled());
       return mayaErrorOccured();
     }
     else if(actionStr == "startProfiling")
