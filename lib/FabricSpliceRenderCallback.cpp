@@ -132,8 +132,6 @@ FabricCore::RTVal &FabricSpliceRenderCallback::getHostToRTRCallback(const MStrin
     sHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
     sHostToRTRCallback = sHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
   }
- 
-
   return sHostToRTRCallback;
 }
  
@@ -158,6 +156,9 @@ void FabricSpliceRenderCallback::preRenderCallback(const MString &str, void *cli
 
   M3dView view;
   M3dView::getM3dViewFromModelPanel(str, view);
+
+  // We don't want to draw when users are selecting objects in maya.
+  if(view.selectMode()) return;
 
   try
   {
@@ -211,8 +212,11 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
   M3dView view;
   M3dView::getM3dViewFromModelPanel(str, view);
 
+  // We don't want to draw when users are selecting objects in maya.
+  if(view.selectMode()) return;
+
   // draw
-  //view.beginGL();
+  view.beginGL();
   try
   {
     FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
@@ -234,7 +238,7 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
     mayaLogErrorFunc(e.getDesc_cstr());
     return;
   }
-  //view.endGL();
+  view.endGL();
 }
  
  
