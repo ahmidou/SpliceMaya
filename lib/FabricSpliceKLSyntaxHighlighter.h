@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _CREATIONSPLICEKLSYNTAXHIGHLIGTER_H_
-#define _CREATIONSPLICEKLSYNTAXHIGHLIGTER_H_
+#pragma once
 
 #include <QtCore/QHash>
 #include <QtGui/QSyntaxHighlighter>
@@ -38,5 +40,3 @@ private:
   QTextCharFormat quotationFormat;
   QTextCharFormat functionFormat;
 };
-
-#endif 

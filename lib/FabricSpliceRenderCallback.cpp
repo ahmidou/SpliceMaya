@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceBaseInterface.h"
@@ -178,4 +182,3 @@ void FabricSpliceRenderCallback::draw(const MString &str, void *clientData){
 
   view.endGL();
 }
-

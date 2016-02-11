@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _CREATIONSPLICECONVERSION_H_
-#define _CREATIONSPLICECONVERSION_H_
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -61,5 +63,3 @@ SplicePortToPlugFunc getSplicePortToPlugFunc(
   const std::string & dataType, 
   const FabricSplice::DGPort * port = NULL
   );
-
-#endif

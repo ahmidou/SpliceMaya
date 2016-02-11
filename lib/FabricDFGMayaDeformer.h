@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _FABRICDFGMAYADEFORMER_H_
-#define _FABRICDFGMAYADEFORMER_H_
+#pragma once
 
 #include "FabricDFGBaseInterface.h"
 
@@ -56,5 +58,3 @@ private:
   // void initializeGeometry(MObject &meshObj);
   int mGeometryInitialized;
 };
-
-#endif

@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _FABRICSPLICEHELPERS_H_
-#define _FABRICSPLICEHELPERS_H_
+#pragma once
 
 #include "Foundation.h"
 #include <maya/MString.h>
@@ -21,5 +23,3 @@ MStatus mayaErrorOccured();
 void mayaRefreshFunc();
 MString mayaGetLastLoadedScene();
 void mayaSetLastLoadedScene(MString scene);
-
-#endif

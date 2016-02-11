@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
 #include <QtGui/QFileDialog>
 
 #include "FabricSpliceCommand.h"
@@ -502,4 +506,3 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
   FabricSpliceEditorWidget::postUpdateAll();
   return mayaErrorOccured();
 }
-

@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _CREATIONSPLICEEDITORCMD_H_
-#define _CREATIONSPLICEEDITORCMD_H_
+#pragma once
 
 #include <map>
 #include <ostream>
@@ -16,5 +18,3 @@ public:
 
 private:
 };
-
-#endif 

@@ -1,5 +1,8 @@
-#ifndef _FABRICDFGBASEINTERFACE_H_
-#define _FABRICDFGBASEINTERFACE_H_
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
+#pragma once
 
 #include <DFG/DFGUI.h>
 
@@ -177,5 +180,3 @@ private:
   bool m_executeShared;
   MString m_lastJson;
 };
-
-#endif

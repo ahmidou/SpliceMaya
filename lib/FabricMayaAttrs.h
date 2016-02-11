@@ -1,9 +1,8 @@
 //
-//  Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
-#ifndef _FabricMayaAttrs_h
-#define _FabricMayaAttrs_h
+#pragma once
 
 #include <FabricSplice.h>
 #include <FTL/StrRef.h>
@@ -55,5 +54,3 @@ MObject CreateMayaAttribute(
   );
 
 } // namespace FabricMaya
-
-#endif //_FabricMayaAttrs_h

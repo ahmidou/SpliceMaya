@@ -1,7 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-
-#ifndef _CREATIONSPLICEMAYADEFORMER_H_
-#define _CREATIONSPLICEMAYADEFORMER_H_
+#pragma once
 
 #include "FabricSpliceBaseInterface.h"
 
@@ -51,6 +52,3 @@ private:
   // void initializeGeometry(MObject &meshObj);
   int mGeometryInitialized;
 };
-
-#endif
-
