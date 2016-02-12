@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _CREATIONSPLICEMAYANODE_H_
-#define _CREATIONSPLICEMAYANODE_H_
+#pragma once
 
 #include "FabricSpliceBaseInterface.h"
 
@@ -48,5 +50,3 @@ private:
 
   MCallbackId m_attributeAddedOrRemovedCallbackID;
 };
-
-#endif

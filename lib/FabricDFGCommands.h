@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _FABRICDFGCOMMANDS_H_
-#define _FABRICDFGCOMMANDS_H_
+#pragma once
 
 // #include "FabricSpliceEditorWidget.h"
 
@@ -1097,5 +1099,3 @@ private:
   std::string m_oldMetadataValue;
   std::string m_newMetadataValue;
 };
-
-#endif 

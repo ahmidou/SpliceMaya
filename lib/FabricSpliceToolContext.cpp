@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
 #include <QtGui/QWidget>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QMouseEvent>
@@ -541,9 +545,9 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
                     x.set(value.maybeGetMember("x").getFloat32());
                     y.set(value.maybeGetMember("y").getFloat32());
                     z.set(value.maybeGetMember("z").getFloat32());
-                    MGlobal::executeCommand(MString("setAttr ") + attribute + "_x " + x + ";", displayEnabled);
-                    MGlobal::executeCommand(MString("setAttr ") + attribute + "_y " + y + ";", displayEnabled);
-                    MGlobal::executeCommand(MString("setAttr ") + attribute + "_z " + z + ";", displayEnabled);
+                    MGlobal::executeCommand(MString("setAttr ") + attribute + "X " + x + ";", displayEnabled);
+                    MGlobal::executeCommand(MString("setAttr ") + attribute + "Y " + y + ";", displayEnabled);
+                    MGlobal::executeCommand(MString("setAttr ") + attribute + "Z " + z + ";", displayEnabled);
                   }
                   else if(portResolvedType == "Euler")
                   {

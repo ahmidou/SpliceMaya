@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _CREATIONSPLICECOMBOWIDGET_H_
-#define _CREATIONSPLICECOMBOWIDGET_H_
+#pragma once
 
 #include <QtGui/QWidget>
 #include <QtGui/QComboBox>
@@ -26,5 +28,3 @@ private:
   void * mCallbackUD;
   std::string mLastText;
 };
-
-#endif 

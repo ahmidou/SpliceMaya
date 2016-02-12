@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
 #include <QtGui/QFileDialog>
 
 #include "FabricSpliceCommand.h"
@@ -82,7 +86,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
       MString clientContextID = FabricSplice::GetClientContextID();
       setResult(clientContextID);
       return mayaErrorOccured();
-    }
+    } 
     else if(actionStr == "registerKLType"){
       MString rtStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "rt").c_str();
       MString extStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "extension", "", true).c_str();
@@ -97,13 +101,13 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     }
     else if(actionStr == "toggleRenderer")
     {
-      enableRTRPass(!isRTRPassEnabled());
+      enableHostToRTRCallback(!isHostToRTRCallbackEnabled());
       mayaRefreshFunc();
       return mayaErrorOccured();
     }
     else if(actionStr == "isRendererEnabled")
     {
-      setResult(isRTRPassEnabled());
+      setResult(isHostToRTRCallbackEnabled());
       return mayaErrorOccured();
     }
     else if(actionStr == "startProfiling")
@@ -502,4 +506,3 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
   FabricSpliceEditorWidget::postUpdateAll();
   return mayaErrorOccured();
 }
-

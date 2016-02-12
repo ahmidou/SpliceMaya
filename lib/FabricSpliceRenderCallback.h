@@ -1,6 +1,8 @@
-#ifndef _SPLICERENDERCALLBACK_H_
-#define _SPLICERENDERCALLBACK_H_
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
+#pragma once
 
 #include "Foundation.h"
 #include <FabricCore.h>
@@ -9,9 +11,12 @@
 bool isHostToRTRCallbackEnabled();
 void enableHostToRTRCallback(bool enable);
 
+
 class FabricSpliceRenderCallback
 {
 public:
+  static void draw(const MString &str, void *clientData);
+  static FabricCore::RTVal & getDrawContext(const MString &str, M3dView & view);
   static FabricCore::RTVal sDrawContext;
   static FabricCore::RTVal sHostToRTRCallback;
   static void invalidateHostToRTRCallback();
@@ -22,5 +27,3 @@ public:
   static void preRenderCallback(const MString &str, void *clientData);
   static void postRenderCallback(const MString &str, void *clientData);
 };
-
-#endif

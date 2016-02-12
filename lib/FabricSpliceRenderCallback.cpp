@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceBaseInterface.h"
@@ -12,38 +16,22 @@
 #include <maya/MMatrix.h>
 #include <maya/MAnimControl.h>
 
-bool gRTRPassEnabled = true;
-
-FabricCore::RTVal FabricSpliceRenderCallback::sDrawContext;
+bool gHostToRTRCallbackEnabled = true;
 FabricCore::RTVal FabricSpliceRenderCallback::sHostToRTRCallback;
+FabricCore::RTVal FabricSpliceRenderCallback::sDrawContext;
 
-bool isRTRPassEnabled()
-{
-  return gRTRPassEnabled;
+bool isHostToRTRCallbackEnabled() {
+  return gHostToRTRCallbackEnabled;
 }
 
-void enableRTRPass(bool enable)
-{
-  gRTRPassEnabled = enable;
+void enableHostToRTRCallback(bool enable) {
+  gHostToRTRCallbackEnabled = enable;
 }
-
+ 
 void FabricSpliceRenderCallback::invalidateHostToRTRCallback() {
-  sDrawContext.invalidate(); 
   sHostToRTRCallback.invalidate(); 
 }
-
-FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(const MString &str, M3dView & view)
-{
-  if(!sDrawContext.isValid()) {
-    sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
-    sDrawContext = sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
-  }
-  else if(sDrawContext.isObject() && sDrawContext.isNullObject()) {
-    sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
-    sDrawContext = sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
-  }
-}
-
+ 
 void FabricSpliceRenderCallback::setCameraTranformFromMaya(M3dView &view, FabricCore::RTVal &camera) {
 
   MDagPath mayaCameraDag;
@@ -149,6 +137,15 @@ FabricCore::RTVal &FabricSpliceRenderCallback::getHostToRTRCallback(const MStrin
   else if(sHostToRTRCallback.isObject() && sHostToRTRCallback.isNullObject()) {
     sHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
     sHostToRTRCallback = sHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
+  }
+
+  if(!sDrawContext.isValid()) {
+    sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+    sDrawContext = sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+  }
+  else if(sDrawContext.isObject() && sDrawContext.isNullObject()) {
+    sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+    sDrawContext = sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
   }
   return sHostToRTRCallback;
 }
@@ -258,3 +255,4 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
   }
   view.endGL();
 }
+ 
