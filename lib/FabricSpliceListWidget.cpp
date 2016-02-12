@@ -1,7 +1,3 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
-
 #include "FabricSpliceListWidget.h"
 
 FabricSpliceListWidget::FabricSpliceListWidget(QWidget * parent)
@@ -21,3 +17,4 @@ std::string FabricSpliceListWidget::getStdText()
     return result.toUtf8().constData();
   #endif
 }
+

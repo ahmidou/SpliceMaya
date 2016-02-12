@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef _CREATIONSPLICEMAYADATA_H_
+#define _CREATIONSPLICEMAYADATA_H_
 
 #include <istream>
 #include <ostream>
@@ -64,3 +62,5 @@ public:
   MObject create (MStatus *stat =NULL);
   MObject create (const FabricCore::RTVal &in, MStatus *stat =NULL);
 } ;
+
+#endif

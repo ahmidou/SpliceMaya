@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef _CREATIONSPLICEBUTTONWIDGET_H_
+#define _CREATIONSPLICEBUTTONWIDGET_H_
 
 #include <QtGui/QWidget>
 #include <QtGui/QPushButton>
@@ -22,3 +20,6 @@ private:
   callback mCallback;
   void * mCallbackUD;
 };
+
+#endif 
+

@@ -1,13 +1,12 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+
+#ifndef _CREATIONSPLICEMAYADEFORMER_H_
+#define _CREATIONSPLICEMAYADEFORMER_H_
 
 #include "FabricSpliceBaseInterface.h"
 
-#include <maya/MPxDeformerNode.h>
-#include <maya/MTypeId.h>
+#include <maya/MPxDeformerNode.h> 
+#include <maya/MTypeId.h> 
 #include <maya/MItGeometry.h>
 
 class FabricSpliceMayaDeformer: public MPxDeformerNode, public FabricSpliceBaseInterface{
@@ -52,3 +51,6 @@ private:
   // void initializeGeometry(MObject &meshObj);
   int mGeometryInitialized;
 };
+
+#endif
+

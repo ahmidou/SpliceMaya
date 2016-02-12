@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef __FABRICDFGCONVERSION_H__
+#define __FABRICDFGCONVERSION_H__
 
 #include <iostream>
 #include <vector>
@@ -61,3 +59,5 @@ typedef void(*DFGArgToPlugFunc)(
 
 DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::CStrRef &dataType);
 DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::CStrRef &dataType);
+
+#endif

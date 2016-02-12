@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef _FABRICDFGWIDGET_H_
+#define _FABRICDFGWIDGET_H_
 
 #include "Foundation.h"
 #include "DFGUICmdHandler_Maya.h"
@@ -75,3 +73,5 @@ private:
   // BaseInterface without initializing a FabricDFGWidget in Maya batch mode
   static FabricCore::Client s_coreClient;
 };
+
+#endif 

@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef _CREATIONSPLICEPORTDIALOG_H_
+#define _CREATIONSPLICEPORTDIALOG_H_
 
 #include <QtGui/QLineEdit>
 #include <QtGui/QCheckBox>
@@ -32,3 +30,6 @@ private:
 
   static void onDataTypeChanged(void * userData);
 };
+
+#endif 
+

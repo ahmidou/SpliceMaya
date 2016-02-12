@@ -1,6 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
+/*
+ *  Copyright 2010-2015 Fabric Software Inc. All rights reserved.
+ */
 
 // [pzion 20150731] This needs to come first, otherwise macros will
 // mess up Qt headers
@@ -506,6 +506,17 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
     true  // undoEnabled
     );
 
+  if(mResult.length() > 0)
+  {
+    FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
+    if(interf)
+    {
+      FabricCore::Client interfClient = interf->getCoreClient();
+      FabricCore::DFGBinding interfBinding = interf->getDFGBinding();
+      FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
+    }
+  }
+
   return mResult.asChar();
 }
 
@@ -568,6 +579,17 @@ std::string DFGUICmdHandler_Maya::dfgDoEditPort(
     true, // displayEnabled
     true  // undoEnabled
     );
+
+  if(mResult.length() > 0)
+  {
+    FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
+    if(interf)
+    {
+      FabricCore::Client interfClient = interf->getCoreClient();
+      FabricCore::DFGBinding interfBinding = interf->getDFGBinding();
+      FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
+    }
+  }
 
   return mResult.asChar();
 }

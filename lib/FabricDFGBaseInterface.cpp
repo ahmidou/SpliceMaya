@@ -1,6 +1,3 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
 #include "FabricDFGBaseInterface.h"
 #include "FabricDFGConversion.h"
@@ -8,7 +5,6 @@
 #include "FabricSpliceMayaData.h"
 #include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
-#include "FabricMayaAttrs.h"
 #include <Persistence/RTValToJSONEncoder.hpp>
 
 #include <string>
@@ -499,7 +495,6 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       continue;
 
     FabricCore::DFGPortType portType = exec.getExecPortType(i);
-    if (!exec.getExecPortResolvedType(i)) continue; // [FE-5538]
     std::string dataType = exec.getExecPortResolvedType(i);
 
     FTL::StrRef opaque = exec.getExecPortMetadata(portName.c_str(), "opaque");
@@ -857,17 +852,10 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
 }
 
 void FabricDFGBaseInterface::copyInternalData(MPxNode *node){
-  if (node)
-  {
-    FabricDFGBaseInterface *otherInterface = getInstanceByName(node->name().asChar());
-    if (otherInterface)
-    {
-      MStatus stat = MS::kSuccess;
-      MAYADFG_CATCH_BEGIN(&stat);
-      restoreFromJSON(otherInterface->getDFGBinding().exportJSON().getCString(), &stat);
-      MAYADFG_CATCH_END(&stat); 
-    }
-  }
+  // FabricDFGBaseInterface *otherSpliceInterface = getInstanceByName(node->name().asChar());
+
+  // std::string jsonData = otherSpliceInterface->_spliceGraph.getPersistenceDataJSON();
+  // _spliceGraph.setFromPersistenceDataJSON(jsonData.c_str());
 }
 
 bool FabricDFGBaseInterface::getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx){
@@ -1108,7 +1096,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   //   }
   // }
   // else if(dataTypeOverride == "Boolean")
-  if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Boolean)
+  if(dataTypeOverride == "Boolean")
   {
     if(arrayType == "Single Value")
     {
@@ -1126,7 +1114,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Integer)
+  else if(dataTypeOverride == "Integer" || dataTypeOverride == "SInt32" || dataTypeOverride == "UInt32")
   {
     if(arrayType == "Single Value")
     {
@@ -1173,7 +1161,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     //   }
     // }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Scalar)
+  else if(dataTypeOverride == "Scalar" || dataTypeOverride == "Float32" || dataTypeOverride == "Float64")
   {
     bool isUnitAttr = true;
     // std::string scalarUnit = getStringOption("scalarUnit", compoundStructure);
@@ -1266,7 +1254,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     //   }
     // }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_String)
+  else if(dataTypeOverride == "String")
   {
     if(arrayType == "Single Value")
     {
@@ -1283,7 +1271,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Color)
+  else if(dataTypeOverride == "Color")
   {
     if(arrayType == "Single Value")
     {
@@ -1301,7 +1289,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Vec3)
+  else if(dataTypeOverride == "Vec3")
   {
     if(arrayType == "Single Value")
     {
@@ -1343,7 +1331,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Euler)
+  else if(dataTypeOverride == "Euler")
   {
     if(arrayType == "Single Value")
     {
@@ -1378,7 +1366,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Mat44)
+  else if(dataTypeOverride == "Mat44")
   {
     if(arrayType == "Single Value")
     {
@@ -1396,7 +1384,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_PolygonMesh)
+  else if(dataTypeOverride == "PolygonMesh")
   {
     if(arrayType == "Single Value")
     {
@@ -1416,7 +1404,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Lines)
+  else if(dataTypeOverride == "Lines")
   {
     if(arrayType == "Single Value")
     {
@@ -1436,7 +1424,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_KeyframeTrack){
+  else if(dataTypeOverride == "KeyframeTrack"){
     
     if(arrayType == "Single Value")
     {
@@ -1466,7 +1454,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       }
     }
   }
-  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_SpliceMayaData){
+  else if(dataTypeOverride == "SpliceMayaData"){
     
     if(arrayType == "Single Value")
     {
@@ -1708,7 +1696,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   FTL::CStrRef jsonStr
   )
 {
-  // MGlobal::displayInfo(jsonStr.data());
+  // MGlobal::displayInfo(jsonCString);
 
   FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
   FTL::OwnedPtr<FTL::JSONObject const> jsonObject(
@@ -1781,14 +1769,8 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   }
   else if( descStr == FTL_STR("argInserted") )
   {
-  }
-  else if(   descStr == FTL_STR("varInserted")
-          || descStr == FTL_STR("varRemoved") )
-  {
-    if (   FabricDFGWidget::Instance()
-        && FabricDFGWidget::Instance()->getDfgWidget()
-        && FabricDFGWidget::Instance()->getDfgWidget()->getUIController())
-    FabricDFGWidget::Instance()->getDfgWidget()->getUIController()->emitVarsChanged();
+    // this happens as the result of the addPortCommand
+    // FabricUI::DFG::DFGController::bindUnboundRTVals(m_client, m_binding);
   }
   // else
   // {

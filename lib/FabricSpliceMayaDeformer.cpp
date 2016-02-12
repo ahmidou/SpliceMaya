@@ -1,6 +1,3 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
 #include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceMayaDeformer.h"
@@ -293,3 +290,4 @@ MStatus FabricSpliceMayaDeformer::preEvaluation(const MDGContext& context, const
   return FabricSpliceBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
 }
 #endif
+

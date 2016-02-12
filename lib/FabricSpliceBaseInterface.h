@@ -1,8 +1,5 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
-
-#pragma once
+#ifndef _FabricSpliceBaseInterface_H_
+#define _FabricSpliceBaseInterface_H_
 
 #include "FabricSpliceConversion.h"
 
@@ -151,3 +148,5 @@ private:
 
 float getScalarOption(const char * key, FabricCore::Variant options, float value = 0.0);
 std::string getStringOption(const char * key, FabricCore::Variant options, std::string value = "");
+
+#endif

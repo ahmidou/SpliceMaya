@@ -1,7 +1,3 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
-
 #include "FabricSpliceButtonWidget.h"
 
 FabricSpliceButtonWidget::FabricSpliceButtonWidget(QString label, QWidget * parent)

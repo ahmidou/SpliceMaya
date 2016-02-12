@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef _CREATIONSPLICEBASEDIALOG_H_
+#define _CREATIONSPLICEBASEDIALOG_H_
 
 #include <QtGui/QWidget>
 #include <QtGui/QDialog>
@@ -30,3 +28,5 @@ private:
 protected:
   std::string getStdStringFromQString(QString input);  
 };
+
+#endif 

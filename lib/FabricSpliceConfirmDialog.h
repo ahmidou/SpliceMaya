@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef _CREATIONSPLICECONFIRMDIALOG_H_
+#define _CREATIONSPLICECONFIRMDIALOG_H_
 
 #include "FabricSpliceBaseDialog.h"
 
@@ -12,3 +10,6 @@ public:
   FabricSpliceConfirmDialog(QWidget * parent);
   virtual FabricCore::Variant getValue(const std::string & name);
 };
+
+#endif 
+

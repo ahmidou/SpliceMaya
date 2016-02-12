@@ -1,6 +1,3 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
 #include "FabricSpliceEditorCmd.h"
 #include "FabricSpliceKLSourceCodeWidget.h"
@@ -83,3 +80,4 @@ MStatus FabricSpliceEditorCmd::doIt(const MArgList &args){
 
   return mayaErrorOccured();
 }
+

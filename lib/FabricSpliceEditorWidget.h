@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef _CREATIONSPLICEEDITORWIDGET_H_
+#define _CREATIONSPLICEEDITORWIDGET_H_
 
 #include <QtCore/QDataStream>
 #include <QtGui/QTabWidget>
@@ -95,3 +93,6 @@ protected:
   virtual QSize sizeHint () const;
   virtual void bringToFront();
 };
+
+#endif 
+

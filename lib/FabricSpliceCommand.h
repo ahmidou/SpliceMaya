@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef _CREATIONSPLICECOMMAND_H_
+#define _CREATIONSPLICECOMMAND_H_
 
 #include "FabricSpliceEditorWidget.h"
 
@@ -19,3 +17,5 @@ public:
 
 private:
 };
+
+#endif 

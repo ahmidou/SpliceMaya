@@ -1,8 +1,6 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
-#pragma once
+#ifndef _CREATIONSPLICELOGOWIDGET_H_
+#define _CREATIONSPLICELOGOWIDGET_H_
 
 #include <QtGui/QWidget>
 #include <QtGui/QMouseEvent>
@@ -26,3 +24,6 @@ private:
   void * mCallbackUD;
   QPixmap mPixmap;
 };
+
+#endif 
+

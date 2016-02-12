@@ -1,8 +1,5 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
-
-#pragma once
+#ifndef _SPLICE_SCOPE_TIMER
+#define _SPLICE_SCOPE_TIMER
 
 #define FABRIC_OS_WINDOWS
 
@@ -85,3 +82,5 @@ private:
   char const *m_desc;
   uint64_t m_begin;
 };
+
+#endif

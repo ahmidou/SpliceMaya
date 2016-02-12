@@ -234,6 +234,7 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
   view.beginGL();
   try
   {
+    FabricCore::RTVal callback = getHostToRTRCallback(str, view);
     FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
     FabricCore::RTVal args[4] = {
       FabricSplice::constructStringRTVal(str.asChar()),
@@ -241,7 +242,7 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
       FabricSplice::constructFloat64RTVal(view.portHeight()),
       FabricSplice::constructUInt32RTVal(2)
     };
-    getHostToRTRCallback(str, view).callMethod("", "render", 4, &args[0]);    
+    callback.callMethod("", "render", 4, &args[0]);    
   }
   catch(FabricSplice::Exception e)
   {
