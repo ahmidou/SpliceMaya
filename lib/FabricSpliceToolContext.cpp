@@ -279,7 +279,6 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
     M3dView view = M3dView::active3dView();
     FabricCore::RTVal klevent;
 
-
     if(event->type() == QEvent::Enter){
       klevent = FabricSplice::constructObjectRTVal("MouseEvent");
     }
@@ -327,9 +326,8 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       klevent.setMember("pos", klpos);
     }
 
-    if(klevent.isValid())
-    {
-      /*
+    if(klevent.isValid()){
+
       int eventType = int(event->type());
       QInputEvent *inputEvent = static_cast<QInputEvent *>(event);
 
@@ -417,14 +415,13 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
           inlineViewport.callMethod("", "setCamera", 1, &inlineCamera);
         }
       }
-      */
+
       //////////////////////////
       // Setup the Host
       // We cannot set an interface value via RTVals.
       FabricCore::RTVal host = FabricSplice::constructObjectRTVal("Host");
       host.setMember("hostName", FabricSplice::constructStringRTVal("Maya"));
 
-      /*
       //////////////////////////
       // Configure the event...
       std::vector<FabricCore::RTVal> args(4);
@@ -437,9 +434,10 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
       //////////////////////////
       // Invoke the event...
       mEventDispatcher.callMethod("Boolean", "onEvent", 1, &klevent);
-      */
+
       bool result = klevent.callMethod("Boolean", "isAccepted", 0, 0).getBoolean();
-      if(result) event->accept();
+      if(result)
+        event->accept();
 
       // The manipulation system has requested that a node is dirtified.
       // here we use the maya command to dirtify the specified dg node.
@@ -543,9 +541,9 @@ bool FabricSpliceToolContext::onEvent(QEvent *event)
                     x.set(value.maybeGetMember("x").getFloat32());
                     y.set(value.maybeGetMember("y").getFloat32());
                     z.set(value.maybeGetMember("z").getFloat32());
-                    MGlobal::executeCommand(MString("setAttr ") + attribute + "X " + x + ";", displayEnabled);
-                    MGlobal::executeCommand(MString("setAttr ") + attribute + "Y " + y + ";", displayEnabled);
-                    MGlobal::executeCommand(MString("setAttr ") + attribute + "Z " + z + ";", displayEnabled);
+                    MGlobal::executeCommand(MString("setAttr ") + attribute + "_x " + x + ";", displayEnabled);
+                    MGlobal::executeCommand(MString("setAttr ") + attribute + "_y " + y + ";", displayEnabled);
+                    MGlobal::executeCommand(MString("setAttr ") + attribute + "_z " + z + ";", displayEnabled);
                   }
                   else if(portResolvedType == "Euler")
                   {

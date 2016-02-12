@@ -1,6 +1,7 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceBaseInterface.h"
+#include "FabricSpliceToolContext.h"
 #include "FabricSpliceHelpers.h"
 
 #include <maya/MGlobal.h>
@@ -11,19 +12,36 @@
 #include <maya/MMatrix.h>
 #include <maya/MAnimControl.h>
 
-bool gHostToRTRCallbackEnabled = true;
+bool gRTRPassEnabled = true;
+
+FabricCore::RTVal FabricSpliceRenderCallback::sDrawContext;
 FabricCore::RTVal FabricSpliceRenderCallback::sHostToRTRCallback;
 
-bool isHostToRTRCallbackEnabled() {
-  return gHostToRTRCallbackEnabled;
+bool isRTRPassEnabled()
+{
+  return gRTRPassEnabled;
 }
 
-void enableHostToRTRCallback(bool enable) {
-  gHostToRTRCallbackEnabled = enable;
+void enableRTRPass(bool enable)
+{
+  gRTRPassEnabled = enable;
 }
 
 void FabricSpliceRenderCallback::invalidateHostToRTRCallback() {
+  sDrawContext.invalidate(); 
   sHostToRTRCallback.invalidate(); 
+}
+
+FabricCore::RTVal & FabricSpliceRenderCallback::getDrawContext(const MString &str, M3dView & view)
+{
+  if(!sDrawContext.isValid()) {
+    sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+    sDrawContext = sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+  }
+  else if(sDrawContext.isObject() && sDrawContext.isNullObject()) {
+    sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+    sDrawContext = sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+  }
 }
 
 void FabricSpliceRenderCallback::setCameraTranformFromMaya(M3dView &view, FabricCore::RTVal &camera) {
@@ -240,5 +258,3 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
   }
   view.endGL();
 }
- 
- 
