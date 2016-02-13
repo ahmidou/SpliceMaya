@@ -18,9 +18,9 @@ public:
   static FabricCore::RTVal sDrawContext;
   static FabricCore::RTVal sHostToRTRCallback;
   static void invalidateHostToRTRCallback();
-  static void setCameraTranformFromMaya(M3dView &view, FabricCore::RTVal &, FabricCore::RTVal &);
-  static void setCameraProjectionFromMaya(M3dView &view, FabricCore::RTVal &, FabricCore::RTVal &);
-  static void setCameraParamtersFromMaya(M3dView &view, FabricCore::RTVal &, FabricCore::RTVal &);
+  static void setCameraTranformFromMaya(M3dView &view, FabricCore::RTVal &camera);
+  static void setCameraProjectionFromMaya(M3dView &view, FabricCore::RTVal &camera);
+  static void setCameraParamtersFromMaya(M3dView &view, FabricCore::RTVal &camera);
   static void draw(const MString &str, uint32_t phase);
   static void initHostToRTRCallback();
   static void preRenderCallback(const MString &str, void *clientData);
