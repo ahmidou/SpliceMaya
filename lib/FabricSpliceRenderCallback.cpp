@@ -5,7 +5,6 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
 #include "FabricSpliceBaseInterface.h"
-#include "FabricSpliceToolContext.h"
 #include "FabricSpliceHelpers.h"
 
 #include <maya/MGlobal.h>
