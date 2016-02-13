@@ -21,7 +21,8 @@ public:
   static void setCameraTranformFromMaya(M3dView &view, FabricCore::RTVal &, FabricCore::RTVal &);
   static void setCameraProjectionFromMaya(M3dView &view, FabricCore::RTVal &, FabricCore::RTVal &);
   static void setCameraParamtersFromMaya(M3dView &view, FabricCore::RTVal &, FabricCore::RTVal &);
-  static void initHostToRTRCallback(const MString &str, M3dView &view);
+  static void draw(const MString &str, uint32_t phase);
+  static void initHostToRTRCallback();
   static void preRenderCallback(const MString &str, void *clientData);
   static void postRenderCallback(const MString &str, void *clientData);
 };

@@ -135,7 +135,7 @@ void FabricSpliceRenderCallback::setCameraParamtersFromMaya(M3dView &view, Fabri
   camera.callMethod("", "setNearDistance", 1, &args[1]);
 }
  
-void FabricSpliceRenderCallback::initHostToRTRCallback(const MString &str, M3dView &view) {
+void FabricSpliceRenderCallback::initHostToRTRCallback() {
  
   if(!sDrawContext.isValid()) {
     sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
@@ -156,112 +156,7 @@ void FabricSpliceRenderCallback::initHostToRTRCallback(const MString &str, M3dVi
   }
 }
  
-void FabricSpliceRenderCallback::preRenderCallback(const MString &str, void *clientData) {
-
-  if(!gHostToRTRCallbackEnabled)
-    return;
-
-  try
-  {
-    if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
-      return;
-  }
-  catch(FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-  }
-  catch(FabricSplice::Exception e)
-  {
-    mayaLogErrorFunc(e.what());
-  }
-
-  M3dView view;
-  M3dView::getM3dViewFromModelPanel(str, view);
-
-  // We don't want to draw when users are selecting objects in maya.
-  if(view.selectMode()) return;
-
-
-  MStatus returnStatus;
-  if(view.getRendererName(&returnStatus) == M3dView::kDefaultQualityRenderer )
-    MGlobal::displayError( "kDefaultQualityRenderer" );
-
-  if(view.getRendererName(&returnStatus) == M3dView::kHighQualityRenderer  )
-    MGlobal::displayError( "kHighQualityRenderer " );
-
-  if(view.getRendererName(&returnStatus) == M3dView::kViewport2Renderer  )
-    MGlobal::displayError( "kViewport2Renderer " );
-
-  if(view.getRendererName(&returnStatus) == M3dView::kExternalRenderer  )
-    MGlobal::displayError( "kExternalRenderer " );
-
-  try
-  {
-    FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()");
-    initHostToRTRCallback(str, view);
-
-    //////////////////////////
-    // RTR
-    FabricCore::RTVal rtrViewport;
-    FabricCore::RTVal viewportNameVal = FabricSplice::constructStringRTVal(str.asChar());
-    if(gRenderName != view.getRendererName(&returnStatus))
-    {
-      gRenderName = view.getRendererName(&returnStatus);
-      rtrViewport = sHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &viewportNameVal);
-    }
-    else rtrViewport = sHostToRTRCallback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &viewportNameVal);
-    FabricCore::RTVal rtrCamera = rtrViewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
- 
-
-    //////////////////////////
-    // InlineDrawing
-    sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
-    FabricCore::RTVal inlineViewport = sDrawContext.maybeGetMember("viewport");
-    double width = view.portWidth();
-    double height = view.portHeight();
-    std::vector<FabricCore::RTVal> args(3);
-    args[0] = sDrawContext;
-    args[1] = FabricSplice::constructFloat64RTVal(width);
-    args[2] = FabricSplice::constructFloat64RTVal(height);
-    inlineViewport.callMethod("", "resize", 3, &args[0]);
-    inlineViewport.callMethod("", "setName", 1, &viewportNameVal);
-    FabricCore::RTVal inlineCamera = inlineViewport.callMethod("InlineCamera", "getCamera", 0, 0);
-
-    FabricSpliceRenderCallback::setCameraTranformFromMaya(view, rtrCamera, inlineCamera);
-    FabricSpliceRenderCallback::setCameraProjectionFromMaya(view, rtrCamera, inlineCamera);
-    FabricSpliceRenderCallback::setCameraParamtersFromMaya(view, rtrCamera, inlineCamera);
-  }
-  catch(FabricSplice::Exception e)
-  {
-    mayaLogErrorFunc(e.what());
-    return;
-  }
-  catch(FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return;
-  }
-}
-
-void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *clientData) {
-
-  if(!gHostToRTRCallbackEnabled)
-    return;
-
-  try
-  {
-    if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
-      return;
-  }
-  catch(FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-  }
-  catch(FabricSplice::Exception e)
-  {
-    mayaLogErrorFunc(e.what());
-  }
-
+void FabricSpliceRenderCallback::draw(const MString &str, uint32_t phase) {
   M3dView view;
   M3dView::getM3dViewFromModelPanel(str, view);
 
@@ -270,28 +165,103 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
 
   // draw
   view.beginGL();
-  try
-  {
-    FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
-    //FabricSplice::SceneManagement::drawOpenGL(sDrawContext);
-    FabricCore::RTVal args[4] = {
-      FabricSplice::constructStringRTVal(str.asChar()),
-      FabricSplice::constructFloat64RTVal(view.portWidth()),
-      FabricSplice::constructFloat64RTVal(view.portHeight()),
-      FabricSplice::constructUInt32RTVal(2)
-    };
-    sHostToRTRCallback.callMethod("", "render", 4, &args[0]);    
-  }
-  catch(FabricSplice::Exception e)
-  {
-    mayaLogErrorFunc(e.what());
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
+  //FabricSplice::SceneManagement::drawOpenGL(sDrawContext);
+  FabricCore::RTVal args[5] = {
+    FabricSplice::constructUInt32RTVal(phase),
+    FabricSplice::constructStringRTVal(str.asChar()),
+    FabricSplice::constructFloat64RTVal(view.portWidth()),
+    FabricSplice::constructFloat64RTVal(view.portHeight()),
+    FabricSplice::constructUInt32RTVal(2)
+  };
+  sHostToRTRCallback.callMethod("", "render", 5, &args[0]);    
+  view.endGL();
+}
+
+void FabricSpliceRenderCallback::preRenderCallback(const MString &str, void *clientData) {
+
+  if(!gHostToRTRCallbackEnabled)
     return;
-  }
-  catch(FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
+
+  if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
     return;
+
+  M3dView view;
+  M3dView::getM3dViewFromModelPanel(str, view);
+
+  // We don't want to draw when users are selecting objects in maya.
+  if(view.selectMode()) return;
+  FabricSpliceRenderCallback::initHostToRTRCallback();
+
+  // RTR
+  MStatus returnStatus;
+  FabricCore::RTVal rtrViewport;
+  FabricCore::RTVal viewportNameVal = FabricSplice::constructStringRTVal(str.asChar());
+  if(gRenderName != view.getRendererName(&returnStatus))
+  {
+    gRenderName = view.getRendererName(&returnStatus);
+    rtrViewport = sHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &viewportNameVal);
   }
+  else rtrViewport = sHostToRTRCallback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &viewportNameVal);
+  FabricCore::RTVal rtrCamera = rtrViewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
+
+  // InlineDrawing
+  sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
+  FabricCore::RTVal inlineViewport = sDrawContext.maybeGetMember("viewport");
+  FabricCore::RTVal params[3] = {
+    sDrawContext,
+    FabricSplice::constructFloat64RTVal(view.portWidth()),
+    FabricSplice::constructFloat64RTVal(view.portHeight())
+  };
+  inlineViewport.callMethod("", "resize", 3, &params[0]);
+  inlineViewport.callMethod("", "setName", 1, &viewportNameVal);
+  FabricCore::RTVal inlineCamera = inlineViewport.callMethod("InlineCamera", "getCamera", 0, 0);
+
+  FabricSpliceRenderCallback::setCameraTranformFromMaya(view, rtrCamera, inlineCamera);
+  FabricSpliceRenderCallback::setCameraProjectionFromMaya(view, rtrCamera, inlineCamera);
+  FabricSpliceRenderCallback::setCameraParamtersFromMaya(view, rtrCamera, inlineCamera);
+
+  // draw
+  view.beginGL();
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
+  //FabricSplice::SceneManagement::drawOpenGL(sDrawContext);
+  FabricCore::RTVal args[5] = {
+    FabricSplice::constructUInt32RTVal(2),
+    FabricSplice::constructStringRTVal(str.asChar()),
+    FabricSplice::constructFloat64RTVal(view.portWidth()),
+    FabricSplice::constructFloat64RTVal(view.portHeight()),
+    FabricSplice::constructUInt32RTVal(2)
+  };
+  sHostToRTRCallback.callMethod("", "render", 5, &args[0]);    
+  view.endGL();
+}
+
+void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *clientData) {
+
+  if(!gHostToRTRCallbackEnabled)
+    return;
+ 
+  if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
+    return;
+  
+  M3dView view;
+  M3dView::getM3dViewFromModelPanel(str, view);
+
+  // We don't want to draw when users are selecting objects in maya.
+  if(view.selectMode()) return;
+
+  // draw
+  view.beginGL();
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
+  //FabricSplice::SceneManagement::drawOpenGL(sDrawContext);
+  FabricCore::RTVal args[5] = {
+    FabricSplice::constructUInt32RTVal(4),
+    FabricSplice::constructStringRTVal(str.asChar()),
+    FabricSplice::constructFloat64RTVal(view.portWidth()),
+    FabricSplice::constructFloat64RTVal(view.portHeight()),
+    FabricSplice::constructUInt32RTVal(2)
+  };
+  sHostToRTRCallback.callMethod("", "render", 5, &args[0]);    
   view.endGL();
 }
  
