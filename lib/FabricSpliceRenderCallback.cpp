@@ -233,7 +233,7 @@ void FabricSpliceRenderCallback::preRenderCallback(const MString &str, void *cli
     FabricSpliceRenderCallback::setCameraParamtersFromMaya(view, camera);
 
     // draw
-    FabricSpliceRenderCallback::draw(str, 2);
+    //FabricSpliceRenderCallback::draw(str, 2);
   }
   catch (FabricCore::Exception e)
   {
@@ -251,6 +251,6 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
     return;
 
   // draw
-  //FabricSpliceRenderCallback::draw(str, 4);
+  FabricSpliceRenderCallback::draw(str, 4);
 }
  

@@ -86,11 +86,11 @@ void resetRenderCallbacks() {
 }
 
 void addViewport(int viewportIndex, MString panelName) {
- MStatus status;
- gPreRenderCallbacks[viewportIndex] = MUiMessage::add3dViewPreRenderMsgCallback(panelName, FabricSpliceRenderCallback::preRenderCallback, NULL, &status);
- gPreRenderCallbacksSet[viewportIndex] = (status == MStatus::kSuccess);
- gPostRenderCallbacks[viewportIndex] = MUiMessage::add3dViewPostRenderMsgCallback(panelName, FabricSpliceRenderCallback::postRenderCallback, NULL, &status);
- gPostRenderCallbacksSet[viewportIndex] = (status == MStatus::kSuccess);
+  MStatus status;
+  gPreRenderCallbacks[viewportIndex] = MUiMessage::add3dViewPreRenderMsgCallback(panelName, FabricSpliceRenderCallback::preRenderCallback, NULL, &status);
+  gPreRenderCallbacksSet[viewportIndex] = (status == MStatus::kSuccess);
+  gPostRenderCallbacks[viewportIndex] = MUiMessage::add3dViewPostRenderMsgCallback(panelName, FabricSpliceRenderCallback::postRenderCallback, NULL, &status);
+  gPostRenderCallbacksSet[viewportIndex] = (status == MStatus::kSuccess);
 }
 
 void onModelPanelSetFocus(void * client) {
@@ -207,6 +207,19 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
+  //MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
+  //if(renderer) 
+  //{
+  //  // We register with a given name
+  //  MString clientContextID = FabricSplice::GetClientContextID();
+  //  MGlobal::displayError( MString("ClientID ") + clientContextID);
+  //  ViewOverrideSimple *overridePtr = new ViewOverrideSimple(
+  //    clientContextID,
+  //    "ViewOverrideSimple", 
+  //    "modelPanel0");
+  //  if(overridePtr) renderer->registerOverride(overridePtr);
+  //}
+
   MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status;
 
@@ -316,19 +329,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Interactive);
   else
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
-
-  //MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
-  //if(renderer) 
-  //{
-  //  // We register with a given name
-  //  MString clientContextID = FabricSplice::GetClientContextID();
-  //  MGlobal::displayError( MString("ClientID ") + clientContextID);
-  //  ViewOverrideSimple *overridePtr = new ViewOverrideSimple(
-  //    clientContextID,
-  //    "ViewOverrideSimple", 
-  //    "modelPanel0");
-  //  if(overridePtr) renderer->registerOverride(overridePtr);
-  //}
 
   return status;
 }
