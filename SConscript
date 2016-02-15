@@ -49,7 +49,7 @@ if FABRIC_BUILD_OS == 'Windows':
 else:
   mayaFlags['CCFLAGS'] = ['-isystem', MAYA_INCLUDE_DIR]
 
-mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'Foundation']
+mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'OpenMayaRender', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
   mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4', 'QtOpenGL4'])

@@ -15,6 +15,7 @@
 #include <maya/MEventMessage.h>
 #include <maya/MQtUtil.h>
 #include <maya/MCommandResult.h>
+#include <maya/MViewport2Renderer.h>
 #include <maya/MFileIO.h>
 
 #include <FabricSplice.h>
@@ -32,6 +33,7 @@
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricUpgradeAttrCommand.h"
+#include "ViewOverrideSimple.h"
 
 #ifdef _MSC_VER
   #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
@@ -60,7 +62,7 @@ MCallbackId gOnSceneCreateReferenceCallbackId;
 MCallbackId gOnSceneImportReferenceCallbackId;
 MCallbackId gOnSceneLoadReferenceCallbackId;
 
- 
+
 #define gRenderCallbackCount 32
 MCallbackId gPostRenderCallbacks[gRenderCallbackCount];
 bool gPostRenderCallbacksSet[gRenderCallbackCount];
@@ -83,6 +85,14 @@ void resetRenderCallbacks() {
   }
 }
 
+void addViewport(int viewportIndex, MString panelName) {
+ MStatus status;
+ gPreRenderCallbacks[viewportIndex] = MUiMessage::add3dViewPreRenderMsgCallback(panelName, FabricSpliceRenderCallback::preRenderCallback, NULL, &status);
+ gPreRenderCallbacksSet[viewportIndex] = (status == MStatus::kSuccess);
+ gPostRenderCallbacks[viewportIndex] = MUiMessage::add3dViewPostRenderMsgCallback(panelName, FabricSpliceRenderCallback::postRenderCallback, NULL, &status);
+ gPostRenderCallbacksSet[viewportIndex] = (status == MStatus::kSuccess);
+}
+
 void onModelPanelSetFocus(void * client) {
   MString panelName;
   MGlobal::executeCommand("getPanel -wf;", panelName, false);
@@ -92,18 +102,7 @@ void onModelPanelSetFocus(void * client) {
     MString modelPanel = MString("modelPanel");
     modelPanel += p;
     if(panelName == modelPanel && !gPreRenderCallbacksSet[p]) 
-    {
-      MStatus status;
-      gPreRenderCallbacks[p] = MUiMessage::add3dViewPreRenderMsgCallback(panelName, FabricSpliceRenderCallback::preRenderCallback, NULL, &status);
-      gPreRenderCallbacksSet[p] = (status == MStatus::kSuccess);
-    }
-
-    if(panelName == modelPanel && !gPostRenderCallbacksSet[p]) 
-    {
-      MStatus status;
-      gPostRenderCallbacks[p] = MUiMessage::add3dViewPostRenderMsgCallback(panelName, FabricSpliceRenderCallback::postRenderCallback, NULL, &status);
-      gPostRenderCallbacksSet[p] = (status == MStatus::kSuccess);
-    }
+      addViewport(p, panelName);
   }
 
   MGlobal::executeCommandOnIdle("refresh;", false);
@@ -214,7 +213,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
 
   loadMenu();
-
   resetRenderCallbacks();
 
   gOnSceneSaveCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, onSceneSave);
@@ -230,12 +228,9 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   for(int p=0; p<5; ++p) 
   {
-    MString modelPanel = MString("modelPanel");
-    modelPanel += p;
-    gPreRenderCallbacks[p] = MUiMessage::add3dViewPreRenderMsgCallback(modelPanel, FabricSpliceRenderCallback::preRenderCallback);
-    gPreRenderCallbacksSet[p] = true;
-    gPostRenderCallbacks[p] = MUiMessage::add3dViewPostRenderMsgCallback(modelPanel, FabricSpliceRenderCallback::postRenderCallback);
-    gPostRenderCallbacksSet[p] = true;
+    MString panelName = MString("modelPanel");
+    panelName += p;
+    addViewport(p, panelName);
   }
 
   gOnNodeAddedCallbackId = MDGMessage::addNodeAddedCallback(FabricSpliceBaseInterface::onNodeAdded);
@@ -245,26 +240,20 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnModelPanelSetFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
 
   plugin.registerData(FabricSpliceMayaData::typeName, FabricSpliceMayaData::id, FabricSpliceMayaData::creator);
-
-
   plugin.registerCommand("fabricSplice", FabricSpliceCommand::creator);//, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceEditor", FabricSpliceEditorCmd::creator, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceManipulation", FabricSpliceManipulationCmd::creator);
   plugin.registerCommand("proceedToNextScene", ProceedToNextSceneCommand::creator);//, FabricSpliceEditorCmd::newSyntax);
-
   plugin.registerNode("spliceMayaNode", FabricSpliceMayaNode::id, FabricSpliceMayaNode::creator, FabricSpliceMayaNode::initialize);
   plugin.registerNode("spliceMayaDeformer", FabricSpliceMayaDeformer::id, FabricSpliceMayaDeformer::creator, FabricSpliceMayaDeformer::initialize, MPxNode::kDeformerNode);
 
-
   MQtUtil::registerUIType("FabricSpliceEditor", FabricSpliceEditorWidget::creator, "fabricSpliceEditor");
-
   plugin.registerCommand("fabricDFG", FabricDFGWidgetCommand::creator, FabricDFGWidgetCommand::newSyntax);
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
 
   // obsolete node
   plugin.registerNode("dfgMayaNode", 0x0011AE46, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
   plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
-
   plugin.registerCommand("FabricCanvasGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("FabricCanvasGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
 
@@ -300,28 +289,10 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, SetTitle );
   MAYA_REGISTER_DFGUICMD( plugin, SplitFromPreset );
 
-  plugin.registerCommand(
-    "dfgImportJSON",
-    FabricDFGImportJSONCommand::creator,
-    FabricDFGImportJSONCommand::newSyntax
-    );
-  plugin.registerCommand(
-    "dfgReloadJSON",
-    FabricDFGReloadJSONCommand::creator,
-    FabricDFGReloadJSONCommand::newSyntax
-    );
-  plugin.registerCommand(
-    "dfgExportJSON",
-    FabricDFGExportJSONCommand::creator,
-    FabricDFGExportJSONCommand::newSyntax
-    );
-
-  plugin.registerCommand(
-    "FabricCanvasSetExecuteShared",
-    FabricCanvasSetExecuteSharedCommand::creator,
-    FabricCanvasSetExecuteSharedCommand::newSyntax
-    );
-
+  plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
+  plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
+  plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
+  plugin.registerCommand("FabricCanvasSetExecuteShared", FabricCanvasSetExecuteSharedCommand::creator, FabricCanvasSetExecuteSharedCommand::newSyntax);
   plugin.registerCommand("fabricUpgradeAttrs", FabricUpgradeAttrCommand::creator, FabricUpgradeAttrCommand::newSyntax);
 
   MString pluginPath = plugin.loadPath();
@@ -341,10 +312,23 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MGlobal::executePythonCommandOnIdle("import AEdfgMayaNodeTemplate", true);
   MGlobal::executePythonCommandOnIdle("import AEcanvasNodeTemplate", true);
 
-  if (MGlobal::mayaState() == MGlobal::kInteractive)
+  if(MGlobal::mayaState() == MGlobal::kInteractive)
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Interactive);
   else
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
+
+  //MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
+  //if(renderer) 
+  //{
+  //  // We register with a given name
+  //  MString clientContextID = FabricSplice::GetClientContextID();
+  //  MGlobal::displayError( MString("ClientID ") + clientContextID);
+  //  ViewOverrideSimple *overridePtr = new ViewOverrideSimple(
+  //    clientContextID,
+  //    "ViewOverrideSimple", 
+  //    "modelPanel0");
+  //  if(overridePtr) renderer->registerOverride(overridePtr);
+  //}
 
   return status;
 }
@@ -385,16 +369,12 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 
   MDGMessage::removeCallback(gOnNodeAddedCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedCallbackId);
-
   MDGMessage::removeCallback(gOnNodeAddedDFGCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedDFGCallbackId);
 
   plugin.deregisterData(FabricSpliceMayaData::id);
-
   MQtUtil::deregisterUIType("FabricSpliceEditor");
-
   plugin.deregisterContextCommand("FabricSpliceToolContext", "FabricSpliceToolCommand");
-
   plugin.deregisterCommand("fabricDFG");
   MQtUtil::deregisterUIType("FabricDFGWidget");
   plugin.deregisterNode(FabricDFGMayaNode::id);
@@ -435,14 +415,27 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand( "dfgReloadJSON" );
   plugin.deregisterCommand( "dfgExportJSON" );
 
+
+  //MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
+  //if (renderer)
+  //{
+  //  // Find override with the given name and deregister
+  //  const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride("ViewOverrideSimple");
+  //  if (overridePtr)
+  //  {
+  //    renderer->deregisterOverride( overridePtr );
+  //    delete overridePtr;
+  //  }
+  //}
+  
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by
   // destroying the Core client, can cause Maya to crash on OS X.
   // 
   FabricSplice::Logging::setKLReportFunc(0);
-
   FabricSplice::DestroyClient();
   FabricSplice::Finalize();
+
   return status;
 }
 
