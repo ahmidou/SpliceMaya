@@ -685,6 +685,32 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_ReorderPorts
   > MayaDFGUICmd_ReorderPorts;
 
+class FabricDFGDismissLoadDiagsCommand
+  : public FabricDFGBindingCommand
+{
+  typedef FabricDFGBindingCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QList<int> indices;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGDismissLoadDiagsCommand,
+  FabricUI::DFG::DFGUICmd_DismissLoadDiags
+  > MayaDFGUICmd_DismissLoadDiags;
+
 class FabricDFGEditNodeCommand
   : public FabricDFGExecCommand
 {

@@ -1019,6 +1019,33 @@ void DFGUICmdHandler_Maya::dfgDoSplitFromPreset(
     );
 }
 
+void DFGUICmdHandler_Maya::dfgDoDismissLoadDiags(
+  FabricCore::DFGBinding const &binding,
+  QList<int> diagIndices
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_DismissLoadDiags::CmdName();
+  encodeBinding( binding, cmd );
+
+  cmd << " -di";
+  cmd << " \"[";
+  for ( int i = 0; i < diagIndices.size(); ++i )
+  {
+    if ( i > 0 )
+      cmd << ", ";
+    cmd << diagIndices[i];
+  }
+  cmd << "]\"";
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+}
+
 FabricDFGBaseInterface * DFGUICmdHandler_Maya::getInterfFromBinding( FabricCore::DFGBinding const &binding )
 {
   MString interfIdStr = binding.getMetadata("maya_id");

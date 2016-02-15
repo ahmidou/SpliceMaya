@@ -268,6 +268,11 @@ protected:
     FabricCore::DFGExec const &exec
     );
 
+  virtual void dfgDoDismissLoadDiags(
+    FabricCore::DFGBinding const &binding,
+    QList<int> diagIndices
+    );
+
 protected:
     
   void encodeMELStringChars(
