@@ -77,7 +77,7 @@ MStatus ViewOverrideSimple::setup( const MString & destination ) {
   // Create a new set of operations as required
   if(!mOperations[0])
   {
-    mOperations[0] = (MHWRender::MRenderOperation*) new MHWRender::MSceneRender(mOperationNames[0]);//, mViewportName);
+    mOperations[0] = (MHWRender::MRenderOperation*) new simpleViewRenderSceneRender(mOperationNames[0], mViewportName);
     mOperations[1] = (MHWRender::MRenderOperation*) new RTRRender(mOperationNames[1], mViewportName);
     mOperations[2] = (MHWRender::MRenderOperation*) new MHWRender::MHUDRender();
     mOperations[3] = (MHWRender::MRenderOperation*) new MHWRender::MPresentTarget(mOperationNames[3]);
@@ -115,6 +115,11 @@ simpleViewRenderSceneRender::simpleViewRenderSceneRender(const MString &name, co
   }
 }
 
+MHWRender::MSceneRender::MSceneFilterOption simpleViewRenderSceneRender::renderFilterOverride() { 
+  // Draw only non-shaded items return 
+  return MHWRender::MSceneRender::kRenderAllItems; 
+}
+
 MHWRender::MClearOperation &simpleViewRenderSceneRender::clearOperation() {
   mClearOperation.setMask((unsigned int)(MHWRender::MClearOperation::kClearAll) );
   return mClearOperation;
@@ -127,7 +132,7 @@ void simpleViewRenderSceneRender::preSceneRender(const MHWRender::MDrawContext &
     FabricCore::RTVal camera = mViewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
        
     MStatus status;
-    MMatrix mayaMatrix = context.getMatrix(MHWRender::MFrameContext::kWorldMtx, &status);
+    MMatrix mayaMatrix = context.getMatrix(MHWRender::MFrameContext::kViewMtx, &status);
     FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
     FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
     float *cameraMatFloats = (float*)cameraMatData.getData();
@@ -199,28 +204,6 @@ void simpleViewRenderSceneRender::preSceneRender(const MHWRender::MDrawContext &
     };
     camera.callMethod("", "setRange", 2, &args[0]);
 
-    //FabricCore::RTVal parameters[5] = {
-    //  FabricSplice::constructUInt32RTVal(2),
-    //  FabricSplice::constructStringRTVal("modelPanel0"),
-    //  FabricSplice::constructFloat64RTVal((double)width),
-    //  FabricSplice::constructFloat64RTVal((double)height),
-    //  FabricSplice::constructUInt32RTVal(2)
-    //}; 
-    //mHostToRTRCallback.callMethod("", "render", 5, &parameters[0]); 
-  }
-  catch (FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return;
-  }
-}
-
-void simpleViewRenderSceneRender::postSceneRender(const MHWRender::MDrawContext &context) {
-  
-  try
-  {
-    int originX, originY, width, height;
-    MStatus status = context.getViewportDimensions(originX, originY, width, height);
     FabricCore::RTVal parameters[5] = {
       FabricSplice::constructUInt32RTVal(2),
       FabricSplice::constructStringRTVal("modelPanel0"),
@@ -235,6 +218,29 @@ void simpleViewRenderSceneRender::postSceneRender(const MHWRender::MDrawContext 
     mayaLogErrorFunc(e.getDesc_cstr());
     return;
   }
+  
+}
+
+void simpleViewRenderSceneRender::postSceneRender(const MHWRender::MDrawContext &context) {
+  
+  //try
+  //{
+  //  int originX, originY, width, height;
+  //  MStatus status = context.getViewportDimensions(originX, originY, width, height);
+  //  FabricCore::RTVal parameters[5] = {
+  //    FabricSplice::constructUInt32RTVal(2),
+  //    FabricSplice::constructStringRTVal("modelPanel0"),
+  //    FabricSplice::constructFloat64RTVal((double)width),
+  //    FabricSplice::constructFloat64RTVal((double)height),
+  //    FabricSplice::constructUInt32RTVal(2)
+  //  }; 
+  //  mHostToRTRCallback.callMethod("", "render", 5, &parameters[0]); 
+  //}
+  //catch (FabricCore::Exception e)
+  //{
+  //  mayaLogErrorFunc(e.getDesc_cstr());
+  //  return;
+  //}
 }
 
 // *****************
@@ -242,30 +248,38 @@ void simpleViewRenderSceneRender::postSceneRender(const MHWRender::MDrawContext 
 RTRRender::RTRRender(const MString &name, const MString &viewportName)
   : MUserRenderOperation( name )
 {
-  try
-  {
-    if(!mHostToRTRCallback.isValid()) 
-    {
-      mHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
-      mHostToRTRCallback = mHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
-    }
-    FabricCore::RTVal viewportNameVal = FabricSplice::constructStringRTVal(viewportName.asChar());
-    mViewport = mHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &viewportNameVal);
-  }
-  catch (FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return;
-  }
+  //try
+  //{
+  //  if(!mHostToRTRCallback.isValid()) 
+  //  {
+  //    mHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
+  //    mHostToRTRCallback = mHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
+  //  }
+  //  FabricCore::RTVal viewportNameVal = FabricSplice::constructStringRTVal(viewportName.asChar());
+  //  mViewport = mHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &viewportNameVal);
+  //}
+  //catch (FabricCore::Exception e)
+  //{
+  //  mayaLogErrorFunc(e.getDesc_cstr());
+  //  return;
+  //}
 }
  
 MStatus RTRRender::execute(const MHWRender::MDrawContext &context) {
+  /*
   try
   {
     FabricCore::RTVal camera = mViewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
-       
+   
     MStatus status;
-    MMatrix mayaMatrix = context.getMatrix(MHWRender::MFrameContext::kWorldMtx, &status);
+    MFnCamera mayaCamera(context.getCurrentCameraPath(&status));
+
+    MDagPath mayaCameraDag;
+    status = mayaCamera.getPath(mayaCameraDag);
+    MMatrix mayaMatrix = mayaCameraDag.inclusiveMatrix();
+
+    //MMatrix mayaMatrix = context.getMatrix(MHWRender::MFrameContext::kViewMtx, &status);
+
     FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
     FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
     float *cameraMatFloats = (float*)cameraMatData.getData();
@@ -321,7 +335,6 @@ MStatus RTRRender::execute(const MHWRender::MDrawContext &context) {
     camera.callMethod("", "setOrthographic", 1, &param);
  
 
-    MFnCamera mayaCamera(context.getCurrentCameraPath(&status));
     double fovX, fovY;
     int originX, originY, width, height;
     status = context.getViewportDimensions(originX, originY, width, height);
@@ -350,5 +363,6 @@ MStatus RTRRender::execute(const MHWRender::MDrawContext &context) {
     mayaLogErrorFunc(e.getDesc_cstr());
     return MStatus::kFailure;
   }
+  */
   return MStatus::kSuccess;
 }

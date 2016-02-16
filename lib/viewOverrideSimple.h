@@ -38,6 +38,7 @@ class simpleViewRenderSceneRender : public MHWRender::MSceneRender {
     virtual MHWRender::MClearOperation& clearOperation();
     virtual void preSceneRender(const MHWRender::MDrawContext &context);
     virtual void postSceneRender(const MHWRender::MDrawContext &context);
+    virtual MHWRender::MSceneRender::MSceneFilterOption renderFilterOverride();
 
   private:
     FabricCore::RTVal mViewport;
