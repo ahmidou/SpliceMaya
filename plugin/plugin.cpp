@@ -7,8 +7,8 @@
 #include <QtCore/QEvent>
 
 #include "plugin.h"
-#include <maya/MFnPlugin.h>
 #include <maya/MGlobal.h>
+#include <maya/MFnPlugin.h>
 #include <maya/MSceneMessage.h>
 #include <maya/MDGMessage.h>
 #include <maya/MUiMessage.h>
