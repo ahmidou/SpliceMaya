@@ -244,11 +244,11 @@ RTRRender::RTRRender(const MString &name, const MString &viewportName)
 {
   try
   {
-    if(!mHostToRTRCallback.isValid()) {
+    if(!mHostToRTRCallback.isValid()) 
+    {
       mHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
       mHostToRTRCallback = mHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
     }
-
     FabricCore::RTVal viewportNameVal = FabricSplice::constructStringRTVal(viewportName.asChar());
     mViewport = mHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &viewportNameVal);
   }
@@ -260,7 +260,6 @@ RTRRender::RTRRender(const MString &name, const MString &viewportName)
 }
  
 MStatus RTRRender::execute(const MHWRender::MDrawContext &context) {
-  
   try
   {
     FabricCore::RTVal camera = mViewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
@@ -345,13 +344,11 @@ MStatus RTRRender::execute(const MHWRender::MDrawContext &context) {
     }; 
     mHostToRTRCallback.callMethod("", "render", 5, &parameters[0]); 
     return MStatus::kSuccess;
-
   }
   catch (FabricCore::Exception e)
   {
     mayaLogErrorFunc(e.getDesc_cstr());
     return MStatus::kFailure;
   }
-  
   return MStatus::kSuccess;
 }
