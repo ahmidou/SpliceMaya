@@ -98,21 +98,20 @@ MStatus ViewOverrideSimple::cleanup() {
 simpleViewRenderSceneRender::simpleViewRenderSceneRender(const MString &name, const MString &viewportName)
   : MSceneRender( name )
 {
-  try
-  {
-    if(!mHostToRTRCallback.isValid()) {
-      mHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
-      mHostToRTRCallback = mHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
-    }
-
-    FabricCore::RTVal viewportNameVal = FabricSplice::constructStringRTVal(viewportName.asChar());
-    mViewport = mHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &viewportNameVal);
-  }
-  catch (FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return;
-  }
+  //try
+  //{
+  //  if(!mHostToRTRCallback.isValid()) {
+  //    mHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
+  //    mHostToRTRCallback = mHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
+  //  }
+  //  FabricCore::RTVal viewportNameVal = FabricSplice::constructStringRTVal(viewportName.asChar());
+  //  mViewport = mHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &viewportNameVal);
+  //}
+  //catch (FabricCore::Exception e)
+  //{
+  //  mayaLogErrorFunc(e.getDesc_cstr());
+  //  return;
+  //}
 }
 
 MHWRender::MSceneRender::MSceneFilterOption simpleViewRenderSceneRender::renderFilterOverride() { 
@@ -126,7 +125,7 @@ MHWRender::MClearOperation &simpleViewRenderSceneRender::clearOperation() {
 }
 
 void simpleViewRenderSceneRender::preSceneRender(const MHWRender::MDrawContext &context) {
-  
+  /*
   try
   {
     FabricCore::RTVal camera = mViewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
@@ -204,6 +203,29 @@ void simpleViewRenderSceneRender::preSceneRender(const MHWRender::MDrawContext &
     };
     camera.callMethod("", "setRange", 2, &args[0]);
 
+    //FabricCore::RTVal parameters[5] = {
+    //  FabricSplice::constructUInt32RTVal(2),
+    //  FabricSplice::constructStringRTVal("modelPanel0"),
+    //  FabricSplice::constructFloat64RTVal((double)width),
+    //  FabricSplice::constructFloat64RTVal((double)height),
+    //  FabricSplice::constructUInt32RTVal(2)
+    //}; 
+    //mHostToRTRCallback.callMethod("", "render", 5, &parameters[0]); 
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return;
+  }  
+  */
+}
+
+void simpleViewRenderSceneRender::postSceneRender(const MHWRender::MDrawContext &context) {
+  /*
+  try
+  {
+    int originX, originY, width, height;
+    MStatus status = context.getViewportDimensions(originX, originY, width, height);
     FabricCore::RTVal parameters[5] = {
       FabricSplice::constructUInt32RTVal(2),
       FabricSplice::constructStringRTVal("modelPanel0"),
@@ -218,29 +240,7 @@ void simpleViewRenderSceneRender::preSceneRender(const MHWRender::MDrawContext &
     mayaLogErrorFunc(e.getDesc_cstr());
     return;
   }
-  
-}
-
-void simpleViewRenderSceneRender::postSceneRender(const MHWRender::MDrawContext &context) {
-  
-  //try
-  //{
-  //  int originX, originY, width, height;
-  //  MStatus status = context.getViewportDimensions(originX, originY, width, height);
-  //  FabricCore::RTVal parameters[5] = {
-  //    FabricSplice::constructUInt32RTVal(2),
-  //    FabricSplice::constructStringRTVal("modelPanel0"),
-  //    FabricSplice::constructFloat64RTVal((double)width),
-  //    FabricSplice::constructFloat64RTVal((double)height),
-  //    FabricSplice::constructUInt32RTVal(2)
-  //  }; 
-  //  mHostToRTRCallback.callMethod("", "render", 5, &parameters[0]); 
-  //}
-  //catch (FabricCore::Exception e)
-  //{
-  //  mayaLogErrorFunc(e.getDesc_cstr());
-  //  return;
-  //}
+  */
 }
 
 // *****************
@@ -248,25 +248,25 @@ void simpleViewRenderSceneRender::postSceneRender(const MHWRender::MDrawContext 
 RTRRender::RTRRender(const MString &name, const MString &viewportName)
   : MUserRenderOperation( name )
 {
-  //try
-  //{
-  //  if(!mHostToRTRCallback.isValid()) 
-  //  {
-  //    mHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
-  //    mHostToRTRCallback = mHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
-  //  }
-  //  FabricCore::RTVal viewportNameVal = FabricSplice::constructStringRTVal(viewportName.asChar());
-  //  mViewport = mHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &viewportNameVal);
-  //}
-  //catch (FabricCore::Exception e)
-  //{
-  //  mayaLogErrorFunc(e.getDesc_cstr());
-  //  return;
-  //}
+  try
+  {
+    if(!mHostToRTRCallback.isValid()) 
+    {
+      mHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
+      mHostToRTRCallback = mHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
+    }
+    FabricCore::RTVal viewportNameVal = FabricSplice::constructStringRTVal(viewportName.asChar());
+    mViewport = mHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &viewportNameVal);
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return;
+  }
 }
  
 MStatus RTRRender::execute(const MHWRender::MDrawContext &context) {
-  /*
+    
   try
   {
     FabricCore::RTVal camera = mViewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
@@ -274,11 +274,7 @@ MStatus RTRRender::execute(const MHWRender::MDrawContext &context) {
     MStatus status;
     MFnCamera mayaCamera(context.getCurrentCameraPath(&status));
 
-    MDagPath mayaCameraDag;
-    status = mayaCamera.getPath(mayaCameraDag);
-    MMatrix mayaMatrix = mayaCameraDag.inclusiveMatrix();
-
-    //MMatrix mayaMatrix = context.getMatrix(MHWRender::MFrameContext::kViewMtx, &status);
+    MMatrix mayaMatrix = context.getMatrix(MHWRender::MFrameContext::kViewMtx, &status);
 
     FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
     FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
@@ -363,6 +359,6 @@ MStatus RTRRender::execute(const MHWRender::MDrawContext &context) {
     mayaLogErrorFunc(e.getDesc_cstr());
     return MStatus::kFailure;
   }
-  */
+  
   return MStatus::kSuccess;
 }
