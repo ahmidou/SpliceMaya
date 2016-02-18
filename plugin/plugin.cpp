@@ -127,7 +127,8 @@ void onSceneSave(void *userData) {
 
 void onSceneNew(void *userData) {
   FabricSpliceEditorWidget::postClearAll();
-  FabricSpliceRenderCallback::invalidateHostToRTRCallback(); 
+  FabricSpliceRenderCallback::invalidateHostToRTRCallback();
+  RTRRender::mRTRRender.invalidate(); 
   MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
   MGlobal::executeCommandOnIdle(cmd, false);
   FabricDFGWidget::Destroy();
@@ -137,6 +138,7 @@ void onSceneNew(void *userData) {
 void onSceneLoad(void *userData) {
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::invalidateHostToRTRCallback(); 
+  RTRRender::mRTRRender.invalidate(); 
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
     FabricSplice::Logging::enableTimers();
@@ -180,9 +182,7 @@ void onMayaExiting(void *userData) {
   }
 
   FabricDFGBaseInterface::allResetInternalData();
-
   FabricDFGWidget::Destroy();
-
   FabricSplice::DestroyClient(true);
 }
 
@@ -208,9 +208,7 @@ __attribute__ ((visibility("default")))
 MAYA_EXPORT initializePlugin(MObject obj)
 {
   MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
-  MStatus status;
-
-  status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
+  MStatus status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
 
   loadMenu();
   resetRenderCallbacks();
@@ -232,6 +230,17 @@ MAYA_EXPORT initializePlugin(MObject obj)
     panelName += p;
     addViewport(p, panelName);
   }
+
+  MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
+  if(renderer) 
+  {
+    // We register with a given name
+    ViewOverrideSimple *overridePtr = new ViewOverrideSimple(
+      "ViewOverrideSimple", 
+      "panelName");
+    if(overridePtr) renderer->registerOverride(overridePtr);
+  }
+
 
   gOnNodeAddedCallbackId = MDGMessage::addNodeAddedCallback(FabricSpliceBaseInterface::onNodeAdded);
   gOnNodeRemovedCallbackId = MDGMessage::addNodeRemovedCallback(FabricSpliceBaseInterface::onNodeRemoved);
@@ -317,18 +326,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   else
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
 
-  MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
-  if(renderer) 
-  {
-    // We register with a given name
-    MString clientContextID = FabricSplice::GetClientContextID();
-    MGlobal::displayError( MString("ClientID ") + clientContextID);
-    ViewOverrideSimple *overridePtr = new ViewOverrideSimple(
-      clientContextID,
-      "ViewOverrideSimple", 
-      "modelPanel0");
-    if(overridePtr) renderer->registerOverride(overridePtr);
-  }
   
   return status;
 }

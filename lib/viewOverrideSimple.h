@@ -10,10 +10,11 @@
 #include <maya/MDrawContext.h>
 #include <maya/MViewport2Renderer.h>
 
+ 
 class ViewOverrideSimple : public MHWRender::MRenderOverride {
 
   public:
-    ViewOverrideSimple(const MString &clientContextID, const MString &name, const MString &viewportName);
+    ViewOverrideSimple(const MString &name, const MString &viewportName);
     virtual ~ViewOverrideSimple();
     virtual MHWRender::DrawAPI supportedDrawAPIs() const;
     virtual MStatus setup( const MString & destination );
@@ -22,13 +23,16 @@ class ViewOverrideSimple : public MHWRender::MRenderOverride {
     virtual MHWRender::MRenderOperation * renderOperation();
     virtual bool nextRenderOperation();
     virtual MString uiName() const { return mUIName; }
-    
+        
+    void enable();
+
   protected:
     MString mViewportName;
     MString mUIName;
     MHWRender::MRenderOperation* mOperations[4];
     MString mOperationNames[4];
     int mCurrentOperation;
+    bool mEnable;
 };
 
 
@@ -36,24 +40,23 @@ class simpleViewRenderSceneRender : public MHWRender::MSceneRender {
   public:
     simpleViewRenderSceneRender(const MString &name, const MString &viewportName);
     virtual MHWRender::MClearOperation& clearOperation();
-    virtual void preSceneRender(const MHWRender::MDrawContext &context);
-    virtual void postSceneRender(const MHWRender::MDrawContext &context);
-    virtual MHWRender::MSceneRender::MSceneFilterOption renderFilterOverride();
-
-  private:
-    FabricCore::RTVal mViewport;
-    FabricCore::RTVal mHostToRTRCallback;
 };
 
+
+bool isRTRRenderEnabled();
+void enableRTRRender(bool enable);
 
 class RTRRender : public MHWRender::MUserRenderOperation {
 
   public:
     RTRRender(const MString &name, const MString &viewportName);
     virtual MStatus execute(const MHWRender::MDrawContext &context);
+    
+    static FabricCore::RTVal mRTRRender;
+    static void invalidateHostToRTRCallback();
 
   private:
-    FabricCore::RTVal mViewport;
-    FabricCore::RTVal mHostToRTRCallback;
+    bool initRTRRender();
+    MString mViewportName;
 };
 #endif

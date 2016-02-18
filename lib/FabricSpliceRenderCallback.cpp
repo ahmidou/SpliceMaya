@@ -213,9 +213,9 @@ void FabricSpliceRenderCallback::preRenderCallback(const MString &str, void *cli
   {
     M3dView view;
     M3dView::getM3dViewFromModelPanel(str, view);
-
     FabricSpliceRenderCallback::initHostToRTRCallback();
 
+    /*
     // RTR
     MStatus returnStatus;
     FabricCore::RTVal viewport;
@@ -234,6 +234,7 @@ void FabricSpliceRenderCallback::preRenderCallback(const MString &str, void *cli
 
     // draw
     //FabricSpliceRenderCallback::draw(str, 2);
+    */
   }
   catch (FabricCore::Exception e)
   {
@@ -251,6 +252,6 @@ void FabricSpliceRenderCallback::postRenderCallback(const MString &str, void *cl
     return;
 
   // draw
-  FabricSpliceRenderCallback::draw(str, 4);
+  //FabricSpliceRenderCallback::draw(str, 4);
 }
  

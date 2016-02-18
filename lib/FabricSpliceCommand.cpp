@@ -27,6 +27,7 @@
 #include "FabricSpliceEditorCmd.h"
 #include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceRenderCallback.h"
+#include "viewOverrideSimple.h"
 #include "FabricSpliceHelpers.h"
 
 #define kActionFlag "-a"
@@ -102,12 +103,13 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     else if(actionStr == "toggleRenderer")
     {
       enableHostToRTRCallback(!isHostToRTRCallbackEnabled());
+      enableRTRRender(!isRTRRenderEnabled());
       mayaRefreshFunc();
       return mayaErrorOccured();
     }
     else if(actionStr == "isRendererEnabled")
     {
-      setResult(isHostToRTRCallbackEnabled());
+      setResult(isHostToRTRCallbackEnabled() && isRTRRenderEnabled());
       return mayaErrorOccured();
     }
     else if(actionStr == "startProfiling")
