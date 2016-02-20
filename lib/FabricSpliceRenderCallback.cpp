@@ -65,65 +65,49 @@ inline void setMatrixTranspose(const MMatrix &mMatrix, float *buffer) {
 }
 
 inline void setCamera(double width, double height, const MFnCamera &mCamera, FabricCore::RTVal &camera) {
-  try
+  MDagPath mCameraDag;
+  MStatus status = mCamera.getPath(mCameraDag);
+  MMatrix mMatrix = mCameraDag.inclusiveMatrix();
+
+  FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
+  FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
+  float *buffer = (float*)cameraMatData.getData();
+  setMatrixTranspose(mMatrix, buffer);
+  camera.callMethod("", "setTransform", 1, &cameraMat);
+
+  bool isOrthographic = mCamera.isOrtho();
+  FabricCore::RTVal param = FabricSplice::constructBooleanRTVal(isOrthographic);
+  camera.callMethod("", "setOrthographic", 1, &param);
+
+  if(isOrthographic) 
   {
-    MDagPath mCameraDag;
-    MStatus status = mCamera.getPath(mCameraDag);
-    MMatrix mMatrix = mCameraDag.inclusiveMatrix();
-
-    FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
-    FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
-    float *buffer = (float*)cameraMatData.getData();
-    setMatrixTranspose(mMatrix, buffer);
-    camera.callMethod("", "setTransform", 1, &cameraMat);
-
-    bool isOrthographic = mCamera.isOrtho();
-    FabricCore::RTVal param = FabricSplice::constructBooleanRTVal(isOrthographic);
-    camera.callMethod("", "setOrthographic", 1, &param);
-
-    if(isOrthographic) 
-    {
-      double windowAspect = width/height;
-      double left = 0.0, right = 0.0, bottom = 0.0, top = 0.0;
-      bool applyOverscan = false, applySqueeze = false, applyPanZoom = false;
-      mCamera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
-      param = FabricSplice::constructFloat32RTVal(top-bottom);
-      camera.callMethod("", "setOrthographicFrustumHeight", 1, &param);
-    }
-    else 
-    {
-      double fovX, fovY;
-      mCamera.getPortFieldOfView(width, height, fovX, fovY);    
-      param = FabricSplice::constructFloat64RTVal(fovY);
-      camera.callMethod("", "setFovY", 1, &param);
-    }
-
-    std::vector<FabricCore::RTVal> args(2);
-    args[0] = FabricSplice::constructFloat32RTVal(mCamera.nearClippingPlane());
-    args[1] = FabricSplice::constructFloat32RTVal(mCamera.farClippingPlane());
-    camera.callMethod("", "setRange", 2, &args[0]);
+    double windowAspect = width/height;
+    double left = 0.0, right = 0.0, bottom = 0.0, top = 0.0;
+    bool applyOverscan = false, applySqueeze = false, applyPanZoom = false;
+    mCamera.getViewingFrustum ( windowAspect, left, right, bottom, top, applyOverscan, applySqueeze, applyPanZoom );
+    param = FabricSplice::constructFloat32RTVal(top-bottom);
+    camera.callMethod("", "setOrthographicFrustumHeight", 1, &param);
   }
-  catch (FabricCore::Exception e)
+  else 
   {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return;
+    double fovX, fovY;
+    mCamera.getPortFieldOfView(width, height, fovX, fovY);    
+    param = FabricSplice::constructFloat64RTVal(fovY);
+    camera.callMethod("", "setFovY", 1, &param);
   }
+
+  std::vector<FabricCore::RTVal> args(2);
+  args[0] = FabricSplice::constructFloat32RTVal(mCamera.nearClippingPlane());
+  args[1] = FabricSplice::constructFloat32RTVal(mCamera.farClippingPlane());
+  camera.callMethod("", "setRange", 2, &args[0]);
 }
 
 inline void setProjection(const MMatrix &projection, FabricCore::RTVal &camera) {
-  try
-  {
-    FabricCore::RTVal projectionMat = FabricSplice::constructRTVal("Mat44");
-    FabricCore::RTVal projectionData = projectionMat.callMethod("Data", "data", 0, 0);
-    float *buffer = (float*)projectionData.getData();
-    setMatrixTranspose(projection, buffer);
-    camera.callMethod("", "setProjMatrix", 1, &projectionMat);
-  }
-  catch (FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return;
-  }
+  FabricCore::RTVal projectionMat = FabricSplice::constructRTVal("Mat44");
+  FabricCore::RTVal projectionData = projectionMat.callMethod("Data", "data", 0, 0);
+  float *buffer = (float*)projectionData.getData();
+  setMatrixTranspose(projection, buffer);
+  camera.callMethod("", "setProjMatrix", 1, &projectionMat);
 }
 
 inline MString getActiveRenderName(const M3dView &view) {
@@ -138,35 +122,23 @@ inline MString getActiveRenderName(const M3dView &view) {
 }
 
 bool FabricSpliceRenderCallback::canDraw() {
-
   if(!FabricSpliceRenderCallback::gCallbackEnabled)
     return false;
-
   if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
     return false;
-
   return true;
 }
 
 void FabricSpliceRenderCallback::draw(double width, double height, const MString &panelName, uint32_t phase) {
-  try
-  {
-    // draw
-    FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
-    FabricCore::RTVal args[5] = {
-      FabricSplice::constructUInt32RTVal(phase),
-      FabricSplice::constructStringRTVal(panelName.asChar()),
-      FabricSplice::constructFloat64RTVal(width),
-      FabricSplice::constructFloat64RTVal(height),
-      FabricSplice::constructUInt32RTVal(2)
-    };
-    FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("", "render", 5, &args[0]);    
-  }
-  catch (FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return;
-  }
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
+  FabricCore::RTVal args[5] = {
+    FabricSplice::constructUInt32RTVal(phase),
+    FabricSplice::constructStringRTVal(panelName.asChar()),
+    FabricSplice::constructFloat64RTVal(width),
+    FabricSplice::constructFloat64RTVal(height),
+    FabricSplice::constructUInt32RTVal(2)
+  };
+  FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("", "render", 5, &args[0]);    
 }
 
 MString gRenderName = "NoViewport";
@@ -175,47 +147,38 @@ inline void preDrawCallback(const MString &panelName, void *clientData) {
   
   if(!FabricSpliceRenderCallback::canDraw()) return;
 
-  try
-  {
-    init();
+  init();
 
-    M3dView view;
-    M3dView::getM3dViewFromModelPanel(panelName, view);
+  M3dView view;
+  M3dView::getM3dViewFromModelPanel(panelName, view);
 
 #if _SPLICE_MAYA_VERSION >= 2016
   if(getActiveRenderName(view) == "vp2Renderer")
     return;
 #endif
 
-    MStatus status;
-    FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
-    FabricCore::RTVal viewport;
-    if(gRenderName != getActiveRenderName(view))
-    {
-      gRenderName = getActiveRenderName(view);
-      viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &panelNameVal);
-    }
-    else
-      viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
-    FabricCore::RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
-    
-    MDagPath cameraDag; view.getCamera(cameraDag);
-    MFnCamera mCamera(cameraDag);
-    setCamera(view.portWidth(), view.portHeight(), mCamera, camera);
-    
-    MMatrix projection;
-    view.projectionMatrix(projection);
-    setProjection(projection, camera);
-
-    // draw
-    FabricSpliceRenderCallback::draw(view.portWidth(), view.portHeight(), panelName, 2);
-  }
-  catch (FabricCore::Exception e)
+  MStatus status;
+  FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
+  FabricCore::RTVal viewport;
+  if(gRenderName != getActiveRenderName(view))
   {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return;
-  } 
+    gRenderName = getActiveRenderName(view);
+    viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &panelNameVal);
+  }
+  else
+    viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
+  FabricCore::RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
+  
+  MDagPath cameraDag; view.getCamera(cameraDag);
+  MFnCamera mCamera(cameraDag);
+  setCamera(view.portWidth(), view.portHeight(), mCamera, camera);
+  
+  MMatrix projection;
+  view.projectionMatrix(projection);
+  setProjection(projection, camera);
 
+  // draw
+  FabricSpliceRenderCallback::draw(view.portWidth(), view.portHeight(), panelName, 2);
 }
 
 #if _SPLICE_MAYA_VERSION >= 2016
@@ -264,12 +227,14 @@ inline void onModelPanelSetFocus(void *client) {
 
 void FabricSpliceRenderCallback::plug() {
   gOnPanelFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
+  
+  MStatus status;
   for(int p=0; p<5; ++p) 
   {
     MString panelName = MString("modelPanel");
     panelName += p;
-    MUiMessage::add3dViewPreRenderMsgCallback(panelName, preDrawCallback, 0, 0);
-    MUiMessage::add3dViewPostRenderMsgCallback(panelName, postDrawCallback, 0, 0);
+    gPreDrawCallbacks[p] = MUiMessage::add3dViewPreRenderMsgCallback(panelName, preDrawCallback, 0, &status);
+    gPostDrawCallbacks[p] = MUiMessage::add3dViewPostRenderMsgCallback(panelName, postDrawCallback, 0, &status);
   }
 
 #if _SPLICE_MAYA_VERSION >= 2016
@@ -286,7 +251,7 @@ void FabricSpliceRenderCallback::plug() {
 
 void FabricSpliceRenderCallback::unplug() {
   MEventMessage::removeCallback(gOnPanelFocusCallbackId);
-  for(unsigned int i=0; i<gCallbackCount; i++) 
+  for(int i=0; i<gCallbackCount; i++) 
   {
     MUiMessage::removeCallback(gPreDrawCallbacks[i]);
     MUiMessage::removeCallback(gPostDrawCallbacks[i]);
