@@ -15,7 +15,7 @@
 
 bool FabricSpliceRenderCallback::gCallbackEnabled = true;
 FabricCore::RTVal FabricSpliceRenderCallback::sDrawContext;
-FabricCore::RTVal FabricSpliceRenderCallback::sHostToRTRCallback;
+FabricCore::RTVal FabricSpliceRenderCallback::sRTROGLHostCallback;
 
 bool FabricSpliceRenderCallback::isEnabled() {
   return FabricSpliceRenderCallback::gCallbackEnabled;
@@ -27,7 +27,7 @@ void FabricSpliceRenderCallback::enable(bool enable) {
  
 void FabricSpliceRenderCallback::disable() {
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
-  FabricSpliceRenderCallback::sHostToRTRCallback.invalidate(); 
+  FabricSpliceRenderCallback::sRTROGLHostCallback.invalidate(); 
 }
  
 // **************
@@ -43,33 +43,25 @@ inline void init() {
     FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
   }
 
-  if(!FabricSpliceRenderCallback::sHostToRTRCallback.isValid()) {
-    FabricSpliceRenderCallback::sHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
-    FabricSpliceRenderCallback::sHostToRTRCallback = FabricSpliceRenderCallback::sHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
+  if(!FabricSpliceRenderCallback::sRTROGLHostCallback.isValid()) {
+    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSplice::constructObjectRTVal("RTROGLHostCallback");
+    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("RTROGLHostCallback", "getOrCreateCallback", 0, 0);
   }
-  else if(FabricSpliceRenderCallback::sHostToRTRCallback.isObject() && FabricSpliceRenderCallback::sHostToRTRCallback.isNullObject()) {
-    FabricSpliceRenderCallback::sHostToRTRCallback = FabricSplice::constructObjectRTVal("HostToRTRCallback");
-    FabricSpliceRenderCallback::sHostToRTRCallback = FabricSpliceRenderCallback::sHostToRTRCallback.callMethod("HostToRTRCallback", "getOrCreateCallback", 0, 0);
+  else if(FabricSpliceRenderCallback::sRTROGLHostCallback.isObject() && FabricSpliceRenderCallback::sRTROGLHostCallback.isNullObject()) {
+    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSplice::constructObjectRTVal("RTROGLHostCallback");
+    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("RTROGLHostCallback", "getOrCreateCallback", 0, 0);
   }
 }
 
 inline void setMatrixTranspose(const MMatrix &mMatrix, float *buffer) {
-  buffer[0]  = (float)mMatrix[0][0];
-  buffer[1]  = (float)mMatrix[1][0];
-  buffer[2]  = (float)mMatrix[2][0];
-  buffer[3]  = (float)mMatrix[3][0];
-  buffer[4]  = (float)mMatrix[0][1];
-  buffer[5]  = (float)mMatrix[1][1];
-  buffer[6]  = (float)mMatrix[2][1];
-  buffer[7]  = (float)mMatrix[3][1];
-  buffer[8]  = (float)mMatrix[0][2];
-  buffer[9]  = (float)mMatrix[1][2];
-  buffer[10] = (float)mMatrix[2][2];
-  buffer[11] = (float)mMatrix[3][2];
-  buffer[12] = (float)mMatrix[0][3];
-  buffer[13] = (float)mMatrix[1][3];
-  buffer[14] = (float)mMatrix[2][3];
-  buffer[15] = (float)mMatrix[3][3];
+  buffer[0]  = (float)mMatrix[0][0];  buffer[1]  = (float)mMatrix[1][0];
+  buffer[2]  = (float)mMatrix[2][0];  buffer[3]  = (float)mMatrix[3][0];
+  buffer[4]  = (float)mMatrix[0][1];  buffer[5]  = (float)mMatrix[1][1];
+  buffer[6]  = (float)mMatrix[2][1];  buffer[7]  = (float)mMatrix[3][1];
+  buffer[8]  = (float)mMatrix[0][2];  buffer[9]  = (float)mMatrix[1][2];
+  buffer[10] = (float)mMatrix[2][2];  buffer[11] = (float)mMatrix[3][2];
+  buffer[12] = (float)mMatrix[0][3];  buffer[13] = (float)mMatrix[1][3];
+  buffer[14] = (float)mMatrix[2][3];  buffer[15] = (float)mMatrix[3][3];
 }
 
 inline void setCamera(double width, double height, const MFnCamera &mCamera, FabricCore::RTVal &camera) {
@@ -168,7 +160,7 @@ void FabricSpliceRenderCallback::draw(double width, double height, const MString
       FabricSplice::constructFloat64RTVal(height),
       FabricSplice::constructUInt32RTVal(2)
     };
-    FabricSpliceRenderCallback::sHostToRTRCallback.callMethod("", "render", 5, &args[0]);    
+    FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("", "render", 5, &args[0]);    
   }
   catch (FabricCore::Exception e)
   {
@@ -201,10 +193,10 @@ inline void preDrawCallback(const MString &panelName, void *clientData) {
     if(gRenderName != getActiveRenderName(view))
     {
       gRenderName = getActiveRenderName(view);
-      viewport = FabricSpliceRenderCallback::sHostToRTRCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &panelNameVal);
+      viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &panelNameVal);
     }
     else
-      viewport = FabricSpliceRenderCallback::sHostToRTRCallback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
+      viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
     FabricCore::RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
     
     MDagPath cameraDag; view.getCamera(cameraDag);

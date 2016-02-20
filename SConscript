@@ -98,10 +98,11 @@ if not os.path.exists(uiSconscript.abspath):
   print "Error: You need to have FabricUI checked out to "+uiSconscript.dir.abspath
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
-env.Append(LIBPATH = [  os.path.join(os.environ['FABRIC_DIR'], 'lib'),
-                        os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Render')
-                     ]
-          )
+env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
+
+if(str(MAYA_VERSION[:4]) == "2016") :
+  env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Render')])
+
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
 env.Append(CPPPATH = [uiSconscript.dir])
 
@@ -146,7 +147,8 @@ target = 'FabricMaya'
 
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
-libSources += env.Glob('lib/Render/*.cpp')
+if(str(MAYA_VERSION[:4]) == "2016") :
+  libSources += env.Glob('lib/Render/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 
 pluginSources = env.Glob('plugin/*.cpp')

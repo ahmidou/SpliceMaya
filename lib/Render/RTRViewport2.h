@@ -65,7 +65,7 @@ class RTRUserRenderOperation : public MUserRenderOperation {
         MStatus status;
         int originX, originY, width, height;
         status = context.getViewportDimensions(originX, originY, width, height);
-        FabricSpliceRenderCallback::draw(width, height, panelName, 4);
+        //FabricSpliceRenderCallback::draw(width, height, panelName, 4);
       }
       catch (FabricCore::Exception e)
       {

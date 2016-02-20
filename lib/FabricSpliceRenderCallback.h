@@ -36,7 +36,7 @@ class FabricSpliceRenderCallback {
 
   public:
     static bool gCallbackEnabled;
-    static FabricCore::RTVal sHostToRTRCallback;
+    static FabricCore::RTVal sRTROGLHostCallback;
     static FabricCore::RTVal sDrawContext;
 
     static void enable(bool enable);
