@@ -1,5 +1,5 @@
 #
-# Copyright 2010-2013 Fabric Engine Inc. All rights reserved.
+# Copyright 2010-2016 Fabric Engine Inc. All rights reserved.
 #
 
 import os, sys, platform, copy
@@ -38,6 +38,7 @@ env.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 mayaFlags = {
   'CPPPATH': [
       env.Dir('lib'),
+      env.Dir('lib').Dir('Render'),
       env.Dir('plugin')
     ],
   'LIBPATH': [
@@ -97,7 +98,10 @@ if not os.path.exists(uiSconscript.abspath):
   print "Error: You need to have FabricUI checked out to "+uiSconscript.dir.abspath
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
-env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
+env.Append(LIBPATH = [  os.path.join(os.environ['FABRIC_DIR'], 'lib'),
+                        os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Render')
+                     ]
+          )
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
 env.Append(CPPPATH = [uiSconscript.dir])
 
@@ -142,6 +146,7 @@ target = 'FabricMaya'
 
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
+libSources += env.Glob('lib/Render/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 
 pluginSources = env.Glob('plugin/*.cpp')
