@@ -38,6 +38,7 @@ env.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 mayaFlags = {
   'CPPPATH': [
       env.Dir('lib'),
+      env.Dir('lib').Dir('Render'),
       env.Dir('plugin')
     ],
   'LIBPATH': [
@@ -49,7 +50,7 @@ if FABRIC_BUILD_OS == 'Windows':
 else:
   mayaFlags['CCFLAGS'] = ['-isystem', MAYA_INCLUDE_DIR]
 
-mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'Foundation']
+mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'OpenMayaRender', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
   mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4', 'QtOpenGL4'])
@@ -98,6 +99,10 @@ if not os.path.exists(uiSconscript.abspath):
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
+
+if(str(MAYA_VERSION[:4]) == "2016") :
+  env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Render')])
+
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
 env.Append(CPPPATH = [uiSconscript.dir])
 
@@ -142,6 +147,8 @@ target = 'FabricMaya'
 
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
+if(str(MAYA_VERSION[:4]) == "2016") :
+  libSources += env.Glob('lib/Render/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 
 pluginSources = env.Glob('plugin/*.cpp')

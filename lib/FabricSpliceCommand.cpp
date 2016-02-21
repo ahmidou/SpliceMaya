@@ -4,31 +4,29 @@
 
 #include <QtGui/QFileDialog>
 
+#include <FabricSplice.h>
+#include "FabricSpliceHelpers.h"
 #include "FabricSpliceCommand.h"
+#include "FabricSpliceEditorCmd.h"
 #include "FabricSpliceConversion.h"
+#include "FabricSpliceEditorWidget.h"
+#include "FabricSpliceBaseInterface.h"
+#include "FabricSpliceRenderCallback.h"
 
-#include <maya/MStringArray.h>
-#include <maya/MFnDependencyNode.h>
 #include <maya/MPlug.h>
-#include <maya/MSelectionList.h>
+#include <maya/MQtUtil.h>
+#include <maya/MSyntax.h>
 #include <maya/MGlobal.h>
 #include <maya/MFnAttribute.h>
-#include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
-#include <maya/MFnNumericAttribute.h>
+#include <maya/MStringArray.h>
 #include <maya/MFnMatrixData.h>
-#include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnStringData.h>
-#include <maya/MQtUtil.h>
-
-#include <FabricSplice.h>
-
-#include "FabricSpliceBaseInterface.h"
-#include "FabricSpliceEditorCmd.h"
-#include "FabricSpliceEditorWidget.h"
-#include "FabricSpliceRenderCallback.h"
-#include "FabricSpliceHelpers.h"
-
+#include <maya/MSelectionList.h>
+#include <maya/MFnDependencyNode.h>
+#include <maya/MFnMatrixAttribute.h>
+#include <maya/MFnNumericAttribute.h>
+ 
 #define kActionFlag "-a"
 #define kActionFlagLong "-action"
 #define kReferenceFlag "-r"
@@ -86,7 +84,7 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
       MString clientContextID = FabricSplice::GetClientContextID();
       setResult(clientContextID);
       return mayaErrorOccured();
-    }
+    } 
     else if(actionStr == "registerKLType"){
       MString rtStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "rt").c_str();
       MString extStr = FabricSplice::Scripting::consumeStringArgument(scriptArgs, "extension", "", true).c_str();
@@ -101,13 +99,13 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     }
     else if(actionStr == "toggleRenderer")
     {
-      enableRTRPass(!isRTRPassEnabled());
+      FabricSpliceRenderCallback::enable(!FabricSpliceRenderCallback::isEnabled());
       mayaRefreshFunc();
       return mayaErrorOccured();
     }
     else if(actionStr == "isRendererEnabled")
     {
-      setResult(isRTRPassEnabled());
+      setResult(FabricSpliceRenderCallback::isEnabled());
       return mayaErrorOccured();
     }
     else if(actionStr == "startProfiling")
