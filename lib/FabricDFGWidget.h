@@ -14,7 +14,7 @@
 #include <maya/MStatus.h>
 #include <maya/MString.h>
 
-#include <DFG/DFGCombinedWidget.h>
+#include <SceneHub/DFG/SHDFGCombinedWidget.h>
 #include <DFG/Dialogs/DFGBaseDialog.h>
 
 #include <FabricSplice.h>
@@ -24,7 +24,7 @@ using namespace FabricUI;
 
 class FabricDFGBaseInterface;
 
-class FabricDFGWidget : public DFG::DFGCombinedWidget {
+class FabricDFGWidget : public DFG::SHDFGCombinedWidget {
 
   Q_OBJECT
   

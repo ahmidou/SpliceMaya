@@ -19,7 +19,7 @@ FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 FabricCore::Client FabricDFGWidget::s_coreClient;
 
 FabricDFGWidget::FabricDFGWidget(QWidget * parent)
-  : DFG::DFGCombinedWidget(parent)
+  : DFG::SHDFGCombinedWidget(parent)
   , m_initialized( false )
 {
   GetCoreClient();
