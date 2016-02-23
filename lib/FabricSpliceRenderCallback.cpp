@@ -117,7 +117,7 @@ inline MString getActiveRenderName(const M3dView &view) {
     MStatus status;
     name = view.rendererString(&status);
   }
-  MGlobal::displayError("renderName " + name);
+  //MGlobal::displayError("renderName " + name);
   return name;
 }
 
@@ -143,12 +143,11 @@ void FabricSpliceRenderCallback::draw(double width, double height, const MString
 
 MString gRenderName = "NoViewport";
 
-inline void preDrawCallback(const MString &panelName, void *clientData) {
+void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void *clientData) {
   
   if(!FabricSpliceRenderCallback::canDraw()) return;
 
   init();
-
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
 
@@ -182,15 +181,15 @@ inline void preDrawCallback(const MString &panelName, void *clientData) {
 }
 
 #if _SPLICE_MAYA_VERSION >= 2016
-inline void preDrawCallback_2(MHWRender::MDrawContext &context, void* clientData) {
+void FabricSpliceRenderCallback::preDrawCallback_2(MHWRender::MDrawContext &context, void* clientData) {
   MString panelName;
   MHWRender::MFrameContext::RenderingDestination destination = 
     context.renderingDestination(panelName);
-  preDrawCallback(panelName, 0);
+  FabricSpliceRenderCallback::preDrawCallback(panelName, 0);
 }
 #endif;
 
-inline void postDrawCallback(const MString &panelName, void *clientData) {
+void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void *clientData) {
   if(!FabricSpliceRenderCallback::canDraw()) return;
 
   M3dView view;
@@ -202,7 +201,8 @@ inline void postDrawCallback(const MString &panelName, void *clientData) {
     return;
 #endif
 
-  //FabricSpliceRenderCallback::draw(view.portWidth(), view.portHeight(), panelName, 4);
+  uint32_t drawPhase = (getActiveRenderName(view) == "vp2Renderer") ? 3 : 4;
+  FabricSpliceRenderCallback::draw(view.portWidth(), view.portHeight(), panelName, drawPhase);
 }
 
 // **************
