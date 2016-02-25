@@ -1713,7 +1713,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   FTL::CStrRef jsonStr
   )
 {
-  MGlobal::displayInfo(jsonStr.data());
+  // MGlobal::displayInfo(jsonStr.data());
 
   FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
   FTL::OwnedPtr<FTL::JSONObject const> jsonObject(
