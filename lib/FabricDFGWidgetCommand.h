@@ -5,17 +5,16 @@
 #pragma once
 
 // #include "FabricSpliceEditorWidget.h"
-
 #include <iostream>
 #include <maya/MPxCommand.h>
 #include <maya/MArgList.h>
 
 class FabricDFGWidgetCommand: public MPxCommand{
-public:
-  static void* creator();
-  static MSyntax newSyntax();
+	public:
+	  static void* creator();
+	  static MSyntax newSyntax();
 
-  MStatus doIt(const MArgList &args);
-  
-private:
+	  MStatus doIt(const MArgList &args);
+	  
+	private:
 };

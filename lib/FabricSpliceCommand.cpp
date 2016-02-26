@@ -99,13 +99,13 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     }
     else if(actionStr == "toggleRenderer")
     {
-      FabricSpliceRenderCallback::enable(!FabricSpliceRenderCallback::isEnabled());
+      //FabricSpliceRenderCallback::enable(!FabricSpliceRenderCallback::isEnabled());
       mayaRefreshFunc();
       return mayaErrorOccured();
     }
     else if(actionStr == "isRendererEnabled")
     {
-      setResult(FabricSpliceRenderCallback::isEnabled());
+      setResult(true);//FabricSpliceRenderCallback::isEnabled());
       return mayaErrorOccured();
     }
     else if(actionStr == "startProfiling")

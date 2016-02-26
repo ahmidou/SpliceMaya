@@ -93,7 +93,6 @@ void onSceneSave(void *userData) {
 
 void onSceneNew(void *userData) {
   FabricSpliceEditorWidget::postClearAll();
-  FabricSpliceRenderCallback::disable();
 
   MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
   MGlobal::executeCommandOnIdle(cmd, false);
@@ -113,7 +112,6 @@ void onSceneNew(void *userData) {
 
 void onSceneLoad(void *userData) {
   FabricSpliceEditorWidget::postClearAll();
-  FabricSpliceRenderCallback::disable(); 
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
     FabricSplice::Logging::enableTimers();
