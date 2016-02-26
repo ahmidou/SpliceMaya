@@ -97,6 +97,7 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog) {
     if(nativeSetting == "true") native = true;
     QString opaqueSetting = exec.getExecPortMetadata(title.toUtf8().constData(), "opaque");
     if(opaqueSetting == "true") native = true;
+      opaque = true;
     enabled = false;
   }
 
