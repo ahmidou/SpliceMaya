@@ -61,9 +61,6 @@ public:
   virtual MStatus doEnterRegion(MEvent &event);
 
   bool onEvent(QEvent *event);
-
-private:
-  FabricCore::RTVal mEventDispatcher;
 };
 
 class FabricSpliceToolContextCmd : public MPxContextCommand

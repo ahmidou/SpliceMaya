@@ -31,13 +31,14 @@
 #include <maya/MFrameContext.h>
 #include <maya/MViewport2Renderer.h>
  
-
 class FabricSpliceRenderCallback {
 
   public:
+  	static MString sPanelName;
     static void plug(); 
     static void unplug();
 
+	static bool getCallback(FabricCore::RTVal &callback);
     static void draw(double width, double height, const MString &str, uint32_t phase);
     static void preDrawCallback(const MString &panelName, void *clientData);
     static void postDrawCallback(const MString &panelName, void *clientData);

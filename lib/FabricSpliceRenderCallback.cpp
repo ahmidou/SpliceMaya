@@ -81,7 +81,7 @@ inline MString getActiveRenderName(const M3dView &view) {
   return name;
 }
 
-inline bool getRTROGLHostCallback(FabricCore::RTVal &callback) {
+bool FabricSpliceRenderCallback::getCallback(FabricCore::RTVal &callback) {
   FabricCore::RTVal isValid = FabricSplice::constructBooleanRTVal(false);
   callback = FabricSplice::constructObjectRTVal("RTROGLHostCallback");
   callback = callback.callMethod("RTROGLHostCallback", "getCallback", 1, &isValid);
@@ -90,7 +90,7 @@ inline bool getRTROGLHostCallback(FabricCore::RTVal &callback) {
 
 void FabricSpliceRenderCallback::draw(double width, double height, const MString &panelName, uint32_t phase) {
   FabricCore::RTVal callback;
-  if(getRTROGLHostCallback(callback))
+  if(getCallback(callback))
   {
     FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
     FabricCore::RTVal args[5] = {
@@ -105,10 +105,11 @@ void FabricSpliceRenderCallback::draw(double width, double height, const MString
 }
 
 MString gRenderName = "NoViewport";
+MString FabricSpliceRenderCallback::sPanelName = "";
 void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void *clientData) {
   
   FabricCore::RTVal callback;
-  if(!getRTROGLHostCallback(callback)) return;
+  if(!getCallback(callback)) return;
 
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
@@ -117,6 +118,8 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   if(getActiveRenderName(view) == "vp2Renderer")
     return;
 #endif
+
+  sPanelName = panelName;
 
   MStatus status;
   FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
