@@ -60,7 +60,7 @@ class RTRUserRenderOperation : public MUserRenderOperation {
       try
       { 
         MString panelName;
-        MHWRender::MFrameContext::RenderingDestination destination = context.renderingDestination(panelName);
+        // MHWRender::MFrameContext::RenderingDestination destination = context.renderingDestination(panelName);
 
         MStatus status;
         int originX, originY, width, height;
