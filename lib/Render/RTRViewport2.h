@@ -56,12 +56,22 @@ class RTRUserRenderOperation : public MUserRenderOperation {
     RTRUserRenderOperation(const MString &name) : MUserRenderOperation(name) {}
     
     virtual MStatus execute(const MDrawContext &context) {
-      MString panelName;
-      context.renderingDestination(panelName);
+      
+      try
+      { 
+        MString panelName;
+        // MHWRender::MFrameContext::RenderingDestination destination = context.renderingDestination(panelName);
 
-      int originX, originY, width, height;
-      MStatus status = context.getViewportDimensions(originX, originY, width, height);
-      FabricSpliceRenderCallback::draw(width, height, panelName, 4);
+        MStatus status;
+        int originX, originY, width, height;
+        status = context.getViewportDimensions(originX, originY, width, height);
+        //FabricSpliceRenderCallback::draw(width, height, panelName, 4);
+      }
+      catch (FabricCore::Exception e)
+      {
+        mayaLogErrorFunc(e.getDesc_cstr());
+        return MStatus::kFailure;
+      } 
       return MStatus::kSuccess;
     }
 };

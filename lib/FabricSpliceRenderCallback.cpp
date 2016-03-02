@@ -13,20 +13,60 @@
 #include "RTRViewport2.h"
 #endif
 
+bool FabricSpliceRenderCallback::gCallbackEnabled = true;
+FabricCore::RTVal FabricSpliceRenderCallback::sDrawContext;
+FabricCore::RTVal FabricSpliceRenderCallback::sRTROGLHostCallback;
+
+bool FabricSpliceRenderCallback::isEnabled() {
+  return FabricSpliceRenderCallback::gCallbackEnabled;
+}
+
+void FabricSpliceRenderCallback::enable(bool enable) {
+  FabricSpliceRenderCallback::gCallbackEnabled = enable;
+}
+ 
+void FabricSpliceRenderCallback::disable() {
+  FabricSpliceRenderCallback::sDrawContext.invalidate(); 
+  FabricSpliceRenderCallback::sRTROGLHostCallback.invalidate(); 
+}
+ 
+// **************
+
+inline void init() {
+ 
+  if(!FabricSpliceRenderCallback::sDrawContext.isValid()) {
+    FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+    FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+  }
+  else if(FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject()) {
+    FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+    FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+  }
+
+  if(!FabricSpliceRenderCallback::sRTROGLHostCallback.isValid()) {
+    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSplice::constructObjectRTVal("RTROGLHostCallback");
+    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("RTROGLHostCallback", "getOrCreateCallback", 0, 0);
+  }
+  else if(FabricSpliceRenderCallback::sRTROGLHostCallback.isObject() && FabricSpliceRenderCallback::sRTROGLHostCallback.isNullObject()) {
+    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSplice::constructObjectRTVal("RTROGLHostCallback");
+    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("RTROGLHostCallback", "getOrCreateCallback", 0, 0);
+  }
+}
+
 inline void setMatrixTranspose(const MMatrix &mMatrix, float *buffer) {
-  buffer[0]  = (float)mMatrix[0][0]; buffer[1]  = (float)mMatrix[1][0];
-  buffer[2]  = (float)mMatrix[2][0]; buffer[3]  = (float)mMatrix[3][0];
-  buffer[4]  = (float)mMatrix[0][1]; buffer[5]  = (float)mMatrix[1][1];
-  buffer[6]  = (float)mMatrix[2][1]; buffer[7]  = (float)mMatrix[3][1];
-  buffer[8]  = (float)mMatrix[0][2]; buffer[9]  = (float)mMatrix[1][2];
-  buffer[10] = (float)mMatrix[2][2]; buffer[11] = (float)mMatrix[3][2];
-  buffer[12] = (float)mMatrix[0][3]; buffer[13] = (float)mMatrix[1][3];
-  buffer[14] = (float)mMatrix[2][3]; buffer[15] = (float)mMatrix[3][3];
+  buffer[0]  = (float)mMatrix[0][0];  buffer[1]  = (float)mMatrix[1][0];
+  buffer[2]  = (float)mMatrix[2][0];  buffer[3]  = (float)mMatrix[3][0];
+  buffer[4]  = (float)mMatrix[0][1];  buffer[5]  = (float)mMatrix[1][1];
+  buffer[6]  = (float)mMatrix[2][1];  buffer[7]  = (float)mMatrix[3][1];
+  buffer[8]  = (float)mMatrix[0][2];  buffer[9]  = (float)mMatrix[1][2];
+  buffer[10] = (float)mMatrix[2][2];  buffer[11] = (float)mMatrix[3][2];
+  buffer[12] = (float)mMatrix[0][3];  buffer[13] = (float)mMatrix[1][3];
+  buffer[14] = (float)mMatrix[2][3];  buffer[15] = (float)mMatrix[3][3];
 }
 
 inline void setCamera(double width, double height, const MFnCamera &mCamera, FabricCore::RTVal &camera) {
   MDagPath mCameraDag;
-  MStatus status = mCamera.getPath(mCameraDag);
+  // MStatus status = mCamera.getPath(mCameraDag);
   MMatrix mMatrix = mCameraDag.inclusiveMatrix();
 
   FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
@@ -51,7 +91,7 @@ inline void setCamera(double width, double height, const MFnCamera &mCamera, Fab
   else 
   {
     double fovX, fovY;
-    mCamera.getPortFieldOfView(width, height, fovX, fovY);    
+    mCamera.getPortFieldOfView(int(width), int(height), fovX, fovY);    
     param = FabricSplice::constructFloat64RTVal(fovY);
     camera.callMethod("", "setFovY", 1, &param);
   }
@@ -81,36 +121,33 @@ inline MString getActiveRenderName(const M3dView &view) {
   return name;
 }
 
-bool FabricSpliceRenderCallback::getCallback(FabricCore::RTVal &callback) {
-  FabricCore::RTVal isValid = FabricSplice::constructBooleanRTVal(false);
-  callback = FabricSplice::constructObjectRTVal("RTROGLHostCallback");
-  callback = callback.callMethod("RTROGLHostCallback", "getCallback", 1, &isValid);
-  return isValid.getBoolean();
+bool FabricSpliceRenderCallback::canDraw() {
+  if(!FabricSpliceRenderCallback::gCallbackEnabled)
+    return false;
+  if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
+    return false;
+  return true;
 }
 
 void FabricSpliceRenderCallback::draw(double width, double height, const MString &panelName, uint32_t phase) {
-  FabricCore::RTVal callback;
-  if(getCallback(callback))
-  {
-    FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
-    FabricCore::RTVal args[5] = {
-      FabricSplice::constructUInt32RTVal(phase),
-      FabricSplice::constructStringRTVal(panelName.asChar()),
-      FabricSplice::constructFloat64RTVal(width),
-      FabricSplice::constructFloat64RTVal(height),
-      FabricSplice::constructUInt32RTVal(2)
-    };
-    callback.callMethod("", "render", 5, &args[0]);    
-  }
+  FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
+  FabricCore::RTVal args[5] = {
+    FabricSplice::constructUInt32RTVal(phase),
+    FabricSplice::constructStringRTVal(panelName.asChar()),
+    FabricSplice::constructFloat64RTVal(width),
+    FabricSplice::constructFloat64RTVal(height),
+    FabricSplice::constructUInt32RTVal(2)
+  };
+  FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("", "render", 5, &args[0]);    
 }
 
 MString gRenderName = "NoViewport";
-MString FabricSpliceRenderCallback::sPanelName = "";
+
 void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void *clientData) {
   
-  FabricCore::RTVal callback;
-  if(!getCallback(callback)) return;
+  if(!FabricSpliceRenderCallback::canDraw()) return;
 
+  init();
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
 
@@ -119,18 +156,16 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
     return;
 #endif
 
-  sPanelName = panelName;
-
   MStatus status;
   FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
   FabricCore::RTVal viewport;
   if(gRenderName != getActiveRenderName(view))
   {
     gRenderName = getActiveRenderName(view);
-    viewport = callback.callMethod("BaseRTRViewport", "resetViewport", 1, &panelNameVal);
+    viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &panelNameVal);
   }
   else
-    viewport = callback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
+    viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
   FabricCore::RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
   
   MDagPath cameraDag; view.getCamera(cameraDag);
@@ -142,18 +177,20 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   setProjection(projection, camera);
 
   // draw
-  draw(view.portWidth(), view.portHeight(), panelName, 2);
+  FabricSpliceRenderCallback::draw(view.portWidth(), view.portHeight(), panelName, 2);
 }
 
 #if _SPLICE_MAYA_VERSION >= 2016
 void FabricSpliceRenderCallback::preDrawCallback_2(MHWRender::MDrawContext &context, void* clientData) {
   MString panelName;
-  context.renderingDestination(panelName);
+  // // MHWRender::MFrameContext::RenderingDestination destination = 
+  //   context.renderingDestination(panelName);
   FabricSpliceRenderCallback::preDrawCallback(panelName, 0);
 }
-#endif;
+#endif
 
 void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void *clientData) {
+  if(!FabricSpliceRenderCallback::canDraw()) return;
 
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
