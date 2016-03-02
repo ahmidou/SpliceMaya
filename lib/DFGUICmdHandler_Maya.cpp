@@ -960,7 +960,7 @@ void DFGUICmdHandler_Maya::dfgDoReorderPorts(
 
   cmd << " -i";
   cmd << " \"[";
-  for(size_t i=0;i<indices.size();i++)
+  for(int i=0;i<indices.size();i++)
   {
     if(i > 0)
       cmd << ", ";
