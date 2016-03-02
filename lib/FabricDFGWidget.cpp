@@ -48,6 +48,10 @@ void FabricDFGWidget::SetCurrentUINodeName(const char * node) {
     Instance()->setCurrentUINodeName( node );
 }
 
+void FabricDFGWidget::Refresh() {
+  Instance()->refresh();
+}
+
 void FabricDFGWidget::setCurrentUINodeName(const char * node) {
   m_currentUINodeName = node;
   FabricDFGBaseInterface *interf = FabricDFGBaseInterface::getInstanceByName( m_currentUINodeName.c_str() );
@@ -74,6 +78,7 @@ void FabricDFGWidget::onRedo() {
 
 void FabricDFGWidget::refresh() {
   MStatus status; 
+  SHDFGCombinedWidget::refresh();
   M3dView view = M3dView::active3dView(&status);
   view.refresh();
 }

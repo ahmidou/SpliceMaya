@@ -2,6 +2,7 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
+#include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceBaseInterface.h"
@@ -254,6 +255,13 @@ inline MString getActiveRenderName(const M3dView &view) {
 }
 
 bool FabricSpliceRenderCallback::getCallback(FabricCore::RTVal &callback) {
+
+  if(!gRTRPassEnabled)
+    return false;
+
+  if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
+    return false;
+
   FabricCore::RTVal isValid = FabricSplice::constructBooleanRTVal(false);
   callback = FabricSplice::constructObjectRTVal("RTROGLHostCallback");
   callback = callback.callMethod("RTROGLHostCallback", "getCallback", 1, &isValid);
@@ -272,7 +280,7 @@ void FabricSpliceRenderCallback::draw(double width, double height, uint32_t phas
       FabricSplice::constructUInt32RTVal(uint32_t(height)),
       FabricSplice::constructUInt32RTVal(2)
     };
-    callback.callMethod("", "render", 5, &args[0]);    
+    callback.callMethod("", "render", 5, &args[0]);   
   }
 }
 
@@ -301,8 +309,7 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
     gRenderName = getActiveRenderName(view);
     viewport = callback.callMethod("BaseRTRViewport", "resetViewport", 1, &panelNameVal);
   }
-  else
-    viewport = callback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
+  else viewport = callback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
   FabricCore::RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
   
   MDagPath cameraDag; view.getCamera(cameraDag);

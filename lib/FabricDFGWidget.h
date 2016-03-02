@@ -32,6 +32,7 @@ class FabricDFGWidget : public DFG::SHDFGCombinedWidget {
     static QWidget * creator(QWidget *parent, const QString &name);
     static FabricDFGWidget *Instance();
     static void Destroy();
+    static void Refresh();
     static void SetCurrentUINodeName(const char * node);
     static FabricCore::Client &GetCoreClient() {
       if(!s_coreClient) s_coreClient = FabricSplice::ConstructClient();
