@@ -31,14 +31,25 @@
 #include <maya/MFrameContext.h>
 #include <maya/MViewport2Renderer.h>
  
+bool isRTRPassEnabled();
+
+void enableRTRPass(bool enable);
+
 class FabricSpliceRenderCallback {
 
   public:
+  	/// *************** InlineDrawing ***************/
+  	static void draw(const MString &str, void *clientData);
+    static FabricCore::RTVal & getDrawContext(const MString &str, M3dView & view);
+    static FabricCore::RTVal sDrawContext;
+
+
+	  /// *************** RTR2 ***************/
   	static MString sPanelName;
     static void plug(); 
     static void unplug();
 
-	static bool getCallback(FabricCore::RTVal &callback);
+	  static bool getCallback(FabricCore::RTVal &callback);
     static void draw(double width, double height, const MString &str, uint32_t phase);
     static void preDrawCallback(const MString &panelName, void *clientData);
     static void postDrawCallback(const MString &panelName, void *clientData);
@@ -49,3 +60,4 @@ class FabricSpliceRenderCallback {
 
 
 #endif // __FABRIC_SPLICE_RENDER_CALLBACK_H__
+
