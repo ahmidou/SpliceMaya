@@ -50,7 +50,7 @@ class FabricSpliceRenderCallback {
     static void unplug();
 
 	  static bool getCallback(FabricCore::RTVal &callback);
-    static void draw(double width, double height, const MString &str, uint32_t phase);
+    static void draw(double width, double height, uint32_t phase);
     static void preDrawCallback(const MString &panelName, void *clientData);
     static void postDrawCallback(const MString &panelName, void *clientData);
 #if _SPLICE_MAYA_VERSION >= 2016

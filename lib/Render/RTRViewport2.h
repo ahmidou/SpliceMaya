@@ -59,13 +59,10 @@ class RTRUserRenderOperation : public MUserRenderOperation {
       
       try
       { 
-        MString panelName;
-        // MHWRender::MFrameContext::RenderingDestination destination = context.renderingDestination(panelName);
-
         MStatus status;
         int originX, originY, width, height;
         status = context.getViewportDimensions(originX, originY, width, height);
-        //FabricSpliceRenderCallback::draw(width, height, panelName, 4);
+        FabricSpliceRenderCallback::draw(width, height, 4);
       }
       catch (FabricCore::Exception e)
       {

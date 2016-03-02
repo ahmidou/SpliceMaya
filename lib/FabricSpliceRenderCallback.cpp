@@ -260,14 +260,14 @@ bool FabricSpliceRenderCallback::getCallback(FabricCore::RTVal &callback) {
   return isValid.getBoolean();
 }
 
-void FabricSpliceRenderCallback::draw(double width, double height, const MString &panelName, uint32_t phase) {
+void FabricSpliceRenderCallback::draw(double width, double height, uint32_t phase) {
   FabricCore::RTVal callback;
   if(getCallback(callback))
   {
     FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
     FabricCore::RTVal args[5] = {
       FabricSplice::constructUInt32RTVal(phase),
-      FabricSplice::constructStringRTVal(panelName.asChar()),
+      FabricSplice::constructStringRTVal(sPanelName.asChar()),
       FabricSplice::constructUInt32RTVal(uint32_t(width)),
       FabricSplice::constructUInt32RTVal(uint32_t(height)),
       FabricSplice::constructUInt32RTVal(2)
@@ -314,7 +314,7 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   setProjection(projection, camera);
 
   // draw
-  draw(view.portWidth(), view.portHeight(), panelName, 2);
+  draw(view.portWidth(), view.portHeight(), 2);
 }
 
 #if _SPLICE_MAYA_VERSION >= 2016
@@ -337,7 +337,7 @@ void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void
 #endif
 
   uint32_t drawPhase = (getActiveRenderName(view) == "vp2Renderer") ? 3 : 4;
-  FabricSpliceRenderCallback::draw(view.portWidth(), view.portHeight(), panelName, drawPhase);
+  FabricSpliceRenderCallback::draw(view.portWidth(), view.portHeight(), drawPhase);
 }
 
 // **************
