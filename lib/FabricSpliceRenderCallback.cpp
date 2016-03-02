@@ -361,7 +361,7 @@ inline void onModelPanelSetFocus2(void *client) {
 }
 
 void FabricSpliceRenderCallback::plug() {
-  //gOnPanelFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus2);
+  gOnPanelFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus2);
   
   MStatus status;
   for(int p=0; p<5; ++p) 
