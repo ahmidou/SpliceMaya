@@ -1,3 +1,6 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 #include "FabricDFGConversion.h"
 #include "FabricSpliceMayaData.h"
@@ -31,8 +34,6 @@
 #include <maya/MFloatVectorArray.h>
 #include <maya/MFnAnimCurve.h>
 
-#include <FTL/CStrRef.h>
-
 #define CORE_CATCH_BEGIN try {
 #define CORE_CATCH_END } \
   catch (FabricCore::Exception e) { \
@@ -58,35 +59,29 @@ double dfgGetFloat64FromRTVal(FabricCore::RTVal rtVal)
   FabricCore::RTVal::SimpleData simpleData;
   if(!rtVal.maybeGetSimpleData(&simpleData))
     return DBL_MAX;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_FLOAT32)
-    return simpleData.value.float32;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_FLOAT64)
-    return simpleData.value.float64;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT32)
-    return simpleData.value.sint32;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT32)
-    return simpleData.value.uint32;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT8)
-    return simpleData.value.uint8;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT16)
-    return simpleData.value.uint16;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT64)
-    return double(simpleData.value.uint64);
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT8)
-    return simpleData.value.sint8;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT16)
-    return simpleData.value.sint16;
-  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT64)
-    return double(simpleData.value.sint64);
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_FLOAT32)  return simpleData.value.float32;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_FLOAT64)  return simpleData.value.float64;
+  
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT32)   return simpleData.value.sint32;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT32)   return simpleData.value.uint32;
+  
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT8)    return simpleData.value.uint8;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT16)   return simpleData.value.uint16;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_UINT64)   return double(simpleData.value.uint64);
+
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT8)    return simpleData.value.sint8;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT16)   return simpleData.value.sint16;
+  if(simpleData.type == FEC_RTVAL_SIMPLE_TYPE_SINT64)   return double(simpleData.value.sint64);
+
   return DBL_MAX;
 }
 
 inline void Mat44ToMMatrix_data(float const *data, MMatrix &matrix)
 {
   double vals[4][4] ={
-    { data[0], data[4], data[8], data[12] }, 
-    { data[1], data[5], data[9], data[13] }, 
-    { data[2], data[6], data[10], data[14] }, 
+    { data[0], data[4], data[8],  data[12] },
+    { data[1], data[5], data[9],  data[13] },
+    { data[2], data[6], data[10], data[14] },
     { data[3], data[7], data[11], data[15] }
   };
   matrix = MMatrix(vals);
@@ -101,16 +96,16 @@ inline void Mat44ToMMatrix(FabricCore::RTVal &rtVal, MMatrix &matrix)
 
 inline void MMatrixToMat44_data(MMatrix const &matrix, float *data)
 {
-  data[0] = (float)matrix[0][0];
-  data[1] = (float)matrix[1][0];
-  data[2] = (float)matrix[2][0];
-  data[3] = (float)matrix[3][0];
-  data[4] = (float)matrix[0][1];
-  data[5] = (float)matrix[1][1];
-  data[6] = (float)matrix[2][1];
-  data[7] = (float)matrix[3][1];
-  data[8] = (float)matrix[0][2];
-  data[9] = (float)matrix[1][2];
+  data[0]  = (float)matrix[0][0];
+  data[1]  = (float)matrix[1][0];
+  data[2]  = (float)matrix[2][0];
+  data[3]  = (float)matrix[3][0];
+  data[4]  = (float)matrix[0][1];
+  data[5]  = (float)matrix[1][1];
+  data[6]  = (float)matrix[2][1];
+  data[7]  = (float)matrix[3][1];
+  data[8]  = (float)matrix[0][2];
+  data[9]  = (float)matrix[1][2];
   data[10] = (float)matrix[2][2];
   data[11] = (float)matrix[3][2];
   data[12] = (float)matrix[0][3];
@@ -588,7 +583,6 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
   CORE_CATCH_END;
 }
 
-
 void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
@@ -750,7 +744,7 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data,
     DFGConversionTimers * timers)
 {
 
-  MString scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
+  FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
   if(plug.isArray()){
     timers->stop();
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
@@ -817,7 +811,7 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data,
       }
 
       // get the resolved data type of the destination exec port and set its value.
-      std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+      FTL::CStrRef resolvedType = binding.getExec().getExecPortResolvedType(argName);
       if      (resolvedType == "Scalar")  binding.setArgValue_lockType(lockType, argName, FabricSplice::constructFloat32RTVal((float)plugValue), false);
       else if (resolvedType == "Float32") binding.setArgValue_lockType(lockType, argName, FabricSplice::constructFloat32RTVal((float)plugValue), false);
       else if (resolvedType == "Float64") binding.setArgValue_lockType(lockType, argName, FabricSplice::constructFloat64RTVal(       plugValue), false);
@@ -844,8 +838,7 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data,
     for(unsigned int i = 0; i < elements; ++i){
       arrayHandle.jumpToArrayElement(i);
       MDataHandle handle = arrayHandle.inputValue();
-      MString stringVal = handle.asString();
-      stringArrayVal.setArrayElement(i, FabricSplice::constructStringRTVal(stringVal.asChar()));
+      stringArrayVal.setArrayElement(i, FabricSplice::constructStringRTVal(handle.asString().asChar()));
     }
 
     binding.setArgValue_lockType(lockType, argName, stringArrayVal, false);
@@ -1632,7 +1625,7 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data,
     const char *option = binding.getExec().getExecPortMetadata(argName, "disableSpliceMayaDataConversion");
     if(option)
     {
-      if(std::string(option) == "true")
+      if(FTL::CStrRef(option) == "true")
       {
         // this is an unconnected opaque port, exit early
         return;
@@ -1696,7 +1689,7 @@ void dfgPortToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDa
   CORE_CATCH_BEGIN;
 
   std::vector<FabricCore::RTVal> args(5);
-  std::string valueType;
+  FTL::CStrRef valueType;
 
   valueType = rtVal.callMethod("String", "getValueType", 0, 0).getStringCString();
 
@@ -2417,7 +2410,7 @@ void dfgPortToPlug_scalar(
 {
   CORE_CATCH_BEGIN;
 
-  MString scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
+  FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2979,8 +2972,8 @@ void dfgPortToPlug_Lines_singleLines(MDataHandle handle, FabricCore::RTVal rtVal
   unsigned int nbSegments = 0;
   if(!rtVal.isNullObject())
   {
-    nbPoints = rtVal.callMethod("UInt64", "pointCount", 0, 0).getUInt64();
-    nbSegments = rtVal.callMethod("UInt64", "lineCount", 0, 0).getUInt64();
+    nbPoints   = rtVal.callMethod("UInt64", "pointCount", 0, 0).getUInt64();
+    nbSegments = rtVal.callMethod("UInt64", "lineCount",  0, 0).getUInt64();
   }
 
   MPointArray mayaPoints(nbPoints);
@@ -3117,66 +3110,95 @@ void dfgPortToPlug_spliceMayaData(
   }
 }
 
-DFGPlugToArgFunc getDFGPlugToArgFunc(const std::string & dataType)
+DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::CStrRef &dataType)
 {
-  if(dataType == "CompoundParam")
-    return dfgPlugToPort_compound;
-  if(dataType == "CompoundArrayParam")
-    return dfgPlugToPort_compoundArray;
-  if(dataType == "Boolean")
-    return dfgPlugToPort_bool;
-  if(dataType == "Integer" || dataType == "SInt32" || dataType == "UInt32")
-    return dfgPlugToPort_integer;
-  if(dataType == "Scalar" || dataType == "Float32" || dataType == "Float64")
-    return dfgPlugToPort_scalar;
-  if(dataType == "String")
-    return dfgPlugToPort_string;
-  if(dataType == "Color")
-    return dfgPlugToPort_color;
-  if(dataType == "Vec3")
-    return dfgPlugToPort_vec3;
-  if(dataType == "Euler")
-    return dfgPlugToPort_euler;
-  if(dataType == "Mat44")
-    return dfgPlugToPort_mat44;
-  if(dataType == "PolygonMesh")
-    return dfgPlugToPort_PolygonMesh;
-  if(dataType == "Lines")
-    return dfgPlugToPort_Lines;
-  if(dataType == "KeyframeTrack")
-    return dfgPlugToPort_KeyframeTrack;
-  if(dataType == "SpliceMayaData")
-    return dfgPlugToPort_spliceMayaData;
+  if(dataType == "Boolean")               return dfgPlugToPort_bool;
+
+  if (dataType == "Scalar")               return dfgPlugToPort_scalar;
+  if (dataType == "Float32")              return dfgPlugToPort_scalar;
+  if (dataType == "Float64")              return dfgPlugToPort_scalar;
+
+  if (dataType == "Integer")              return dfgPlugToPort_integer;
+  if (dataType == "SInt8")                return dfgPlugToPort_integer;
+  if (dataType == "SInt16")               return dfgPlugToPort_integer;
+  if (dataType == "SInt32")               return dfgPlugToPort_integer;
+  if (dataType == "SInt64")               return dfgPlugToPort_integer;
+
+  if (dataType == "Byte")                 return dfgPlugToPort_integer;
+  if (dataType == "UInt8")                return dfgPlugToPort_integer;
+  if (dataType == "UInt16")               return dfgPlugToPort_integer;
+  if (dataType == "Count")                return dfgPlugToPort_integer;
+  if (dataType == "Index")                return dfgPlugToPort_integer;
+  if (dataType == "Size")                 return dfgPlugToPort_integer;
+  if (dataType == "UInt32")               return dfgPlugToPort_integer;
+  if (dataType == "DataSize")             return dfgPlugToPort_integer;
+  if (dataType == "UInt64")               return dfgPlugToPort_integer;
+
+  if (dataType == "String")               return dfgPlugToPort_string;
+
+  if (dataType == "Vec3")                 return dfgPlugToPort_vec3;
+
+  if (dataType == "Euler")                return dfgPlugToPort_euler;
+
+  if (dataType == "Mat44")                return dfgPlugToPort_mat44;
+
+  if (dataType == "Color")                return dfgPlugToPort_color;
+
+  if (dataType == "PolygonMesh")          return dfgPlugToPort_PolygonMesh;
+
+  if (dataType == "Lines")                return dfgPlugToPort_Lines;
+
+  if (dataType == "KeyframeTrack")        return dfgPlugToPort_KeyframeTrack;
+
+  if (dataType == "SpliceMayaData")      return dfgPlugToPort_spliceMayaData;
+
+  if(dataType == "CompoundParam")         return dfgPlugToPort_compound;
+  if(dataType == "CompoundArrayParam")    return dfgPlugToPort_compoundArray;
 
   return NULL;  
 }
 
-DFGArgToPlugFunc getDFGArgToPlugFunc(const std::string & dataType)
+DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::CStrRef &dataType)
 {
-  if(dataType == "CompoundParam")
-    return dfgPortToPlug_compound;
-  if(dataType == "Boolean")
-    return dfgPortToPlug_bool;
-  if(dataType == "Integer" || dataType == "SInt32" || dataType == "UInt32")
-    return dfgPortToPlug_integer;
-  if(dataType == "Scalar" || dataType == "Float32" || dataType == "Float64")
-    return dfgPortToPlug_scalar;
-  if(dataType == "String")
-    return dfgPortToPlug_string;
-  if(dataType == "Color")
-    return dfgPortToPlug_color;
-  if(dataType == "Vec3")
-    return dfgPortToPlug_vec3;
-  if(dataType == "Euler")
-    return dfgPortToPlug_euler;
-  if(dataType == "Mat44")
-    return dfgPortToPlug_mat44;
-  if(dataType == "PolygonMesh")
-    return dfgPortToPlug_PolygonMesh;
-  if(dataType == "Lines")
-    return dfgPortToPlug_Lines;
-  if(dataType == "SpliceMayaData")
-    return dfgPortToPlug_spliceMayaData;
+  if(dataType == "Boolean")               return dfgPortToPlug_bool;
+
+  if (dataType == "Scalar")               return dfgPortToPlug_scalar;
+  if (dataType == "Float32")              return dfgPortToPlug_scalar;
+  if (dataType == "Float64")              return dfgPortToPlug_scalar;
+
+  if (dataType == "Integer")              return dfgPortToPlug_integer;
+  if (dataType == "SInt8")                return dfgPortToPlug_integer;
+  if (dataType == "SInt16")               return dfgPortToPlug_integer;
+  if (dataType == "SInt32")               return dfgPortToPlug_integer;
+  if (dataType == "SInt64")               return dfgPortToPlug_integer;
+
+  if (dataType == "Byte")                 return dfgPortToPlug_integer;
+  if (dataType == "UInt8")                return dfgPortToPlug_integer;
+  if (dataType == "UInt16")               return dfgPortToPlug_integer;
+  if (dataType == "Count")                return dfgPortToPlug_integer;
+  if (dataType == "Index")                return dfgPortToPlug_integer;
+  if (dataType == "Size")                 return dfgPortToPlug_integer;
+  if (dataType == "UInt32")               return dfgPortToPlug_integer;
+  if (dataType == "DataSize")             return dfgPortToPlug_integer;
+  if (dataType == "UInt64")               return dfgPortToPlug_integer;
+
+  if (dataType == "String")               return dfgPortToPlug_string;
+
+  if (dataType == "Vec3")                 return dfgPortToPlug_vec3;
+
+  if (dataType == "Euler")                return dfgPortToPlug_euler;
+
+  if (dataType == "Mat44")                return dfgPortToPlug_mat44;
+
+  if (dataType == "Color")                return dfgPortToPlug_color;
+
+  if (dataType == "PolygonMesh")          return dfgPortToPlug_PolygonMesh;
+
+  if (dataType == "Lines")                return dfgPortToPlug_Lines;
+
+  if (dataType == "SpliceMayaData")      return dfgPortToPlug_spliceMayaData;
+
+  if(dataType == "CompoundParam")         return dfgPortToPlug_compound;
 
   return NULL;  
 }

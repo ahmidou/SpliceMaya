@@ -1,5 +1,8 @@
-#ifndef _FOUNDATION_H_
-#define _FOUNDATION_H_
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
+#pragma once
 
 // [andrew 20150520] these Qt headers need to be included before X11 due to
 // conflicting #defines
@@ -100,5 +103,3 @@
 #ifndef ULONG
 	typedef unsigned long ULONG;
 #endif
-
-#endif  // _FOUNDATION_H_

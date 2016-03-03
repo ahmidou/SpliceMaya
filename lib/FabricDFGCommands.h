@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _FABRICDFGCOMMANDS_H_
-#define _FABRICDFGCOMMANDS_H_
+#pragma once
 
 // #include "FabricSpliceEditorWidget.h"
 
@@ -413,6 +415,34 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_AddPort
   > MayaDFGUICmd_AddPort;
 
+class FabricDFGCreatePresetCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    std::string nodeName;
+    std::string presetDirPath;
+    std::string presetName;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGCreatePresetCommand,
+  FabricUI::DFG::DFGUICmd_CreatePreset
+  > MayaDFGUICmd_CreatePreset;
+
 class FabricDFGEditPortCommand
   : public FabricDFGExecCommand
 {
@@ -655,7 +685,33 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_ReorderPorts
   > MayaDFGUICmd_ReorderPorts;
 
-class FabricDFGRenameNodeCommand
+class FabricDFGDismissLoadDiagsCommand
+  : public FabricDFGBindingCommand
+{
+  typedef FabricDFGBindingCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QList<int> indices;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGDismissLoadDiagsCommand,
+  FabricUI::DFG::DFGUICmd_DismissLoadDiags
+  > MayaDFGUICmd_DismissLoadDiags;
+
+class FabricDFGEditNodeCommand
   : public FabricDFGExecCommand
 {
   typedef FabricDFGExecCommand Parent;
@@ -668,6 +724,8 @@ protected:
   {
     std::string oldNodeName;
     std::string desiredNewNodeName;
+    std::string nodeMetadata;
+    std::string execMetadata;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -678,9 +736,9 @@ protected:
 };
 
 typedef MayaDFGUICmdWrapper<
-  FabricDFGRenameNodeCommand,
-  FabricUI::DFG::DFGUICmd_RenameNode
-  > MayaDFGUICmd_RenameNode;
+  FabricDFGEditNodeCommand,
+  FabricUI::DFG::DFGUICmd_EditNode
+  > MayaDFGUICmd_EditNode;
 
 class FabricDFGRenamePortCommand
   : public FabricDFGExecCommand
@@ -1067,5 +1125,3 @@ private:
   std::string m_oldMetadataValue;
   std::string m_newMetadataValue;
 };
-
-#endif 

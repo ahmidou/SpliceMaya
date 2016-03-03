@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _FABRICDFGMAYANODE_H_
-#define _FABRICDFGMAYANODE_H_
+#pragma once
 
 #include "FabricDFGBaseInterface.h"
 
@@ -28,6 +30,8 @@ public:
   MStatus setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs);
   MStatus shouldSave(const MPlug &plug, bool &isSaving);
   void copyInternalData(MPxNode *node);
+  bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);
+  bool setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx);
 
   virtual MStatus connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
   virtual MStatus connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
@@ -44,5 +48,3 @@ public:
   static MObject evalID;
   static MObject refFilePath;
 };
-
-#endif

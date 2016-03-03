@@ -1,3 +1,6 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 #include "FabricDFGMayaNode.h"
 #include "FabricSpliceHelpers.h"
@@ -37,6 +40,7 @@ MStatus FabricDFGMayaNode::initialize(){
 
   saveData = typedAttr.create("saveData", "svd", MFnData::kString);
   typedAttr.setHidden(true);
+  typedAttr.setInternal(true);
   addAttribute(saveData);
 
   evalID = nAttr.create("evalID", "evalID", MFnNumericData::kInt);
@@ -55,22 +59,38 @@ MStatus FabricDFGMayaNode::compute(const MPlug& plug, MDataBlock& data){
   _outputsDirtied = false;
   
   MStatus stat;
-  
-  MAYADFG_CATCH_BEGIN(&stat);
 
-  FabricSplice::Logging::AutoTimer timer("Maya::compute()");
+  // get the node's state data handle.
+  MDataHandle stateData = data.outputValue(state, &stat);
+  if (stat != MS::kSuccess)
+    return stat;
 
-  // if(!_spliceGraph.checkErrors()){
-  //   return MStatus::kFailure; // avoid evaluating on errors
-  // }
-
-  if(transferInputValuesToDFG(data))
+  if (stateData.asShort() == 0)       // 0: Normal.
   {
-    evaluate();
-    transferOutputValuesToMaya(data);
-  }
+    MAYADFG_CATCH_BEGIN(&stat);
 
-  MAYADFG_CATCH_END(&stat);
+    FabricSplice::Logging::AutoTimer timer("Maya::compute()");
+
+    // if(!_spliceGraph.checkErrors()){
+    //   return MStatus::kFailure; // avoid evaluating on errors
+    // }
+
+    if(transferInputValuesToDFG(data))
+    {
+      evaluate();
+      transferOutputValuesToMaya(data);
+    }
+
+    MAYADFG_CATCH_END(&stat);
+  }
+  else if (stateData.asShort() == 1)  // 1: HasNoEffect.
+  {
+    stat = MS::kNotImplemented;
+  }
+  else                                // not supported by Canvas node.
+  {
+    stat = MS::kNotImplemented;
+  }
 
   return stat;
 }
@@ -87,6 +107,14 @@ MStatus FabricDFGMayaNode::shouldSave(const MPlug &plug, bool &isSaving){
 
 void FabricDFGMayaNode::copyInternalData(MPxNode *node){
   FabricDFGBaseInterface::copyInternalData(node);
+}
+
+bool FabricDFGMayaNode::getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx){
+  return FabricDFGBaseInterface::getInternalValueInContext(plug, dataHandle, ctx);
+}
+
+bool FabricDFGMayaNode::setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx){
+  return FabricDFGBaseInterface::setInternalValueInContext(plug, dataHandle, ctx);
 }
 
 MStatus FabricDFGMayaNode::connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
@@ -107,4 +135,3 @@ MStatus FabricDFGMayaNode::preEvaluation(const MDGContext& context, const MEvalu
   return FabricDFGBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
 }
 #endif
-

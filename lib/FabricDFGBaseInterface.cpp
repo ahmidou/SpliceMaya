@@ -1,3 +1,6 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 #include "FabricDFGBaseInterface.h"
 #include "FabricDFGConversion.h"
@@ -5,6 +8,7 @@
 #include "FabricSpliceMayaData.h"
 #include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricMayaAttrs.h"
 #include <Persistence/RTValToJSONEncoder.hpp>
 
 #include <string>
@@ -57,6 +61,7 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
   _dgDirtyQueued = false;
   m_evalID = 0;
   m_evalIDAtLastEvaluate = 0;
+  m_isStoringJson = false;
   _instances.push_back(this);
 
   m_id = s_maxID++;
@@ -404,6 +409,7 @@ void FabricDFGBaseInterface::storePersistenceData(MString file, MStatus *stat){
   MAYADFG_CATCH_BEGIN(stat);
 
   FabricSplice::Logging::AutoTimer timer("Maya::storePersistenceData()");
+  FTL::AutoSet<bool> storingJson(m_isStoringJson, true);
 
   std::string json = m_binding.exportJSON().getCString();
   MPlug saveDataPlug = getSaveDataPlug();
@@ -462,6 +468,8 @@ void FabricDFGBaseInterface::restoreFromPersistenceData(MString file, MStatus *s
 void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   if(_restoredFromPersistenceData)
     return;
+  if(m_lastJson == json)
+    return;
 
   MAYADFG_CATCH_BEGIN(stat);
 
@@ -493,6 +501,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       continue;
 
     FabricCore::DFGPortType portType = exec.getExecPortType(i);
+    if (!exec.getExecPortResolvedType(i)) continue; // [FE-5538]
     std::string dataType = exec.getExecPortResolvedType(i);
 
     FTL::StrRef opaque = exec.getExecPortMetadata(portName.c_str(), "opaque");
@@ -588,6 +597,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     }
   }
 
+  m_lastJson = json;
   // todo... set values?
 
   MAYADFG_CATCH_END(stat);
@@ -616,26 +626,20 @@ void FabricDFGBaseInterface::reloadFromReferencedFilePath()
   restoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
-MString FabricDFGBaseInterface::getPlugName(MString portName)
+MString FabricDFGBaseInterface::getPlugName(const MString &portName)
 {
-  if(portName == "message")
-    return "dfg_message";
-  else if(portName == "saveData")
-    return "dfg_saveData";
-  else if(portName == "refFilePath")
-    return "dfg_refFilePath";
-  return portName;
+  if      (portName == "message")       return "dfg_message";
+  else if (portName == "saveData")      return "dfg_saveData";
+  else if (portName == "refFilePath")   return "dfg_refFilePath";
+  else                                  return portName;
 }
 
-MString FabricDFGBaseInterface::getPortName(MString plugName)
+MString FabricDFGBaseInterface::getPortName(const MString &plugName)
 {
-  if(plugName == "dfg_message")
-    return "message";
-  else if(plugName == "dfg_saveData")
-    return "saveData";
-  else if(plugName == "dfg_refFilePath")
-    return "refFilePath";
-  return plugName;
+  if      (plugName == "dfg_message")     return "message";
+  else if (plugName == "dfg_saveData")    return "saveData";
+  else if (plugName == "dfg_refFilePath") return "refFilePath";
+  else                                    return plugName;
 }
 
 void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
@@ -855,10 +859,49 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
 }
 
 void FabricDFGBaseInterface::copyInternalData(MPxNode *node){
-  // FabricDFGBaseInterface *otherSpliceInterface = getInstanceByName(node->name().asChar());
+  if (node)
+  {
+    FabricDFGBaseInterface *otherInterface = getInstanceByName(node->name().asChar());
+    if (otherInterface)
+    {
+      MStatus stat = MS::kSuccess;
+      MAYADFG_CATCH_BEGIN(&stat);
+      restoreFromJSON(otherInterface->getDFGBinding().exportJSON().getCString(), &stat);
+      MAYADFG_CATCH_END(&stat); 
+    }
+  }
+}
 
-  // std::string jsonData = otherSpliceInterface->_spliceGraph.getPersistenceDataJSON();
-  // _spliceGraph.setFromPersistenceDataJSON(jsonData.c_str());
+bool FabricDFGBaseInterface::getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx){
+  if(plug.partialName() == "saveData" || plug.partialName() == "svd"){
+    // somebody is pulling on the save data, let's persist it either way
+    MStatus stat = MS::kSuccess;
+    MAYADFG_CATCH_BEGIN(&stat);
+    dataHandle.setString(m_binding.exportJSON().getCString());
+    MAYADFG_CATCH_END(&stat); 
+    return stat == MS::kSuccess;
+  }
+  return false;
+}
+
+bool FabricDFGBaseInterface::setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx){
+  if(plug.partialName() == "saveData" || plug.partialName() == "svd"){
+    if(!m_isStoringJson)
+    {
+      MString json = dataHandle.asString();
+      if(json.length() > 0)
+      {
+        if(m_lastJson != json)
+        {
+          MStatus st;
+          restoreFromJSON(json, &st);
+          _restoredFromPersistenceData = false;
+        }
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 void FabricDFGBaseInterface::onNodeAdded(MObject &node, void *clientData)
@@ -1070,7 +1113,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   //   }
   // }
   // else if(dataTypeOverride == "Boolean")
-  if(dataTypeOverride == "Boolean")
+  if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Boolean)
   {
     if(arrayType == "Single Value")
     {
@@ -1088,7 +1131,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Integer" || dataTypeOverride == "SInt32" || dataTypeOverride == "UInt32")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Integer)
   {
     if(arrayType == "Single Value")
     {
@@ -1135,7 +1178,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     //   }
     // }
   }
-  else if(dataTypeOverride == "Scalar" || dataTypeOverride == "Float32" || dataTypeOverride == "Float64")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Scalar)
   {
     bool isUnitAttr = true;
     // std::string scalarUnit = getStringOption("scalarUnit", compoundStructure);
@@ -1228,7 +1271,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     //   }
     // }
   }
-  else if(dataTypeOverride == "String")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_String)
   {
     if(arrayType == "Single Value")
     {
@@ -1245,7 +1288,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Color")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Color)
   {
     if(arrayType == "Single Value")
     {
@@ -1263,7 +1306,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Vec3")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Vec3)
   {
     if(arrayType == "Single Value")
     {
@@ -1305,7 +1348,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Euler")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Euler)
   {
     if(arrayType == "Single Value")
     {
@@ -1340,7 +1383,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Mat44")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Mat44)
   {
     if(arrayType == "Single Value")
     {
@@ -1358,7 +1401,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "PolygonMesh")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_PolygonMesh)
   {
     if(arrayType == "Single Value")
     {
@@ -1378,7 +1421,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "Lines")
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_Lines)
   {
     if(arrayType == "Single Value")
     {
@@ -1398,7 +1441,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       return newAttribute;
     }
   }
-  else if(dataTypeOverride == "KeyframeTrack"){
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_KeyframeTrack){
     
     if(arrayType == "Single Value")
     {
@@ -1428,7 +1471,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       }
     }
   }
-  else if(dataTypeOverride == "SpliceMayaData"){
+  else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_SpliceMayaData){
     
     if(arrayType == "Single Value")
     {
@@ -1670,7 +1713,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   FTL::CStrRef jsonStr
   )
 {
-  // MGlobal::displayInfo(jsonCString);
+  // MGlobal::displayInfo(jsonStr.data());
 
   FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
   FTL::OwnedPtr<FTL::JSONObject const> jsonObject(
@@ -1743,8 +1786,14 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   }
   else if( descStr == FTL_STR("argInserted") )
   {
-    // this happens as the result of the addPortCommand
-    // FabricUI::DFG::DFGController::bindUnboundRTVals(m_client, m_binding);
+  }
+  else if(   descStr == FTL_STR("varInserted")
+          || descStr == FTL_STR("varRemoved") )
+  {
+    if (   FabricDFGWidget::Instance()
+        && FabricDFGWidget::Instance()->getDfgWidget()
+        && FabricDFGWidget::Instance()->getDfgWidget()->getUIController())
+    FabricDFGWidget::Instance()->getDfgWidget()->getUIController()->emitVarsChanged();
   }
   // else
   // {

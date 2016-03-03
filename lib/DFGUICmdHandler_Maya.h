@@ -1,7 +1,8 @@
-// Copyright 2010-2015 Fabric Software Inc. All rights reserved.
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef __UI_DFG_DFGUICmdHandler_Maya__
-#define __UI_DFG_DFGUICmdHandler_Maya__
+#pragma once
 
 #include <FabricUI/DFG/DFGUICmdHandler.h>
 #include <maya/MString.h>
@@ -104,6 +105,15 @@ protected:
     FTL::CStrRef uiMetadata
     );
 
+  virtual std::string dfgDoCreatePreset(
+    FabricCore::DFGBinding const &binding,
+    FTL::StrRef execPath,
+    FabricCore::DFGExec const &exec,
+    FTL::StrRef nodeName,
+    FTL::StrRef presetDirPath,
+    FTL::StrRef presetName
+    );
+
   virtual std::string dfgDoEditPort(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
@@ -184,12 +194,14 @@ protected:
     FTL::CStrRef code
     );
 
-  virtual std::string dfgDoRenameNode(
+  virtual std::string dfgDoEditNode(
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec,
-    FTL::CStrRef oldName,
-    FTL::CStrRef desiredNewName
+    FTL::StrRef oldNodeName,
+    FTL::StrRef desiredNewNodeName,
+    FTL::StrRef nodeMetadata,
+    FTL::StrRef execMetadata
     );
 
   virtual std::string dfgDoRenamePort(
@@ -254,6 +266,11 @@ protected:
     FabricCore::DFGBinding const &binding,
     FTL::CStrRef execPath,
     FabricCore::DFGExec const &exec
+    );
+
+  virtual void dfgDoDismissLoadDiags(
+    FabricCore::DFGBinding const &binding,
+    QList<int> diagIndices
     );
 
 protected:
@@ -330,7 +347,7 @@ protected:
 
   void encodeExec(
     FabricCore::DFGBinding const &binding,
-    FTL::CStrRef execPath,
+    FTL::StrRef execPath,
     FabricCore::DFGExec const &exec,
     std::stringstream &cmd
     );
@@ -338,5 +355,3 @@ protected:
   static FabricDFGBaseInterface * getInterfFromBinding( FabricCore::DFGBinding const &binding );
   static MString getNodeNameFromBinding( FabricCore::DFGBinding const &binding );
 };
-
-#endif // __UI_DFG_DFGUICmdHandler_Maya__

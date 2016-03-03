@@ -7,8 +7,8 @@
 #include <QtCore/QEvent>
 
 #include "plugin.h"
-#include <maya/MFnPlugin.h>
 #include <maya/MGlobal.h>
+#include <maya/MFnPlugin.h>
 #include <maya/MSceneMessage.h>
 #include <maya/MDGMessage.h>
 #include <maya/MUiMessage.h>
@@ -29,6 +29,7 @@
 #include "FabricDFGWidgetCommand.h"
 #include "FabricDFGWidget.h"
 #include "FabricDFGMayaNode.h"
+#include "FabricDFGMayaDeformer.h"
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricUpgradeAttrCommand.h"
@@ -48,6 +49,7 @@ const MTypeId gFirstValidNodeID(0x0011AE40);
 // FabricSpliceMayaData 0x0011AE45
 // FabricDFGMayaNode 0x0011AE46 // dfgMayaNode
 // FabricDFGMayaNode 0x0011AE47 // canvasNode
+// FabricDFGMayaDeformer 0x0011AE48 // canvasDeformer
 const MTypeId gLastValidNodeID(0x0011AF3F);
 
 MCallbackId gOnSceneNewCallbackId;
@@ -101,7 +103,17 @@ void onSceneNew(void *userData){
   MGlobal::executeCommandOnIdle(cmd, false);
   FabricDFGWidget::Destroy();
  
-  FabricSplice::DestroyClient();
+  // [FE-5508]
+  // rather than destroying the client via
+  // FabricSplice::DestroyClient() we only
+  // remove all singleton objects.
+  const FabricCore::Client * client = NULL;
+  FECS_DGGraph_getClient(&client);
+  if (client)
+  {
+    FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
+    handleVal.callMethod("", "removeAllObjects", 0, NULL);
+  }
 }
 
 void onSceneLoad(void *userData){
@@ -402,6 +414,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   // obsolete node
   plugin.registerNode("dfgMayaNode", 0x0011AE46, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
   plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
+  plugin.registerNode("canvasDeformer", FabricDFGMayaDeformer::id, FabricDFGMayaDeformer::creator, FabricDFGMayaDeformer::initialize, MPxNode::kDeformerNode);
 
   plugin.registerCommand("FabricCanvasGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("FabricCanvasGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
@@ -414,7 +427,10 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, AddSet );
   MAYA_REGISTER_DFGUICMD( plugin, AddVar );
   MAYA_REGISTER_DFGUICMD( plugin, Connect );
+  MAYA_REGISTER_DFGUICMD( plugin, CreatePreset );
   MAYA_REGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_REGISTER_DFGUICMD( plugin, DismissLoadDiags );
+  MAYA_REGISTER_DFGUICMD( plugin, EditNode );
   MAYA_REGISTER_DFGUICMD( plugin, EditPort );
   MAYA_REGISTER_DFGUICMD( plugin, ExplodeNode );
   MAYA_REGISTER_DFGUICMD( plugin, ImplodeNodes );
@@ -423,7 +439,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, Paste );
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes );
   MAYA_REGISTER_DFGUICMD( plugin, RemovePort );
-  MAYA_REGISTER_DFGUICMD( plugin, RenameNode );
   MAYA_REGISTER_DFGUICMD( plugin, RenamePort );
   MAYA_REGISTER_DFGUICMD( plugin, ReorderPorts );
   MAYA_REGISTER_DFGUICMD( plugin, ResizeBackDrop );
@@ -478,6 +493,11 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MGlobal::executePythonCommandOnIdle("import AEdfgMayaNodeTemplate", true);
   MGlobal::executePythonCommandOnIdle("import AEcanvasNodeTemplate", true);
 
+  if (MGlobal::mayaState() == MGlobal::kInteractive)
+    FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Interactive);
+  else
+    FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
+
   return status;
 }
 
@@ -527,6 +547,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand("fabricDFG");
   MQtUtil::deregisterUIType("FabricDFGWidget");
   plugin.deregisterNode(FabricDFGMayaNode::id);
+  plugin.deregisterNode(FabricDFGMayaDeformer::id);
 
   MAYA_DEREGISTER_DFGUICMD( plugin, AddBackDrop );
   MAYA_DEREGISTER_DFGUICMD( plugin, AddFunc );
@@ -536,7 +557,10 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, AddSet );
   MAYA_DEREGISTER_DFGUICMD( plugin, AddVar );
   MAYA_DEREGISTER_DFGUICMD( plugin, Connect );
+  MAYA_DEREGISTER_DFGUICMD( plugin, CreatePreset );
   MAYA_DEREGISTER_DFGUICMD( plugin, Disconnect );
+  MAYA_DEREGISTER_DFGUICMD( plugin, DismissLoadDiags );
+  MAYA_DEREGISTER_DFGUICMD( plugin, EditNode );
   MAYA_DEREGISTER_DFGUICMD( plugin, EditPort );
   MAYA_DEREGISTER_DFGUICMD( plugin, ExplodeNode );
   MAYA_DEREGISTER_DFGUICMD( plugin, ImplodeNodes );
@@ -545,7 +569,6 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, Paste );
   MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes );
   MAYA_DEREGISTER_DFGUICMD( plugin, RemovePort );
-  MAYA_DEREGISTER_DFGUICMD( plugin, RenameNode );
   MAYA_DEREGISTER_DFGUICMD( plugin, RenamePort );
   MAYA_DEREGISTER_DFGUICMD( plugin, ReorderPorts );
   MAYA_DEREGISTER_DFGUICMD( plugin, ResizeBackDrop );

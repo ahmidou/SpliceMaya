@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
 #include "FabricSpliceEditorWidget.h" // [pzion 20150519] Must come first because of some stupid macro definition somewhere
 #include "FabricSpliceHelpers.h"
 #include <DFG/DFGLogWidget.h>
@@ -98,12 +102,15 @@ void mayaKLStatusFunc(const char * topicData, unsigned int topicLength,  const c
   {
     try
     {
-      FabricUI::HandleLicenseData(
-        NULL,
-        *client,
-        message,
-        false // modalDialogs
-        );
+      if (MGlobal::mayaState() == MGlobal::kInteractive)
+      {
+        FabricUI_HandleLicenseData(
+          NULL,
+          *client,
+          message,
+          false // modalDialogs
+          );
+      }
     }
     catch ( FabricCore::Exception e )
     {

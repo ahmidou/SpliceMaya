@@ -1,6 +1,6 @@
-/*
- *  Copyright 2010-2015 Fabric Software Inc. All rights reserved.
- */
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 // [pzion 20150731] This needs to come first, otherwise macros will
 // mess up Qt headers
@@ -226,7 +226,7 @@ void DFGUICmdHandler_Maya::encodeBinding(
 
 void DFGUICmdHandler_Maya::encodeExec(
   FabricCore::DFGBinding const &binding,
-  FTL::CStrRef execPath,
+  FTL::StrRef execPath,
   FabricCore::DFGExec const &exec,
   std::stringstream &cmd
   )
@@ -506,17 +506,33 @@ std::string DFGUICmdHandler_Maya::dfgDoAddPort(
     true  // undoEnabled
     );
 
-  if(mResult.length() > 0)
-  {
-    FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
-    if(interf)
-    {
-      FabricCore::Client interfClient = interf->getCoreClient();
-      FabricCore::DFGBinding interfBinding = interf->getDFGBinding();
-      FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
-    }
-  }
+  return mResult.asChar();
+}
 
+std::string DFGUICmdHandler_Maya::dfgDoCreatePreset(
+  FabricCore::DFGBinding const &binding,
+  FTL::StrRef execPath,
+  FabricCore::DFGExec const &exec,
+  FTL::StrRef nodeName,
+  FTL::StrRef presetDirPath,
+  FTL::StrRef presetName
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_CreatePreset::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("n"), nodeName, cmd );
+  encodeStringArg( FTL_STR("pd"), presetDirPath, cmd );
+  encodeStringArg( FTL_STR("pn"), presetName, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
   return mResult.asChar();
 }
 
@@ -552,17 +568,6 @@ std::string DFGUICmdHandler_Maya::dfgDoEditPort(
     true, // displayEnabled
     true  // undoEnabled
     );
-
-  if(mResult.length() > 0)
-  {
-    FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
-    if(interf)
-    {
-      FabricCore::Client interfClient = interf->getCoreClient();
-      FabricCore::DFGBinding interfBinding = interf->getDFGBinding();
-      FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
-    }
-  }
 
   return mResult.asChar();
 }
@@ -770,19 +775,23 @@ void DFGUICmdHandler_Maya::dfgDoSetCode(
     );
 }
 
-std::string DFGUICmdHandler_Maya::dfgDoRenameNode(
+std::string DFGUICmdHandler_Maya::dfgDoEditNode(
   FabricCore::DFGBinding const &binding,
   FTL::CStrRef execPath,
   FabricCore::DFGExec const &exec,
-  FTL::CStrRef name,
-  FTL::CStrRef desiredName
+  FTL::StrRef oldNodeName,
+  FTL::StrRef desiredNewNodeName,
+  FTL::StrRef nodeMetadata,
+  FTL::StrRef execMetadata
   )
 {
   std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_RenameNode::CmdName();
+  cmd << FabricUI::DFG::DFGUICmd_EditNode::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("n"), name, cmd );
-  encodeStringArg( FTL_STR("d"), desiredName, cmd );
+  encodeStringArg( FTL_STR("n"), oldNodeName, cmd );
+  encodeStringArg( FTL_STR("d"), desiredNewNodeName, cmd );
+  encodeStringArg( FTL_STR("nm"), nodeMetadata, cmd );
+  encodeStringArg( FTL_STR("xm"), execMetadata, cmd );
   cmd << ';';
 
   MString mResult;
@@ -1001,6 +1010,33 @@ void DFGUICmdHandler_Maya::dfgDoSplitFromPreset(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_SplitFromPreset::CmdName();
   encodeExec( binding, execPath, exec, cmd );
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+}
+
+void DFGUICmdHandler_Maya::dfgDoDismissLoadDiags(
+  FabricCore::DFGBinding const &binding,
+  QList<int> diagIndices
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_DismissLoadDiags::CmdName();
+  encodeBinding( binding, cmd );
+
+  cmd << " -di";
+  cmd << " \"[";
+  for ( int i = 0; i < diagIndices.size(); ++i )
+  {
+    if ( i > 0 )
+      cmd << ", ";
+    cmd << diagIndices[i];
+  }
+  cmd << "]\"";
   cmd << ';';
 
   MGlobal::executeCommand(

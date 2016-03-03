@@ -1,5 +1,8 @@
-#ifndef _FABRICDFGBASEINTERFACE_H_
-#define _FABRICDFGBASEINTERFACE_H_
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
+#pragma once
 
 #include <DFG/DFGUI.h>
 
@@ -59,16 +62,6 @@ public:
   FabricCore::DFGBinding getDFGBinding();
   FabricCore::DFGExec getDFGExec();
 
-  FabricDFGWidget *getWidget() const
-  {
-    return m_widget;
-  }
-
-  void setWidget( FabricDFGWidget *widget )
-  {
-    m_widget = widget;
-  }
- 
   void storePersistenceData(MString file, MStatus *stat = 0);
   void restoreFromPersistenceData(MString file, MStatus *stat = 0);
   void restoreFromJSON(MString json, MStatus *stat = 0);
@@ -98,8 +91,8 @@ public:
     { m_executeSharedDirty = true; }
 
 protected:
-  MString getPlugName(MString portName);
-  MString getPortName(MString plugName);
+  inline MString getPlugName(const MString &portName);
+  inline MString getPortName(const MString &plugName);
   void invalidatePlug(MPlug & plug);
   void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
 
@@ -120,6 +113,8 @@ protected:
   void collectDirtyPlug(MPlug const &inPlug);
   void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
   void copyInternalData(MPxNode *node);
+  bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);
+  bool setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx);
   void onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made);
   MStatus setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
 
@@ -181,9 +176,8 @@ private:
 
   unsigned int m_id;
   static unsigned int s_maxID;
-  FabricDFGWidget *m_widget;
   bool m_executeSharedDirty;
   bool m_executeShared;
+  MString m_lastJson;
+  bool m_isStoringJson;
 };
-
-#endif

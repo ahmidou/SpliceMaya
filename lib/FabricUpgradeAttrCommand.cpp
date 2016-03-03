@@ -1,3 +1,6 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 #include "FabricUpgradeAttrCommand.h"
 #include "FabricSpliceConversion.h"
@@ -226,4 +229,3 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
 
   return status;
 }
-
