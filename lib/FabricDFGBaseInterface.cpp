@@ -61,6 +61,7 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
   _dgDirtyQueued = false;
   m_evalID = 0;
   m_evalIDAtLastEvaluate = 0;
+  m_isStoringJson = false;
   _instances.push_back(this);
 
   m_id = s_maxID++;
@@ -408,6 +409,7 @@ void FabricDFGBaseInterface::storePersistenceData(MString file, MStatus *stat){
   MAYADFG_CATCH_BEGIN(stat);
 
   FabricSplice::Logging::AutoTimer timer("Maya::storePersistenceData()");
+  FTL::AutoSet<bool> storingJson(m_isStoringJson, true);
 
   std::string json = m_binding.exportJSON().getCString();
   MPlug saveDataPlug = getSaveDataPlug();
@@ -884,14 +886,17 @@ bool FabricDFGBaseInterface::getInternalValueInContext(const MPlug &plug, MDataH
 
 bool FabricDFGBaseInterface::setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx){
   if(plug.partialName() == "saveData" || plug.partialName() == "svd"){
-    MString json = dataHandle.asString();
-    if(json.length() > 0)
+    if(!m_isStoringJson)
     {
-      if(m_lastJson != json)
+      MString json = dataHandle.asString();
+      if(json.length() > 0)
       {
-        MStatus st;
-        restoreFromJSON(json, &st);
-        _restoredFromPersistenceData = false;
+        if(m_lastJson != json)
+        {
+          MStatus st;
+          restoreFromJSON(json, &st);
+          _restoredFromPersistenceData = false;
+        }
       }
     }
     return true;

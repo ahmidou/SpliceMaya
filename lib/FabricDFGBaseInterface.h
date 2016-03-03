@@ -179,4 +179,5 @@ private:
   bool m_executeSharedDirty;
   bool m_executeShared;
   MString m_lastJson;
+  bool m_isStoringJson;
 };
