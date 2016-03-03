@@ -103,16 +103,25 @@ void onSceneNew(void *userData){
   MGlobal::executeCommandOnIdle(cmd, false);
   FabricDFGWidget::Destroy();
  
-  // [FE-5508]
-  // rather than destroying the client via
-  // FabricSplice::DestroyClient() we only
-  // remove all singleton objects.
-  const FabricCore::Client * client = NULL;
-  FECS_DGGraph_getClient(&client);
-  if (client)
+  char const *no_client_persistence = ::getenv( "FABRIC_DISABLE_CLIENT_PERSISTENCE" );
+  if (!!no_client_persistence && !!no_client_persistence[0])
   {
-    FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
-    handleVal.callMethod("", "removeAllObjects", 0, NULL);
+    // [FE-5944] old behavior: destroy the client.
+    FabricSplice::DestroyClient();
+  }
+  else
+  {
+    // [FE-5508]
+    // rather than destroying the client via
+    // FabricSplice::DestroyClient() we only
+    // remove all singleton objects.
+    const FabricCore::Client * client = NULL;
+    FECS_DGGraph_getClient(&client);
+    if (client)
+    {
+      FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
+      handleVal.callMethod("", "removeAllObjects", 0, NULL);
+    }
   }
 }
 
