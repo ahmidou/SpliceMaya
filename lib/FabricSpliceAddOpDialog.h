@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _CREATIONSPLICEADDOPDIALOG_H_
-#define _CREATIONSPLICEADDOPDIALOG_H_
+#pragma once
 
 #include <QtGui/QLineEdit>
 #include "FabricSpliceBaseDialog.h"
@@ -14,6 +16,3 @@ public:
 private:
   QLineEdit * mName;
 };
-
-#endif 
-

@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _CREATIONSPLICEKLSOURCECODEWIDGET_H_
-#define _CREATIONSPLICEKLSOURCECODEWIDGET_H_
+#pragma once
 
 #include <QtGui/QWidget>
 #include <QtGui/QPlainTextEdit>
@@ -90,5 +92,3 @@ private:
   std::string mOperator;
   FabricSplice::KLParser mParser;
 };
-
-#endif 

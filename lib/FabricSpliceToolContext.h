@@ -1,5 +1,8 @@
-#ifndef _FabricSpliceToolContext_H_
-#define _FabricSpliceToolContext_H_
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
+#pragma once
 
 #include <QtCore/QObject>
 #include <QtCore/QEvent>
@@ -69,7 +72,3 @@ public:
   virtual MPxContext* makeObj();
   static void* creator();
 };
-
-
-
-#endif

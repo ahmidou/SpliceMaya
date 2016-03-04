@@ -1,7 +1,8 @@
-// Copyright 2010-2015 Fabric Software Inc. All rights reserved.
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef __UI_DFG_DFGUICmdHandler_Maya__
-#define __UI_DFG_DFGUICmdHandler_Maya__
+#pragma once
 
 #include <FabricUI/DFG/DFGUICmdHandler.h>
 #include <maya/MString.h>
@@ -255,6 +256,11 @@ protected:
     FabricCore::DFGExec const &exec
     );
 
+  virtual void dfgDoDismissLoadDiags(
+    FabricCore::DFGBinding const &binding,
+    QList<int> diagIndices
+    );
+
 protected:
 
   void encodeFlag(
@@ -342,5 +348,3 @@ protected:
   static FabricDFGBaseInterface * getInterfFromBinding( FabricCore::DFGBinding const &binding );
   static MString getNodeNameFromBinding( FabricCore::DFGBinding const &binding );
 };
-
-#endif // __UI_DFG_DFGUICmdHandler_Maya__

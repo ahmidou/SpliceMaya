@@ -1,6 +1,6 @@
-/*
- *  Copyright 2010-2015 Fabric Software Inc. All rights reserved.
- */
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 // [pzion 20150731] This needs to come first, otherwise macros will
 // mess up Qt headers
@@ -508,6 +508,7 @@ QString DFGUICmdHandler_Maya::dfgDoAddPort(
     true  // undoEnabled
     );
 
+  /* FIXME [andrew 20160304]
   if(mResult.length() > 0)
   {
     FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
@@ -518,6 +519,7 @@ QString DFGUICmdHandler_Maya::dfgDoAddPort(
       FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
     }
   }
+  */
 
   return QString::fromUtf8( mResult.asChar() );
 }
@@ -582,6 +584,7 @@ QString DFGUICmdHandler_Maya::dfgDoEditPort(
     true  // undoEnabled
     );
 
+  /* FIXME [andrew 20160304]
   if(mResult.length() > 0)
   {
     FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
@@ -592,6 +595,7 @@ QString DFGUICmdHandler_Maya::dfgDoEditPort(
       FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
     }
   }
+  */
 
   return QString::fromUtf8( mResult.asChar() );
 }
@@ -1006,6 +1010,33 @@ void DFGUICmdHandler_Maya::dfgDoSplitFromPreset(
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_SplitFromPreset::CmdName();
   encodeExec( binding, execPath, exec, cmd );
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+}
+
+void DFGUICmdHandler_Maya::dfgDoDismissLoadDiags(
+  FabricCore::DFGBinding const &binding,
+  QList<int> diagIndices
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_DismissLoadDiags::CmdName();
+  encodeBinding( binding, cmd );
+
+  cmd << " -di";
+  cmd << " \"[";
+  for ( int i = 0; i < diagIndices.size(); ++i )
+  {
+    if ( i > 0 )
+      cmd << ", ";
+    cmd << diagIndices[i];
+  }
+  cmd << "]\"";
   cmd << ';';
 
   MGlobal::executeCommand(

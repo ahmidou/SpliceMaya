@@ -1,3 +1,6 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 #include "FabricDFGMayaDeformer.h"
 #include "FabricDFGConversion.h"
@@ -255,4 +258,3 @@ MStatus FabricDFGMayaDeformer::preEvaluation(const MDGContext& context, const ME
   return FabricDFGBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
 }
 #endif
-

@@ -1,6 +1,8 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
-#ifndef _CREATIONSPLICECHECKBOXWIDGET_H_
-#define _CREATIONSPLICECHECKBOXWIDGET_H_
+#pragma once
 
 #include <QtGui/QWidget>
 #include <QtGui/QCheckBox>
@@ -19,6 +21,3 @@ private:
   callback mCallback;
   void * mCallbackUD;
 };
-
-#endif 
-

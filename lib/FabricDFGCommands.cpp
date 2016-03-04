@@ -1,3 +1,7 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
+
 #include <QtGui/QFileDialog>  // [pzion 20150519] Must include first since something below defines macros that mess it up
 
 #include "Foundation.h"
@@ -1517,6 +1521,59 @@ FabricUI::DFG::DFGUICmd *FabricDFGReorderPortsCommand::executeDFGUICmd(
       args.binding,
       args.execPath,
       args.exec,
+      args.indices
+      );
+  cmd->doit();
+  return cmd;
+}
+
+// FabricDFGDismissLoadDiagsCommand
+
+void FabricDFGDismissLoadDiagsCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-di", "-diagIndices", MSyntax::kString);
+}
+
+void FabricDFGDismissLoadDiagsCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "diagIndices" ) )
+    throw ArgException( MS::kFailure, "-di (-diagIndices) not provided." );
+
+  std::string jsonStr = argParser.flagArgumentString( "diagIndices", 0 ).asChar();
+
+  try
+  {
+    FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
+    FTL::OwnedPtr<FTL::JSONArray> jsonArray(
+      FTL::JSONValue::Decode( jsonStrWithLoc )->cast<FTL::JSONArray>()
+      );
+    for( size_t i=0; i < jsonArray->size(); i++ )
+    {
+      args.indices.append( jsonArray->get(i)->getSInt32Value() );
+    }
+  }
+  catch ( FabricCore::Exception e )
+  {
+    throw ArgException( MS::kFailure, "-di (-diagIndices) not valid json." );
+  }
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGDismissLoadDiagsCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_DismissLoadDiags *cmd =
+    new FabricUI::DFG::DFGUICmd_DismissLoadDiags(
+      args.binding,
       args.indices
       );
   cmd->doit();

@@ -1,3 +1,6 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QVBoxLayout>
@@ -121,7 +124,7 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
       native = true;
     QString opaqueSetting = exec.getExecPortMetadata(title.toUtf8().constData(), "opaque");
     if(opaqueSetting == "true")
-      native = true;
+      opaque = true;
     enabled = false;
   }
 

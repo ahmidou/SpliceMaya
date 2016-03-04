@@ -1,3 +1,6 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 #include "FabricMayaAttrs.h"
 #include "FabricSpliceEditorWidget.h"
@@ -367,26 +370,16 @@ float getScalarOption(const char * key, FabricCore::Variant options, float value
   const FabricCore::Variant * option = options.getDictValue(key);
   if(!option)
     return value;
-  if(option->isSInt8())
-    return (float)option->getSInt8();
-  if(option->isSInt16())
-    return (float)option->getSInt8();
-  if(option->isSInt32())
-    return (float)option->getSInt8();
-  if(option->isSInt64())
-    return (float)option->getSInt8();
-  if(option->isUInt8())
-    return (float)option->getUInt8();
-  if(option->isUInt16())
-    return (float)option->getUInt8();
-  if(option->isUInt32())
-    return (float)option->getUInt8();
-  if(option->isUInt64())
-    return (float)option->getUInt8();
-  if(option->isFloat32())
-    return (float)option->getFloat32();
-  if(option->isFloat64())
-    return (float)option->getFloat64();
+  if(option->isSInt8())     return (float)option->getSInt8();
+  if(option->isSInt16())    return (float)option->getSInt16();
+  if(option->isSInt32())    return (float)option->getSInt32();
+  if(option->isSInt64())    return (float)option->getSInt64();
+  if(option->isUInt8())     return (float)option->getUInt8();
+  if(option->isUInt16())    return (float)option->getUInt16();
+  if(option->isUInt32())    return (float)option->getUInt32();
+  if(option->isUInt64())    return (float)option->getUInt64();
+  if(option->isFloat32())   return (float)option->getFloat32();
+  if(option->isFloat64())   return (float)option->getFloat64();
   return value;
 } 
 
@@ -779,7 +772,7 @@ void FabricSpliceBaseInterface::restoreFromPersistenceData(MString file, MStatus
     mayaLogErrorFunc(message);
     return;
   }
-  FabricCore::Variant dictData = FabricCore::Variant::CreateFromJSON(dictString);
+  FabricCore::Variant dictData = FabricCore::Variant::CreateFromJSON(dictString.c_str());
   bool dataRestored = _spliceGraph.setFromPersistenceDataDict(dictData, &info, file.asChar());
 
   if(dataRestored){
@@ -1092,26 +1085,16 @@ MStatus FabricSpliceBaseInterface::reloadFromFile()
 float createAttributeForPort_getFloatFromVariant(const FabricCore::Variant * variant)
 {
   float value = 0.0;
-  if(variant->isSInt8())
-    value = (float)variant->getSInt8();
-  else if(variant->isSInt16())
-    value = (float)variant->getSInt16();
-  else if(variant->isSInt32())
-    value = (float)variant->getSInt32();
-  else if(variant->isSInt64())
-    value = (float)variant->getSInt64();
-  else if(variant->isUInt8())
-    value = (float)variant->getUInt8();
-  else if(variant->isUInt16())
-    value = (float)variant->getUInt16();
-  else if(variant->isUInt32())
-    value = (float)variant->getUInt32();
-  else if(variant->isUInt64())
-    value = (float)variant->getUInt64();
-  else if(variant->isFloat32())
-    value = (float)variant->getFloat32();
-  else if(variant->isFloat64())
-    value = (float)variant->getFloat64();
+  if      (variant->isSInt8())      value = (float)variant->getSInt8();
+  else if (variant->isSInt16())     value = (float)variant->getSInt16();
+  else if (variant->isSInt32())     value = (float)variant->getSInt32();
+  else if (variant->isSInt64())     value = (float)variant->getSInt64();
+  else if (variant->isUInt8())      value = (float)variant->getUInt8();
+  else if (variant->isUInt16())     value = (float)variant->getUInt16();
+  else if (variant->isUInt32())     value = (float)variant->getUInt32();
+  else if (variant->isUInt64())     value = (float)variant->getUInt64();
+  else if (variant->isFloat32())    value = (float)variant->getFloat32();
+  else if (variant->isFloat64())    value = (float)variant->getFloat64();
   return value;  
 }
 

@@ -1,3 +1,6 @@
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
 #include "FabricDFGMayaNode.h"
 #include "FabricSpliceHelpers.h"
@@ -132,4 +135,3 @@ MStatus FabricDFGMayaNode::preEvaluation(const MDGContext& context, const MEvalu
   return FabricDFGBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
 }
 #endif
-

@@ -1,6 +1,8 @@
-#ifndef _SPLICERENDERCALLBACK_H_
-#define _SPLICERENDERCALLBACK_H_
+//
+// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
+//
 
+#pragma once
 
 #include "Foundation.h"
 #include <FabricCore.h>
@@ -16,5 +18,3 @@ public:
   static FabricCore::RTVal & getDrawContext(const MString &str, M3dView & view);
   static FabricCore::RTVal sDrawContext;
 };
-
-#endif
