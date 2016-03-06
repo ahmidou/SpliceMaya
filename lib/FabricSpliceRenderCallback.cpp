@@ -13,9 +13,20 @@
 #include "RTRViewport2.h"
 #endif
 
+uint32_t gPanelId = 0;
+bool gRTRPassEnabled = true;
+
 bool FabricSpliceRenderCallback::gCallbackEnabled = true;
 FabricCore::RTVal FabricSpliceRenderCallback::sDrawContext;
-FabricCore::RTVal FabricSpliceRenderCallback::sRTROGLHostCallback;
+FabricCore::RTVal FabricSpliceRenderCallback::shHostGLRenderer;
+
+bool isRTRPassEnabled() {
+  return gRTRPassEnabled;
+}
+
+void enableRTRPass(bool enable) {
+  gRTRPassEnabled = enable;
+}
 
 bool FabricSpliceRenderCallback::isEnabled() {
   return FabricSpliceRenderCallback::gCallbackEnabled;
@@ -27,12 +38,12 @@ void FabricSpliceRenderCallback::enable(bool enable) {
  
 void FabricSpliceRenderCallback::disable() {
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
-  FabricSpliceRenderCallback::sRTROGLHostCallback.invalidate(); 
+  //FabricSpliceRenderCallback::shHostGLRenderer.invalidate(); 
 }
  
 // **************
 
-inline void init() {
+inline void initID() {
  
   if(!FabricSpliceRenderCallback::sDrawContext.isValid()) {
     FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
@@ -42,15 +53,14 @@ inline void init() {
     FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
     FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
   }
+}
 
-  if(!FabricSpliceRenderCallback::sRTROGLHostCallback.isValid()) {
-    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSplice::constructObjectRTVal("RTROGLHostCallback");
-    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("RTROGLHostCallback", "getOrCreateCallback", 0, 0);
-  }
-  else if(FabricSpliceRenderCallback::sRTROGLHostCallback.isObject() && FabricSpliceRenderCallback::sRTROGLHostCallback.isNullObject()) {
-    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSplice::constructObjectRTVal("RTROGLHostCallback");
-    FabricSpliceRenderCallback::sRTROGLHostCallback = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("RTROGLHostCallback", "getOrCreateCallback", 0, 0);
-  }
+inline bool isRTR2Enable() {
+  FabricSpliceRenderCallback::shHostGLRenderer = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
+  FabricCore::RTVal isValidVal = FabricSplice::constructBooleanRTVal(false);
+  FabricSpliceRenderCallback::shHostGLRenderer = 
+    FabricSpliceRenderCallback::shHostGLRenderer.callMethod("SHGLHostRenderer", "getSHGLHostRenderer", 1, &isValidVal);
+  return isValidVal.getBoolean();
 }
 
 inline void setMatrixTranspose(const MMatrix &mMatrix, float *buffer) {
@@ -64,7 +74,7 @@ inline void setMatrixTranspose(const MMatrix &mMatrix, float *buffer) {
   buffer[14] = (float)mMatrix[2][3];  buffer[15] = (float)mMatrix[3][3];
 }
 
-inline void setCamera(double width, double height, const MFnCamera &mCamera, FabricCore::RTVal &camera) {
+inline void setCamera(bool id, double width, double height, const MFnCamera &mCamera, FabricCore::RTVal &camera) {
   MDagPath mCameraDag;
   MStatus status = mCamera.getPath(mCameraDag);
   MMatrix mMatrix = mCameraDag.inclusiveMatrix();
@@ -73,7 +83,8 @@ inline void setCamera(double width, double height, const MFnCamera &mCamera, Fab
   FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
   float *buffer = (float*)cameraMatData.getData();
   setMatrixTranspose(mMatrix, buffer);
-  camera.callMethod("", "setTransform", 1, &cameraMat);
+  if(!id) camera.callMethod("", "setTransform", 1, &cameraMat);
+  else camera.callMethod("", "setFromMat44", 1, &cameraMat);
 
   bool isOrthographic = mCamera.isOrtho();
   FabricCore::RTVal param = FabricSplice::constructBooleanRTVal(isOrthographic);
@@ -96,18 +107,25 @@ inline void setCamera(double width, double height, const MFnCamera &mCamera, Fab
     camera.callMethod("", "setFovY", 1, &param);
   }
 
-  std::vector<FabricCore::RTVal> args(2);
-  args[0] = FabricSplice::constructFloat32RTVal(mCamera.nearClippingPlane());
-  args[1] = FabricSplice::constructFloat32RTVal(mCamera.farClippingPlane());
-  camera.callMethod("", "setRange", 2, &args[0]);
+  FabricCore::RTVal args[2] = {
+    FabricSplice::constructFloat32RTVal(mCamera.nearClippingPlane()),
+    FabricSplice::constructFloat32RTVal(mCamera.farClippingPlane())
+  };
+  if(!id) camera.callMethod("", "setRange", 2, &args[0]);
+  else
+  {
+    camera.callMethod("", "setNearDistance", 1, &args[0]);
+    camera.callMethod("", "setFarDistance", 1, &args[1]);
+  }
 }
 
-inline void setProjection(const MMatrix &projection, FabricCore::RTVal &camera) {
+inline void setProjection(bool id, const MMatrix &projection, FabricCore::RTVal &camera) {
   FabricCore::RTVal projectionMat = FabricSplice::constructRTVal("Mat44");
   FabricCore::RTVal projectionData = projectionMat.callMethod("Data", "data", 0, 0);
   float *buffer = (float*)projectionData.getData();
   setMatrixTranspose(projection, buffer);
-  camera.callMethod("", "setProjMatrix", 1, &projectionMat);
+  if(!id) camera.callMethod("", "setProjMatrix", 1, &projectionMat);
+  else camera.setMember("projection", projectionMat);
 }
 
 inline MString getActiveRenderName(const M3dView &view) {
@@ -121,7 +139,62 @@ inline MString getActiveRenderName(const M3dView &view) {
   return name;
 }
 
-bool FabricSpliceRenderCallback::canDraw() {
+inline void setupIDViewport(M3dView &view, const MString &panelName) {
+ 
+  // sync the time
+  FabricSpliceRenderCallback::sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
+
+  //////////////////////////
+  // Setup the viewport
+  FabricCore::RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
+  double width = view.portWidth();
+  double height = view.portHeight();
+  FabricCore::RTVal args[3] = {
+    FabricSpliceRenderCallback::sDrawContext,
+    FabricSplice::constructFloat64RTVal(width),
+    FabricSplice::constructFloat64RTVal(height)
+  };
+  viewport.callMethod("", "resize", 3, &args[0]);
+
+  FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
+  viewport.callMethod("", "setName", 1, &panelNameVal);
+  FabricCore::RTVal camera = viewport.callMethod("InlineCamera", "getCamera", 0, 0);
+
+  MDagPath cameraDag; view.getCamera(cameraDag);
+  MFnCamera mCamera(cameraDag);
+  setCamera(true, view.portWidth(), view.portHeight(), mCamera, camera);
+  
+  MMatrix projection;
+  view.projectionMatrix(projection);
+  setProjection(true, projection, camera);
+}
+
+MString gRenderName = "NoViewport";
+inline void setupRTR2Viewport(M3dView &view, const MString &panelName) {
+ 
+  MStatus status;
+  gPanelId = panelName.substringW(panelName.length()-2, panelName.length()-1).asInt();
+
+  FabricCore::RTVal panelIdVal = FabricSplice::constructUInt32RTVal(gPanelId);
+  if(gRenderName != getActiveRenderName(view))
+  {
+    gRenderName = getActiveRenderName(view);
+    FabricSpliceRenderCallback::shHostGLRenderer.callMethod("", "removeViewport", 1, &panelIdVal);
+  }
+  //else
+  FabricCore::RTVal viewport = FabricSpliceRenderCallback::shHostGLRenderer.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelIdVal);
+  FabricCore::RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
+  
+  MDagPath cameraDag; view.getCamera(cameraDag);
+  MFnCamera mCamera(cameraDag);
+  setCamera(false, view.portWidth(), view.portHeight(), mCamera, camera);
+  
+  MMatrix projection;
+  view.projectionMatrix(projection);
+  setProjection(false, projection, camera);
+}
+
+inline bool canDraw() {
   if(!FabricSpliceRenderCallback::gCallbackEnabled)
     return false;
   if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
@@ -129,80 +202,102 @@ bool FabricSpliceRenderCallback::canDraw() {
   return true;
 }
 
-void FabricSpliceRenderCallback::draw(double width, double height, const MString &panelName, uint32_t phase) {
-  FabricSplice::Logging::AutoTimer globalTimer("Maya::DrawOpenGL()"); 
-  FabricCore::RTVal args[5] = {
-    FabricSplice::constructUInt32RTVal(phase),
-    FabricSplice::constructStringRTVal(panelName.asChar()),
-    FabricSplice::constructFloat64RTVal(width),
-    FabricSplice::constructFloat64RTVal(height),
-    FabricSplice::constructUInt32RTVal(2)
-  };
-  FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("", "render", 5, &args[0]);    
+void FabricSpliceRenderCallback::drawID() {
+  try
+  {
+    FabricSplice::SceneManagement::drawOpenGL(sDrawContext);
+  }
+  catch(FabricCore::Exception e)
+  {
+    MString str("FabricSpliceRenderCallback::drawID: ");
+    str += e.getDesc_cstr();
+    mayaLogErrorFunc(str.asChar());
+  } 
 }
 
-MString gRenderName = "NoViewport";
+MStatus FabricSpliceRenderCallback::drawRTR2(uint32_t width, uint32_t height, uint32_t phase) {
+  MStatus status = MStatus::kSuccess;
+  if(isRTR2Enable())
+  {
+    //try
+    //{ 
+      FabricCore::RTVal args[5] = {
+        FabricSplice::constructUInt32RTVal(gPanelId),
+        FabricSplice::constructUInt32RTVal(width),
+        FabricSplice::constructUInt32RTVal(height),
+        FabricSplice::constructUInt32RTVal(2),
+        FabricSplice::constructUInt32RTVal(phase)
+      };
+      FabricSpliceRenderCallback::shHostGLRenderer.callMethod("", "render", 5, &args[0]);    
+    //}
+    //catch (FabricCore::Exception e)
+    //{
+    //  MString str("FabricSpliceRenderCallback::drawRTR2: ");
+    //  str += e.getDesc_cstr();
+    //  mayaLogErrorFunc(str.asChar());
+    //  status = MStatus::kFailure;
+    //} 
+  }
+  return status;
+}
 
 void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void *clientData) {
   
-  if(!FabricSpliceRenderCallback::canDraw()) return;
+  if(!canDraw()) return;
+  bool rtr2Draw = isRTR2Enable();
 
-  init();
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
 
+  if(!rtr2Draw) 
+  {
+    initID();
+    setupIDViewport(view, panelName);
+  }
+ 
 #if _SPLICE_MAYA_VERSION >= 2016
-  if(getActiveRenderName(view) == "vp2Renderer")
+  if(rtr2Draw && getActiveRenderName(view) == "vp2Renderer")
     return;
 #endif
 
-  MStatus status;
-  FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
-  FabricCore::RTVal viewport;
-  if(gRenderName != getActiveRenderName(view))
+  if(rtr2Draw) 
   {
-    gRenderName = getActiveRenderName(view);
-    viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "resetViewport", 1, &panelNameVal);
+    setupRTR2Viewport(view, panelName);
+    // draw
+    drawRTR2(uint32_t(view.portWidth()), uint32_t(view.portHeight()), 2);
   }
-  else
-    viewport = FabricSpliceRenderCallback::sRTROGLHostCallback.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelNameVal);
-  FabricCore::RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
-  
-  MDagPath cameraDag; view.getCamera(cameraDag);
-  MFnCamera mCamera(cameraDag);
-  setCamera(view.portWidth(), view.portHeight(), mCamera, camera);
-  
-  MMatrix projection;
-  view.projectionMatrix(projection);
-  setProjection(projection, camera);
-
-  // draw
-  FabricSpliceRenderCallback::draw(view.portWidth(), view.portHeight(), panelName, 2);
 }
 
 #if _SPLICE_MAYA_VERSION >= 2016
 void FabricSpliceRenderCallback::preDrawCallback_2(MHWRender::MDrawContext &context, void* clientData) {
   MString panelName;
-  MHWRender::MFrameContext::RenderingDestination destination = 
-    context.renderingDestination(panelName);
+  context.renderingDestination(panelName);
   FabricSpliceRenderCallback::preDrawCallback(panelName, 0);
 }
 #endif;
 
 void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void *clientData) {
-  if(!FabricSpliceRenderCallback::canDraw()) return;
+  if(!canDraw()) return;
+
+  bool rtr2Draw = isRTR2Enable();
+  if(!rtr2Draw) drawID();
 
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
 
 #if _SPLICE_MAYA_VERSION >= 2016
-  if(getActiveRenderName(view) == "vp2Renderer" ||
-     getActiveRenderName(view) == "RTRViewport2_name")
+  if(
+      getActiveRenderName(view) == "vp2Renderer" ||   
+      getActiveRenderName(view) == "RTRViewport2_name"
+    )
     return;
 #endif
 
-  uint32_t drawPhase = (getActiveRenderName(view) == "vp2Renderer") ? 3 : 4;
-  FabricSpliceRenderCallback::draw(view.portWidth(), view.portHeight(), panelName, drawPhase);
+  if(rtr2Draw)
+  {
+    uint32_t drawPhase = (getActiveRenderName(view) == "vp2Renderer") ? 3 : 4;
+    drawRTR2(uint32_t(view.portWidth()), uint32_t(view.portHeight()), drawPhase);
+  }
 }
 
 // **************
@@ -237,15 +332,15 @@ void FabricSpliceRenderCallback::plug() {
     gPostDrawCallbacks[p] = MUiMessage::add3dViewPostRenderMsgCallback(panelName, postDrawCallback, 0, &status);
   }
 
-#if _SPLICE_MAYA_VERSION >= 2016
-  MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
-  if(renderer) 
-  {
-    RTRViewport2 *overridePtr = new RTRViewport2(RTRViewport2_name);
-    if(overridePtr) renderer->registerOverride(overridePtr);
-    renderer->addNotification(preDrawCallback_2, "PreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
-  }
-#endif
+  #if _SPLICE_MAYA_VERSION >= 2016
+    MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
+    if(renderer) 
+    {
+      RTRViewport2 *overridePtr = new RTRViewport2(RTRViewport2_name);
+      if(overridePtr) renderer->registerOverride(overridePtr);
+      renderer->addNotification(preDrawCallback_2, "PreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
+    }
+  #endif
 
 }
 
@@ -257,18 +352,18 @@ void FabricSpliceRenderCallback::unplug() {
     MUiMessage::removeCallback(gPostDrawCallbacks[i]);
   }
 
-#if _SPLICE_MAYA_VERSION >= 2016
-  MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
-  if(renderer)
-  {
-    renderer->removeNotification("PreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic);
-    const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride(RTRViewport2_name);
-    if(overridePtr)
+  #if _SPLICE_MAYA_VERSION >= 2016
+    MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
+    if(renderer)
     {
-      renderer->deregisterOverride(overridePtr);
-      delete overridePtr;
-      overridePtr = 0;
+      renderer->removeNotification("PreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic);
+      const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride(RTRViewport2_name);
+      if(overridePtr)
+      {
+        renderer->deregisterOverride(overridePtr);
+        delete overridePtr;
+        overridePtr = 0;
+      }
     }
-  }
-#endif
+  #endif
 }
