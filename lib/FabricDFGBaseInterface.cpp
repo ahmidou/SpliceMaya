@@ -315,7 +315,9 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
         }
 
         if(isDeformer && portDataType == "PolygonMesh") {
-          data.setClean(plug);
+          //data.setClean(plug);  // [FE-6087]
+                                  // 'setClean()' need not be called for MPxDeformerNode.
+                                  // (see comments of FE-6087 for more detailed information)
         } else {
           DFGArgToPlugFunc func = getDFGArgToPlugFunc(portDataType);
           if(func != NULL) {
