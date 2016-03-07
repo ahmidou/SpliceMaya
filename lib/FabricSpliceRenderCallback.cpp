@@ -38,7 +38,6 @@ void FabricSpliceRenderCallback::enable(bool enable) {
  
 void FabricSpliceRenderCallback::disable() {
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
-  //FabricSpliceRenderCallback::shHostGLRenderer.invalidate(); 
 }
  
 // **************
@@ -59,7 +58,7 @@ inline bool isRTR2Enable() {
   FabricSpliceRenderCallback::shHostGLRenderer = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
   FabricCore::RTVal isValidVal = FabricSplice::constructBooleanRTVal(false);
   FabricSpliceRenderCallback::shHostGLRenderer = 
-    FabricSpliceRenderCallback::shHostGLRenderer.callMethod("SHGLHostRenderer", "getSHGLHostRenderer", 1, &isValidVal);
+    FabricSpliceRenderCallback::shHostGLRenderer.callMethod("SHGLHostRenderer", "getSHGLRenderer", 1, &isValidVal);
   return isValidVal.getBoolean();
 }
 
@@ -181,7 +180,6 @@ inline void setupRTR2Viewport(M3dView &view, const MString &panelName) {
     gRenderName = getActiveRenderName(view);
     FabricSpliceRenderCallback::shHostGLRenderer.callMethod("", "removeViewport", 1, &panelIdVal);
   }
-  //else
   FabricCore::RTVal viewport = FabricSpliceRenderCallback::shHostGLRenderer.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelIdVal);
   FabricCore::RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
   
@@ -219,8 +217,8 @@ MStatus FabricSpliceRenderCallback::drawRTR2(uint32_t width, uint32_t height, ui
   MStatus status = MStatus::kSuccess;
   if(isRTR2Enable())
   {
-    //try
-    //{ 
+    try
+    { 
       FabricCore::RTVal args[5] = {
         FabricSplice::constructUInt32RTVal(gPanelId),
         FabricSplice::constructUInt32RTVal(width),
@@ -229,14 +227,14 @@ MStatus FabricSpliceRenderCallback::drawRTR2(uint32_t width, uint32_t height, ui
         FabricSplice::constructUInt32RTVal(phase)
       };
       FabricSpliceRenderCallback::shHostGLRenderer.callMethod("", "render", 5, &args[0]);    
-    //}
-    //catch (FabricCore::Exception e)
-    //{
-    //  MString str("FabricSpliceRenderCallback::drawRTR2: ");
-    //  str += e.getDesc_cstr();
-    //  mayaLogErrorFunc(str.asChar());
-    //  status = MStatus::kFailure;
-    //} 
+    }
+    catch (FabricCore::Exception e)
+    {
+      MString str("FabricSpliceRenderCallback::drawRTR2: ");
+      str += e.getDesc_cstr();
+      mayaLogErrorFunc(str.asChar());
+      status = MStatus::kFailure;
+    } 
   }
   return status;
 }
@@ -263,7 +261,6 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   if(rtr2Draw) 
   {
     setupRTR2Viewport(view, panelName);
-    // draw
     drawRTR2(uint32_t(view.portWidth()), uint32_t(view.portHeight()), 2);
   }
 }
