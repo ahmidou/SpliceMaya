@@ -442,14 +442,12 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, RenamePort );
   MAYA_REGISTER_DFGUICMD( plugin, ReorderPorts );
   MAYA_REGISTER_DFGUICMD( plugin, ResizeBackDrop );
-  MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetCode );
   MAYA_REGISTER_DFGUICMD( plugin, SetExtDeps );
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_REGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetRefVarPath );
-  MAYA_REGISTER_DFGUICMD( plugin, SetTitle );
   MAYA_REGISTER_DFGUICMD( plugin, SplitFromPreset );
 
   plugin.registerCommand(
@@ -572,14 +570,12 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, RenamePort );
   MAYA_DEREGISTER_DFGUICMD( plugin, ReorderPorts );
   MAYA_DEREGISTER_DFGUICMD( plugin, ResizeBackDrop );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetArgType );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetArgValue );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetCode );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetExtDeps );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetRefVarPath );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetTitle );
   MAYA_DEREGISTER_DFGUICMD( plugin, SplitFromPreset );
 
   plugin.deregisterCommand( "dfgImportJSON" );
