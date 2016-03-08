@@ -58,7 +58,7 @@ inline bool isRTR2Enable() {
   FabricSpliceRenderCallback::shHostGLRenderer = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
   FabricCore::RTVal isValidVal = FabricSplice::constructBooleanRTVal(false);
   FabricSpliceRenderCallback::shHostGLRenderer = 
-    FabricSpliceRenderCallback::shHostGLRenderer.callMethod("SHGLHostRenderer", "getSHGLRenderer", 1, &isValidVal);
+    FabricSpliceRenderCallback::shHostGLRenderer.callMethod("SHGLHostRenderer", "get", 1, &isValidVal);
   return isValidVal.getBoolean();
 }
 

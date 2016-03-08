@@ -60,6 +60,8 @@ private slots:
   void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog, FTL::JSONObjectEnc<> * additionalMetaData);
 
 protected:
+  virtual void refreshScene();
+
   void setCurrentUINodeName(const char * node);
 
 private:

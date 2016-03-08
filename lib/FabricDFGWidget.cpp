@@ -64,6 +64,12 @@ void FabricDFGWidget::SetCurrentUINodeName(const char * node)
     Instance()->setCurrentUINodeName( node );
 }
 
+void FabricDFGWidget::refreshScene() {
+  MStatus status;
+  M3dView view = M3dView::active3dView(&status);
+  view.refresh(true, true);
+}
+
 void FabricDFGWidget::setCurrentUINodeName(const char * node)
 {
   m_currentUINodeName = node;
