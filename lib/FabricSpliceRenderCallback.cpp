@@ -100,7 +100,8 @@ inline void setCamera(bool id, double width, double height, const MFnCamera &mCa
   }
   else 
   {
-    int w = 0, h = 0;
+    int w = (int)width;
+    int h = (int)height;
     double fovX = 0.0, fovY = 0.0;
     mCamera.getPortFieldOfView(w, h, fovX, fovY);    
     param = FabricSplice::constructFloat64RTVal(fovY);
