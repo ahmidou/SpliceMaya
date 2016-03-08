@@ -11,6 +11,7 @@
 #include <maya/MFnPlugin.h>
 #include <maya/MSceneMessage.h>
 #include <maya/MDGMessage.h>
+#include <maya/MAnimMessage.h>
 #include <maya/MUiMessage.h>
 #include <maya/MEventMessage.h>
 #include <maya/MQtUtil.h>
@@ -70,6 +71,7 @@ MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
 MCallbackId gOnNodeAddedDFGCallbackId;
 MCallbackId gOnNodeRemovedDFGCallbackId;
+MCallbackId gOnAnimCurveEditedCallbackId;
 MCallbackId gBeforeSceneOpenCallbackId;
 MCallbackId gOnModelPanelSetFocusCallbackId;
 
@@ -401,6 +403,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnNodeRemovedCallbackId = MDGMessage::addNodeRemovedCallback(FabricSpliceBaseInterface::onNodeRemoved);
   gOnNodeAddedDFGCallbackId = MDGMessage::addNodeAddedCallback(FabricDFGBaseInterface::onNodeAdded);
   gOnNodeRemovedDFGCallbackId = MDGMessage::addNodeRemovedCallback(FabricDFGBaseInterface::onNodeRemoved);
+  gOnAnimCurveEditedCallbackId = MAnimMessage::addAnimCurveEditedCallback(FabricDFGBaseInterface::onAnimCurveEdited);
   gOnModelPanelSetFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
 
   plugin.registerData(FabricSpliceMayaData::typeName, FabricSpliceMayaData::id, FabricSpliceMayaData::creator);
@@ -546,6 +549,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 
   MDGMessage::removeCallback(gOnNodeAddedDFGCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedDFGCallbackId);
+  MDGMessage::removeCallback(gOnAnimCurveEditedCallbackId);
 
   plugin.deregisterData(FabricSpliceMayaData::id);
 
