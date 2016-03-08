@@ -100,8 +100,9 @@ inline void setCamera(bool id, double width, double height, const MFnCamera &mCa
   }
   else 
   {
-    double fovX, fovY;
-    mCamera.getPortFieldOfView(width, height, fovX, fovY);    
+    int w = 0, h = 0;
+    double fovX = 0.0, fovY = 0.0;
+    mCamera.getPortFieldOfView(w, h, fovX, fovY);    
     param = FabricSplice::constructFloat64RTVal(fovY);
     camera.callMethod("", "setFovY", 1, &param);
   }
@@ -271,7 +272,7 @@ void FabricSpliceRenderCallback::preDrawCallback_2(MHWRender::MDrawContext &cont
   context.renderingDestination(panelName);
   FabricSpliceRenderCallback::preDrawCallback(panelName, 0);
 }
-#endif;
+#endif
 
 void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void *clientData) {
   if(!canDraw()) return;
