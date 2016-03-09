@@ -76,6 +76,7 @@ inline void setMatrixTranspose(const MMatrix &mMatrix, float *buffer) {
 inline void setCamera(bool id, double width, double height, const MFnCamera &mCamera, FabricCore::RTVal &camera) {
   MDagPath mCameraDag;
   MStatus status = mCamera.getPath(mCameraDag);
+  (void)status;
   MMatrix mMatrix = mCameraDag.inclusiveMatrix();
 
   FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
