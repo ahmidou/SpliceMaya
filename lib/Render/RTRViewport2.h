@@ -6,9 +6,9 @@
 #define __RTR_OVERRIDE_H__
  
 #include "FabricSpliceRenderCallback.h"
+#include <maya/MUiMessage.h>
 #include <maya/MDrawContext.h>
 #include <maya/MViewport2Renderer.h>
-#include <maya/MUiMessage.h>
 
 using namespace MHWRender;
 
@@ -56,19 +56,10 @@ class RTRUserRenderOperation : public MUserRenderOperation {
     RTRUserRenderOperation(const MString &name) : MUserRenderOperation(name) {}
     
     virtual MStatus execute(const MDrawContext &context) {
-      
-      try
-      { 
-        MStatus status;
-        int originX, originY, width, height;
-        status = context.getViewportDimensions(originX, originY, width, height);
-        FabricSpliceRenderCallback::draw(width, height, 4);
-      }
-      catch (FabricCore::Exception e)
-      {
-        mayaLogErrorFunc(e.getDesc_cstr());
-        return MStatus::kFailure;
-      } 
+      int originX, originY, width, height;
+      MStatus status = context.getViewportDimensions(originX, originY, width, height);
+      (void)status;
+      FabricSpliceRenderCallback::drawRTR2(width, height, 4);
       return MStatus::kSuccess;
     }
 };
