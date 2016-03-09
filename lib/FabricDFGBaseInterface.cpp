@@ -930,43 +930,37 @@ void FabricDFGBaseInterface::onNodeRemoved(MObject &node, void *clientData)
 
 void FabricDFGBaseInterface::onAnimCurveEdited(MObjectArray &editedCurves, void *clientData)
 {
-  mayaLogFunc("onAnimCurveEdited() called");
   for (unsigned int i=0;i<editedCurves.length();i++)
   {
-    MStatus result = MS::kSuccess;
-    MFnAnimCurve curve(editedCurves[i], &result);
-    if (result != MS::kSuccess)
-      continue;
-
+    // get the curve and its connected plugs.
+    MFnAnimCurve curve(editedCurves[i]);
     MPlugArray curvePlugs;
     if (curve.getConnections(curvePlugs) != MS::kSuccess)
       continue;
 
+    // go through the connected plugs and check
+    // if they are connected to a Canvas node.
     for (unsigned int j=0;j<curvePlugs.length();j++)
     {
+      // get the plug and its connections.
       MPlug &curvePlug = curvePlugs[j];
-
       MPlugArray destPlugs;
       if (!curvePlug.connectedTo(destPlugs, false, true) || !destPlugs.length())
         continue;
 
+      // go through the connected plugs and
+      // check if they belong to a Canvas node.
       for (unsigned int k=0;k<destPlugs.length();k++)
       {
         MPlug &destPlug = destPlugs[k];
-
-        MDagPath dagPath;
-        MDagPath::getAPathTo(destPlug.node(), dagPath);
-
-        mayaLogFunc(MString("destPlug.name() = ") + destPlug.name() + MString("      destPlug.node().apiTypeStr() = ") + destPlug.node().apiTypeStr());
-
 
         std::string n = destPlug.name().asChar();
         size_t t = n.find_last_of('.');
         if (t == std::string::npos)
           continue;
+
         FabricDFGBaseInterface *b = getInstanceByName(n.substr(0, t).c_str());
-        if (b)
-          mayaLogFunc("yessss");
+        if (b)  b->invalidatePlug(destPlug);
       }
     }
   }
