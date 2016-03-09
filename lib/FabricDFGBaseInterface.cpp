@@ -945,7 +945,7 @@ void FabricDFGBaseInterface::onAnimCurveEdited(MObjectArray &editedCurves, void 
       // get the plug and its connections.
       MPlug &curvePlug = curvePlugs[j];
       MPlugArray destPlugs;
-      if (!curvePlug.connectedTo(destPlugs, false, true) || !destPlugs.length())
+      if (!curvePlug.connectedTo(destPlugs, false /* asDst */, true /* asSrc */) || !destPlugs.length())
         continue;
 
       // go through the connected plugs and
