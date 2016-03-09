@@ -58,6 +58,7 @@ class RTRUserRenderOperation : public MUserRenderOperation {
     virtual MStatus execute(const MDrawContext &context) {
       int originX, originY, width, height;
       MStatus status = context.getViewportDimensions(originX, originY, width, height);
+      (void)status;
       FabricSpliceRenderCallback::drawRTR2(width, height, 4);
       return MStatus::kSuccess;
     }
