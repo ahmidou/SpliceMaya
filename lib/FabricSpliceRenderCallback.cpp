@@ -42,6 +42,14 @@ void FabricSpliceRenderCallback::disable() {
  
 // **************
 
+inline bool canDraw() {
+  if(!FabricSpliceRenderCallback::gCallbackEnabled)
+    return false;
+  if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
+    return false;
+  return true;
+}
+
 inline void initID() {
  
   if(!FabricSpliceRenderCallback::sDrawContext.isValid()) {
@@ -55,6 +63,9 @@ inline void initID() {
 }
 
 inline bool isRTR2Enable() {
+  //if(!canDraw()) 
+  //  return false;
+  
   FabricSpliceRenderCallback::shHostGLRenderer = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
   FabricCore::RTVal isValidVal = FabricSplice::constructBooleanRTVal(false);
   FabricSpliceRenderCallback::shHostGLRenderer = 
@@ -193,14 +204,6 @@ inline void setupRTR2Viewport(M3dView &view, const MString &panelName) {
   MMatrix projection;
   view.projectionMatrix(projection);
   setProjection(false, projection, camera);
-}
-
-inline bool canDraw() {
-  if(!FabricSpliceRenderCallback::gCallbackEnabled)
-    return false;
-  if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
-    return false;
-  return true;
 }
 
 void FabricSpliceRenderCallback::drawID() {
