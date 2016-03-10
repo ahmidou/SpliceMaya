@@ -205,7 +205,11 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
 
       if(exec.getExecPortType(portName.asChar()) != FabricCore::DFGPortType_Out){
 
-        std::string portDataType = exec.getExecPortResolvedType(portName.asChar());
+        char const *portDataTypeCStr = exec.getExecPortResolvedType(portName.asChar());
+        if ( !portDataTypeCStr )
+          continue;
+
+        std::string portDataType( portDataTypeCStr );
 
         if(portDataType.substr(portDataType.length()-2, 2) == "[]")
           portDataType = portDataType.substr(0, portDataType.length()-2);
@@ -678,7 +682,8 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
 
     if (getDFGBinding().getExec().haveExecPort(plugName.asChar()))
     {
-      std::string dataType = getDFGBinding().getExec().getExecPortResolvedType(plugName.asChar());
+      char const *dataTypeCStr = getDFGBinding().getExec().getExecPortResolvedType(plugName.asChar());
+      std::string dataType( dataTypeCStr? dataTypeCStr: "");
       if(dataType.substr(0, 8) == "Compound")
       {
         // ensure to set the attribute values one more time
