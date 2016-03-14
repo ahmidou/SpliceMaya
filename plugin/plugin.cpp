@@ -418,6 +418,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   plugin.registerCommand("FabricCanvasGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("FabricCanvasGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
+  plugin.registerCommand("FabricCanvasDestroyClient", FabricDFGDestroyClientCommand::creator, FabricDFGDestroyClientCommand::newSyntax);
 
   MAYA_REGISTER_DFGUICMD( plugin, AddBackDrop );
   MAYA_REGISTER_DFGUICMD( plugin, AddFunc );
