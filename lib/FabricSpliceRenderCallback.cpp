@@ -63,8 +63,8 @@ inline void initID() {
 }
 
 inline bool isRTR2Enable() {
-  //if(!canDraw()) 
-  //  return false;
+  if(!canDraw()) 
+    return false;
   
   FabricSpliceRenderCallback::shHostGLRenderer = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
   FabricCore::RTVal isValidVal = FabricSplice::constructBooleanRTVal(false);
