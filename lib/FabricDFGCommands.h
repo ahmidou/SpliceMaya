@@ -29,6 +29,17 @@ public:
   virtual bool isUndoable() const { return false; }
 };
 
+class FabricDFGDestroyClientCommand: public MPxCommand
+{
+public:
+
+  virtual const char * getName() { return "FabricCanvasDestroyClient"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+  virtual bool isUndoable() const { return false; }
+};
+
 class FabricDFGGetBindingIDCommand: public MPxCommand
 {
 public:

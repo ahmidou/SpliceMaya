@@ -25,7 +25,6 @@
 #include "FabricSpliceMayaData.h"
 #include "FabricSpliceToolContext.h"
 #include "FabricSpliceRenderCallback.h"
-#include "ProceedToNextSceneCommand.h"
 #include "FabricDFGWidgetCommand.h"
 #include "FabricDFGWidget.h"
 #include "FabricDFGMayaNode.h"
@@ -400,7 +399,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("fabricSplice", FabricSpliceCommand::creator);//, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceEditor", FabricSpliceEditorCmd::creator, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceManipulation", FabricSpliceManipulationCmd::creator);
-  plugin.registerCommand("proceedToNextScene", ProceedToNextSceneCommand::creator);//, FabricSpliceEditorCmd::newSyntax);
 
   plugin.registerNode("spliceMayaNode", FabricSpliceMayaNode::id, FabricSpliceMayaNode::creator, FabricSpliceMayaNode::initialize);
   plugin.registerNode("spliceMayaDeformer", FabricSpliceMayaDeformer::id, FabricSpliceMayaDeformer::creator, FabricSpliceMayaDeformer::initialize, MPxNode::kDeformerNode);
@@ -418,6 +416,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   plugin.registerCommand("FabricCanvasGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("FabricCanvasGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
+  plugin.registerCommand("FabricCanvasDestroyClient", FabricDFGDestroyClientCommand::creator, FabricDFGDestroyClientCommand::newSyntax);
 
   MAYA_REGISTER_DFGUICMD( plugin, AddBackDrop );
   MAYA_REGISTER_DFGUICMD( plugin, AddFunc );

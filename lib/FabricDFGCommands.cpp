@@ -49,6 +49,36 @@ MStatus FabricDFGGetContextIDCommand::doIt(const MArgList &args)
   return MS::kSuccess;
 }
 
+MSyntax FabricDFGDestroyClientCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGDestroyClientCommand::creator()
+{
+  return new FabricDFGDestroyClientCommand;
+}
+
+MStatus FabricDFGDestroyClientCommand::doIt(const MArgList &args)
+{
+  MString result;
+  try
+  {
+    FabricSplice::DestroyClient();
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    return mayaErrorOccured();
+  }
+
+  setResult(result);
+  return MS::kSuccess;
+}
+
 MSyntax FabricDFGGetBindingIDCommand::newSyntax()
 {
   MSyntax syntax;
