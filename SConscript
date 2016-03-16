@@ -21,7 +21,6 @@ Import(
   'ADDITIONAL_FLAGS',
   'commandsFlags',
   'astWrapperFlags',
-  'legacyBoostFlags',
   'codeCompletionFlags'
   )
 
@@ -76,7 +75,6 @@ env.MergeFlags(mayaFlags)
 # services flags
 if len(commandsFlags.keys()) > 0:
   env.MergeFlags(commandsFlags)
-  env.MergeFlags(legacyBoostFlags)
   env.MergeFlags(codeCompletionFlags)
 else:
   if FABRIC_BUILD_OS == 'Windows':
@@ -134,9 +132,6 @@ env.Append(CPPDEFINES = ["_SPLICE_MAYA_VERSION="+str(MAYA_VERSION[:4])])
 env.MergeFlags(sharedCapiFlags)
 env.MergeFlags(spliceFlags)
 env.MergeFlags(ADDITIONAL_FLAGS)
-
-if FABRIC_BUILD_OS == 'Linux':
-  env.Append(LIBS=['boost_filesystem', 'boost_system'])
 
 target = 'FabricMaya'
 
@@ -241,7 +236,6 @@ env.Append(LIBPATH = [env.Dir('.')])
 if FABRIC_BUILD_OS == 'Linux':
   # [andrew 20151110] want to find only symbols in libFabricMaya.so
   env['LIBS'] = ['FabricMaya']
-  env.Append(LIBS=['boost_filesystem', 'boost_system'])
 else:
   env.Append(LIBS = [libFabricMaya])
 env.Depends(mayaModule, libFabricMaya)
