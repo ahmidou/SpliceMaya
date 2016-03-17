@@ -73,15 +73,11 @@ elif FABRIC_BUILD_OS == 'Darwin':
 env.MergeFlags(mayaFlags)
 
 # services flags
-if len(commandsFlags.keys()) > 0:
-  env.MergeFlags(commandsFlags)
-  env.MergeFlags(codeCompletionFlags)
+if FABRIC_BUILD_OS == 'Windows':
+  env.Append(LIBS = ['FabricServices-MSVC-'+env['MSVC_VERSION']+'-mt'])
 else:
-  if FABRIC_BUILD_OS == 'Windows':
-    env.Append(LIBS = ['FabricServices-MSVC-'+env['MSVC_VERSION']])
-  else:
-    env.Append(LIBS = ['FabricServices'])
-  env.Append(LIBS = ['FabricSplitSearch'])
+  env.Append(LIBS = ['FabricServices'])
+env.Append(LIBS = ['FabricSplitSearch'])
 
 
 # build the ui libraries for splice
