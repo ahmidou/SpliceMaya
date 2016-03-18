@@ -73,6 +73,8 @@ public:
 
   static void onNodeAdded(MObject &node, void *clientData);
   static void onNodeRemoved(MObject &node, void *clientData);
+  static void onAnimCurveEdited(MObjectArray &editedCurves, void *clientData);
+
   void managePortObjectValues(bool destroy);
 
   static void allStorePersistenceData(MString file, MStatus *stat = 0);
