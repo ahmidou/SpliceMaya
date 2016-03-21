@@ -72,7 +72,7 @@ MCallbackId gOnNodeRemovedCallbackId;
 MCallbackId gOnNodeAddedDFGCallbackId;
 MCallbackId gOnNodeRemovedDFGCallbackId;
 MCallbackId gOnAnimCurveEditedCallbackId;
-MCallbackId gBeforeSceneOpenCallbackId;
+MCallbackId gOnBeforeSceneOpenCallbackId;
 MCallbackId gOnModelPanelSetFocusCallbackId;
 
 void resetRenderCallbacks() {
@@ -381,7 +381,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   gOnSceneSaveCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, onSceneSave);
   gOnSceneLoadCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterOpen, onSceneLoad);
-  gBeforeSceneOpenCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeOpen, onSceneNew);
+  gOnBeforeSceneOpenCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeOpen, onSceneNew);
   gOnSceneNewCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeNew, onSceneNew);
   gOnMayaExitCallbackId = MSceneMessage::addCallback(MSceneMessage::kMayaExiting, onMayaExiting);
   gOnSceneExportCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeExport, onSceneSave);
