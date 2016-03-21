@@ -126,7 +126,7 @@ MStatus FabricDFGCoreCommand::doIt( const MArgList &args )
        .ma/.mb file associated to the current scene, i.e. it sets the Maya
        scene status to "the scene contains unsaved changes".
     */
-    MGlobal::executeCommandOnIdle("file -modified true", true);
+    MGlobal::executeCommandOnIdle("file -modified true", false /* displayEnabled*/);
   }
 
   return status;
