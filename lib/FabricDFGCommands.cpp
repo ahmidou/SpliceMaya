@@ -145,6 +145,20 @@ MStatus FabricDFGCoreCommand::doIt( const MArgList &args )
       status = MS::kFailure;
     }
   }
+
+  if (status != MS::kFailure)
+  {
+    /* [FE-6195]
+       Issue: when executing a DFG command the Canvas graph gets modified,
+       however Maya is not aware of the changes (unless some plugs were
+       dirtyfied.
+       Fix: we call the MEL command "file -modified true". It dirtyfies the
+       .ma/.mb file associated to the current scene, i.e. it sets the Maya
+       scene status to "the scene contains unsaved changes".
+    */
+    MGlobal::executeCommandOnIdle("file -modified true", false /* displayEnabled*/);
+  }
+
   return status;
 }
 
