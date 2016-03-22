@@ -14,6 +14,7 @@
 #include <maya/MFnPlugin.h>
 #include <maya/MSceneMessage.h>
 #include <maya/MDGMessage.h>
+#include <maya/MAnimMessage.h>
 #include <maya/MUiMessage.h>
 #include <maya/MEventMessage.h>
 #include <maya/MQtUtil.h>
@@ -69,6 +70,7 @@ MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
 MCallbackId gOnNodeAddedDFGCallbackId;
 MCallbackId gOnNodeRemovedDFGCallbackId;
+MCallbackId gOnAnimCurveEditedCallbackId;
 MCallbackId gBeforeSceneOpenCallbackId;
   
 // *************
@@ -97,16 +99,26 @@ void onSceneNew(void *userData) {
   MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
   MGlobal::executeCommandOnIdle(cmd, false);
   FabricDFGWidget::Destroy();
-  // [FE-5508]
-  // rather than destroying the client via
-  // FabricSplice::DestroyClient() we only
-  // remove all singleton objects.
-  const FabricCore::Client * client = NULL;
-  FECS_DGGraph_getClient(&client);
-  if (client)
+ 
+  char const *no_client_persistence = ::getenv( "FABRIC_DISABLE_CLIENT_PERSISTENCE" );
+  if (!!no_client_persistence && !!no_client_persistence[0])
   {
-    FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
-    handleVal.callMethod("", "removeAllObjects", 0, NULL);
+    // [FE-5944] old behavior: destroy the client.
+    FabricSplice::DestroyClient();
+  }
+  else
+  {
+    // [FE-5508]
+    // rather than destroying the client via
+    // FabricSplice::DestroyClient() we only
+    // remove all singleton objects.
+    const FabricCore::Client * client = NULL;
+    FECS_DGGraph_getClient(&client);
+    if (client)
+    {
+      FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
+      handleVal.callMethod("", "removeAllObjects", 0, NULL);
+    }
   }
 }
 
@@ -220,7 +232,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnNodeRemovedCallbackId = MDGMessage::addNodeRemovedCallback(FabricSpliceBaseInterface::onNodeRemoved);
   gOnNodeAddedDFGCallbackId = MDGMessage::addNodeAddedCallback(FabricDFGBaseInterface::onNodeAdded);
   gOnNodeRemovedDFGCallbackId = MDGMessage::addNodeRemovedCallback(FabricDFGBaseInterface::onNodeRemoved);
-
+  gOnAnimCurveEditedCallbackId = MAnimMessage::addAnimCurveEditedCallback(FabricDFGBaseInterface::onAnimCurveEdited);
+ 
   plugin.registerData(FabricSpliceMayaData::typeName, FabricSpliceMayaData::id, FabricSpliceMayaData::creator);
   plugin.registerCommand("fabricSplice", FabricSpliceCommand::creator);//, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceEditor", FabricSpliceEditorCmd::creator, FabricSpliceEditorCmd::newSyntax);
@@ -336,6 +349,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MDGMessage::removeCallback(gOnNodeRemovedCallbackId);
   MDGMessage::removeCallback(gOnNodeAddedDFGCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedDFGCallbackId);
+  MDGMessage::removeCallback(gOnAnimCurveEditedCallbackId);
 
   plugin.deregisterData(FabricSpliceMayaData::id);
   MQtUtil::deregisterUIType("FabricSpliceEditor");
