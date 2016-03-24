@@ -91,8 +91,9 @@ void mayaCompilerErrorFunc(unsigned int row, unsigned int col, const char * file
 
 void mayaKLStatusFunc(const char * topicData, unsigned int topicLength,  const char * messageData, unsigned int messageLength)
 {
-  MString composed = MString("[KL Status]: ")+MString(messageData, messageLength);
-  MGlobal::displayInfo(composed);
+  /* [FE-6245] we don't log the KL status messages.
+     MString composed = MString("[KL Status]: ")+MString(messageData, messageLength);
+     MGlobal::displayInfo(composed); */
 
   FTL::StrRef topic( topicData, topicLength );
   FTL::StrRef message( messageData, messageLength );

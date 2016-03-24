@@ -1638,6 +1638,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
 
   MFnDependencyNode thisNode(getThisMObject());
   MPxNode * userNode = thisNode.userNode();
+
   if(userNode != NULL)
   {
     FabricCore::DFGExec exec = getDFGExec();
@@ -1657,7 +1658,8 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
         userNode->attributeAffects(plug.attribute(), newAttribute);
       }
     }
-    else
+
+    if(portType != FabricCore::DFGPortType_Out)
     {
       for(unsigned i = 0; i < exec.getExecPortCount(); ++i) {
         std::string otherPortName = exec.getExecPortName(i);
@@ -1673,6 +1675,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
       }
     }
   }
+
   MAYASPLICE_CATCH_END(stat);
 }
 

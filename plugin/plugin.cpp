@@ -71,9 +71,19 @@ MCallbackId gOnNodeRemovedCallbackId;
 MCallbackId gOnNodeAddedDFGCallbackId;
 MCallbackId gOnNodeRemovedDFGCallbackId;
 MCallbackId gOnAnimCurveEditedCallbackId;
+<<<<<<< HEAD
 MCallbackId gBeforeSceneOpenCallbackId;
   
 // *************
+=======
+MCallbackId gOnBeforeSceneOpenCallbackId;
+MCallbackId gOnModelPanelSetFocusCallbackId;
+
+void resetRenderCallbacks() {
+  for(unsigned int i=0;i<gRenderCallbackCount;i++)
+    gRenderCallbacksSet[i] = false;
+}
+>>>>>>> origin/pablo
 
 void onSceneSave(void *userData) {
 
@@ -219,7 +229,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   gOnSceneSaveCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, onSceneSave);
   gOnSceneLoadCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterOpen, onSceneLoad);
-  gBeforeSceneOpenCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeOpen, onSceneNew);
+  gOnBeforeSceneOpenCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeOpen, onSceneNew);
   gOnSceneNewCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeNew, onSceneNew);
   gOnMayaExitCallbackId = MSceneMessage::addCallback(MSceneMessage::kMayaExiting, onMayaExiting);
   gOnSceneExportCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeExport, onSceneSave);
