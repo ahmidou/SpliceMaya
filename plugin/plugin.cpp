@@ -370,6 +370,12 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
+  // [FE-6287]
+  char const *disable_evalContext = ::getenv( "FABRIC_DISABLE_EVALCONTEXT" );
+  FabricDFGBaseInterface::s_use_evalContext = !(!!disable_evalContext && !!disable_evalContext[0]);
+  if (!FabricDFGBaseInterface::s_use_evalContext)
+    MGlobal::displayInfo("[Fabric for Maya]: evalContext has been disabled via the environment variable FABRIC_DISABLE_EVALCONTEXT.")
+
   MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status;
 

@@ -182,4 +182,8 @@ private:
   bool m_executeShared;
   MString m_lastJson;
   bool m_isStoringJson;
+
+// [FE-6287]
+public:
+  static bool s_use_evalContext;
 };
