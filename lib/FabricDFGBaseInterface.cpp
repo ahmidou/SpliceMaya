@@ -42,6 +42,7 @@ std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
   std::map<std::string, int> FabricDFGBaseInterface::_nodeCreatorCounts;
 #endif
 unsigned int FabricDFGBaseInterface::s_maxID = 1;
+bool FabricDFGBaseInterface::s_use_evalContext = true; // [FE-6287]
 
 FabricDFGBaseInterface::FabricDFGBaseInterface()
   : m_executeSharedDirty( true )
@@ -77,7 +78,8 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface(){
 
   m_binding = FabricCore::DFGBinding();
 
-  m_evalContext = FabricCore::RTVal();
+  if (s_use_evalContext)
+    m_evalContext = FabricCore::RTVal();
 
   for(size_t i=0;i<_instances.size();i++){
     if(_instances[i] == this){
@@ -253,30 +255,33 @@ void FabricDFGBaseInterface::evaluate(){
   FabricSplice::Logging::AutoTimer timer("Maya::evaluate()");
   managePortObjectValues(false); // recreate objects if not there yet
 
-  if(!m_evalContext.isValid())
+  if (s_use_evalContext)
   {
-    try
+    if(!m_evalContext.isValid())
     {
-      m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
-      m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
-      m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
-    }
-    catch(FabricCore::Exception e)
+      try
+      {
+        m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
+        m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
+        m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
+      }
+      catch(FabricCore::Exception e)
+      {
+        mayaLogErrorFunc(e.getDesc_cstr());
+      }
+    }  
+    if(m_evalContext.isValid())
     {
-      mayaLogErrorFunc(e.getDesc_cstr());
-    }
-  }  
-  if(m_evalContext.isValid())
-  {
-    try
-    {
-      m_evalContext.setMember("graph", FabricCore::RTVal::ConstructString(m_client, thisNode.name().asChar()));
-      m_evalContext.setMember("time", FabricCore::RTVal::ConstructFloat32(m_client, MAnimControl::currentTime().as(MTime::kSeconds)));
-      m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, mayaGetLastLoadedScene().asChar()));
-    }
-    catch(FabricCore::Exception e)
-    {
-      mayaLogErrorFunc(e.getDesc_cstr());
+      try
+      {
+        m_evalContext.setMember("graph", FabricCore::RTVal::ConstructString(m_client, thisNode.name().asChar()));
+        m_evalContext.setMember("time", FabricCore::RTVal::ConstructFloat32(m_client, MAnimControl::currentTime().as(MTime::kSeconds)));
+        m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, mayaGetLastLoadedScene().asChar()));
+      }
+      catch(FabricCore::Exception e)
+      {
+        mayaLogErrorFunc(e.getDesc_cstr());
+      }
     }
   }
 
@@ -1638,6 +1643,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
 
   MFnDependencyNode thisNode(getThisMObject());
   MPxNode * userNode = thisNode.userNode();
+
   if(userNode != NULL)
   {
     FabricCore::DFGExec exec = getDFGExec();
@@ -1657,7 +1663,8 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
         userNode->attributeAffects(plug.attribute(), newAttribute);
       }
     }
-    else
+
+    if(portType != FabricCore::DFGPortType_Out)
     {
       for(unsigned i = 0; i < exec.getExecPortCount(); ++i) {
         std::string otherPortName = exec.getExecPortName(i);
@@ -1673,6 +1680,7 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
       }
     }
   }
+
   MAYASPLICE_CATCH_END(stat);
 }
 
