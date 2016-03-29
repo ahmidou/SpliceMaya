@@ -282,7 +282,9 @@ void FabricSpliceBaseInterface::transferOutputValuesToMaya(MDataBlock& data, boo
       }
 
       if(isDeformer && portDataType == "PolygonMesh") {
-        data.setClean(plug);
+        //data.setClean(plug);  // [FE-6087]
+                                // 'setClean()' need not be called for MPxDeformerNode.
+                                // (see comments of FE-6087 for more detailed information)
       } else {
         SplicePortToPlugFunc func = getSplicePortToPlugFunc(portDataType, &port);
         if(func != NULL) {

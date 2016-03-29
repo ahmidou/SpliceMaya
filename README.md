@@ -18,7 +18,6 @@ Building
 ========
 
 A scons (http://www.scons.org/) build script is provided. Fabric Splice for Maya depends on
-* A static build of boost (http://www.boost.org/), version 1.55 or higher.
 * A dynamic build of Fabric Core (matching the latest version).
 * The SpliceAPI repository checked out one level above (http://github.com/fabric-engine/SpliceAPI)
 * The FTL (Fabric Template Library) repository (it can be pulled here: https://github.com/fabric-engine/FTL).
@@ -44,7 +43,6 @@ To inform scons where to find the Fabric Core includes as well as the thirdparty
 * FABRIC_BUILD_TYPE: The optimization type (Release, Debug)
 * FABRIC_SPLICE_VERSION: Refers to the version you want to build. Typically the name of the branch (for example 1.13.0)
 * FABRIC_DIR: Should point to Fabric Engine's installation folder.
-* BOOST_DIR: Should point to the boost root folder (containing boost/ (includes) and lib/ for the static libraries).
 * MAYA_INCLUDE_DIR: The include folder of the Autodesk Maya installation. (for example: C:\Program Files\Autodesk\Maya2014\include)
 * MAYA_LIB_DIR: The library folder of the Autodesk Maya installation. (for example: C:\Program Files\Autodesk\Maya2014\lib)
 * MAYA_VERSION: The Maya version to use including eventual SP suffix. (for example: 2014SP2)

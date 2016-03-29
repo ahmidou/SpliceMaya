@@ -848,9 +848,27 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data,
     if(rtVal.isArray())
       return;
     timers->stop();
-    MDataHandle handle = data.inputValue(plug);
+    MStatus mStatus;
+    MDataHandle handle = data.inputValue( plug, &mStatus );
     timers->resume();
-    binding.setArgValue_lockType(lockType, argName, FabricSplice::constructStringRTVal(handle.asString().asChar()), false);
+    if ( mStatus != MS::kSuccess
+      || handle.type() != MFnData::kString )
+    {
+      std::string error;
+      error += "Unexpected failure transferring String value of port '";
+      error += argName;
+      error += "'";
+      mayaLogErrorFunc( error.c_str() );
+      return;
+    }
+    MString valueMString = handle.asString();
+    char const *valueCStr = valueMString.asChar();
+    binding.setArgValue_lockType(
+      lockType,
+      argName,
+      FabricSplice::constructStringRTVal( valueCStr ),
+      false
+      );
   }
 
   CORE_CATCH_END;

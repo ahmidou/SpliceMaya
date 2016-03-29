@@ -205,7 +205,11 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
 
       if(exec.getExecPortType(portName.asChar()) != FabricCore::DFGPortType_Out){
 
-        std::string portDataType = exec.getExecPortResolvedType(portName.asChar());
+        char const *portDataTypeCStr = exec.getExecPortResolvedType(portName.asChar());
+        if ( !portDataTypeCStr )
+          continue;
+
+        std::string portDataType( portDataTypeCStr );
 
         if(portDataType.substr(portDataType.length()-2, 2) == "[]")
           portDataType = portDataType.substr(0, portDataType.length()-2);
@@ -315,7 +319,9 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
         }
 
         if(isDeformer && portDataType == "PolygonMesh") {
-          data.setClean(plug);
+          //data.setClean(plug);  // [FE-6087]
+                                  // 'setClean()' need not be called for MPxDeformerNode.
+                                  // (see comments of FE-6087 for more detailed information)
         } else {
           DFGArgToPlugFunc func = getDFGArgToPlugFunc(portDataType);
           if(func != NULL) {
@@ -676,7 +682,8 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
 
     if (getDFGBinding().getExec().haveExecPort(plugName.asChar()))
     {
-      std::string dataType = getDFGBinding().getExec().getExecPortResolvedType(plugName.asChar());
+      char const *dataTypeCStr = getDFGBinding().getExec().getExecPortResolvedType(plugName.asChar());
+      std::string dataType( dataTypeCStr? dataTypeCStr: "");
       if(dataType.substr(0, 8) == "Compound")
       {
         // ensure to set the attribute values one more time
@@ -924,6 +931,44 @@ void FabricDFGBaseInterface::onNodeRemoved(MObject &node, void *clientData)
 
   if(interf)
     interf->managePortObjectValues(true); // detach
+}
+
+void FabricDFGBaseInterface::onAnimCurveEdited(MObjectArray &editedCurves, void *clientData)
+{
+  for (unsigned int i=0;i<editedCurves.length();i++)
+  {
+    // get the curve and its connected plugs.
+    MFnAnimCurve curve(editedCurves[i]);
+    MPlugArray curvePlugs;
+    if (curve.getConnections(curvePlugs) != MS::kSuccess)
+      continue;
+
+    // go through the connected plugs and check
+    // if they are connected to a Canvas node.
+    for (unsigned int j=0;j<curvePlugs.length();j++)
+    {
+      // get the plug and its connections.
+      MPlug &curvePlug = curvePlugs[j];
+      MPlugArray destPlugs;
+      if (!curvePlug.connectedTo(destPlugs, false /* asDst */, true /* asSrc */) || !destPlugs.length())
+        continue;
+
+      // go through the connected plugs and
+      // check if they belong to a Canvas node.
+      for (unsigned int k=0;k<destPlugs.length();k++)
+      {
+        MPlug &destPlug = destPlugs[k];
+
+        std::string n = destPlug.name().asChar();
+        size_t t = n.find_last_of('.');
+        if (t == std::string::npos)
+          continue;
+
+        FabricDFGBaseInterface *b = getInstanceByName(n.substr(0, t).c_str());
+        if (b)  b->invalidatePlug(destPlug);
+      }
+    }
+  }
 }
 
 void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made)

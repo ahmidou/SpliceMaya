@@ -14,6 +14,7 @@
 #include <maya/MFnPlugin.h>
 #include <maya/MSceneMessage.h>
 #include <maya/MDGMessage.h>
+#include <maya/MAnimMessage.h>
 #include <maya/MUiMessage.h>
 #include <maya/MEventMessage.h>
 #include <maya/MQtUtil.h>
@@ -29,7 +30,6 @@
 #include "FabricSpliceMayaData.h"
 #include "FabricSpliceToolContext.h"
 #include "FabricSpliceRenderCallback.h"
-#include "ProceedToNextSceneCommand.h"
 #include "FabricDFGWidgetCommand.h"
 #include "FabricDFGWidget.h"
 #include "FabricDFGMayaNode.h"
@@ -70,6 +70,7 @@ MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
 MCallbackId gOnNodeAddedDFGCallbackId;
 MCallbackId gOnNodeRemovedDFGCallbackId;
+MCallbackId gOnAnimCurveEditedCallbackId;
 MCallbackId gBeforeSceneOpenCallbackId;
   
 // *************
@@ -97,16 +98,26 @@ void onSceneNew(void *userData) {
   MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
   MGlobal::executeCommandOnIdle(cmd, false);
   FabricDFGWidget::Destroy();
-  // [FE-5508]
-  // rather than destroying the client via
-  // FabricSplice::DestroyClient() we only
-  // remove all singleton objects.
-  const FabricCore::Client * client = NULL;
-  FECS_DGGraph_getClient(&client);
-  if (client)
+ 
+  char const *no_client_persistence = ::getenv( "FABRIC_DISABLE_CLIENT_PERSISTENCE" );
+  if (!!no_client_persistence && !!no_client_persistence[0])
   {
-    FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
-    handleVal.callMethod("", "removeAllObjects", 0, NULL);
+    // [FE-5944] old behavior: destroy the client.
+    FabricSplice::DestroyClient();
+  }
+  else
+  {
+    // [FE-5508]
+    // rather than destroying the client via
+    // FabricSplice::DestroyClient() we only
+    // remove all singleton objects.
+    const FabricCore::Client * client = NULL;
+    FECS_DGGraph_getClient(&client);
+    if (client)
+    {
+      FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
+      handleVal.callMethod("", "removeAllObjects", 0, NULL);
+    }
   }
 }
 
@@ -219,12 +230,13 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnNodeRemovedCallbackId = MDGMessage::addNodeRemovedCallback(FabricSpliceBaseInterface::onNodeRemoved);
   gOnNodeAddedDFGCallbackId = MDGMessage::addNodeAddedCallback(FabricDFGBaseInterface::onNodeAdded);
   gOnNodeRemovedDFGCallbackId = MDGMessage::addNodeRemovedCallback(FabricDFGBaseInterface::onNodeRemoved);
-
+  gOnAnimCurveEditedCallbackId = MAnimMessage::addAnimCurveEditedCallback(FabricDFGBaseInterface::onAnimCurveEdited);
+ 
   plugin.registerData(FabricSpliceMayaData::typeName, FabricSpliceMayaData::id, FabricSpliceMayaData::creator);
   plugin.registerCommand("fabricSplice", FabricSpliceCommand::creator);//, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceEditor", FabricSpliceEditorCmd::creator, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceManipulation", FabricSpliceManipulationCmd::creator);
-  plugin.registerCommand("proceedToNextScene", ProceedToNextSceneCommand::creator);//, FabricSpliceEditorCmd::newSyntax);
+
   plugin.registerNode("spliceMayaNode", FabricSpliceMayaNode::id, FabricSpliceMayaNode::creator, FabricSpliceMayaNode::initialize);
   plugin.registerNode("spliceMayaDeformer", FabricSpliceMayaDeformer::id, FabricSpliceMayaDeformer::creator, FabricSpliceMayaDeformer::initialize, MPxNode::kDeformerNode);
 
@@ -238,6 +250,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerNode("canvasDeformer", FabricDFGMayaDeformer::id, FabricDFGMayaDeformer::creator, FabricDFGMayaDeformer::initialize, MPxNode::kDeformerNode);
   plugin.registerCommand("FabricCanvasGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("FabricCanvasGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
+  plugin.registerCommand("FabricCanvasDestroyClient", FabricDFGDestroyClientCommand::creator, FabricDFGDestroyClientCommand::newSyntax);
 
   MAYA_REGISTER_DFGUICMD( plugin, AddBackDrop );
   MAYA_REGISTER_DFGUICMD( plugin, AddFunc );
@@ -262,14 +275,12 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, RenamePort );
   MAYA_REGISTER_DFGUICMD( plugin, ReorderPorts );
   MAYA_REGISTER_DFGUICMD( plugin, ResizeBackDrop );
-  MAYA_REGISTER_DFGUICMD( plugin, SetArgType );
   MAYA_REGISTER_DFGUICMD( plugin, SetArgValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetCode );
   MAYA_REGISTER_DFGUICMD( plugin, SetExtDeps );
   MAYA_REGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_REGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_REGISTER_DFGUICMD( plugin, SetRefVarPath );
-  MAYA_REGISTER_DFGUICMD( plugin, SetTitle );
   MAYA_REGISTER_DFGUICMD( plugin, SplitFromPreset );
 
   plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
@@ -336,6 +347,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MDGMessage::removeCallback(gOnNodeRemovedCallbackId);
   MDGMessage::removeCallback(gOnNodeAddedDFGCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedDFGCallbackId);
+  MDGMessage::removeCallback(gOnAnimCurveEditedCallbackId);
 
   plugin.deregisterData(FabricSpliceMayaData::id);
   MQtUtil::deregisterUIType("FabricSpliceEditor");
@@ -368,14 +380,12 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MAYA_DEREGISTER_DFGUICMD( plugin, RenamePort );
   MAYA_DEREGISTER_DFGUICMD( plugin, ReorderPorts );
   MAYA_DEREGISTER_DFGUICMD( plugin, ResizeBackDrop );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetArgType );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetArgValue );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetCode );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetExtDeps );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeComment );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetPortDefaultValue );
   MAYA_DEREGISTER_DFGUICMD( plugin, SetRefVarPath );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetTitle );
   MAYA_DEREGISTER_DFGUICMD( plugin, SplitFromPreset );
 
   plugin.deregisterCommand( "dfgImportJSON" );
