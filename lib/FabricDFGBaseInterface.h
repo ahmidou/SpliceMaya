@@ -20,7 +20,6 @@
 #include <maya/MFnCompoundAttribute.h>
 
 #include <FabricSplice.h>
-#include <DFG/DFGValueEditor.h>
 #include <Commands/CommandStack.h>
 
 using namespace FabricServices;
