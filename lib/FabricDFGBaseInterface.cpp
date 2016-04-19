@@ -1092,13 +1092,15 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       uiHardMax = parts[1].asFloat();
     }
   }
+
+  // correct soft range, if necessary.
   if (uiSoftMin < uiSoftMax && uiHardMin < uiHardMax)
   {
     if (uiSoftMin < uiHardMin)  uiSoftMin = uiHardMin;
     if (uiSoftMax > uiHardMax)  uiSoftMax = uiHardMax;
   }
 
-  // attribute default value.
+  // calc attribute's default value.
   float attrDefValue = 0.0f;
   if(uiHardMin < uiHardMax)   attrDefValue = uiHardMin;
   if(uiSoftMin < uiSoftMax)   attrDefValue = uiSoftMin;
