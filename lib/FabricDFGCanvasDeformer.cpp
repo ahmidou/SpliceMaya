@@ -131,7 +131,7 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
         mayaLogErrorFunc(e.getDesc_cstr());
         return MStatus::kSuccess;
       }
-      binding.setArgValue(portName.asChar(), rtValToSet, false);
+      binding.setArgValue_lockType(getLockType(), portName.asChar(), rtValToSet, false);
 
       evaluate();
 
