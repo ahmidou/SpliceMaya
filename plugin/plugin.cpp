@@ -42,14 +42,14 @@
 
 // FE Owned IDs 0x0011AE40 - 0x0011AF3F
 const MTypeId gFirstValidNodeID(0x0011AE40);
-// FabricSpliceMayaNode 0x0011AE41
-// FabricSpliceMayaDeformer 0x0011AE42
-// FabricSpliceInlineGeometry 0x0011AE43 /* no longer in use, but not available */
-// FabricSpliceMayaDebugger 0x0011AE44 /* no longer in use, but not available */
-// FabricSpliceMayaData 0x0011AE45
-// FabricDFGMayaNode 0x0011AE46 // dfgMayaNode
-// FabricDFGMayaNode 0x0011AE47 // canvasNode
-// FabricDFGMayaDeformer 0x0011AE48 // canvasDeformer
+// FabricSpliceMayaNode       0x0011AE41
+// FabricSpliceMayaDeformer   0x0011AE42
+// FabricSpliceInlineGeometry 0x0011AE43  /* no longer in use, but not available */
+// FabricSpliceMayaDebugger   0x0011AE44  /* no longer in use, but not available */
+// FabricSpliceMayaData       0x0011AE45
+// FabricDFGMayaNode          0x0011AE46  /* no longer in use, but not available */
+// FabricDFGMayaNode          0x0011AE47  // canvasNode
+// FabricDFGMayaDeformer      0x0011AE48  // canvasDeformer
 const MTypeId gLastValidNodeID(0x0011AF3F);
 
 MCallbackId gOnSceneNewCallbackId;
@@ -427,8 +427,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("fabricDFG", FabricDFGWidgetCommand::creator, FabricDFGWidgetCommand::newSyntax);
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
 
-  // obsolete node
-  plugin.registerNode("dfgMayaNode", 0x0011AE46, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
   plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
   plugin.registerNode("canvasDeformer", FabricDFGMayaDeformer::id, FabricDFGMayaDeformer::creator, FabricDFGMayaDeformer::initialize, MPxNode::kDeformerNode);
 
@@ -505,7 +503,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   // FabricSplice::SceneManagement::setManipulationFunc(FabricSpliceBaseInterface::manipulationCallback);
 
   MGlobal::executePythonCommandOnIdle("import AEspliceMayaNodeTemplate", true);
-  MGlobal::executePythonCommandOnIdle("import AEdfgMayaNodeTemplate", true);
   MGlobal::executePythonCommandOnIdle("import AEcanvasNodeTemplate", true);
 
   if (MGlobal::mayaState() == MGlobal::kInteractive)
@@ -530,7 +527,6 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand("fabricUpgradeAttrs");
   plugin.deregisterCommand("FabricSpliceEditor");
   plugin.deregisterCommand("proceedToNextScene");
-  plugin.deregisterNode(0x0011AE46);
   plugin.deregisterNode(FabricSpliceMayaNode::id);
   plugin.deregisterNode(FabricSpliceMayaDeformer::id);
 
