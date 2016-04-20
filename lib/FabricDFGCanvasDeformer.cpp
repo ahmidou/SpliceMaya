@@ -2,7 +2,7 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
-#include "FabricDFGMayaDeformer.h"
+#include "FabricDFGCanvasDeformer.h"
 #include "FabricDFGConversion.h"
 #include "FabricSpliceHelpers.h"
 
