@@ -2,7 +2,7 @@
 # Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 #
 
-import os, sys, platform, copy
+import os
 
 Import(
   'parentEnv',
@@ -141,9 +141,9 @@ libEnv = env.Clone()
 # [andrew 20151110] see FE-5693
 if FABRIC_BUILD_OS == 'Linux':
   libEnv.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../lib/')])
-  libFabricMaya = libEnv.SharedLibrary('libFabricMaya', libSources)
+  libFabricMaya = libEnv.SharedLibrary('libFabricMaya'+MAYA_VERSION, libSources)
 else:
-  libFabricMaya = libEnv.StaticLibrary('libFabricMaya', libSources)
+  libFabricMaya = libEnv.StaticLibrary('libFabricMaya'+MAYA_VERSION, libSources)
 
 if FABRIC_BUILD_OS == 'Darwin':
   # a loadable module will omit the 'lib' prefix name on Os X
@@ -205,7 +205,7 @@ mayaModuleFile = env.SubstMayaModuleFile(
 
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
-mayaFiles.append(env.Install(STAGE_DIR, libFabricMaya))
+mayaFiles.append(env.Install(Dir(FABRIC_DIR).Dir('lib'), libFabricMaya))
 
 for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricDFGTool', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
@@ -223,7 +223,6 @@ mayaFiles.append(installedModule)
 # also install the FabricCore dynamic library
 if FABRIC_BUILD_OS == 'Linux':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/../../../lib/')])
-  env.Append(LINKFLAGS = [Literal('-Wl,-rpath,$ORIGIN/..')])
 if FABRIC_BUILD_OS == 'Darwin':
   env.Append(LINKFLAGS = [Literal('-Wl,-rpath,@loader_path/../../..')])
 # todo: install the python client
@@ -231,7 +230,7 @@ if FABRIC_BUILD_OS == 'Darwin':
 env.Append(LIBPATH = [env.Dir('.')])
 if FABRIC_BUILD_OS == 'Linux':
   # [andrew 20151110] want to find only symbols in libFabricMaya.so
-  env['LIBS'] = ['FabricMaya']
+  env['LIBS'] = ['FabricMaya'+MAYA_VERSION]
 else:
   env.Append(LIBS = [libFabricMaya])
 env.Depends(mayaModule, libFabricMaya)
