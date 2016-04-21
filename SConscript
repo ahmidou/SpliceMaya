@@ -205,7 +205,8 @@ mayaModuleFile = env.SubstMayaModuleFile(
 
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
-mayaFiles.append(env.Install(Dir(FABRIC_DIR).Dir('lib'), libFabricMaya))
+installedLibFabricMaya = env.Install(Dir(FABRIC_DIR).Dir('lib'), libFabricMaya)
+mayaFiles.append(installedLibFabricMaya)
 
 for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricDFGTool', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
@@ -233,7 +234,7 @@ if FABRIC_BUILD_OS == 'Linux':
   env['LIBS'] = ['FabricMaya'+MAYA_VERSION]
 else:
   env.Append(LIBS = [libFabricMaya])
-env.Depends(mayaModule, libFabricMaya)
+env.Depends(mayaModule, installedLibFabricMaya)
 
 alias = env.Alias('splicemaya', mayaFiles)
 spliceData = (alias, mayaFiles)
