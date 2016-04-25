@@ -642,17 +642,29 @@ void FabricDFGDisconnectCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "srcPortPath" ) )
     throw ArgException( MS::kFailure, "-s (-srcPortPath) not provided." );
-  args.srcPorts =
-    QString::fromUtf8(
-      argParser.flagArgumentString( "srcPortPath", 0 ).asChar()
+  FTL::StrRef srcPortsStr =
+    argParser.flagArgumentString( "srcPortPath", 0 ).asChar();
+  while ( !srcPortsStr.empty() )
+  {
+    FTL::StrRef::Split split = srcPortsStr.trimSplit('|');
+    args.srcPorts.append(
+      QString::fromUtf8( split.first.data(), split.first.size() )
       );
+    srcPortsStr = split.second;
+  }
 
   if ( !argParser.isFlagSet( "dstPortPath" ) )
-    throw ArgException( MS::kFailure, "-d (-dstPortPath) not provided." );
-  args.dstPorts =
-    QString::fromUtf8(
-      argParser.flagArgumentString( "dstPortPath", 0 ).asChar()
+    throw ArgException( MS::kFailure, "-s (-dstPortPath) not provided." );
+  FTL::StrRef dstPortsStr =
+    argParser.flagArgumentString( "dstPortPath", 0 ).asChar();
+  while ( !dstPortsStr.empty() )
+  {
+    FTL::StrRef::Split split = dstPortsStr.trimSplit('|');
+    args.dstPorts.append(
+      QString::fromUtf8( split.first.data(), split.first.size() )
       );
+    dstPortsStr = split.second;
+  }
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGDisconnectCommand::executeDFGUICmd(
