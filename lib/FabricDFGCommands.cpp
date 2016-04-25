@@ -574,14 +574,16 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddSetCommand::executeDFGUICmd(
   return cmd;
 }
 
-void FabricDFGCnxnCommand::AddSyntax( MSyntax &syntax )
+// FabricDFGConnectCommand
+
+void FabricDFGConnectCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
   syntax.addFlag("-s", "-srcPortPath", MSyntax::kString);
   syntax.addFlag("-d", "-dstPortPath", MSyntax::kString);
 }
 
-void FabricDFGCnxnCommand::GetArgs(
+void FabricDFGConnectCommand::GetArgs(
   MArgParser &argParser,
   Args &args
   )
@@ -602,8 +604,6 @@ void FabricDFGCnxnCommand::GetArgs(
       argParser.flagArgumentString( "dstPortPath", 0 ).asChar()
       );
 }
-
-// FabricDFGConnectCommand
 
 FabricUI::DFG::DFGUICmd *FabricDFGConnectCommand::executeDFGUICmd(
   MArgParser &argParser
@@ -626,6 +626,35 @@ FabricUI::DFG::DFGUICmd *FabricDFGConnectCommand::executeDFGUICmd(
 
 // FabricDFGDisconnectCommand
 
+void FabricDFGDisconnectCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-s", "-srcPortPath", MSyntax::kString);
+  syntax.addFlag("-d", "-dstPortPath", MSyntax::kString);
+}
+
+void FabricDFGDisconnectCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "srcPortPath" ) )
+    throw ArgException( MS::kFailure, "-s (-srcPortPath) not provided." );
+  args.srcPorts =
+    QString::fromUtf8(
+      argParser.flagArgumentString( "srcPortPath", 0 ).asChar()
+      );
+
+  if ( !argParser.isFlagSet( "dstPortPath" ) )
+    throw ArgException( MS::kFailure, "-d (-dstPortPath) not provided." );
+  args.dstPorts =
+    QString::fromUtf8(
+      argParser.flagArgumentString( "dstPortPath", 0 ).asChar()
+      );
+}
+
 FabricUI::DFG::DFGUICmd *FabricDFGDisconnectCommand::executeDFGUICmd(
   MArgParser &argParser
   )
@@ -638,8 +667,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGDisconnectCommand::executeDFGUICmd(
       args.binding,
       args.execPath,
       args.exec,
-      args.srcPort,
-      args.dstPort
+      args.srcPorts,
+      args.dstPorts
       );
   cmd->doit();
   return cmd;

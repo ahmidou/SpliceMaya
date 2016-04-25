@@ -443,15 +443,15 @@ void DFGUICmdHandler_Maya::dfgDoDisconnect(
   FabricCore::DFGBinding const &binding,
   QString execPath,
   FabricCore::DFGExec const &exec,
-  QString srcPortPath, 
-  QString dstPortPath
+  QStringList srcPortPaths,
+  QStringList dstPortPaths
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_Disconnect::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("s"), srcPortPath, cmd );
-  encodeStringArg( FTL_STR("d"), dstPortPath, cmd );
+  encodeStringsArg( FTL_STR("s"), srcPortPaths, cmd );
+  encodeStringsArg( FTL_STR("d"), dstPortPaths, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(

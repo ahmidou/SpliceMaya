@@ -182,7 +182,7 @@ protected:
     );
 };
 
-class FabricDFGCnxnCommand
+class FabricDFGConnectCommand
   : public FabricDFGExecCommand
 {
   typedef FabricDFGExecCommand Parent;
@@ -198,14 +198,6 @@ protected:
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
-};
-
-class FabricDFGConnectCommand
-  : public FabricDFGCnxnCommand
-{
-  typedef FabricDFGCnxnCommand Parent;
-  
-protected:
 
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser
@@ -218,11 +210,21 @@ typedef MayaDFGUICmdWrapper<
   > MayaDFGUICmd_Connect;
 
 class FabricDFGDisconnectCommand
-  : public FabricDFGCnxnCommand
+  : public FabricDFGExecCommand
 {
-  typedef FabricDFGCnxnCommand Parent;
+  typedef FabricDFGExecCommand Parent;
   
 protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QStringList srcPorts;
+    QStringList dstPorts;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
 
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser
