@@ -214,6 +214,10 @@ int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBloc
   if (!exec.isValid())
     return 0;
 
+  // [FE-6492]
+  if (exec.getExecPortCount() <= 1)
+    return 0;
+
   MString portName = "meshes";
   if (!exec.haveExecPort(portName.asChar())){
     MGlobal::displayWarning("FabricDFGMayaDeformer: missing port: " + portName);
