@@ -529,7 +529,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       if(nativeArray == "true")
       {
         arrayType = "Array (Native)";
-        exec.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false);
+        exec.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false /* canUndo */);
       }
     }
 
@@ -999,7 +999,7 @@ void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherP
         {
           // if there are no connections,
           // ensure to disable the conversion
-          getDFGExec().setExecPortMetadata(plugName.asChar(), "disableSpliceMayaDataConversion", made ? "false" : "true", false);
+          getDFGExec().setExecPortMetadata(plugName.asChar(), "disableSpliceMayaDataConversion", made ? "false" : "true", false /* canUndo */);
         }
         break;
       }
@@ -1572,7 +1572,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
 
         // disable input conversion by default
         // only enable it again if there is a connection to the port
-        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false);
+        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false /* canUndo */);
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
@@ -1590,7 +1590,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
 
         // disable input conversion by default
         // only enable it again if there is a connection to the port
-        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false);
+        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false /* canUndo */);
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
@@ -1610,7 +1610,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     // TODO: handle this in a "clean" way; here we are not in the context of an undo-able command.
     //       We would need that the DFG knows which binding types are "stored" as attributes on the
     //       DCC side and set these as persistable in the source "addPort" command.
-    exec.setExecPortMetadata( portName.asChar(), DFG_METADATA_UIPERSISTVALUE, "true" );
+    exec.setExecPortMetadata( portName.asChar(), DFG_METADATA_UIPERSISTVALUE, "true", false /* canUndo [FE-6169] */ );
   }
 
   // set the mode
