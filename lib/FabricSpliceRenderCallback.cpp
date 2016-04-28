@@ -9,6 +9,7 @@
 #include <maya/MFrameContext.h>
 #include <maya/MEventMessage.h>
 #include <maya/MViewport2Renderer.h>
+#include <maya/MSelectionList.h>
 #if _SPLICE_MAYA_VERSION >= 2016
 #include "Viewport2Override.h"
 #endif
@@ -46,6 +47,7 @@ inline bool canDraw() {
     return false;
   if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
     return false;
+ 
   return true;
 }
 
@@ -170,6 +172,14 @@ void FabricSpliceRenderCallback::drawID() {
   try
   {
     FabricSplice::SceneManagement::drawOpenGL(sDrawContext);
+
+// In maya 2015, there is a bug where the normals are inverted after using the rectangular selection.
+// In order to fix it, we force Maya to refresh.
+// Now, it just glitchs.
+#if _SPLICE_MAYA_VERSION == 2015
+  MGlobal::executeCommandOnIdle("refresh;", false);
+#endif
+
   }
   catch(FabricCore::Exception e)
   {
@@ -186,15 +196,8 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
 
-   
   initID();
   setupIDViewport(view, panelName);
-   
-#if _SPLICE_MAYA_VERSION >= 2016
-  if(getActiveRenderName(view) == "vp2Renderer")
-    return;
-#endif
-
 }
 
 #if _SPLICE_MAYA_VERSION >= 2016
@@ -230,15 +233,6 @@ MCallbackId gPostDrawCallbacks[gCallbackCount];
 MCallbackId gPreDrawCallbacks[gCallbackCount];
  
 inline void onModelPanelSetFocus(void *client) {
-  MString panelName;
-  MGlobal::executeCommand("getPanel -wf;", panelName, false);
-  //for(int p=0; p<gCallbackCount; ++p) 
-  //{
-  //  MString modelPanel = MString("modelPanel");
-  //  modelPanel += p;
-  //  if(panelName == modelPanel) 
-  //    addViewport(p, panelName);
-  //}
   MGlobal::executeCommandOnIdle("refresh;", false);
 }
 
@@ -254,7 +248,7 @@ void FabricSpliceRenderCallback::plug() {
     gPostDrawCallbacks[p] = MUiMessage::add3dViewPostRenderMsgCallback(panelName, postDrawCallback, 0, &status);
   }
 
-  #if _SPLICE_MAYA_VERSION >= 2016
+#if _SPLICE_MAYA_VERSION >= 2016
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer) 
     {
@@ -262,8 +256,7 @@ void FabricSpliceRenderCallback::plug() {
       if(overridePtr) renderer->registerOverride(overridePtr);
       renderer->addNotification(preDrawCallback_2, "PreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
     }
-  #endif
-
+#endif
 }
 
 void FabricSpliceRenderCallback::unplug() {
@@ -274,7 +267,7 @@ void FabricSpliceRenderCallback::unplug() {
     MUiMessage::removeCallback(gPostDrawCallbacks[i]);
   }
 
-  #if _SPLICE_MAYA_VERSION >= 2016
+#if _SPLICE_MAYA_VERSION >= 2016
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer)
     {
@@ -287,5 +280,5 @@ void FabricSpliceRenderCallback::unplug() {
         overridePtr = 0;
       }
     }
-  #endif
+#endif
 }
