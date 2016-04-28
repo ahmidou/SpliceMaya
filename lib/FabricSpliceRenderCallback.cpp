@@ -246,7 +246,7 @@ void FabricSpliceRenderCallback::plug() {
   gOnPanelFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
   
   MStatus status;
-  for(int p=0; p<5; ++p) 
+  for(int p=0; p<gCallbackCount; ++p) 
   {
     MString panelName = MString("modelPanel");
     panelName += p;
