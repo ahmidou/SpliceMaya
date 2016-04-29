@@ -25,7 +25,7 @@ class Viewport2Override : public MRenderOverride {
     virtual MRenderOperation* renderOperation();
     virtual bool nextRenderOperation();
 
-    virtual MString uiName() const { return "Fabric Viewport2.0"; }
+    virtual MString uiName() const { return "Fabric Viewport 2.0"; }
     virtual DrawAPI supportedDrawAPIs() const { return kAllDevices; };
         
   private:
