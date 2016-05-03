@@ -204,7 +204,10 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   loadMenu();
 
-  FabricSpliceRenderCallback::plug();
+  // FE-6558 : Don't plug the render-callback if not interactive.
+  // Otherwise it will crash on linux machine without DISPLAY
+  if (MGlobal::mayaState() == MGlobal::kInteractive)
+    FabricSpliceRenderCallback::plug();
 
   gOnSceneSaveCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, onSceneSave);
   gOnSceneLoadCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterOpen, onSceneLoad);
@@ -351,7 +354,10 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MSceneMessage::removeCallback(gOnSceneLoadReferenceCallbackId);
   MEventMessage::removeCallback(gOnModelPanelSetFocusCallbackId);
 
-  FabricSpliceRenderCallback::unplug();
+  // FE-6558 : Don't plug the render-callback if not interactive.
+  // Otherwise it will crash on linux machine without DISPLAY
+  if (MGlobal::mayaState() == MGlobal::kInteractive)
+    FabricSpliceRenderCallback::unplug();
 
   MDGMessage::removeCallback(gOnNodeAddedCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedCallbackId);
