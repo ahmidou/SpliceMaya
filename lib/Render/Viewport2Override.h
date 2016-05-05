@@ -12,20 +12,20 @@
 
 using namespace MHWRender;
 
-const MString RTRViewport2_name = "RTRViewport2";
+const MString Viewport2Override_name = "Viewport2Override";
 
-class RTRViewport2 : public MRenderOverride {
+class Viewport2Override : public MRenderOverride {
 
   public:
-    RTRViewport2(const MString &name);
-    virtual ~RTRViewport2();
+    Viewport2Override(const MString &name);
+    virtual ~Viewport2Override();
     virtual MStatus setup(const MString& destination);
     virtual MStatus cleanup();
     virtual bool startOperationIterator();
     virtual MRenderOperation* renderOperation();
     virtual bool nextRenderOperation();
 
-    virtual MString uiName() const { return "Fabric RTR2"; }
+    virtual MString uiName() const { return "Fabric Viewport 2.0"; }
     virtual DrawAPI supportedDrawAPIs() const { return kAllDevices; };
         
   private:
@@ -34,9 +34,9 @@ class RTRViewport2 : public MRenderOverride {
     MRenderOperation* mOps[4];
 };
 
-class RTRSceneRender : public MSceneRender {
+class SceneRenderOverride : public MSceneRender {
   public:
-    RTRSceneRender(const MString &name) : MSceneRender(name) {}
+    SceneRenderOverride(const MString &name) : MSceneRender(name) {}
     virtual MClearOperation& clearOperation() {
       MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
       bool gradient = renderer->useGradient();
@@ -51,15 +51,20 @@ class RTRSceneRender : public MSceneRender {
     }
 };
  
-class RTRUserRenderOperation : public MUserRenderOperation {
+class UserRenderOperationOverride : public MUserRenderOperation {
   public:
-    RTRUserRenderOperation(const MString &name) : MUserRenderOperation(name) {}
+    UserRenderOperationOverride(const MString &name) : MUserRenderOperation(name) {}
     
     virtual MStatus execute(const MDrawContext &context) {
-      int originX, originY, width, height;
-      MStatus status = context.getViewportDimensions(originX, originY, width, height);
-      (void)status;
-      FabricSpliceRenderCallback::drawRTR2(width, height, 4);
+      if(FabricSpliceRenderCallback::isRTR2Enable())
+      {
+        int originX, originY, width, height;
+        context.getViewportDimensions(originX, originY, width, height);
+        FabricSpliceRenderCallback::drawRTR2(width, height, 4);
+      }
+      else
+        FabricSpliceRenderCallback::drawID();
+
       return MStatus::kSuccess;
     }
 };

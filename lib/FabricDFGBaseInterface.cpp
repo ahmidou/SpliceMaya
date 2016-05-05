@@ -529,7 +529,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
       if(nativeArray == "true")
       {
         arrayType = "Array (Native)";
-        exec.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false);
+        exec.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false /* canUndo */);
       }
     }
 
@@ -999,7 +999,7 @@ void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherP
         {
           // if there are no connections,
           // ensure to disable the conversion
-          getDFGExec().setExecPortMetadata(plugName.asChar(), "disableSpliceMayaDataConversion", made ? "false" : "true", false);
+          getDFGExec().setExecPortMetadata(plugName.asChar(), "disableSpliceMayaDataConversion", made ? "false" : "true", false /* canUndo */);
         }
         break;
       }
@@ -1056,24 +1056,54 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   }
 
   // extract the ui range info
-  float uiMin = 0.0f;
-  float uiMax = 0.0f;
-  FTL::CStrRef uiRangeRef = exec.getExecPortMetadata(portName.asChar(), "uiRange");
-  if(uiRangeRef.size() > 2)
+  float uiSoftMin = 0.0f;
+  float uiSoftMax = 0.0f;
+  float uiHardMin = 0.0f;
+  float uiHardMax = 0.0f;
+  FTL::CStrRef uiSoftRangeRef = exec.getExecPortMetadata(portName.asChar(), "uiRange");
+  FTL::CStrRef uiHardRangeRef = exec.getExecPortMetadata(portName.asChar(), "uiHardRange");
+  if (uiSoftRangeRef.size() > 2)
   {
-    MString uiRangeStr = uiRangeRef.c_str();
-    if(uiRangeStr.asChar()[0] == '(')
+    MString uiRangeStr = uiSoftRangeRef.c_str();
+    if (uiRangeStr.asChar()[0] == '(')
       uiRangeStr = uiRangeStr.substring(1, uiRangeStr.length()-1);
-    if(uiRangeStr.asChar()[uiRangeStr.length()-1] == ')')
+    if (uiRangeStr.asChar()[uiRangeStr.length()-1] == ')')
       uiRangeStr = uiRangeStr.substring(0, uiRangeStr.length()-2);
     MStringArray parts;
     uiRangeStr.split(',', parts);
-    if(parts.length() == 2)
+    if (parts.length() == 2)
     {
-      uiMin = parts[0].asFloat();
-      uiMax = parts[1].asFloat();
+      uiSoftMin = parts[0].asFloat();
+      uiSoftMax = parts[1].asFloat();
     }
   }
+  if (uiHardRangeRef.size() > 2)
+  {
+    MString uiRangeStr = uiHardRangeRef.c_str();
+    if (uiRangeStr.asChar()[0] == '(')
+      uiRangeStr = uiRangeStr.substring(1, uiRangeStr.length()-1);
+    if (uiRangeStr.asChar()[uiRangeStr.length()-1] == ')')
+      uiRangeStr = uiRangeStr.substring(0, uiRangeStr.length()-2);
+    MStringArray parts;
+    uiRangeStr.split(',', parts);
+    if (parts.length() == 2)
+    {
+      uiHardMin = parts[0].asFloat();
+      uiHardMax = parts[1].asFloat();
+    }
+  }
+
+  // correct soft range, if necessary.
+  if (uiSoftMin < uiSoftMax && uiHardMin < uiHardMax)
+  {
+    if (uiSoftMin < uiHardMin)  uiSoftMin = uiHardMin;
+    if (uiSoftMax > uiHardMax)  uiSoftMax = uiHardMax;
+  }
+
+  // calc attribute's default value.
+  float attrDefValue = 0.0f;
+  if(uiHardMin < uiHardMax)   attrDefValue = uiHardMin;
+  if(uiSoftMin < uiSoftMax)   attrDefValue = uiSoftMin;
 
   MFnNumericAttribute nAttr;
   MFnTypedAttribute tAttr;
@@ -1185,11 +1215,16 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt, uiMin);
-      if(uiMin != uiMax)
+      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt, attrDefValue);
+      if(uiSoftMin < uiSoftMax)
       {
-        nAttr.setMin(uiMin);
-        nAttr.setMax(uiMax);
+        nAttr.setSoftMin(uiSoftMin);
+        nAttr.setSoftMax(uiSoftMax);
+      }
+      if(uiHardMin < uiHardMax)
+      {
+        nAttr.setMin(uiHardMin);
+        nAttr.setMax(uiHardMax);
       }
     }
     else if(arrayType == "Array (Multi)")
@@ -1236,21 +1271,26 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if(arrayType == "Single Value" || arrayType == "Array (Multi)")
     {
       if(scalarUnit == "time")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kTime, uiMin);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kTime, attrDefValue);
       else if(scalarUnit == "angle")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kAngle, uiMin);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kAngle, attrDefValue);
       else if(scalarUnit == "distance")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kDistance, uiMin);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kDistance, attrDefValue);
       else
       {
-        newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kDouble, uiMin);
+        newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kDouble, attrDefValue);
         isUnitAttr = false;
       }
 
-      if(uiMin != uiMax)
+      if(uiSoftMin < uiSoftMax)
       {
-        nAttr.setMin(uiMin);
-        nAttr.setMax(uiMax);
+        nAttr.setSoftMin(uiSoftMin);
+        nAttr.setSoftMax(uiSoftMax);
+      }
+      if(uiHardMin < uiHardMax)
+      {
+        nAttr.setMin(uiHardMin);
+        nAttr.setMax(uiHardMax);
       }
 
       if(arrayType == "Array (Multi)") 
@@ -1532,7 +1572,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
 
         // disable input conversion by default
         // only enable it again if there is a connection to the port
-        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false);
+        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false /* canUndo */);
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
@@ -1550,7 +1590,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
 
         // disable input conversion by default
         // only enable it again if there is a connection to the port
-        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false);
+        getDFGExec().setExecPortMetadata(portName.asChar(), "disableSpliceMayaDataConversion", "true", false /* canUndo */);
       }
       else{
         mayaLogErrorFunc("Creating maya attribute failed, No port found with name " + portName);
@@ -1570,7 +1610,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     // TODO: handle this in a "clean" way; here we are not in the context of an undo-able command.
     //       We would need that the DFG knows which binding types are "stored" as attributes on the
     //       DCC side and set these as persistable in the source "addPort" command.
-    exec.setExecPortMetadata( portName.asChar(), DFG_METADATA_UIPERSISTVALUE, "true" );
+    exec.setExecPortMetadata( portName.asChar(), DFG_METADATA_UIPERSISTVALUE, "true", false /* canUndo [FE-6169] */ );
   }
 
   // set the mode

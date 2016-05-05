@@ -10,7 +10,7 @@
 #include <maya/MEventMessage.h>
 #include <maya/MViewport2Renderer.h>
 #if _SPLICE_MAYA_VERSION >= 2016
-#include "RTRViewport2.h"
+#include "Viewport2Override.h"
 #endif
 
 uint32_t gPanelId = 0;
@@ -62,14 +62,13 @@ inline void initID() {
   }
 }
 
-inline bool isRTR2Enable() {
+bool FabricSpliceRenderCallback::isRTR2Enable() {
   if(!canDraw()) 
     return false;
   
-  FabricSpliceRenderCallback::shHostGLRenderer = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
+  shHostGLRenderer = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
   FabricCore::RTVal isValidVal = FabricSplice::constructBooleanRTVal(false);
-  FabricSpliceRenderCallback::shHostGLRenderer = 
-    FabricSpliceRenderCallback::shHostGLRenderer.callMethod("SHGLHostRenderer", "get", 1, &isValidVal);
+  shHostGLRenderer = shHostGLRenderer.callMethod("SHGLHostRenderer", "get", 1, &isValidVal);
   return isValidVal.getBoolean();
 }
 
@@ -282,21 +281,20 @@ void FabricSpliceRenderCallback::preDrawCallback_2(MHWRender::MDrawContext &cont
 void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void *clientData) {
   if(!canDraw()) return;
 
-  bool rtr2Draw = isRTR2Enable();
-  if(!rtr2Draw) drawID();
-
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
 
 #if _SPLICE_MAYA_VERSION >= 2016
   if(
       getActiveRenderName(view) == "vp2Renderer" ||   
-      getActiveRenderName(view) == "RTRViewport2_name"
+      getActiveRenderName(view) == "Viewport2Override"
     )
     return;
 #endif
 
-  if(rtr2Draw)
+  bool rtr2Draw = isRTR2Enable();
+  if(!rtr2Draw) drawID();
+  else
   {
     uint32_t drawPhase = (getActiveRenderName(view) == "vp2Renderer") ? 3 : 4;
     drawRTR2(uint32_t(view.portWidth()), uint32_t(view.portHeight()), drawPhase);
@@ -312,7 +310,7 @@ MCallbackId gPreDrawCallbacks[gCallbackCount];
  
 inline void onModelPanelSetFocus(void *client) {
   MString panelName;
-  MGlobal::executeCommand("getPanel -wf;", panelName, false);
+  //MGlobal::executeCommand("getPanel -wf;", panelName, false);
   //for(int p=0; p<gCallbackCount; ++p) 
   //{
   //  MString modelPanel = MString("modelPanel");
@@ -327,7 +325,7 @@ void FabricSpliceRenderCallback::plug() {
   gOnPanelFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
   
   MStatus status;
-  for(int p=0; p<5; ++p) 
+  for(int p=0; p<gCallbackCount; ++p) 
   {
     MString panelName = MString("modelPanel");
     panelName += p;
@@ -339,7 +337,7 @@ void FabricSpliceRenderCallback::plug() {
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer) 
     {
-      RTRViewport2 *overridePtr = new RTRViewport2(RTRViewport2_name);
+      Viewport2Override *overridePtr = new Viewport2Override(Viewport2Override_name);
       if(overridePtr) renderer->registerOverride(overridePtr);
       renderer->addNotification(preDrawCallback_2, "PreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
     }
@@ -360,7 +358,7 @@ void FabricSpliceRenderCallback::unplug() {
     if(renderer)
     {
       renderer->removeNotification("PreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic);
-      const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride(RTRViewport2_name);
+      const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride(Viewport2Override_name);
       if(overridePtr)
       {
         renderer->deregisterOverride(overridePtr);

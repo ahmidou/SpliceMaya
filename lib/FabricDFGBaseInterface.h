@@ -20,7 +20,6 @@
 #include <maya/MFnCompoundAttribute.h>
 
 #include <FabricSplice.h>
-#include <DFG/DFGValueEditor.h>
 #include <Commands/CommandStack.h>
 
 using namespace FabricServices;
@@ -33,7 +32,8 @@ using namespace FabricUI;
 
 #define MAYADFG_CATCH_END(statusPtr) } \
   catch (FabricCore::Exception e) { \
-    mayaLogErrorFunc(e.getDesc_cstr()); \
+    if (e.getDescLength()) \
+      mayaLogErrorFunc(e.getDesc_cstr()); \
     if (statusPtr) \
       *statusPtr=MS::kFailure; \
   }

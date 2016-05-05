@@ -91,6 +91,12 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
     init( s_coreClient, manager, m_dfgHost, binding, "", exec, &m_cmdHandler,
           false, config );
 
+    // adjust some background colors that cannot be defined
+    // using DFG::DFGConfig (note: this also kinda solves [FE-6009]).
+    getTreeWidget()    ->setStyleSheet("background-color: rgb(48,48,48); border: 1px solid black;");
+    getDfgValueEditor()->setStyleSheet("background-color: rgb(48,48,48);");
+    getDfgLogWidget()  ->setStyleSheet("background-color: rgb(48,48,48); border: 1px solid black;");
+
     m_initialized = true;
   }
   else

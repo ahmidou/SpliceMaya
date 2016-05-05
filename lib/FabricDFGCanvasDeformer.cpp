@@ -2,7 +2,7 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
-#include "FabricDFGMayaDeformer.h"
+#include "FabricDFGCanvasDeformer.h"
 #include "FabricDFGConversion.h"
 #include "FabricSpliceHelpers.h"
 
@@ -131,7 +131,7 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
         mayaLogErrorFunc(e.getDesc_cstr());
         return MStatus::kSuccess;
       }
-      binding.setArgValue(portName.asChar(), rtValToSet, false);
+      binding.setArgValue_lockType(getLockType(), portName.asChar(), rtValToSet, false);
 
       evaluate();
 
@@ -212,6 +212,10 @@ int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBloc
 
   FabricCore::DFGExec exec = getDFGExec();
   if (!exec.isValid())
+    return 0;
+
+  // [FE-6492]
+  if (exec.getExecPortCount() <= 1)
     return 0;
 
   MString portName = "meshes";

@@ -48,7 +48,8 @@ class FabricSpliceRenderCallback {
     static void enable(bool enable);
     static void disable();
     static bool isEnabled();
-   
+    
+    static bool isRTR2Enable();
     static void drawID();
     static MStatus drawRTR2(uint32_t width, uint32_t height, uint32_t phase);
     static void preDrawCallback(const MString &panelName, void *clientData);

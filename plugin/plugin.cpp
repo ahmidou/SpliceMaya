@@ -1,6 +1,3 @@
-//
-// Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
-//
 
 // [andrew 20130620] all hell breaks loose in Linux if these aren't included first
 #include <QtCore/QDataStream>
@@ -32,8 +29,8 @@
 #include "FabricSpliceRenderCallback.h"
 #include "FabricDFGWidgetCommand.h"
 #include "FabricDFGWidget.h"
-#include "FabricDFGMayaNode.h"
-#include "FabricDFGMayaDeformer.h"
+#include "FabricDFGCanvasNode.h"
+#include "FabricDFGCanvasDeformer.h"
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricUpgradeAttrCommand.h"
@@ -46,14 +43,14 @@
 
 // FE Owned IDs 0x0011AE40 - 0x0011AF3F
 const MTypeId gFirstValidNodeID(0x0011AE40);
-// FabricSpliceMayaNode 0x0011AE41
-// FabricSpliceMayaDeformer 0x0011AE42
-// FabricSpliceInlineGeometry 0x0011AE43 /* no longer in use, but not available */
-// FabricSpliceMayaDebugger 0x0011AE44 /* no longer in use, but not available */
-// FabricSpliceMayaData 0x0011AE45
-// FabricDFGMayaNode 0x0011AE46 // dfgMayaNode
-// FabricDFGMayaNode 0x0011AE47 // canvasNode
-// FabricDFGMayaDeformer 0x0011AE48 // canvasDeformer
+// FabricSpliceMayaNode       0x0011AE41
+// FabricSpliceMayaDeformer   0x0011AE42
+// FabricSpliceInlineGeometry 0x0011AE43  /* no longer in use, but not available */
+// FabricSpliceMayaDebugger   0x0011AE44  /* no longer in use, but not available */
+// FabricSpliceMayaData       0x0011AE45
+// FabricDFGMayaNode          0x0011AE46  /* no longer in use, but not available */
+// FabricDFGMayaNode          0x0011AE47  // canvasNode
+// FabricDFGMayaDeformer      0x0011AE48  // canvasDeformer
 const MTypeId gLastValidNodeID(0x0011AF3F);
 
 MCallbackId gOnSceneNewCallbackId;
@@ -65,22 +62,15 @@ MCallbackId gOnSceneExportCallbackId;
 MCallbackId gOnSceneCreateReferenceCallbackId;
 MCallbackId gOnSceneImportReferenceCallbackId;
 MCallbackId gOnSceneLoadReferenceCallbackId;
-
 MCallbackId gOnNodeAddedCallbackId;
 MCallbackId gOnNodeRemovedCallbackId;
 MCallbackId gOnNodeAddedDFGCallbackId;
 MCallbackId gOnNodeRemovedDFGCallbackId;
 MCallbackId gOnAnimCurveEditedCallbackId;
- 
 MCallbackId gOnBeforeSceneOpenCallbackId;
 MCallbackId gOnModelPanelSetFocusCallbackId;
 
-//void resetRenderCallbacks() {
-//  for(unsigned int i=0;i<gRenderCallbackCount;i++)
-//    gRenderCallbacksSet[i] = false;
-//}
- 
-void onSceneSave(void *userData) {
+void onSceneSave(void *userData){
 
   MStatus status = MS::kSuccess;
   mayaSetLastLoadedScene(MFileIO::beforeSaveFilename(&status));
@@ -97,8 +87,9 @@ void onSceneSave(void *userData) {
   FabricDFGBaseInterface::allStorePersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
-void onSceneNew(void *userData) {
+void onSceneNew(void *userData){
   FabricSpliceEditorWidget::postClearAll();
+  FabricSpliceRenderCallback::sDrawContext.invalidate(); 
 
   MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
   MGlobal::executeCommandOnIdle(cmd, false);
@@ -126,8 +117,9 @@ void onSceneNew(void *userData) {
   }
 }
 
-void onSceneLoad(void *userData) {
+void onSceneLoad(void *userData){
   FabricSpliceEditorWidget::postClearAll();
+  FabricSpliceRenderCallback::sDrawContext.invalidate(); 
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
     FabricSplice::Logging::enableTimers();
@@ -142,9 +134,11 @@ void onSceneLoad(void *userData) {
   for(uint32_t i = 0; i < instances.size(); ++i){
     FabricSpliceBaseInterface *node = instances[i];
     node->restoreFromPersistenceData(mayaGetLastLoadedScene(), &status); 
-    if(status != MS::kSuccess) return;
+    if( status != MS::kSuccess)
+      return;
   }
   FabricSpliceEditorWidget::postClearAll();
+
   FabricDFGBaseInterface::allRestoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
@@ -159,7 +153,7 @@ void onSceneLoad(void *userData) {
 }
 
 bool gSceneIsDestroying = false;
-void onMayaExiting(void *userData) {
+void onMayaExiting(void *userData){
   gSceneIsDestroying = true;
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
@@ -169,33 +163,16 @@ void onMayaExiting(void *userData) {
   }
 
   FabricDFGBaseInterface::allResetInternalData();
+
   FabricDFGWidget::Destroy();
+
   FabricSplice::DestroyClient(true);
 }
 
-bool isDestroyingScene() {
+bool isDestroyingScene()
+{
   return gSceneIsDestroying;
 }
-
-// *************
-
-void loadMenu() {
-  MString cmd = "source \"FabricSpliceMenu.mel\"; FabricSpliceLoadMenu(\"";
-  cmd += "FabricMaya";
-  cmd += "\");";
-  MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
-  if (commandStatus != MStatus::kSuccess)
-    MGlobal::displayError("Failed to load FabricSpliceMenu.mel. Adjust your MAYA_SCRIPT_PATH!");
-}
-
-void unloadMenu() {
-  MString cmd = "source \"FabricSpliceMenu.mel\"; FabricSpliceUnloadMenu();";
-  MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
-  if (commandStatus != MStatus::kSuccess)
-    MGlobal::displayError("Failed to load FabricSpliceMenu.mel. Adjust your MAYA_SCRIPT_PATH!");
-}
-
-// *************
 
 #define MAYA_REGISTER_DFGUICMD( plugin, Name ) \
   plugin.registerCommand( \
@@ -221,10 +198,16 @@ MAYA_EXPORT initializePlugin(MObject obj)
     MGlobal::displayInfo("[Fabric for Maya]: evalContext has been disabled via the environment variable FABRIC_MAYA_DISABLE_EVALCONTEXT.");
 
   MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
-  MStatus status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
+  MStatus status;
+
+  status = plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator  );
 
   loadMenu();
-  FabricSpliceRenderCallback::plug();
+
+  // FE-6558 : Don't plug the render-callback if not interactive.
+  // Otherwise it will crash on linux machine without DISPLAY
+  if (MGlobal::mayaState() == MGlobal::kInteractive)
+    FabricSpliceRenderCallback::plug();
 
   gOnSceneSaveCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeSave, onSceneSave);
   gOnSceneLoadCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterOpen, onSceneLoad);
@@ -236,7 +219,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnSceneCreateReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterCreateReference, onSceneLoad);
   gOnSceneImportReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImportReference, onSceneLoad);
   gOnSceneLoadReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterLoadReference, onSceneLoad);
-
   gOnNodeAddedCallbackId = MDGMessage::addNodeAddedCallback(FabricSpliceBaseInterface::onNodeAdded);
   gOnNodeRemovedCallbackId = MDGMessage::addNodeRemovedCallback(FabricSpliceBaseInterface::onNodeRemoved);
   gOnNodeAddedDFGCallbackId = MDGMessage::addNodeAddedCallback(FabricDFGBaseInterface::onNodeAdded);
@@ -244,6 +226,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnAnimCurveEditedCallbackId = MAnimMessage::addAnimCurveEditedCallback(FabricDFGBaseInterface::onAnimCurveEdited);
  
   plugin.registerData(FabricSpliceMayaData::typeName, FabricSpliceMayaData::id, FabricSpliceMayaData::creator);
+
+
   plugin.registerCommand("fabricSplice", FabricSpliceCommand::creator);//, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceEditor", FabricSpliceEditorCmd::creator, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceManipulation", FabricSpliceManipulationCmd::creator);
@@ -251,14 +235,15 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerNode("spliceMayaNode", FabricSpliceMayaNode::id, FabricSpliceMayaNode::creator, FabricSpliceMayaNode::initialize);
   plugin.registerNode("spliceMayaDeformer", FabricSpliceMayaDeformer::id, FabricSpliceMayaDeformer::creator, FabricSpliceMayaDeformer::initialize, MPxNode::kDeformerNode);
 
+
   MQtUtil::registerUIType("FabricSpliceEditor", FabricSpliceEditorWidget::creator, "fabricSpliceEditor");
+
   plugin.registerCommand("fabricDFG", FabricDFGWidgetCommand::creator, FabricDFGWidgetCommand::newSyntax);
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
 
-  // obsolete node
-  plugin.registerNode("dfgMayaNode", 0x0011AE46, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
   plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
   plugin.registerNode("canvasDeformer", FabricDFGMayaDeformer::id, FabricDFGMayaDeformer::creator, FabricDFGMayaDeformer::initialize, MPxNode::kDeformerNode);
+
   plugin.registerCommand("FabricCanvasGetContextID", FabricDFGGetContextIDCommand::creator, FabricDFGGetContextIDCommand::newSyntax);
   plugin.registerCommand("FabricCanvasGetBindingID", FabricDFGGetBindingIDCommand::creator, FabricDFGGetBindingIDCommand::newSyntax);
   plugin.registerCommand("FabricCanvasDestroyClient", FabricDFGDestroyClientCommand::creator, FabricDFGDestroyClientCommand::newSyntax);
@@ -294,10 +279,28 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MAYA_REGISTER_DFGUICMD( plugin, SetRefVarPath );
   MAYA_REGISTER_DFGUICMD( plugin, SplitFromPreset );
 
-  plugin.registerCommand("dfgImportJSON", FabricDFGImportJSONCommand::creator, FabricDFGImportJSONCommand::newSyntax);
-  plugin.registerCommand("dfgReloadJSON", FabricDFGReloadJSONCommand::creator, FabricDFGReloadJSONCommand::newSyntax);
-  plugin.registerCommand("dfgExportJSON", FabricDFGExportJSONCommand::creator, FabricDFGExportJSONCommand::newSyntax);
-  plugin.registerCommand("FabricCanvasSetExecuteShared", FabricCanvasSetExecuteSharedCommand::creator, FabricCanvasSetExecuteSharedCommand::newSyntax);
+  plugin.registerCommand(
+    "dfgImportJSON",
+    FabricDFGImportJSONCommand::creator,
+    FabricDFGImportJSONCommand::newSyntax
+    );
+  plugin.registerCommand(
+    "dfgReloadJSON",
+    FabricDFGReloadJSONCommand::creator,
+    FabricDFGReloadJSONCommand::newSyntax
+    );
+  plugin.registerCommand(
+    "dfgExportJSON",
+    FabricDFGExportJSONCommand::creator,
+    FabricDFGExportJSONCommand::newSyntax
+    );
+
+  plugin.registerCommand(
+    "FabricCanvasSetExecuteShared",
+    FabricCanvasSetExecuteSharedCommand::creator,
+    FabricCanvasSetExecuteSharedCommand::newSyntax
+    );
+
   plugin.registerCommand("fabricUpgradeAttrs", FabricUpgradeAttrCommand::creator, FabricUpgradeAttrCommand::newSyntax);
 
   MString pluginPath = plugin.loadPath();
@@ -314,10 +317,9 @@ MAYA_EXPORT initializePlugin(MObject obj)
   // FabricSplice::SceneManagement::setManipulationFunc(FabricSpliceBaseInterface::manipulationCallback);
 
   MGlobal::executePythonCommandOnIdle("import AEspliceMayaNodeTemplate", true);
-  MGlobal::executePythonCommandOnIdle("import AEdfgMayaNodeTemplate", true);
   MGlobal::executePythonCommandOnIdle("import AEcanvasNodeTemplate", true);
 
-  if(MGlobal::mayaState() == MGlobal::kInteractive)
+  if (MGlobal::mayaState() == MGlobal::kInteractive)
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Interactive);
   else
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
@@ -339,7 +341,6 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand("fabricUpgradeAttrs");
   plugin.deregisterCommand("FabricSpliceEditor");
   plugin.deregisterCommand("proceedToNextScene");
-  plugin.deregisterNode(0x0011AE46);
   plugin.deregisterNode(FabricSpliceMayaNode::id);
   plugin.deregisterNode(FabricSpliceMayaDeformer::id);
 
@@ -351,18 +352,26 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MSceneMessage::removeCallback(gOnSceneCreateReferenceCallbackId);
   MSceneMessage::removeCallback(gOnSceneImportReferenceCallbackId);
   MSceneMessage::removeCallback(gOnSceneLoadReferenceCallbackId);
+  MEventMessage::removeCallback(gOnModelPanelSetFocusCallbackId);
 
-  FabricSpliceRenderCallback::unplug();
+  // FE-6558 : Don't plug the render-callback if not interactive.
+  // Otherwise it will crash on linux machine without DISPLAY
+  if (MGlobal::mayaState() == MGlobal::kInteractive)
+    FabricSpliceRenderCallback::unplug();
 
   MDGMessage::removeCallback(gOnNodeAddedCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedCallbackId);
+
   MDGMessage::removeCallback(gOnNodeAddedDFGCallbackId);
   MDGMessage::removeCallback(gOnNodeRemovedDFGCallbackId);
   MDGMessage::removeCallback(gOnAnimCurveEditedCallbackId);
 
   plugin.deregisterData(FabricSpliceMayaData::id);
+
   MQtUtil::deregisterUIType("FabricSpliceEditor");
+
   plugin.deregisterContextCommand("FabricSpliceToolContext", "FabricSpliceToolCommand");
+
   plugin.deregisterCommand("fabricDFG");
   MQtUtil::deregisterUIType("FabricDFGWidget");
   plugin.deregisterNode(FabricDFGMayaNode::id);
@@ -402,14 +411,33 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand( "dfgImportJSON" );
   plugin.deregisterCommand( "dfgReloadJSON" );
   plugin.deregisterCommand( "dfgExportJSON" );
-  
+
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by
   // destroying the Core client, can cause Maya to crash on OS X.
   // 
   FabricSplice::Logging::setKLReportFunc(0);
+
   FabricSplice::DestroyClient();
   FabricSplice::Finalize();
-
   return status;
 }
+
+void loadMenu()
+{
+  MString cmd = "source \"FabricSpliceMenu.mel\"; FabricSpliceLoadMenu(\"";
+  cmd += "FabricMaya";
+  cmd += "\");";
+  MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
+  if (commandStatus != MStatus::kSuccess)
+    MGlobal::displayError("Failed to load FabricSpliceMenu.mel. Adjust your MAYA_SCRIPT_PATH!");
+}
+
+void unloadMenu()
+{
+  MString cmd = "source \"FabricSpliceMenu.mel\"; FabricSpliceUnloadMenu();";
+  MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
+  if (commandStatus != MStatus::kSuccess)
+    MGlobal::displayError("Failed to load FabricSpliceMenu.mel. Adjust your MAYA_SCRIPT_PATH!");
+}
+

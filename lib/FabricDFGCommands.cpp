@@ -574,14 +574,16 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddSetCommand::executeDFGUICmd(
   return cmd;
 }
 
-void FabricDFGCnxnCommand::AddSyntax( MSyntax &syntax )
+// FabricDFGConnectCommand
+
+void FabricDFGConnectCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
   syntax.addFlag("-s", "-srcPortPath", MSyntax::kString);
   syntax.addFlag("-d", "-dstPortPath", MSyntax::kString);
 }
 
-void FabricDFGCnxnCommand::GetArgs(
+void FabricDFGConnectCommand::GetArgs(
   MArgParser &argParser,
   Args &args
   )
@@ -602,8 +604,6 @@ void FabricDFGCnxnCommand::GetArgs(
       argParser.flagArgumentString( "dstPortPath", 0 ).asChar()
       );
 }
-
-// FabricDFGConnectCommand
 
 FabricUI::DFG::DFGUICmd *FabricDFGConnectCommand::executeDFGUICmd(
   MArgParser &argParser
@@ -626,6 +626,47 @@ FabricUI::DFG::DFGUICmd *FabricDFGConnectCommand::executeDFGUICmd(
 
 // FabricDFGDisconnectCommand
 
+void FabricDFGDisconnectCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-s", "-srcPortPath", MSyntax::kString);
+  syntax.addFlag("-d", "-dstPortPath", MSyntax::kString);
+}
+
+void FabricDFGDisconnectCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "srcPortPath" ) )
+    throw ArgException( MS::kFailure, "-s (-srcPortPath) not provided." );
+  FTL::StrRef srcPortsStr =
+    argParser.flagArgumentString( "srcPortPath", 0 ).asChar();
+  while ( !srcPortsStr.empty() )
+  {
+    FTL::StrRef::Split split = srcPortsStr.trimSplit('|');
+    args.srcPorts.append(
+      QString::fromUtf8( split.first.data(), split.first.size() )
+      );
+    srcPortsStr = split.second;
+  }
+
+  if ( !argParser.isFlagSet( "dstPortPath" ) )
+    throw ArgException( MS::kFailure, "-s (-dstPortPath) not provided." );
+  FTL::StrRef dstPortsStr =
+    argParser.flagArgumentString( "dstPortPath", 0 ).asChar();
+  while ( !dstPortsStr.empty() )
+  {
+    FTL::StrRef::Split split = dstPortsStr.trimSplit('|');
+    args.dstPorts.append(
+      QString::fromUtf8( split.first.data(), split.first.size() )
+      );
+    dstPortsStr = split.second;
+  }
+}
+
 FabricUI::DFG::DFGUICmd *FabricDFGDisconnectCommand::executeDFGUICmd(
   MArgParser &argParser
   )
@@ -638,8 +679,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGDisconnectCommand::executeDFGUICmd(
       args.binding,
       args.execPath,
       args.exec,
-      args.srcPort,
-      args.dstPort
+      args.srcPorts,
+      args.dstPorts
       );
   cmd->doit();
   return cmd;
@@ -1905,6 +1946,11 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
     {
       json = argParser.flagArgumentString("json", 0);
     }
+
+    // check if the graph is not empty
+    FabricCore::DFGExec exec = interf->getDFGExec();
+    if(exec.getExecPortCount() > 1 || exec.getNodeCount() > 0)
+      throw ArgException( MS::kFailure, MString(getName()) + ": The Canvas Graph is not empty. You can only load graphs onto empty Canvas nodes.");
 
     interf->restoreFromJSON(json);
     if(asReferenced)

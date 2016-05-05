@@ -36,10 +36,16 @@ static void ThrowIncompatibleDataArrayTypes(
 
 static void ThrowInvalidDataType( FTL::StrRef dataTypeStr )
 {
-  std::string error;
-  error += "Unhandled DataType '";
-  error += dataTypeStr;
-  error += "'";
+  std::string error = "";
+  if (   dataTypeStr != FTL_STR("Execute")
+      && dataTypeStr != FTL_STR("ManipHandle")    // [FE-6166]
+      && dataTypeStr != FTL_STR("DrawingHandle")  // [FE-6231]
+     )
+  {
+    error += "Unhandled DataType '";
+    error += dataTypeStr;
+    error += "'";
+  }
   throw FabricCore::Exception( error.c_str() );
 }
 
