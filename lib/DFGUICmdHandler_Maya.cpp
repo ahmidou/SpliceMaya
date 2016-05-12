@@ -524,6 +524,32 @@ QString DFGUICmdHandler_Maya::dfgDoAddPort(
   return QString::fromUtf8( mResult.asChar() );
 }
 
+QString DFGUICmdHandler_Maya::dfgDoAddBlock(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QString desiredName,
+  QPointF pos
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_AddBlock::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("d"), desiredName, cmd );
+  encodePositionArg( pos, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+
+  return QString::fromUtf8( mResult.asChar() );
+}
+
 QString DFGUICmdHandler_Maya::dfgDoCreatePreset(
   FabricCore::DFGBinding const &binding,
   QString execPath,

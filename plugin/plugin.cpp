@@ -264,6 +264,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("FabricCanvasDestroyClient", FabricDFGDestroyClientCommand::creator, FabricDFGDestroyClientCommand::newSyntax);
 
   MAYA_REGISTER_DFGUICMD( plugin, AddBackDrop );
+  MAYA_REGISTER_DFGUICMD( plugin, AddBlock );
   MAYA_REGISTER_DFGUICMD( plugin, AddFunc );
   MAYA_REGISTER_DFGUICMD( plugin, AddGet );
   MAYA_REGISTER_DFGUICMD( plugin, AddGraph );
@@ -400,6 +401,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterNode(FabricDFGMayaDeformer::id);
 
   MAYA_DEREGISTER_DFGUICMD( plugin, AddBackDrop );
+  MAYA_DEREGISTER_DFGUICMD( plugin, AddBlock );
   MAYA_DEREGISTER_DFGUICMD( plugin, AddFunc );
   MAYA_DEREGISTER_DFGUICMD( plugin, AddGet );
   MAYA_DEREGISTER_DFGUICMD( plugin, AddGraph );

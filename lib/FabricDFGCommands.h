@@ -428,6 +428,33 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_AddPort
   > MayaDFGUICmd_AddPort;
 
+class FabricDFGAddBlockCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString desiredName;
+    QPointF pos;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddBlockCommand,
+  FabricUI::DFG::DFGUICmd_AddBlock
+  > MayaDFGUICmd_AddBlock;
+
 class FabricDFGCreatePresetCommand
   : public FabricDFGExecCommand
 {
