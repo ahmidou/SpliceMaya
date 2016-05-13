@@ -76,7 +76,13 @@ MStatus mayaErrorOccured()
 
 void mayaKLReportFunc(const char * message, unsigned int length)
 {
-  MGlobal::displayInfo(MString("[KL]: ")+MString(message));
+  if (length <= 1000)
+    MGlobal::displayInfo(MString("[KL]: ")+MString(message));
+  else
+  {
+    MString cropped(message, 1000);
+    MGlobal::displayInfo(MString("[KL]: ")+cropped+MString(" [long message, only first 1000 characters displayed]"));
+  }
 }
 
 void mayaCompilerErrorFunc(unsigned int row, unsigned int col, const char * file, const char * level, const char * desc)
