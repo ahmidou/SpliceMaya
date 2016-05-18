@@ -148,8 +148,12 @@ void onSceneLoad(void *userData){
       std::string name = FabricSplice::Logging::getTimerName(i);
       FabricSplice::Logging::logTimer(name.c_str());
       FabricSplice::Logging::resetTimer(name.c_str());
-    }    
-  } 
+    }
+  }
+
+  // [FE-6612] invalidate all DFG nodes.
+  for (unsigned int i=0;i<FabricDFGBaseInterface::getNumInstances();i++)
+    FabricDFGBaseInterface::getInstanceByIndex(i)->invalidateNode();
 }
 
 bool gSceneIsDestroying = false;

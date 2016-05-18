@@ -153,6 +153,13 @@ FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceById(unsigned int id
   return NULL;
 }
 
+FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByIndex(unsigned int index)
+{
+  if (index < _instances.size())
+    return _instances[index];
+  return NULL;
+}
+
 unsigned int FabricDFGBaseInterface::getNumInstances()
 {
   return (unsigned int)_instances.size();
