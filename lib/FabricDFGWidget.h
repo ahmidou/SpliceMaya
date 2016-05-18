@@ -54,12 +54,14 @@ public:
 public slots:
   virtual void onUndo();
   virtual void onRedo();
+  virtual void onSelectCanvasNodeInDCC();
 
 private slots:
   void onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog * dialog);
   void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog, FTL::JSONObjectEnc<> * additionalMetaData);
 
 protected:
+  virtual void initMenu();
   void setCurrentUINodeName(const char * node);
 
 private:

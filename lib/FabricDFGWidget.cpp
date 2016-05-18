@@ -58,6 +58,22 @@ QWidget * FabricDFGWidget::creator(QWidget * parent, const QString & name)
   return Instance();
 }
 
+void FabricDFGWidget::initMenu() {
+
+  m_menuBar = new QMenuBar(this);
+  m_menuBar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  addWidget(m_menuBar);
+
+  // populate the menu bar
+  QObject::connect(
+    m_dfgWidget,
+    SIGNAL(additionalMenuActionsRequested(QString, QMenu*, bool)),
+    this, SLOT(onAdditionalMenuActionsRequested(QString, QMenu *, bool))
+    );
+
+  m_dfgWidget->populateMenuBar(m_menuBar, false /* addFileMenu */, true /* addDCCMenu */);
+}
+
 void FabricDFGWidget::SetCurrentUINodeName(const char * node)
 {
   if ( node )
@@ -105,6 +121,11 @@ void FabricDFGWidget::onUndo()
 void FabricDFGWidget::onRedo()
 {
   MGlobal::executeCommandOnIdle("redo");
+}
+
+void FabricDFGWidget::onSelectCanvasNodeInDCC()
+{
+  MGlobal::executeCommandOnIdle(MString("select ") + MString(m_currentUINodeName.c_str()));
 }
 
 void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
