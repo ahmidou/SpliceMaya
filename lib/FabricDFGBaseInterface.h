@@ -50,6 +50,7 @@ public:
 
   static FabricDFGBaseInterface * getInstanceByName(const std::string & name);
   static FabricDFGBaseInterface * getInstanceById(unsigned int id);
+  static FabricDFGBaseInterface * getInstanceByIndex(unsigned int index);
   static unsigned int getNumInstances();
 
   virtual MObject getThisMObject() = 0;
