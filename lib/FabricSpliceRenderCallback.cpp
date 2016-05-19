@@ -63,6 +63,10 @@ inline void initID() {
 }
 
 bool FabricSpliceRenderCallback::isRTR2Enable() {
+#ifndef FABRIC_SCENEHUB
+  return false;
+#endif
+
   if(!canDraw()) 
     return false;
   
