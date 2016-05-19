@@ -82,10 +82,10 @@ void FabricDFGWidget::SetCurrentUINodeName(const char * node)
 
 void FabricDFGWidget::setCurrentUINodeName(const char * node)
 {
-  m_currentUINodeName = node;
+  std::string currentUINodeName = node;
 
   FabricDFGBaseInterface *interf =
-    FabricDFGBaseInterface::getInstanceByName( m_currentUINodeName.c_str() );
+    FabricDFGBaseInterface::getInstanceByName( currentUINodeName.c_str() );
 
   FabricCore::DFGBinding binding = interf->getDFGBinding();
   FabricCore::DFGExec exec = binding.getExec();
@@ -125,7 +125,15 @@ void FabricDFGWidget::onRedo()
 
 void FabricDFGWidget::onSelectCanvasNodeInDCC()
 {
-  MGlobal::executeCommandOnIdle(MString("select ") + MString(m_currentUINodeName.c_str()));
+  MString interfIdStr = getDfgWidget()->getUIController()->getBinding().getMetadata("maya_id");
+  if (interfIdStr.length() == 0)
+    return;
+  FabricDFGBaseInterface *interf = FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
+  if (interf)
+  {
+    MFnDependencyNode mayaNode(interf->getThisMObject());
+   MGlobal::executeCommandOnIdle(MString("select ") + mayaNode.name(), true /* displayEnabled */);
+  }
 }
 
 void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)

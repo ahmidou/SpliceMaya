@@ -67,7 +67,6 @@ protected:
 private:
 
   DFGUICmdHandler_Maya m_cmdHandler;
-  std::string m_currentUINodeName;
   FabricCore::DFGHost m_dfgHost;
   bool m_initialized;
 
