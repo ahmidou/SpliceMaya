@@ -24,7 +24,11 @@ using namespace FabricUI;
 
 class FabricDFGBaseInterface;
 
+#ifdef FABRIC_SCENEHUB
 class FabricDFGWidget : public DFG::SHDFGCombinedWidget {
+#else
+class FabricDFGWidget : public DFG::DFGCombinedWidget {
+#endif
 
   Q_OBJECT
   
