@@ -506,3 +506,4 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
   FabricSpliceEditorWidget::postUpdateAll();
   return mayaErrorOccured();
 }
+
