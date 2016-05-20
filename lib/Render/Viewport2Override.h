@@ -56,10 +56,15 @@ class UserRenderOperationOverride : public MUserRenderOperation {
     UserRenderOperationOverride(const MString &name) : MUserRenderOperation(name) {}
     
     virtual MStatus execute(const MDrawContext &context) {
-      int originX, originY, width, height;
-      MStatus status = context.getViewportDimensions(originX, originY, width, height);
-      (void)status;
-      FabricSpliceRenderCallback::drawID();//width, height, 4);
+      if(FabricSpliceRenderCallback::isRTR2Enable())
+      {
+        int originX, originY, width, height;
+        context.getViewportDimensions(originX, originY, width, height);
+        FabricSpliceRenderCallback::drawRTR2(width, height, 4);
+      }
+      else
+        FabricSpliceRenderCallback::drawID();
+
       return MStatus::kSuccess;
     }
 };

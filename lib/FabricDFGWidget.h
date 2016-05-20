@@ -14,7 +14,7 @@
 #include <maya/MStatus.h>
 #include <maya/MString.h>
 
-#include <DFG/DFGCombinedWidget.h>
+#include <SceneHub/DFG/SHDFGCombinedWidget.h>
 #include <DFG/Dialogs/DFGBaseDialog.h>
 
 #include <FabricSplice.h>
@@ -24,7 +24,11 @@ using namespace FabricUI;
 
 class FabricDFGBaseInterface;
 
+#ifdef FABRIC_SCENEHUB
+class FabricDFGWidget : public DFG::SHDFGCombinedWidget {
+#else
 class FabricDFGWidget : public DFG::DFGCombinedWidget {
+#endif
 
   Q_OBJECT
   
@@ -62,6 +66,7 @@ private slots:
 
 protected:
   virtual void initMenu();
+  virtual void refreshScene();
   void setCurrentUINodeName(const char * node);
 
 private:
