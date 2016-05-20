@@ -47,8 +47,7 @@ inline bool canDraw() {
     return false;
   if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
     return false;
- 
-  return true;
+  return gRTRPassEnabled;
 }
 
 inline void initID() {
@@ -169,6 +168,8 @@ inline void setupIDViewport(M3dView &view, const MString &panelName) {
 }
 
 void FabricSpliceRenderCallback::drawID() {
+  if(!canDraw()) return;
+
   try
   {
     FabricSplice::SceneManagement::drawOpenGL(sDrawContext);
@@ -209,7 +210,6 @@ void FabricSpliceRenderCallback::preDrawCallback_2(MHWRender::MDrawContext &cont
 #endif
 
 void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void *clientData) {
-  if(!canDraw()) return;
 
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
