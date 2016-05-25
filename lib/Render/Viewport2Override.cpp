@@ -5,6 +5,37 @@
 #include "Viewport2Override.h"
 using namespace MHWRender;
 
+class SceneRenderOverride : public MSceneRender {
+  public:
+    SceneRenderOverride(const MString &name) : MSceneRender(name) {}
+    virtual MClearOperation& clearOperation() {
+      MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
+      bool gradient = renderer->useGradient();
+      MColor color1 = renderer->clearColor();
+      MColor color2 = renderer->clearColor2();
+      float c1[4] = { color1[0], color1[1], color1[2], 1.0f };
+      float c2[4] = { color2[0], color2[1], color2[2], 1.0f };
+      mClearOperation.setClearColor( c1 );
+      mClearOperation.setClearColor2( c2 );
+      mClearOperation.setClearGradient( gradient);
+      return mClearOperation;
+    }
+};
+ 
+class UserRenderOperationOverride : public MUserRenderOperation {
+  public:
+    UserRenderOperationOverride(const MString &name) : MUserRenderOperation(name) {}
+    
+    virtual MStatus execute(const MDrawContext &context) {
+      int originX, originY, width, height;
+      MStatus status = context.getViewportDimensions(originX, originY, width, height);
+      (void)status;
+      FabricSpliceRenderCallback::drawID();//width, height, 4);
+      return MStatus::kSuccess;
+    }
+};
+
+
 Viewport2Override::Viewport2Override(const MString &name) : MRenderOverride(name) {
   mCurrentOp = -1;
   mOps[0] = mOps[1] = mOps[2] = mOps[3] = NULL;
@@ -20,6 +51,14 @@ Viewport2Override::~Viewport2Override() {
     mOps[i] = NULL;
   }
 }
+
+MString Viewport2Override::uiName() const { 
+  return "Fabric Viewport 2.0"; 
+}
+    
+DrawAPI Viewport2Override::supportedDrawAPIs() const { 
+  return kAllDevices; 
+};
 
 MStatus Viewport2Override::setup(const MString &destination) {
   MRenderer *theRenderer = MRenderer::theRenderer();
