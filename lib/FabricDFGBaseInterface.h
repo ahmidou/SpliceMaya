@@ -120,7 +120,7 @@ protected:
   void onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made);
   MStatus setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
   MStatus preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode);
 #endif
 
@@ -146,7 +146,7 @@ protected:
   unsigned int m_evalIDAtLastEvaluate;
   MPlugArray _affectedPlugs;
 
-#if _SPLICE_MAYA_VERSION < 2013
+#if MAYA_API_VERSION < 201300
   static std::map<std::string, int> _nodeCreatorCounts;
 #endif
   static std::vector<FabricDFGBaseInterface*> _instances;

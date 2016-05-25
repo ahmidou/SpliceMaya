@@ -2785,7 +2785,7 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
   MIntArray    mayaCounts;
   MIntArray    mayaIndices;
 
-  #if _SPLICE_MAYA_VERSION < 2015         // FE-5118 ("crash when saving scene with an empty polygon mesh")
+  #if MAYA_API_VERSION < 201500         // FE-5118 ("crash when saving scene with an empty polygon mesh")
 
   if (nbPoints < 3 || nbPolygons == 0)
   {

@@ -33,12 +33,12 @@
 #include <maya/MFnPluginData.h>
 #include <maya/MAnimControl.h>
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 # include <maya/MEvaluationNode.h>
 #endif
 
 std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
-#if _SPLICE_MAYA_VERSION < 2013
+#if MAYA_API_VERSION < 201300
   std::map<std::string, int> FabricDFGBaseInterface::_nodeCreatorCounts;
 #endif
 unsigned int FabricDFGBaseInterface::s_maxID = 1;
@@ -98,7 +98,7 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   if(m_binding.isValid())
     return;
 
-#if _SPLICE_MAYA_VERSION < 2013
+#if MAYA_API_VERSION < 201300
   // in earlier versions than 2013 maya would construct each node
   // once on startup. we avoid this by counting the numbers of nodes
   // constructor for each node type.
@@ -1970,7 +1970,7 @@ bool FabricDFGBaseInterface::getExecuteShared()
   return m_executeShared;
 }
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 MStatus FabricDFGBaseInterface::preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode)
 {
   MStatus status;

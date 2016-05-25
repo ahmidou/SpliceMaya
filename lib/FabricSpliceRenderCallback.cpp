@@ -10,7 +10,7 @@
 #include <maya/MEventMessage.h>
 #include <maya/MViewport2Renderer.h>
 #include <maya/MSelectionList.h>
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 #include "Viewport2Override.h"
 #endif
 
@@ -177,7 +177,7 @@ void FabricSpliceRenderCallback::drawID() {
 // In maya 2015, there is a bug where the normals are inverted after using the rectangular selection.
 // In order to fix it, we force Maya to refresh.
 // Now, it just glitchs.
-#if _SPLICE_MAYA_VERSION == 2015
+#if MAYA_API_VERSION >= 201500 && MAYA_API_VERSION < 201600
   MGlobal::executeCommandOnIdle("refresh;", false);
 #endif
 
@@ -201,7 +201,7 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   setupIDViewport(view, panelName);
 }
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 void FabricSpliceRenderCallback::preDrawCallback_2(MHWRender::MDrawContext &context, void* clientData) {
   MString panelName;
   context.renderingDestination(panelName);
@@ -214,7 +214,7 @@ void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
   if(
       getActiveRenderName(view) == "vp2Renderer" ||   
       getActiveRenderName(view) == "Viewport2Override"
@@ -248,7 +248,7 @@ void FabricSpliceRenderCallback::plug() {
     gPostDrawCallbacks[p] = MUiMessage::add3dViewPostRenderMsgCallback(panelName, postDrawCallback, 0, &status);
   }
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer) 
     {
@@ -267,7 +267,7 @@ void FabricSpliceRenderCallback::unplug() {
     MUiMessage::removeCallback(gPostDrawCallbacks[i]);
   }
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer)
     {

@@ -287,7 +287,7 @@ MStatus FabricSpliceMayaDeformer::connectionBroken(const MPlug &plug, const MPlu
   return MS::kUnknownParameter;
 }
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 MStatus FabricSpliceMayaDeformer::preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode)
 {
   return FabricSpliceBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);

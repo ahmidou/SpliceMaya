@@ -128,8 +128,6 @@ Import(uiLibPrefix+'Flags')
 # ui flags
 env.MergeFlags(locals()[uiLibPrefix + 'Flags'])
 
-env.Append(CPPDEFINES = ["_SPLICE_MAYA_VERSION="+str(MAYA_VERSION[:4])])
-
 env.MergeFlags(sharedCapiFlags)
 env.MergeFlags(spliceFlags)
 env.MergeFlags(ADDITIONAL_FLAGS)
@@ -187,7 +185,6 @@ if FABRIC_BUILD_OS == 'Windows':
       sedCmd = sedPath
 
 moduleFileMayaVersion = MAYA_VERSION
-moduleFileMayaVersion = moduleFileMayaVersion[:moduleFileMayaVersion.find('201')+4]
 
 if FABRIC_BUILD_OS == 'Darwin':
   pythonVersion = '2.7'

@@ -52,7 +52,7 @@ class FabricSpliceRenderCallback {
     static void drawID();
     static void preDrawCallback(const MString &panelName, void *clientData);
     static void postDrawCallback(const MString &panelName, void *clientData);
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
     static void preDrawCallback_2(MHWRender::MDrawContext &context, void* clientData);
 #endif
     

@@ -129,7 +129,7 @@ MStatus FabricDFGMayaNode::connectionBroken(const MPlug &plug, const MPlug &othe
   return MS::kUnknownParameter;
 }
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 MStatus FabricDFGMayaNode::preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode)
 {
   return FabricDFGBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);

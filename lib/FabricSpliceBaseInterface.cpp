@@ -13,7 +13,7 @@
 #include <sstream>
 #include <algorithm>
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 #include <maya/MEvaluationManager.h>
 #endif
 #include <maya/MGlobal.h>
@@ -31,12 +31,12 @@
 #include <maya/MFnPluginData.h>
 #include <maya/MAnimControl.h>
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 # include <maya/MEvaluationNode.h>
 #endif
 
 std::vector<FabricSpliceBaseInterface*> FabricSpliceBaseInterface::_instances;
-#if _SPLICE_MAYA_VERSION < 2013
+#if MAYA_API_VERSION < 201300
   std::map<std::string, int> FabricSpliceBaseInterface::_nodeCreatorCounts;
 #endif
 
@@ -79,7 +79,7 @@ void FabricSpliceBaseInterface::constructBaseInterface(){
   if(_spliceGraph.isValid())
     return;
 
-#if _SPLICE_MAYA_VERSION < 2013
+#if MAYA_API_VERSION < 201300
   // in earlier versions than 2013 maya would construct each node
   // once on startup. we avoid this by counting the numbers of nodes
   // constructor for each node type.
@@ -1273,7 +1273,7 @@ MStatus FabricSpliceBaseInterface::setDependentsDirty(
 {
   MStatus status;
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
   bool constructingEvaluationGraph =
     MEvaluationManager::graphConstructionActive();
 #else
@@ -1491,7 +1491,7 @@ void FabricSpliceBaseInterface::managePortObjectValues(bool destroy)
   _portObjectsDestroyed = destroy;
 }
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 MStatus FabricSpliceBaseInterface::preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode)
 {
   MStatus status;
