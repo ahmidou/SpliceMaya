@@ -59,6 +59,8 @@ public slots:
   virtual void onUndo();
   virtual void onRedo();
   virtual void onSelectCanvasNodeInDCC();
+  virtual void onImportGraphInDCC();
+  virtual void onExportGraphInDCC();
 
 private slots:
   void onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog * dialog);

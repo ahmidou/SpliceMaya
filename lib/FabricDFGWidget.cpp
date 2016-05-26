@@ -146,6 +146,16 @@ void FabricDFGWidget::onSelectCanvasNodeInDCC()
   }
 }
 
+void FabricDFGWidget::onImportGraphInDCC()
+{
+  MGlobal::displayError("Import Graph is not yet implemented!");
+}
+
+void FabricDFGWidget::onExportGraphInDCC()
+{
+  MGlobal::displayError("Export Graph is not yet implemented!");
+}
+
 void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
 {
   DFG::DFGController * controller = dialog->getDFGController();
