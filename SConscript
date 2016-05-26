@@ -215,7 +215,7 @@ mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
 installedLibFabricMaya = env.Install(Dir(FABRIC_DIR).Dir('lib'), libFabricMaya)
 mayaFiles.append(installedLibFabricMaya)
 
-for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricDFGTool', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
+for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
 for script in ['AEspliceMayaNodeTemplate', 'AEcanvasNodeTemplate']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.py')))

@@ -78,9 +78,6 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -ec 1 -c ("createNode \"canvasNode\";") "Create Graph (Node)";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("addCanvasDeformer();") "Create Graph (Deformer)";
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -ec 1 -c ("source \"FabricDFGTool.mel\"; fabricLoadDFG();") "Load Graph";
-  menuItem -p $fabricSpliceMenu -ec 1 -c ("source \"FabricDFGTool.mel\"; fabricSaveDFG();") "Save Graph";
-  menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("createReferencedDFGNode();") "Create referenced Graph";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("reloadReferencedDFGNode();") "Reload referenced Graph";
   menuItem -p $fabricSpliceMenu -divider true;
