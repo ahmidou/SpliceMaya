@@ -7,6 +7,7 @@
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
 #include <maya/MFrameContext.h>
+#include <maya/MDrawContext.h>
 #include <maya/MEventMessage.h>
 #include <maya/MViewport2Renderer.h>
 #include <maya/MSelectionList.h>
@@ -48,6 +49,23 @@ inline bool canDraw() {
   if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
     return false;
   return gRTRPassEnabled;
+}
+
+inline MString getActiveRenderName() {
+  MString name = MHWRender::MRenderer::theRenderer()->activeRenderOverride();
+  //MGlobal::displayError("renderName 1 " + name);
+  return name;
+}
+
+inline MString getActiveRenderName(const M3dView &view) {
+  MString name = getActiveRenderName();
+  if(name.numChars() == 0) 
+  {
+    MStatus status;
+    name = view.rendererString(&status);
+  }
+  //MGlobal::displayError("renderName 2" + name);
+  return name;
 }
 
 inline void initID() {
@@ -126,44 +144,31 @@ inline void setProjection(const MMatrix &projection, FabricCore::RTVal &camera) 
   camera.setMember("projection", projectionMat);
 }
 
-inline MString getActiveRenderName(const M3dView &view) {
-  MString name = MHWRender::MRenderer::theRenderer()->activeRenderOverride();
-  if(name.numChars() == 0) 
-  {
-    MStatus status;
-    name = view.rendererString(&status);
-  }
-  //MGlobal::displayError("renderName " + name);
-  return name;
-}
+inline void setupIDViewport(
+  const MString &panelName, 
+  double width, 
+  double height, 
+  const MFnCamera &mCamera,
+  const MMatrix &projection) 
+{
+  if(!canDraw()) return;
 
-inline void setupIDViewport(M3dView &view, const MString &panelName) {
- 
-  // sync the time
+  initID();
+
   FabricSpliceRenderCallback::sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
 
-  //////////////////////////
-  // Setup the viewport
+  FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
   FabricCore::RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
-  double width = view.portWidth();
-  double height = view.portHeight();
+  viewport.callMethod("", "setName", 1, &panelNameVal);
   FabricCore::RTVal args[3] = {
     FabricSpliceRenderCallback::sDrawContext,
     FabricSplice::constructFloat64RTVal(width),
     FabricSplice::constructFloat64RTVal(height)
   };
   viewport.callMethod("", "resize", 3, &args[0]);
-
-  FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
-  viewport.callMethod("", "setName", 1, &panelNameVal);
+ 
   FabricCore::RTVal camera = viewport.callMethod("InlineCamera", "getCamera", 0, 0);
-
-  MDagPath cameraDag; view.getCamera(cameraDag);
-  MFnCamera mCamera(cameraDag);
-  setCamera(view.portWidth(), view.portHeight(), mCamera, camera);
-  
-  MMatrix projection;
-  view.projectionMatrix(projection);
+  setCamera(width, height, mCamera, camera);
   setProjection(projection, camera);
 }
 
@@ -173,10 +178,9 @@ void FabricSpliceRenderCallback::drawID() {
   try
   {
     FabricSplice::SceneManagement::drawOpenGL(sDrawContext);
-
-// In maya 2015, there is a bug where the normals are inverted after using the rectangular selection.
-// In order to fix it, we force Maya to refresh.
-// Now, it just glitchs.
+  // In maya 2015, there is a bug where the normals are inverted after using the rectangular selection.
+  // In order to fix it, we force Maya to refresh.
+  // Now, it just glitchs.
 #if MAYA_API_VERSION >= 201500 && MAYA_API_VERSION < 201600
   MGlobal::executeCommandOnIdle("refresh;", false);
 #endif
@@ -191,21 +195,39 @@ void FabricSpliceRenderCallback::drawID() {
 }
 
 void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void *clientData) {
-  
-  if(!canDraw()) return;
- 
+
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
-
-  initID();
-  setupIDViewport(view, panelName);
+ 
+  MDagPath cameraDag; 
+  view.getCamera(cameraDag);
+  MFnCamera mCamera(cameraDag);
+   
+  MMatrix projection; 
+  view.projectionMatrix(projection);
+ 
+  setupIDViewport(panelName, view.portWidth(), view.portHeight(), mCamera, projection);
 }
 
 #if MAYA_API_VERSION >= 201600
-void FabricSpliceRenderCallback::preDrawCallback_2(MHWRender::MDrawContext &context, void* clientData) {
+void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDrawContext &context, void* clientData) {
+
+  if(getActiveRenderName() != "Viewport2Override")
+    return;
+
+  MStatus status;
+
   MString panelName;
   context.renderingDestination(panelName);
-  FabricSpliceRenderCallback::preDrawCallback(panelName, 0);
+
+  int oriX, oriY, width, height;
+  status = context.getViewportDimensions(oriX, oriY, width, height);
+
+  MDagPath cameraDag = context.getCurrentCameraPath(&status);
+  MFnCamera mCamera(cameraDag);
+  MMatrix projection = context.getMatrix(MDrawContext::MatrixType::kProjectionMtx, &status);
+
+  setupIDViewport(panelName, (double)width, (double)height, mCamera, projection);
 }
 #endif
 
@@ -237,6 +259,7 @@ inline void onModelPanelSetFocus(void *client) {
 }
 
 void FabricSpliceRenderCallback::plug() {
+  
   gOnPanelFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
   
   MStatus status;
@@ -254,12 +277,13 @@ void FabricSpliceRenderCallback::plug() {
     {
       Viewport2Override *overridePtr = new Viewport2Override("Viewport2Override");
       if(overridePtr) renderer->registerOverride(overridePtr);
-      renderer->addNotification(preDrawCallback_2, "PreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
+      renderer->addNotification(viewport2OverridePreDrawCallback, "Viewport2OverridePreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
     }
 #endif
 }
 
 void FabricSpliceRenderCallback::unplug() {
+
   MEventMessage::removeCallback(gOnPanelFocusCallbackId);
   for(int i=0; i<gCallbackCount; i++) 
   {
@@ -271,7 +295,7 @@ void FabricSpliceRenderCallback::unplug() {
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer)
     {
-      renderer->removeNotification("PreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic);
+      renderer->removeNotification("Viewport2OverridePreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic);
       const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride("Viewport2Override");
       if(overridePtr)
       {
