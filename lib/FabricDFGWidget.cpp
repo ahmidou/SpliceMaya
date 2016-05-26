@@ -142,18 +142,37 @@ void FabricDFGWidget::onSelectCanvasNodeInDCC()
   if (interf)
   {
     MFnDependencyNode mayaNode(interf->getThisMObject());
-   MGlobal::executeCommandOnIdle(MString("select ") + mayaNode.name(), true /* displayEnabled */);
+    MGlobal::executeCommandOnIdle(MString("select ") + mayaNode.name(), true /* displayEnabled */);
   }
 }
 
 void FabricDFGWidget::onImportGraphInDCC()
 {
-  MGlobal::displayError("Import Graph is not yet implemented!");
+  MString interfIdStr = getDfgWidget()->getUIController()->getBinding().getMetadata("maya_id");
+  if (interfIdStr.length() == 0)
+    return;
+  FabricDFGBaseInterface *interf = FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
+  if (interf)
+  {
+    MFnDependencyNode mayaNode(interf->getThisMObject());
+    MGlobal::executeCommand(MString("dfgImportJSON -m ") + mayaNode.name() + MString(" -f \"\""), true /* displayEnabled */, false /* undoEnabled */);
+
+    // refresh Canvas.
+    MGlobal::executeCommandOnIdle(MString("fabricDFG -a showUI -node ") + mayaNode.name(), false /* displayEnabled */);
+  }
 }
 
 void FabricDFGWidget::onExportGraphInDCC()
 {
-  MGlobal::displayError("Export Graph is not yet implemented!");
+  MString interfIdStr = getDfgWidget()->getUIController()->getBinding().getMetadata("maya_id");
+  if (interfIdStr.length() == 0)
+    return;
+  FabricDFGBaseInterface *interf = FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
+  if (interf)
+  {
+    MFnDependencyNode mayaNode(interf->getThisMObject());
+    MGlobal::executeCommand(MString("dfgExportJSON -m ") + mayaNode.name() + MString(" -f \"\""), true /* displayEnabled */, false /* undoEnabled */);
+  }
 }
 
 void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
