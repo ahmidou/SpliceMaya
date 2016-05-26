@@ -225,7 +225,7 @@ void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDr
 
   MDagPath cameraDag = context.getCurrentCameraPath(&status);
   MFnCamera mCamera(cameraDag);
-  MMatrix projection = context.getMatrix(MDrawContext::MatrixType::kProjectionMtx, &status);
+  MMatrix projection = context.getMatrix(MDrawContext::kProjectionMtx, &status);
 
   setupIDViewport(panelName, (double)width, (double)height, mCamera, projection);
 }
