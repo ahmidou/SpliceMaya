@@ -75,7 +75,10 @@ env.MergeFlags(mayaFlags)
 
 # services flags
 if FABRIC_BUILD_OS == 'Windows':
-  env.Append(LIBS = ['FabricServices-MSVC-'+env['MSVC_VERSION']+'-mt'])
+  if FABRIC_BUILD_TYPE == 'Release':
+    env.Append(LIBS = ['FabricServices-MSVC-'+env['MSVC_VERSION']+'-mt'])
+  else:
+    env.Append(LIBS = ['FabricServices-MSVC-'+env['MSVC_VERSION']+'-mtd'])
 else:
   env.Append(LIBS = ['FabricServices'])
 env.Append(LIBS = ['FabricSplitSearch'])
