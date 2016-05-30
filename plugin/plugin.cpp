@@ -57,6 +57,7 @@ MCallbackId gOnSceneNewCallbackId;
 MCallbackId gOnSceneLoadCallbackId;
 MCallbackId gOnSceneSaveCallbackId;
 MCallbackId gOnMayaExitCallbackId;
+MCallbackId gOnBeforeImportCallbackId;
 MCallbackId gOnSceneImportCallbackId;
 MCallbackId gOnSceneExportCallbackId;
 MCallbackId gOnSceneCreateReferenceCallbackId;
@@ -156,6 +157,15 @@ void onSceneLoad(void *userData){
     FabricDFGBaseInterface::getInstanceByIndex(i)->invalidateNode();
 }
 
+void onBeforeImport(void *userData){
+  // [FE-6247]
+  // before importing anything we mark all current base interfaces
+  // as "restored from pers. data", so that they get skipped when
+  // FabricDFGBaseInterface::allRestoreFromPersistenceData() is invoked
+  // in the above onSceneLoad() function.
+  FabricDFGBaseInterface::setAllRestoredFromPersistenceData(true);
+}
+
 bool gSceneIsDestroying = false;
 void onMayaExiting(void *userData){
   gSceneIsDestroying = true;
@@ -219,6 +229,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   gOnSceneNewCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeNew, onSceneNew);
   gOnMayaExitCallbackId = MSceneMessage::addCallback(MSceneMessage::kMayaExiting, onMayaExiting);
   gOnSceneExportCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeExport, onSceneSave);
+  gOnBeforeImportCallbackId = MSceneMessage::addCallback(MSceneMessage::kBeforeImport, onBeforeImport);
   gOnSceneImportCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImport, onSceneLoad);
   gOnSceneCreateReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterCreateReference, onSceneLoad);
   gOnSceneImportReferenceCallbackId = MSceneMessage::addCallback(MSceneMessage::kAfterImportReference, onSceneLoad);
@@ -351,6 +362,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MSceneMessage::removeCallback(gOnSceneSaveCallbackId);
   MSceneMessage::removeCallback(gOnSceneLoadCallbackId);
   MSceneMessage::removeCallback(gOnMayaExitCallbackId);
+  MSceneMessage::removeCallback(gOnBeforeImportCallbackId);
   MSceneMessage::removeCallback(gOnSceneImportCallbackId);
   MSceneMessage::removeCallback(gOnSceneExportCallbackId);
   MSceneMessage::removeCallback(gOnSceneCreateReferenceCallbackId);

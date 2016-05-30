@@ -51,7 +51,7 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
   MStatus stat;
   MAYADFG_CATCH_BEGIN(&stat);
 
-  _restoredFromPersistenceData = false;
+  _restoredFromPersistenceData = true;
   _isTransferingInputs = false;
   _dgDirtyEnabled = true;
   _portObjectsDestroyed = false;
@@ -1807,6 +1807,12 @@ void FabricDFGBaseInterface::allResetInternalData()
     // todo: eventually destroy the binding
     // m_binding = DFGWrapper::Binding();
   }
+}
+
+void FabricDFGBaseInterface::setAllRestoredFromPersistenceData(bool value)
+{
+  for(size_t i=0;i<_instances.size();i++)
+    _instances[i]->_restoredFromPersistenceData = value;
 }
 
 void FabricDFGBaseInterface::bindingNotificationCallback(
