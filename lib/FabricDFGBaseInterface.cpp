@@ -51,7 +51,7 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
   MStatus stat;
   MAYADFG_CATCH_BEGIN(&stat);
 
-  _restoredFromPersistenceData = true;
+  _restoredFromPersistenceData = false;
   _isTransferingInputs = false;
   _dgDirtyEnabled = true;
   _portObjectsDestroyed = false;
