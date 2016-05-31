@@ -39,23 +39,33 @@ class FabricSpliceRenderCallback {
 
   public:
     static bool gCallbackEnabled;
+    
     static FabricCore::RTVal sDrawContext;
+    
     static FabricCore::RTVal shHostGLRenderer;
 
     static void plug(); 
+    
     static void unplug();
 
     static void enable(bool enable);
+    
     static void disable();
+    
     static bool isEnabled();
     
     static bool isRTR2Enable();
+    
     static void drawID();
+
     static MStatus drawRTR2(uint32_t width, uint32_t height, uint32_t phase);
+
     static void preDrawCallback(const MString &panelName, void *clientData);
-    static void postDrawCallback(const MString &panelName, void *clientData);
+   
+   static void postDrawCallback(const MString &panelName, void *clientData);
+
 #if _SPLICE_MAYA_VERSION >= 2016
-    static void preDrawCallback_2(MHWRender::MDrawContext &context, void* clientData);
+    static void viewport2OverridePreDrawCallback(MHWRender::MDrawContext &context, void* clientData);
 #endif
     
 };
