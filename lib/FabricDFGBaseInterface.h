@@ -81,6 +81,7 @@ public:
   static void allStorePersistenceData(MString file, MStatus *stat = 0);
   static void allRestoreFromPersistenceData(MString file, MStatus *stat = 0);
   static void allResetInternalData();
+  static void setAllRestoredFromPersistenceData(bool value);
 
   virtual void invalidateNode();
 

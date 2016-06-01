@@ -1809,6 +1809,12 @@ void FabricDFGBaseInterface::allResetInternalData()
   }
 }
 
+void FabricDFGBaseInterface::setAllRestoredFromPersistenceData(bool value)
+{
+  for(size_t i=0;i<_instances.size();i++)
+    _instances[i]->_restoredFromPersistenceData = value;
+}
+
 void FabricDFGBaseInterface::bindingNotificationCallback(
   FTL::CStrRef jsonStr
   )
