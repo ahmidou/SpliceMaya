@@ -10,7 +10,7 @@
 #include <maya/MDrawContext.h>
 #include <maya/MEventMessage.h>
 #include <maya/MViewport2Renderer.h>
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 #include "Viewport2Override.h"
 #endif
 
@@ -226,7 +226,7 @@ void FabricSpliceRenderCallback::drawID() {
 // In maya 2015, there is a bug where the normals are inverted after using the rectangular selection.
 // In order to fix it, we force Maya to refresh.
 // Now, it just glitchs.
-#if _SPLICE_MAYA_VERSION == 2015
+#if MAYA_API_VERSION == 201500
   MGlobal::executeCommandOnIdle("refresh;", false);
 #endif
   }
@@ -259,7 +259,7 @@ MStatus FabricSpliceRenderCallback::drawRTR2(uint32_t width, uint32_t height, ui
 // In maya 2015, there is a bug where the normals are inverted after using the rectangular selection.
 // In order to fix it, we force Maya to refresh.
 // Now, it just glitchs.
-#if _SPLICE_MAYA_VERSION == 2015
+#if MAYA_API_VERSION == 201500
   if(phase > 2)    
     MGlobal::executeCommandOnIdle("refresh;", false);
 #endif
@@ -294,7 +294,7 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
     MString renderName = getActiveRenderName(view);
 
 // In Maya >= 2016, we deactive the maya viewport 2.0
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
   if(renderName == "vp2Renderer")
     return;
 #endif
@@ -305,7 +305,7 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
 }
 
 // Special preDraw Callback for Viewport2Override in Maya >= 2016
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
 void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDrawContext &context, void* clientData) {
 
   MString panelName;
@@ -343,7 +343,7 @@ void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void
 
 // In Maya >= 2016, we deactive the maya viewport 2.0
 // And the postDraw Callback is done within the override, cf Viewport2Override class.
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
   if(
       getActiveRenderName(view) == "vp2Renderer" ||   
       getActiveRenderName(view) == "Viewport2Override"
@@ -389,7 +389,7 @@ void FabricSpliceRenderCallback::plug() {
 // In Maya >= 2016, we override the viewport 2.0
 // Create a pretDraw Callback, the postDraw Callback is done 
 // within the override, cf Viewport2Override class.
-  #if _SPLICE_MAYA_VERSION >= 2016
+  #if MAYA_API_VERSION >= 201600
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer) 
     {
@@ -409,7 +409,7 @@ void FabricSpliceRenderCallback::unplug() {
     MUiMessage::removeCallback(gPostDrawCallbacks[i]);
   }
 
-  #if _SPLICE_MAYA_VERSION >= 2016
+  #if MAYA_API_VERSION >= 201600
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer)
     {

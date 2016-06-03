@@ -34,7 +34,7 @@ class FabricDFGWidget : public DFG::DFGCombinedWidget {
   
 public:
   FabricDFGWidget(QWidget * parent);
-  ~FabricDFGWidget();
+  virtual ~FabricDFGWidget();
 
   static QWidget * creator(QWidget * parent, const QString & name);
  
