@@ -63,6 +63,12 @@ public:
   bool onEvent(QEvent *event);
 
 private:
+  bool qtToKLEvent(QEvent *event, FabricCore::RTVal &klevent, FabricCore::RTVal &viewport);
+
+  bool onIDEvent(FabricCore::RTVal &klevent, M3dView &view);
+
+  bool onRTR2Event(FabricCore::RTVal &klevent, M3dView &view);
+
   FabricCore::RTVal mEventDispatcher;
 };
 

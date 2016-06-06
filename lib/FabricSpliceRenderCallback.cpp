@@ -13,10 +13,9 @@
 #include "Viewport2Override.h"
 #endif
 
-uint32_t gPanelId = 0;
 bool gRTRPassEnabled = true;
-
 bool FabricSpliceRenderCallback::gCallbackEnabled = true;
+uint32_t FabricSpliceRenderCallback::gCurrentViewportID = 0;
 FabricCore::RTVal FabricSpliceRenderCallback::sDrawContext;
 FabricCore::RTVal FabricSpliceRenderCallback::shHostGLRenderer;
 
@@ -42,7 +41,7 @@ void FabricSpliceRenderCallback::disable() {
  
 // **************
 
-inline bool canDraw() {
+bool FabricSpliceRenderCallback::canDraw() {
   if(!FabricSpliceRenderCallback::gCallbackEnabled)
     return false;
   if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
@@ -189,9 +188,9 @@ MString gRenderName = "NoViewport";
 inline void setupRTR2Viewport(M3dView &view, const MString &panelName) {
  
   MStatus status;
-  gPanelId = panelName.substringW(panelName.length()-2, panelName.length()-1).asInt();
+  FabricSpliceRenderCallback::gCurrentViewportID = panelName.substringW(panelName.length()-2, panelName.length()-1).asInt();
 
-  FabricCore::RTVal panelIdVal = FabricSplice::constructUInt32RTVal(gPanelId);
+  FabricCore::RTVal panelIdVal = FabricSplice::constructUInt32RTVal(FabricSpliceRenderCallback::gCurrentViewportID);
   if(gRenderName != getActiveRenderName(view))
   {
     gRenderName = getActiveRenderName(view);
@@ -229,7 +228,7 @@ MStatus FabricSpliceRenderCallback::drawRTR2(uint32_t width, uint32_t height, ui
     try
     { 
       FabricCore::RTVal args[5] = {
-        FabricSplice::constructUInt32RTVal(gPanelId),
+        FabricSplice::constructUInt32RTVal(FabricSpliceRenderCallback::gCurrentViewportID),
         FabricSplice::constructUInt32RTVal(width),
         FabricSplice::constructUInt32RTVal(height),
         FabricSplice::constructUInt32RTVal(2),
