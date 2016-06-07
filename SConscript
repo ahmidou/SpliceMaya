@@ -97,7 +97,7 @@ if not os.path.exists(uiSconscript.abspath):
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
 
-if(str(MAYA_VERSION[:4]) == "2016") :
+if(str(MAYA_VERSION[:4]) == "2016" or str(MAYA_VERSION[:4]) == "2016.5") :
   env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Render')])
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
@@ -131,8 +131,6 @@ Import(uiLibPrefix+'Flags')
 # ui flags
 env.MergeFlags(locals()[uiLibPrefix + 'Flags'])
 
-env.Append(CPPDEFINES = ["_SPLICE_MAYA_VERSION="+str(MAYA_VERSION[:4])])
-
 env.MergeFlags(sharedCapiFlags)
 env.MergeFlags(spliceFlags)
 env.MergeFlags(ADDITIONAL_FLAGS)
@@ -141,7 +139,7 @@ target = 'FabricMaya'
 
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
-if(str(MAYA_VERSION[:4]) == "2016") :
+if(str(MAYA_VERSION[:4]) == "2016" or str(MAYA_VERSION[:4]) == "2016.5") :
   libSources += env.Glob('lib/Render/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 
@@ -190,7 +188,6 @@ if FABRIC_BUILD_OS == 'Windows':
       sedCmd = sedPath
 
 moduleFileMayaVersion = MAYA_VERSION
-moduleFileMayaVersion = moduleFileMayaVersion[:moduleFileMayaVersion.find('201')+4]
 
 if FABRIC_BUILD_OS == 'Darwin':
   pythonVersion = '2.7'

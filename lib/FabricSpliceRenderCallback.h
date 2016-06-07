@@ -30,7 +30,8 @@
 #include <maya/MDrawContext.h>
 #include <maya/MFrameContext.h>
 #include <maya/MViewport2Renderer.h>
- 
+#include <FabricUI/SceneHub/SHGLRenderer.h>
+
 bool isRTRPassEnabled();
 
 void enableRTRPass(bool enable);
@@ -38,10 +39,14 @@ void enableRTRPass(bool enable);
 class FabricSpliceRenderCallback {
 
   public:
+
+    static uint32_t gPanelId;
+
     static bool gCallbackEnabled;
-    static uint32_t gCurrentViewportID;
+    
     static FabricCore::RTVal sDrawContext;
-    static FabricCore::RTVal shHostGLRenderer;
+    
+    static FabricUI::SceneHub::SHGLRenderer shHostGLRenderer;
 
     static void plug(); 
     
@@ -52,21 +57,21 @@ class FabricSpliceRenderCallback {
     static void disable();
     
     static bool isEnabled();
-        
-    static bool canDraw();
-
+    
     static bool isRTR2Enable();
+
+    static bool canDraw();
     
     static void drawID();
-    
+
     static MStatus drawRTR2(uint32_t width, uint32_t height, uint32_t phase);
-    
+
     static void preDrawCallback(const MString &panelName, void *clientData);
-    
+   
     static void postDrawCallback(const MString &panelName, void *clientData);
 
-#if _SPLICE_MAYA_VERSION >= 2016
-    static void preDrawCallback_2(MHWRender::MDrawContext &context, void* clientData);
+#if MAYA_API_VERSION >= 201600
+    static void viewport2OverridePreDrawCallback(MHWRender::MDrawContext &context, void* clientData);
 #endif
     
 };

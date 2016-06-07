@@ -67,8 +67,6 @@ private:
 
   bool onIDEvent(FabricCore::RTVal &klevent, M3dView &view);
 
-  bool onRTR2Event(FabricCore::RTVal &klevent, M3dView &view);
-
   FabricCore::RTVal mEventDispatcher;
 };
 

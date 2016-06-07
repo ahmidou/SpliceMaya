@@ -113,7 +113,7 @@ protected:
   void onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made);
   MStatus setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
 
-#if _SPLICE_MAYA_VERSION >= 2016
+#if MAYA_API_VERSION >= 201600
   MStatus preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode);
 #endif
 
@@ -124,7 +124,7 @@ protected:
   bool _outputsDirtied;
   MPlugArray _affectedPlugs;
 
-#if _SPLICE_MAYA_VERSION < 2014
+#if MAYA_API_VERSION < 201400
   static std::map<std::string, int> _nodeCreatorCounts;
 #endif
 

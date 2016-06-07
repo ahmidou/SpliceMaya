@@ -322,7 +322,7 @@ bool FabricSpliceToolContext::qtToKLEvent(
 
   if(klevent.isValid())
   {
-    M3dView view = M3dView::active3dView();\
+    M3dView view = M3dView::active3dView();
     int eventType = int(event->type());
     QInputEvent *inputEvent = static_cast<QInputEvent *>(event); 
 
@@ -505,11 +505,6 @@ bool FabricSpliceToolContext::onIDEvent(FabricCore::RTVal &klevent, M3dView &vie
   return false;
 }
 
-bool FabricSpliceToolContext::onRTR2Event(FabricCore::RTVal &klevent, M3dView &view) {
-  // FabricCore::RTVal mEventDispatcher = FabricSpliceRenderCallback::shHostGLRenderer.callMethod("EventDispatcher", "getEventDispatcher", 0, 0);
-  return false;
-}
-
 bool FabricSpliceToolContext::onEvent(QEvent *event) {
 
   if(!FabricSpliceRenderCallback::canDraw()) 
@@ -532,26 +527,23 @@ bool FabricSpliceToolContext::onEvent(QEvent *event) {
     {
       FabricCore::RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
       FabricCore::RTVal klevent;
-      if(qtToKLEvent(event, klevent, viewport))
+      if(qtToKLEvent(event, klevent, viewport) && onIDEvent(klevent, view))
       {
-        if(onIDEvent(klevent, view))
-        {
-          event->accept();
-          return true;
-        }
-        return false;
+        event->accept();
+        return true;
       }
     }
+    
     else
     {
-      FabricCore::RTVal panelIdVal = FabricSplice::constructUInt32RTVal(FabricSpliceRenderCallback::gCurrentViewportID);
-      FabricCore::RTVal viewport = FabricSpliceRenderCallback::shHostGLRenderer.callMethod("BaseRTRViewport", "getOrAddViewport", 1, &panelIdVal);
-      FabricCore::RTVal klevent;
-      if(qtToKLEvent(event, klevent, viewport))
-        return false;//onRTREvent(klevent, view);
-      else 
-        return false;
+      if(FabricSpliceRenderCallback::shHostGLRenderer.onEvent(FabricSpliceRenderCallback::gPanelId, event, false))
+      {
+        view.refresh(true, true);
+        return true;
+      }
     }
+
+    return false;
   }
 
   catch(FabricCore::Exception e) 
@@ -563,6 +555,8 @@ bool FabricSpliceToolContext::onEvent(QEvent *event) {
     mayaLogErrorFunc(e.what());
     return false;
   }
+  
+
   // the event was not handled by FabricEngine manipulation system. 
   return false;
 }

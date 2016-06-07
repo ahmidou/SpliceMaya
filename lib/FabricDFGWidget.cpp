@@ -19,11 +19,7 @@ FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 FabricCore::Client FabricDFGWidget::s_coreClient;
 
 FabricDFGWidget::FabricDFGWidget(QWidget * parent)
-#ifdef FABRIC_SCENEHUB
-  : DFG::SHDFGCombinedWidget(parent)
-#else
-  : DFG::DFGCombinedWidget(parent)
-#endif
+  : FabricDFGWidgetBaseClass(parent)
   , m_initialized( false )
 {
   GetCoreClient();
@@ -62,22 +58,6 @@ QWidget * FabricDFGWidget::creator(QWidget * parent, const QString & name)
   return Instance();
 }
 
-void FabricDFGWidget::initMenu() {
-
-  m_menuBar = new QMenuBar(this);
-  m_menuBar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  addWidget(m_menuBar);
-
-  // populate the menu bar
-  QObject::connect(
-    m_dfgWidget,
-    SIGNAL(additionalMenuActionsRequested(QString, QMenu*, bool)),
-    this, SLOT(onAdditionalMenuActionsRequested(QString, QMenu *, bool))
-    );
-
-  m_dfgWidget->populateMenuBar(m_menuBar, false /* addFileMenu */, true /* addDCCMenu */);
-}
-
 void FabricDFGWidget::SetCurrentUINodeName(const char * node)
 {
   if ( node )
@@ -108,8 +88,28 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
     DFG::DFGConfig config;
     config.graphConfig.useOpenGL = false;
 
-    init( s_coreClient, manager, m_dfgHost, binding, "", exec, &m_cmdHandler,
-          false, config );
+#ifdef FABRIC_SCENEHUB
+    init( s_coreClient,
+          manager,
+          m_dfgHost,
+          binding,
+          "",
+          exec,
+          &m_cmdHandler,
+          &FabricSpliceRenderCallback::shHostGLRenderer, 
+          false, 
+          config);
+#else
+   init(  s_coreClient, 
+          manager, 
+          m_dfgHost, 
+          binding, 
+          "", 
+          exec, 
+          &m_cmdHandler,
+          false, 
+          config);
+#endif
 
     // adjust some background colors that cannot be defined
     // using DFG::DFGConfig (note: this also kinda solves [FE-6009]).

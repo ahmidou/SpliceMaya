@@ -17,6 +17,8 @@
 #include <SceneHub/DFG/SHDFGCombinedWidget.h>
 #include <DFG/Dialogs/DFGBaseDialog.h>
 
+#include "FabricSpliceRenderCallback.h"
+
 #include <FabricSplice.h>
 
 using namespace FabricServices;
@@ -24,17 +26,31 @@ using namespace FabricUI;
 
 class FabricDFGBaseInterface;
 
+// SH-279
+// We have to define a new typedef FabricDFGWidgetBaseClass outside of the class declaration
+// so Q-Moc (signal/slots compilation) compiles over the right derived class.
+// Using #ifdef #endif within the declaration as :
+// #ifdef FABRIC_SCENEHUB
+//  class FabricDFGWidget : public DFG::SHDFGCombinedWidget {
+// #else
+//  class FabricDFGWidget : public DFG::DFGCombinedWidget {
+// #endif
+// breaks the Moc-build in the way that it's not referring to the right parent class and all the signal/slots are broken.
+
 #ifdef FABRIC_SCENEHUB
-class FabricDFGWidget : public DFG::SHDFGCombinedWidget {
+typedef DFG::SHDFGCombinedWidget FabricDFGWidgetBaseClass;
 #else
-class FabricDFGWidget : public DFG::DFGCombinedWidget {
+typedef DFG::DFGCombinedWidget FabricDFGWidgetBaseClass; 
 #endif
+ 
+class FabricDFGWidget : public FabricDFGWidgetBaseClass {
+ 
 
   Q_OBJECT
   
 public:
   FabricDFGWidget(QWidget * parent);
-  ~FabricDFGWidget();
+  virtual ~FabricDFGWidget();
 
   static QWidget * creator(QWidget * parent, const QString & name);
  
@@ -67,7 +83,6 @@ private slots:
   void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog, FTL::JSONObjectEnc<> * additionalMetaData);
 
 protected:
-  virtual void initMenu();
   virtual void refreshScene();
   void setCurrentUINodeName(const char * node);
 
