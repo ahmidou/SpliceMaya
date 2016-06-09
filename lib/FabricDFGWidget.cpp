@@ -16,6 +16,7 @@
 #include <maya/MGlobal.h>
 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
+FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
 FabricCore::Client FabricDFGWidget::s_coreClient;
 
 FabricDFGWidget::FabricDFGWidget(QWidget * parent)
@@ -41,14 +42,17 @@ FabricDFGWidget::~FabricDFGWidget()
 FabricDFGWidget *FabricDFGWidget::Instance()
 {
   if ( !s_widget )
+  {
+    s_manager = new FabricServices::ASTWrapper::KLASTManager( &s_coreClient );
     s_widget = new FabricDFGWidget( NULL );
+  }
   return s_widget;
 }
 
 void FabricDFGWidget::Destroy()
 {
-  if ( s_widget )
-    delete s_widget;
+  delete s_widget;
+  delete s_manager;
   s_widget = NULL;
   s_coreClient = FabricCore::Client();
 }
@@ -76,13 +80,10 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
 
   if ( !m_initialized )
   {
-    FabricServices::ASTWrapper::KLASTManager *manager =
-      ASTWrapper::KLASTManager::retainGlobalManager( &s_coreClient );
-
     DFG::DFGConfig config;
     config.graphConfig.useOpenGL = false;
 
-    init( s_coreClient, manager, m_dfgHost, binding, "", exec, &m_cmdHandler,
+    init( s_coreClient, s_manager, m_dfgHost, binding, "", exec, &m_cmdHandler,
           false, config );
 
     // adjust some background colors that cannot be defined
