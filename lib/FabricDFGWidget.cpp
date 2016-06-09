@@ -52,8 +52,9 @@ FabricDFGWidget *FabricDFGWidget::Instance()
 void FabricDFGWidget::Destroy()
 {
   delete s_widget;
-  delete s_manager;
   s_widget = NULL;
+  delete s_manager;
+  s_manager = NULL;
   s_coreClient = FabricCore::Client();
 }
 
