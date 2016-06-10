@@ -390,7 +390,7 @@ void FabricSpliceRenderCallback::plug() {
 // In Maya >= 2016, we override the viewport 2.0
 // Create a pretDraw Callback, the postDraw Callback is done 
 // within the override, cf Viewport2Override class.
-  #if MAYA_API_VERSION >= 201600
+#if MAYA_API_VERSION >= 201600
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer) 
     {
@@ -398,7 +398,7 @@ void FabricSpliceRenderCallback::plug() {
       if(overridePtr) renderer->registerOverride(overridePtr);
       renderer->addNotification(viewport2OverridePreDrawCallback, "Viewport2OverridePreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
     }
-  #endif
+#endif
 }
 
 void FabricSpliceRenderCallback::unplug() {
@@ -410,7 +410,7 @@ void FabricSpliceRenderCallback::unplug() {
     MUiMessage::removeCallback(gPostDrawCallbacks[i]);
   }
 
-  #if MAYA_API_VERSION >= 201600
+#if MAYA_API_VERSION >= 201600
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer)
     {
@@ -423,5 +423,5 @@ void FabricSpliceRenderCallback::unplug() {
         overridePtr = 0;
       }
     }
-  #endif
+#endif
 }
