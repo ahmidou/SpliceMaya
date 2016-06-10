@@ -241,7 +241,6 @@ void* FabricSpliceToolContextCmd::creator() {
 }
 
 bool EventFilterObject::eventFilter(QObject *object, QEvent *event) {
-  std::cout << "\n\n\n\n EventFilterObject::eventFilter \n\n\n\n" << std::endl;
   return tool->onEvent(event);
 }
  
