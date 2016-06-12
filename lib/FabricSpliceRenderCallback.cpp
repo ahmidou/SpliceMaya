@@ -281,7 +281,14 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
- 
+  MString renderName = getActiveRenderName(view);
+
+// In Maya >= 2016, we deactive the maya viewport 2.0
+#if MAYA_API_VERSION >= 201600
+  if(renderName == "vp2Renderer")
+    return;
+#endif
+
   MDagPath cameraDag; 
   view.getCamera(cameraDag);
   MFnCamera mCamera(cameraDag);
@@ -290,17 +297,12 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   view.projectionMatrix(projection);
   
   if(!isRTR2Enable())
+  {
     setupIDViewport(panelName, view.portWidth(), view.portHeight(), mCamera, projection);
+    drawID();
+  }
   else
   {
-    MString renderName = getActiveRenderName(view);
-
-// In Maya >= 2016, we deactive the maya viewport 2.0
-#if MAYA_API_VERSION >= 201600
-  if(renderName == "vp2Renderer")
-    return;
-#endif
-
     setupRTR2Viewport(renderName, panelName, view.portWidth(), view.portHeight(), mCamera, projection);
     drawRTR2(uint32_t(view.portWidth()), uint32_t(view.portHeight()), 2);
   }
@@ -329,7 +331,10 @@ void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDr
   MMatrix projection = context.getMatrix(MDrawContext::kProjectionMtx, &status);
 
   if(!isRTR2Enable())
+  {
     setupIDViewport(panelName, (double)width, (double)height, mCamera, projection);
+    drawID();
+  }
   else
   {
     setupRTR2Viewport(renderName, panelName, (double)width, (double)height, mCamera, projection);
@@ -353,9 +358,7 @@ void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void
     return;
 #endif
 
-  if(!isRTR2Enable()) 
-    drawID();
-  else
+  if(isRTR2Enable()) 
   {
     uint32_t drawPhase = (getActiveRenderName(view) == "vp2Renderer") ? 3 : 4;
     drawRTR2(uint32_t(view.portWidth()), uint32_t(view.portHeight()), drawPhase);
