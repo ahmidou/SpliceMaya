@@ -311,6 +311,12 @@ MAYA_EXPORT initializePlugin(MObject obj)
     );
 
   plugin.registerCommand(
+    "FabricCanvasGetExecuteShared",
+    FabricCanvasGetExecuteSharedCommand::creator,
+    FabricCanvasGetExecuteSharedCommand::newSyntax
+    );
+
+  plugin.registerCommand(
     "FabricCanvasSetExecuteShared",
     FabricCanvasSetExecuteSharedCommand::creator,
     FabricCanvasSetExecuteSharedCommand::newSyntax

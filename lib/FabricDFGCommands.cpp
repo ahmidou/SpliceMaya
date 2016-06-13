@@ -2116,6 +2116,63 @@ MStatus FabricDFGExportJSONCommand::doIt(const MArgList &args)
   return status;
 }
 
+// FabricCanvasGetExecuteSharedCommand
+
+MSyntax FabricCanvasGetExecuteSharedCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag("-m", "-mayaNode", MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+MStatus FabricCanvasGetExecuteSharedCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  bool result = false;
+  MArgParser argParser( syntax(), args, &status );
+  if ( status != MS::kSuccess )
+  {
+    setResult(result);
+    return status;
+  }
+
+  try
+  {
+    if ( !argParser.isFlagSet("mayaNode") )
+      throw ArgException( MS::kFailure, "-m (-mayaNode) not provided." );
+    MString mayaNodeName = argParser.flagArgumentString("mayaNode", 0);
+
+    FabricDFGBaseInterface *m_interf =
+      FabricDFGBaseInterface::getInstanceByName( mayaNodeName.asChar() );
+    if ( !m_interf )
+      throw ArgException(
+        MS::kNotFound, "Maya node '" + mayaNodeName + "' not found."
+        );
+    FabricCore::DFGBinding binding = m_interf->getDFGBinding();
+
+    char const *metadataValueCStr =
+      binding.getMetadata( "executeShared" );
+
+    result = (metadataValueCStr && MString(metadataValueCStr) == "true");
+    status = MS::kSuccess;
+  }
+  catch ( ArgException e )
+  {
+    logError( e.getDesc() );
+    status = e.getStatus();
+  }
+  catch ( FabricCore::Exception e )
+  {
+    logError( e.getDesc_cstr() );
+    status = MS::kFailure;
+  }
+
+  setResult(result);
+  return status;
+}
+
 // FabricCanvasSetExecuteSharedCommand
 
 MSyntax FabricCanvasSetExecuteSharedCommand::newSyntax()

@@ -1062,6 +1062,22 @@ public:
   virtual bool isUndoable() const { return false; }
 };
 
+class FabricCanvasGetExecuteSharedCommand
+  : public FabricDFGBaseCommand
+{
+public:
+
+  static void* creator()
+    { return new FabricCanvasGetExecuteSharedCommand; }
+
+  virtual MString getName()
+    { return "FabricCanvasGetExecuteShared"; }
+
+  static MSyntax newSyntax();
+  virtual MStatus doIt( const MArgList &args );
+  virtual bool isUndoable() const { return false; }
+};
+
 class FabricCanvasSetExecuteSharedCommand
   : public FabricDFGBaseCommand
 {
