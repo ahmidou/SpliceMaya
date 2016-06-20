@@ -102,7 +102,7 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
           false, 
           config);
 #else
-   init(  s_coreClient, 
+    init( s_coreClient,
           s_manager, 
           m_dfgHost, 
           binding, 
@@ -113,12 +113,23 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
           config);
 #endif
 
-    // adjust some background colors that cannot be defined
-    // using DFG::DFGConfig (note: this also kinda solves [FE-6009]).
-    getTreeWidget()    ->setStyleSheet("background-color: rgb(82,82,82); border: 1px solid black;");
-    getDfgValueEditor()->setStyleSheet("background-color: rgb(48,48,48);");
-    getDfgLogWidget()  ->setStyleSheet("background-color: rgb(48,48,48); border: 1px solid black;");
+    // [FE-6009] [FE-6595]
+    // adjust a few colors colors that
+    // cannot be defined with DFG::DFGConfig.
+    {
+      // tree widget.
+      getTreeWidget()->setStyleSheet("background-color: rgb(78,78,78); border: 1px solid black;");
 
+      // value editor.
+      getDfgValueEditor()->setStyleSheet("QWidget { background-color: rgb(78,78,78); } \n"
+                                         "QSlider { background: #222; } \n"
+                                         "QCheckBox { background: #222; } \n"
+                                         "QLineEdit { background: #222; } \n"
+                                         "QTextEdit { background: #222; } \n"
+                                        );
+      // log widget.
+      getDfgLogWidget()->setStyleSheet("background-color: rgb(72,72,72); border: 1px solid black;");
+    }
     m_initialized = true;
   }
   else
