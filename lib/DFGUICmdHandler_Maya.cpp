@@ -849,15 +849,15 @@ QString DFGUICmdHandler_Maya::dfgDoRenamePort(
   FabricCore::DFGBinding const &binding,
   QString execPath,
   FabricCore::DFGExec const &exec,
-  QString name,
-  QString desiredName
+  QString portPath,
+  QString desiredNewPortName
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_RenamePort::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("n"), name, cmd );
-  encodeStringArg( FTL_STR("d"), desiredName, cmd );
+  encodeStringArg( FTL_STR("n"), portPath, cmd );
+  encodeStringArg( FTL_STR("d"), desiredNewPortName, cmd );
   cmd << ';';
 
   MString mResult;
