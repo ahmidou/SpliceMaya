@@ -434,10 +434,9 @@ bool FabricSpliceToolContext::onRTR2Event(QEvent *event, M3dView &view) {
     {
       if(mouseEvent->modifiers() & Qt::ShiftModifier)
       {
-        QPoint map = view.widget()->mapToGlobal(mouseEvent->pos());
         FabricSpliceRenderCallback::shHostGLRenderer.emitShowContextualMenu(
           panelId,
-          map, 
+          mouseEvent->pos(), 
           view.widget());
         event->accept();
       }
