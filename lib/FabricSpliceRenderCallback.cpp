@@ -299,7 +299,7 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   if(!isRTR2Enable())
   {
     setupIDViewport(panelName, view.portWidth(), view.portHeight(), mCamera, projection);
-    drawID();
+    //drawID();
   }
   else
   {
@@ -333,7 +333,7 @@ void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDr
   if(!isRTR2Enable())
   {
     setupIDViewport(panelName, (double)width, (double)height, mCamera, projection);
-    drawID();
+    //drawID();
   }
   else
   {
@@ -363,6 +363,8 @@ void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void
     uint32_t drawPhase = (getActiveRenderName(view) == "vp2Renderer") ? 3 : 4;
     drawRTR2(uint32_t(view.portWidth()), uint32_t(view.portHeight()), drawPhase);
   }
+  else
+    drawID();
 }
 
 // **************
