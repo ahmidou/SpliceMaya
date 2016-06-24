@@ -126,12 +126,6 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
       styleSheet = LoadFabricStyleSheet("ValueEditor_Maya.qss");
       if (!styleSheet.isEmpty())
         getDfgValueEditor()->setStyleSheet( styleSheet );
-      //getDfgValueEditor()->setStyleSheet(" \n"
-      //                                   " \n"
-      //                                   "QCheckBox { background: #222; } \n"
-      //                                   "QLineEdit { background: #222; } \n"
-      //                                   "QTextEdit { background: #222; } \n"
-      //                                  );
 
       styleSheet = LoadFabricStyleSheet("DFGLogWidget_Maya.qss");
       if (!styleSheet.isEmpty())
