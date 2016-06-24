@@ -13,6 +13,8 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
 
+#include <FabricUI/Util/LoadFabricStyleSheet.h>
+
 #include <maya/MGlobal.h>
 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
@@ -113,23 +115,29 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
           config);
 #endif
 
-    // [FE-6009] [FE-6595]
-    // adjust a few colors colors that
-    // cannot be defined with DFG::DFGConfig.
+    // [FE-6595] load and set the Maya specific style sheets.
     {
-      // tree widget.
-      getTreeWidget()->setStyleSheet("background-color: rgb(78,78,78); border: 1px solid black;");
+      QString styleSheet;
 
-      // value editor.
-      getDfgValueEditor()->setStyleSheet("QWidget { background-color: rgb(78,78,78); } \n"
-                                         "QSlider { background: #222; } \n"
-                                         "QCheckBox { background: #222; } \n"
-                                         "QLineEdit { background: #222; } \n"
-                                         "QTextEdit { background: #222; } \n"
-                                        );
-      // log widget.
-      getDfgLogWidget()->setStyleSheet("background-color: rgb(72,72,72); border: 1px solid black;");
+      styleSheet = LoadFabricStyleSheet("PresetTreeWidget_Maya.qss");
+      if (!styleSheet.isEmpty())
+        getTreeWidget()->setStyleSheet( styleSheet );
+
+      styleSheet = LoadFabricStyleSheet("ValueEditor_Maya.qss");
+      if (!styleSheet.isEmpty())
+        getDfgValueEditor()->setStyleSheet( styleSheet );
+      //getDfgValueEditor()->setStyleSheet(" \n"
+      //                                   " \n"
+      //                                   "QCheckBox { background: #222; } \n"
+      //                                   "QLineEdit { background: #222; } \n"
+      //                                   "QTextEdit { background: #222; } \n"
+      //                                  );
+
+      styleSheet = LoadFabricStyleSheet("DFGLogWidget_Maya.qss");
+      if (!styleSheet.isEmpty())
+        getDfgLogWidget()->setStyleSheet( styleSheet );
     }
+
     m_initialized = true;
   }
   else
