@@ -33,6 +33,8 @@ class UserRenderOperationOverride : public MUserRenderOperation {
         context.getViewportDimensions(originX, originY, width, height);
         FabricSpliceRenderCallback::drawRTR2(width, height, 4);
       }
+      else 
+        FabricSpliceRenderCallback::drawID();
       return MStatus::kSuccess;
     }
 };

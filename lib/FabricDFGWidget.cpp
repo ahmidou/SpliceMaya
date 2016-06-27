@@ -13,6 +13,8 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
 
+#include <FabricUI/Util/LoadFabricStyleSheet.h>
+
 #include <maya/MGlobal.h>
 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
@@ -102,7 +104,7 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
           false, 
           config);
 #else
-   init(  s_coreClient, 
+    init( s_coreClient,
           s_manager, 
           m_dfgHost, 
           binding, 
@@ -113,11 +115,22 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
           config);
 #endif
 
-    // adjust some background colors that cannot be defined
-    // using DFG::DFGConfig (note: this also kinda solves [FE-6009]).
-    getTreeWidget()    ->setStyleSheet("background-color: rgb(48,48,48); border: 1px solid black;");
-    getDfgValueEditor()->setStyleSheet("background-color: rgb(48,48,48);");
-    getDfgLogWidget()  ->setStyleSheet("background-color: rgb(48,48,48); border: 1px solid black;");
+    // [FE-6595] load and set the Maya specific style sheets.
+    {
+      QString styleSheet;
+
+      styleSheet = LoadFabricStyleSheet("PresetTreeWidget_Maya.qss");
+      if (!styleSheet.isEmpty())
+        getTreeWidget()->setStyleSheet( styleSheet );
+
+      styleSheet = LoadFabricStyleSheet("ValueEditor_Maya.qss");
+      if (!styleSheet.isEmpty())
+        getDfgValueEditor()->setStyleSheet( styleSheet );
+
+      styleSheet = LoadFabricStyleSheet("DFGLogWidget_Maya.qss");
+      if (!styleSheet.isEmpty())
+        getDfgLogWidget()->setStyleSheet( styleSheet );
+    }
 
     m_initialized = true;
   }
