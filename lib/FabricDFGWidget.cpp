@@ -135,7 +135,7 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
     m_initialized = true;
   }
   else
-    getDfgWidget()->getUIController()->setBindingExec( binding, "", exec );
+    getDfgWidget()->replaceBinding( binding );
 }
 
 void FabricDFGWidget::onUndo()
