@@ -472,7 +472,14 @@ protected:
 
   struct Args : Parent::Args
   {
-    // TODO
+    QString instName;
+    QString desiredPortName;
+    FabricCore::DFGPortType portType;
+    QString typeSpec;
+    QString pathToConnect;
+    FabricCore::DFGPortType connectType;
+    QString extDep;
+    QString metaData;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -497,7 +504,13 @@ protected:
 
   struct Args : Parent::Args
   {
-    // TODO
+    QString instName;
+    QString blockName;
+    QString desiredPortName;
+    QString typeSpec;
+    QString pathToConnect;
+    QString extDep;
+    QString metaData;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -1032,9 +1045,9 @@ typedef MayaDFGUICmdWrapper<
   > MayaDFGUICmd_DismissLoadDiags;
 
 class FabricDFGAddBlockCommand
-  : public FabricDFGBindingCommand
+  : public FabricDFGAddNodeCommand
 {
-  typedef FabricDFGBindingCommand Parent;
+  typedef FabricDFGAddNodeCommand Parent;
   
 protected:
 
@@ -1042,7 +1055,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    // TODO
+    QString desiredName;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -1057,9 +1070,9 @@ typedef MayaDFGUICmdWrapper<
   > MayaDFGUICmd_AddBlock;
 
 class FabricDFGAddBlockPortCommand
-  : public FabricDFGBindingCommand
+  : public FabricDFGExecCommand
 {
-  typedef FabricDFGBindingCommand Parent;
+  typedef FabricDFGExecCommand Parent;
   
 protected:
 
@@ -1067,7 +1080,14 @@ protected:
 
   struct Args : Parent::Args
   {
-    // TODO
+    QString blockName;
+    QString desiredPortName;
+    FabricCore::DFGPortType portType;
+    QString typeSpec;
+    QString pathToConnect;
+    FabricCore::DFGPortType connectType;
+    QString extDep;
+    QString metaData;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );

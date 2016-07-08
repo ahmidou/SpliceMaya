@@ -1095,7 +1095,21 @@ QString DFGUICmdHandler_Maya::dfgDoAddBlock(
   QPointF pos
   )
 {
-  // TODO
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_AddBlock::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("d"), desiredName, cmd );
+  encodePositionArg( pos, cmd );
+  cmd << ';';
+
+  MString result;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    result,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+  return QString::fromUtf8( result.asChar() );
 }
 
 QString DFGUICmdHandler_Maya::dfgDoAddBlockPort(

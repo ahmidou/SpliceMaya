@@ -788,7 +788,15 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
 
 void FabricDFGAddInstPortCommand::AddSyntax( MSyntax &syntax )
 {
-  // TODO
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-instName", MSyntax::kString);
+  syntax.addFlag("-d", "-desiredPortName", MSyntax::kString);
+  syntax.addFlag("-p", "-portType", MSyntax::kString);
+  syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
+  syntax.addFlag("-c", "-pathToConnect", MSyntax::kString);
+  syntax.addFlag("-ct", "-connectType", MSyntax::kString);
+  syntax.addFlag("-xd", "-extDep", MSyntax::kString);
+  syntax.addFlag("-md", "-metaData", MSyntax::kString);
 }
 
 void FabricDFGAddInstPortCommand::GetArgs(
@@ -796,21 +804,105 @@ void FabricDFGAddInstPortCommand::GetArgs(
   Args &args
   )
 {
-  // TODO
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "instName" ) )
+    throw ArgException( MS::kFailure, "-n (-instName) not provided." );
+  args.instName = QString::fromUtf8(
+    argParser.flagArgumentString( "instName", 0 ).asChar()
+    );
+
+  if ( !argParser.isFlagSet( "desiredPortName" ) )
+    throw ArgException( MS::kFailure, "-d (-desiredPortName) not provided." );
+  args.desiredPortName = QString::fromUtf8(
+    argParser.flagArgumentString( "desiredPortName", 0 ).asChar()
+    );
+
+  if ( !argParser.isFlagSet( "portType" ) )
+    throw ArgException( MS::kFailure, "-p (-portType) not provided." );
+  MString portTypeString = argParser.flagArgumentString( "portType", 0 ).asChar();
+  portTypeString.toLowerCase(); 
+  if ( portTypeString == "in" )
+    args.portType = FabricCore::DFGPortType_In;
+  else if ( portTypeString == "io" )
+    args.portType = FabricCore::DFGPortType_IO;
+  else if ( portTypeString == "out" )
+    args.portType = FabricCore::DFGPortType_Out;
+  else
+    throw ArgException( MS::kFailure, "-p (-portType) value unrecognized" );
+
+  if ( argParser.isFlagSet( "typeSpec" ) )
+    args.typeSpec = QString::fromUtf8(
+      argParser.flagArgumentString( "typeSpec", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "pathToConnect" ) )
+    args.pathToConnect = QString::fromUtf8(
+      argParser.flagArgumentString( "pathToConnect", 0 ).asChar()
+      );
+
+  if ( !argParser.isFlagSet( "connectType" ) )
+    throw ArgException( MS::kFailure, "-ct (-connectType) not provided." );
+  MString connectTypeString = argParser.flagArgumentString( "connectType", 0 ).asChar();
+  connectTypeString.toLowerCase(); 
+  if ( connectTypeString == "in" )
+    args.connectType = FabricCore::DFGPortType_In;
+  else if ( connectTypeString == "io" )
+    args.connectType = FabricCore::DFGPortType_IO;
+  else if ( connectTypeString == "out" )
+    args.connectType = FabricCore::DFGPortType_Out;
+  else
+    throw ArgException( MS::kFailure, "-ct (-connectType) value unrecognized" );
+
+  if ( argParser.isFlagSet( "extDep" ) )
+    args.extDep = QString::fromUtf8(
+      argParser.flagArgumentString( "extDep", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "metaData" ) )
+    args.metaData = QString::fromUtf8(
+      argParser.flagArgumentString( "metaData", 0 ).asChar()
+      );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddInstPortCommand::executeDFGUICmd(
   MArgParser &argParser
   )
 {
-  // TODO
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddInstPort *cmd =
+    new FabricUI::DFG::DFGUICmd_AddInstPort(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.instName,
+      args.desiredPortName,
+      args.portType,
+      args.typeSpec,
+      args.pathToConnect,
+      args.connectType,
+      args.extDep,
+      args.metaData
+      );
+  cmd->doit();
+  setResult( cmd->getActualPortName().toUtf8().constData() );
+  return cmd;
 }
 
 // FabricDFGAddInstBlockPortCommand
 
 void FabricDFGAddInstBlockPortCommand::AddSyntax( MSyntax &syntax )
 {
-  // TODO
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-instName", MSyntax::kString);
+  syntax.addFlag("-b", "-blockName", MSyntax::kString);
+  syntax.addFlag("-d", "-desiredPortName", MSyntax::kString);
+  syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
+  syntax.addFlag("-c", "-pathToConnect", MSyntax::kString);
+  syntax.addFlag("-xd", "-extDep", MSyntax::kString);
+  syntax.addFlag("-md", "-metaData", MSyntax::kString);
 }
 
 void FabricDFGAddInstBlockPortCommand::GetArgs(
@@ -818,14 +910,70 @@ void FabricDFGAddInstBlockPortCommand::GetArgs(
   Args &args
   )
 {
-  // TODO
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "instName" ) )
+    throw ArgException( MS::kFailure, "-n (-instName) not provided." );
+  args.instName = QString::fromUtf8(
+    argParser.flagArgumentString( "instName", 0 ).asChar()
+    );
+
+  if ( !argParser.isFlagSet( "blockName" ) )
+    throw ArgException( MS::kFailure, "-b (-blockName) not provided." );
+  args.blockName = QString::fromUtf8(
+    argParser.flagArgumentString( "blockName", 0 ).asChar()
+    );
+
+  if ( !argParser.isFlagSet( "desiredPortName" ) )
+    throw ArgException( MS::kFailure, "-d (-desiredPortName) not provided." );
+  args.desiredPortName = QString::fromUtf8(
+    argParser.flagArgumentString( "desiredPortName", 0 ).asChar()
+    );
+
+  if ( argParser.isFlagSet( "typeSpec" ) )
+    args.typeSpec = QString::fromUtf8(
+      argParser.flagArgumentString( "typeSpec", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "pathToConnect" ) )
+    args.pathToConnect = QString::fromUtf8(
+      argParser.flagArgumentString( "pathToConnect", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "extDep" ) )
+    args.extDep = QString::fromUtf8(
+      argParser.flagArgumentString( "extDep", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "metaData" ) )
+    args.metaData = QString::fromUtf8(
+      argParser.flagArgumentString( "metaData", 0 ).asChar()
+      );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddInstBlockPortCommand::executeDFGUICmd(
   MArgParser &argParser
   )
 {
-  // TODO
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddInstBlockPort *cmd =
+    new FabricUI::DFG::DFGUICmd_AddInstBlockPort(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.instName,
+      args.blockName,
+      args.desiredPortName,
+      args.typeSpec,
+      args.pathToConnect,
+      args.extDep,
+      args.metaData
+      );
+  cmd->doit();
+  setResult( cmd->getActualPortName().toUtf8().constData() );
+  return cmd;
 }
 
 // FabricDFGCreatePresetCommand
@@ -1911,7 +2059,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGDismissLoadDiagsCommand::executeDFGUICmd(
 
 void FabricDFGAddBlockCommand::AddSyntax( MSyntax &syntax )
 {
-  // TODO
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-d", "-desiredName", MSyntax::kString);
 }
 
 void FabricDFGAddBlockCommand::GetArgs(
@@ -1919,21 +2068,48 @@ void FabricDFGAddBlockCommand::GetArgs(
   Args &args
   )
 {
-  // TODO
+  Parent::GetArgs( argParser, args );
+
+  if ( argParser.isFlagSet( "desiredName" ) )
+    args.desiredName =
+    QString::fromUtf8(
+      argParser.flagArgumentString( "desiredName", 0 ).asChar()
+      );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddBlockCommand::executeDFGUICmd(
   MArgParser &argParser
   )
 {
-  // TODO
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddGraph *cmd =
+    new FabricUI::DFG::DFGUICmd_AddGraph(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.desiredName,
+      args.pos
+      );
+  cmd->doit();
+  setResult( cmd->getActualNodeName().toUtf8().constData() );
+  return cmd;
 }
 
 // FabricDFGAddBlockPortCommand
 
 void FabricDFGAddBlockPortCommand::AddSyntax( MSyntax &syntax )
 {
-  // TODO
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-b", "-blockName", MSyntax::kString);
+  syntax.addFlag("-d", "-desiredPortName", MSyntax::kString);
+  syntax.addFlag("-p", "-portType", MSyntax::kString);
+  syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
+  syntax.addFlag("-c", "-pathToConnect", MSyntax::kString);
+  syntax.addFlag("-ct", "-connectType", MSyntax::kString);
+  syntax.addFlag("-xd", "-extDep", MSyntax::kString);
+  syntax.addFlag("-md", "-metaData", MSyntax::kString);
 }
 
 void FabricDFGAddBlockPortCommand::GetArgs(
@@ -1941,14 +2117,91 @@ void FabricDFGAddBlockPortCommand::GetArgs(
   Args &args
   )
 {
-  // TODO
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "blockName" ) )
+    throw ArgException( MS::kFailure, "-b (-blockName) not provided." );
+  args.blockName = QString::fromUtf8(
+    argParser.flagArgumentString( "blockName", 0 ).asChar()
+    );
+
+  if ( !argParser.isFlagSet( "desiredPortName" ) )
+    throw ArgException( MS::kFailure, "-d (-desiredPortName) not provided." );
+  args.desiredPortName = QString::fromUtf8(
+    argParser.flagArgumentString( "desiredPortName", 0 ).asChar()
+    );
+
+  if ( !argParser.isFlagSet( "portType" ) )
+    throw ArgException( MS::kFailure, "-p (-portType) not provided." );
+  MString portTypeString = argParser.flagArgumentString( "portType", 0 ).asChar();
+  portTypeString.toLowerCase(); 
+  if ( portTypeString == "in" )
+    args.portType = FabricCore::DFGPortType_In;
+  else if ( portTypeString == "io" )
+    args.portType = FabricCore::DFGPortType_IO;
+  else if ( portTypeString == "out" )
+    args.portType = FabricCore::DFGPortType_Out;
+  else
+    throw ArgException( MS::kFailure, "-p (-portType) value unrecognized" );
+
+  if ( argParser.isFlagSet( "typeSpec" ) )
+    args.typeSpec = QString::fromUtf8(
+      argParser.flagArgumentString( "typeSpec", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "pathToConnect" ) )
+    args.pathToConnect = QString::fromUtf8(
+      argParser.flagArgumentString( "pathToConnect", 0 ).asChar()
+      );
+
+  if ( !argParser.isFlagSet( "connectType" ) )
+    throw ArgException( MS::kFailure, "-ct (-connectType) not provided." );
+  MString connectTypeString = argParser.flagArgumentString( "connectType", 0 ).asChar();
+  connectTypeString.toLowerCase(); 
+  if ( connectTypeString == "in" )
+    args.connectType = FabricCore::DFGPortType_In;
+  else if ( connectTypeString == "io" )
+    args.connectType = FabricCore::DFGPortType_IO;
+  else if ( connectTypeString == "out" )
+    args.connectType = FabricCore::DFGPortType_Out;
+  else
+    throw ArgException( MS::kFailure, "-ct (-connectType) value unrecognized" );
+
+  if ( argParser.isFlagSet( "extDep" ) )
+    args.extDep = QString::fromUtf8(
+      argParser.flagArgumentString( "extDep", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "metaData" ) )
+    args.metaData = QString::fromUtf8(
+      argParser.flagArgumentString( "metaData", 0 ).asChar()
+      );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGAddBlockPortCommand::executeDFGUICmd(
   MArgParser &argParser
   )
 {
-  // TODO
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddBlockPort *cmd =
+    new FabricUI::DFG::DFGUICmd_AddBlockPort(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.blockName,
+      args.desiredPortName,
+      args.portType,
+      args.typeSpec,
+      args.pathToConnect,
+      args.connectType,
+      args.extDep,
+      args.metaData
+      );
+  cmd->doit();
+  setResult( cmd->getActualPortName().toUtf8().constData() );
+  return cmd;
 }
 
 
