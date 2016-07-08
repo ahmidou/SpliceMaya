@@ -546,7 +546,57 @@ QString DFGUICmdHandler_Maya::dfgDoAddInstPort(
   QString metaData
   )
 {
-  // TODO
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_AddInstPort::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("n"), instName, cmd );
+  encodeStringArg( FTL_STR("d"), desiredPortName, cmd );
+  QString portTypeStr;
+  switch ( portType )
+  {
+    case FabricCore::DFGPortType_In:
+      portTypeStr = QString("In");
+      break;
+    case FabricCore::DFGPortType_IO:
+      portTypeStr = QString("IO");
+      break;
+    case FabricCore::DFGPortType_Out:
+      portTypeStr = QString("Out");
+      break;
+  }
+  encodeStringArg( FTL_STR("p"), portTypeStr, cmd );
+  encodeStringArg( FTL_STR("t"), typeSpec, cmd );
+  if ( !pathToConnect.isEmpty() )
+  encodeStringArg( FTL_STR("c"), pathToConnect, cmd );
+  QString connectTypeStr;
+  switch ( connectType )
+  {
+    case FabricCore::DFGPortType_In:
+      connectTypeStr = QString("In");
+      break;
+    case FabricCore::DFGPortType_IO:
+      connectTypeStr = QString("IO");
+      break;
+    case FabricCore::DFGPortType_Out:
+      connectTypeStr = QString("Out");
+      break;
+  }
+  encodeStringArg( FTL_STR("ct"), connectTypeStr, cmd );
+  if ( !extDep.isEmpty() )
+    encodeStringArg( FTL_STR("xd"), extDep, cmd );
+  if ( !metaData.isEmpty() )
+    encodeStringArg( FTL_STR("md"), metaData, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+
+  return QString::fromUtf8( mResult.asChar() );
 }
 
 QString DFGUICmdHandler_Maya::dfgDoAddInstBlockPort(
@@ -562,7 +612,30 @@ QString DFGUICmdHandler_Maya::dfgDoAddInstBlockPort(
   QString metaData
   )
 {
-  // TODO
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_AddInstBlockPort::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("n"), instName, cmd );
+  encodeStringArg( FTL_STR("b"), blockName, cmd );
+  encodeStringArg( FTL_STR("d"), desiredPortName, cmd );
+  encodeStringArg( FTL_STR("t"), typeSpec, cmd );
+  if ( !pathToConnect.isEmpty() )
+  encodeStringArg( FTL_STR("c"), pathToConnect, cmd );
+  if ( !extDep.isEmpty() )
+    encodeStringArg( FTL_STR("xd"), extDep, cmd );
+  if ( !metaData.isEmpty() )
+    encodeStringArg( FTL_STR("md"), metaData, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+
+  return QString::fromUtf8( mResult.asChar() );
 }
 
 QString DFGUICmdHandler_Maya::dfgDoCreatePreset(
@@ -1126,7 +1199,57 @@ QString DFGUICmdHandler_Maya::dfgDoAddBlockPort(
   QString metaData
   )
 {
-  // TODO
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_AddBlockPort::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("b"), blockName, cmd );
+  encodeStringArg( FTL_STR("d"), desiredPortName, cmd );
+  QString portTypeStr;
+  switch ( portType )
+  {
+    case FabricCore::DFGPortType_In:
+      portTypeStr = QString("In");
+      break;
+    case FabricCore::DFGPortType_IO:
+      portTypeStr = QString("IO");
+      break;
+    case FabricCore::DFGPortType_Out:
+      portTypeStr = QString("Out");
+      break;
+  }
+  encodeStringArg( FTL_STR("p"), portTypeStr, cmd );
+  encodeStringArg( FTL_STR("t"), typeSpec, cmd );
+  if ( !pathToConnect.isEmpty() )
+  encodeStringArg( FTL_STR("c"), pathToConnect, cmd );
+  QString connectTypeStr;
+  switch ( connectType )
+  {
+    case FabricCore::DFGPortType_In:
+      connectTypeStr = QString("In");
+      break;
+    case FabricCore::DFGPortType_IO:
+      connectTypeStr = QString("IO");
+      break;
+    case FabricCore::DFGPortType_Out:
+      connectTypeStr = QString("Out");
+      break;
+  }
+  encodeStringArg( FTL_STR("ct"), connectTypeStr, cmd );
+  if ( !extDep.isEmpty() )
+    encodeStringArg( FTL_STR("xd"), extDep, cmd );
+  if ( !metaData.isEmpty() )
+    encodeStringArg( FTL_STR("md"), metaData, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+
+  return QString::fromUtf8( mResult.asChar() );
 }
 
 /*
