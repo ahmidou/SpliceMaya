@@ -29,7 +29,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     QString execPath,
     FabricCore::DFGExec const &exec,
-    QString srcPath, 
+    QString srcPath,
     QString dstPath
     );
 
@@ -106,6 +106,33 @@ protected:
     QString uiMetadata
     );
 
+  virtual QString dfgDoAddInstPort(
+    FabricCore::DFGBinding const &binding,
+    QString execPath,
+    FabricCore::DFGExec const &exec,
+    QString instName,
+    QString desiredPortName,
+    FabricCore::DFGPortType portType,
+    QString typeSpec,
+    QString pathToConnect,
+    FabricCore::DFGPortType connectType,
+    QString extDep,
+    QString metaData
+    );
+
+  virtual QString dfgDoAddInstBlockPort(
+    FabricCore::DFGBinding const &binding,
+    QString execPath,
+    FabricCore::DFGExec const &exec,
+    QString instName,
+    QString blockName,
+    QString desiredPortName,
+    QString typeSpec,
+    QString pathToConnect,
+    QString extDep,
+    QString metaData
+    );
+
   virtual QString dfgDoCreatePreset(
     FabricCore::DFGBinding const &binding,
     QString execPath,
@@ -177,7 +204,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     QString execPath,
     FabricCore::DFGExec const &exec,
-    QString node,
+    QString nodeName,
     QString comment
     );
 
@@ -216,7 +243,7 @@ protected:
 
   virtual void dfgDoSetArgValue(
     FabricCore::DFGBinding const &binding,
-    QString name,
+    QString argName,
     FabricCore::RTVal const &value
     );
 
@@ -224,7 +251,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     QString execPath,
     FabricCore::DFGExec const &exec,
-    QString port,
+    QString portPath,
     FabricCore::RTVal const &value
     );
 
@@ -260,13 +287,27 @@ protected:
     FabricCore::DFGBinding const &binding,
     QList<int> diagIndices
     );
-  
+
   virtual QString dfgDoAddBlock(
     FabricCore::DFGBinding const &binding,
     QString execPath,
     FabricCore::DFGExec const &exec,
     QString desiredName,
     QPointF pos
+    );
+
+  virtual QString dfgDoAddBlockPort(
+    FabricCore::DFGBinding const &binding,
+    QString execPath,
+    FabricCore::DFGExec const &exec,
+    QString blockName,
+    QString desiredPortName,
+    FabricCore::DFGPortType portType,
+    QString typeSpec,
+    QString pathToConnect,
+    FabricCore::DFGPortType connectType,
+    QString extDep,
+    QString metaData
     );
 
 protected:

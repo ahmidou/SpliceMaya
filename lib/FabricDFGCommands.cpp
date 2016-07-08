@@ -1002,17 +1002,17 @@ FabricUI::DFG::DFGUICmd *FabricDFGPasteCommand::executeDFGUICmd(
       );
   cmd->doit();
 
-  QStringList pastedNodeNames = cmd->getPastedNodeNames();
+  QStringList pastedItemNames = cmd->getPastedItemNames();
 
-  MString mPastedNodeNames;
-  for ( QStringList::const_iterator it = pastedNodeNames.begin();
-    it != pastedNodeNames.end(); ++it )
+  MString mPastedItemNames;
+  for ( QStringList::const_iterator it = pastedItemNames.begin();
+    it != pastedItemNames.end(); ++it )
   {
-    if ( it != pastedNodeNames.begin() )
-      mPastedNodeNames += "|";
-    mPastedNodeNames += it->toUtf8().constData();
+    if ( it != pastedItemNames.begin() )
+      mPastedItemNames += "|";
+    mPastedItemNames += it->toUtf8().constData();
   }
-  setResult( mPastedNodeNames );
+  setResult( mPastedItemNames );
 
   return cmd;
 }
