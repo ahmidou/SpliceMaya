@@ -16,6 +16,10 @@
 
 #include <sstream>
 
+/*
+    helpers
+*/
+
 void DFGUICmdHandler_Maya::encodeFlag(
   FTL::CStrRef name,
   std::stringstream &cmd
@@ -237,6 +241,126 @@ void DFGUICmdHandler_Maya::encodeExec(
   encodeStringArg( FTL_STR("e"), execPath, cmd );
 }
 
+/*
+    commands
+*/
+
+void DFGUICmdHandler_Maya::dfgDoRemoveNodes(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QStringList nodes
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_RemoveNodes::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeNamesArg( nodes, cmd );
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+}
+
+void DFGUICmdHandler_Maya::dfgDoConnect(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QString srcPortPath, 
+  QString dstPortPath
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_Connect::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("s"), srcPortPath, cmd );
+  encodeStringArg( FTL_STR("d"), dstPortPath, cmd );
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+ }
+
+void DFGUICmdHandler_Maya::dfgDoDisconnect(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QStringList srcPortPaths,
+  QStringList dstPortPaths
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_Disconnect::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringsArg( FTL_STR("s"), srcPortPaths, cmd );
+  encodeStringsArg( FTL_STR("d"), dstPortPaths, cmd );
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+}
+
+QString DFGUICmdHandler_Maya::dfgDoAddGraph(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QString title,
+  QPointF pos
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_AddGraph::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("t"), title, cmd );
+  encodePositionArg( pos, cmd );
+  cmd << ';';
+
+  MString result;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    result,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+  return QString::fromUtf8( result.asChar() );
+}
+
+QString DFGUICmdHandler_Maya::dfgDoAddFunc(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QString title,
+  QString code,
+  QPointF pos
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_AddFunc::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("t"), title, cmd );
+  encodeStringArg( FTL_STR("c"), code, cmd );
+  encodePositionArg( pos, cmd );
+  cmd << ';';
+
+  MString result;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    result,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+  return QString::fromUtf8( result.asChar() );
+}
+
 QString DFGUICmdHandler_Maya::dfgDoInstPreset(
   FabricCore::DFGBinding const &binding,
   QString execPath,
@@ -345,122 +469,6 @@ QString DFGUICmdHandler_Maya::dfgDoAddSet(
   return QString::fromUtf8( result.asChar() );
 }
 
-QString DFGUICmdHandler_Maya::dfgDoAddGraph(
-  FabricCore::DFGBinding const &binding,
-  QString execPath,
-  FabricCore::DFGExec const &exec,
-  QString title,
-  QPointF pos
-  )
-{
-  std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_AddGraph::CmdName();
-  encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("t"), title, cmd );
-  encodePositionArg( pos, cmd );
-  cmd << ';';
-
-  MString result;
-  MGlobal::executeCommand(
-    cmd.str().c_str(),
-    result,
-    true, // displayEnabled
-    true  // undoEnabled
-    );
-  return QString::fromUtf8( result.asChar() );
-}
-
-QString DFGUICmdHandler_Maya::dfgDoAddFunc(
-  FabricCore::DFGBinding const &binding,
-  QString execPath,
-  FabricCore::DFGExec const &exec,
-  QString title,
-  QString code,
-  QPointF pos
-  )
-{
-  std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_AddFunc::CmdName();
-  encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("t"), title, cmd );
-  encodeStringArg( FTL_STR("c"), code, cmd );
-  encodePositionArg( pos, cmd );
-  cmd << ';';
-
-  MString result;
-  MGlobal::executeCommand(
-    cmd.str().c_str(),
-    result,
-    true, // displayEnabled
-    true  // undoEnabled
-    );
-  return QString::fromUtf8( result.asChar() );
-}
-
-void DFGUICmdHandler_Maya::dfgDoRemoveNodes(
-  FabricCore::DFGBinding const &binding,
-  QString execPath,
-  FabricCore::DFGExec const &exec,
-  QStringList nodes
-  )
-{
-  std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_RemoveNodes::CmdName();
-  encodeExec( binding, execPath, exec, cmd );
-  encodeNamesArg( nodes, cmd );
-  cmd << ';';
-
-  MGlobal::executeCommand(
-    cmd.str().c_str(),
-    true, // displayEnabled
-    true  // undoEnabled
-    );
-}
-
-void DFGUICmdHandler_Maya::dfgDoConnect(
-  FabricCore::DFGBinding const &binding,
-  QString execPath,
-  FabricCore::DFGExec const &exec,
-  QString srcPortPath, 
-  QString dstPortPath
-  )
-{
-  std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_Connect::CmdName();
-  encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("s"), srcPortPath, cmd );
-  encodeStringArg( FTL_STR("d"), dstPortPath, cmd );
-  cmd << ';';
-
-  MGlobal::executeCommand(
-    cmd.str().c_str(),
-    true, // displayEnabled
-    true  // undoEnabled
-    );
- }
-
-void DFGUICmdHandler_Maya::dfgDoDisconnect(
-  FabricCore::DFGBinding const &binding,
-  QString execPath,
-  FabricCore::DFGExec const &exec,
-  QStringList srcPortPaths,
-  QStringList dstPortPaths
-  )
-{
-  std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_Disconnect::CmdName();
-  encodeExec( binding, execPath, exec, cmd );
-  encodeStringsArg( FTL_STR("s"), srcPortPaths, cmd );
-  encodeStringsArg( FTL_STR("d"), dstPortPaths, cmd );
-  cmd << ';';
-
-  MGlobal::executeCommand(
-    cmd.str().c_str(),
-    true, // displayEnabled
-    true  // undoEnabled
-    );
-}
-
 QString DFGUICmdHandler_Maya::dfgDoAddPort(
   FabricCore::DFGBinding const &binding,
   QString execPath,
@@ -524,30 +532,37 @@ QString DFGUICmdHandler_Maya::dfgDoAddPort(
   return QString::fromUtf8( mResult.asChar() );
 }
 
-QString DFGUICmdHandler_Maya::dfgDoAddBlock(
+QString DFGUICmdHandler_Maya::dfgDoAddInstPort(
   FabricCore::DFGBinding const &binding,
   QString execPath,
   FabricCore::DFGExec const &exec,
-  QString desiredName,
-  QPointF pos
+  QString instName,
+  QString desiredPortName,
+  FabricCore::DFGPortType portType,
+  QString typeSpec,
+  QString pathToConnect,
+  FabricCore::DFGPortType connectType,
+  QString extDep,
+  QString metaData
   )
 {
-  std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_AddBlock::CmdName();
-  encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("d"), desiredName, cmd );
-  encodePositionArg( pos, cmd );
-  cmd << ';';
+  // TODO
+}
 
-  MString mResult;
-  MGlobal::executeCommand(
-    cmd.str().c_str(),
-    mResult,
-    true, // displayEnabled
-    true  // undoEnabled
-    );
-
-  return QString::fromUtf8( mResult.asChar() );
+QString DFGUICmdHandler_Maya::dfgDoAddInstBlockPort(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QString instName,
+  QString blockName,
+  QString desiredPortName,
+  QString typeSpec,
+  QString pathToConnect,
+  QString extDep,
+  QString metaData
+  )
+{
+  // TODO
 }
 
 QString DFGUICmdHandler_Maya::dfgDoCreatePreset(
@@ -1071,6 +1086,38 @@ void DFGUICmdHandler_Maya::dfgDoDismissLoadDiags(
     true  // undoEnabled
     );
 }
+
+QString DFGUICmdHandler_Maya::dfgDoAddBlock(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QString desiredName,
+  QPointF pos
+  )
+{
+  // TODO
+}
+
+QString DFGUICmdHandler_Maya::dfgDoAddBlockPort(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QString blockName,
+  QString desiredPortName,
+  FabricCore::DFGPortType portType,
+  QString typeSpec,
+  QString pathToConnect,
+  FabricCore::DFGPortType connectType,
+  QString extDep,
+  QString metaData
+  )
+{
+  // TODO
+}
+
+/*
+    misc
+*/
 
 FabricDFGBaseInterface * DFGUICmdHandler_Maya::getInterfFromBinding( FabricCore::DFGBinding const &binding )
 {

@@ -266,6 +266,41 @@ void FabricDFGAddNodeCommand::GetArgs( MArgParser &argParser, Args &args )
       );
 }
 
+// FabricDFGAddRefCommand
+
+void FabricDFGAddRefCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-d", "-desiredNodeName", MSyntax::kString);
+  syntax.addFlag("-p", "-varPath", MSyntax::kString);
+}
+
+void FabricDFGAddRefCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( argParser.isFlagSet( "desiredNodeName" ) )
+    args.desiredName =
+    QString::fromUtf8(
+      argParser.flagArgumentString( "desiredNodeName", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "varPath" ) )
+    args.varPath =
+    QString::fromUtf8(
+      argParser.flagArgumentString( "varPath", 0 ).asChar()
+      );
+}
+
+
+
+// -------------------------
+
+
+
 // FabricDFGAddBackDropCommand
 
 void FabricDFGAddBackDropCommand::AddSyntax( MSyntax &syntax )
@@ -497,35 +532,6 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddVarCommand::executeDFGUICmd(
   cmd->doit();
   setResult( cmd->getActualNodeName().toUtf8().constData() );
   return cmd;
-}
-
-// FabricDFGAddRefCommand
-
-void FabricDFGAddRefCommand::AddSyntax( MSyntax &syntax )
-{
-  Parent::AddSyntax( syntax );
-  syntax.addFlag("-d", "-desiredNodeName", MSyntax::kString);
-  syntax.addFlag("-p", "-varPath", MSyntax::kString);
-}
-
-void FabricDFGAddRefCommand::GetArgs(
-  MArgParser &argParser,
-  Args &args
-  )
-{
-  Parent::GetArgs( argParser, args );
-
-  if ( argParser.isFlagSet( "desiredNodeName" ) )
-    args.desiredName =
-    QString::fromUtf8(
-      argParser.flagArgumentString( "desiredNodeName", 0 ).asChar()
-      );
-
-  if ( argParser.isFlagSet( "varPath" ) )
-    args.varPath =
-    QString::fromUtf8(
-      argParser.flagArgumentString( "varPath", 0 ).asChar()
-      );
 }
 
 // FabricDFGAddGetCommand
@@ -1223,64 +1229,6 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddPortCommand::executeDFGUICmd(
   return cmd;
 }
 
-// FabricDFGAddBlockCommand
-
-void FabricDFGAddBlockCommand::AddSyntax( MSyntax &syntax )
-{
-  Parent::AddSyntax( syntax );
-  syntax.addFlag("-d", "-desiredName", MSyntax::kString);
-  syntax.addFlag( "-x", "-xPos", MSyntax::kString );
-  syntax.addFlag( "-y", "-yPos", MSyntax::kString );
-}
-
-void FabricDFGAddBlockCommand::GetArgs(
-  MArgParser &argParser,
-  Args &args
-  )
-{
-  Parent::GetArgs( argParser, args );
-
-  if ( !argParser.isFlagSet( "desiredName" ) )
-    throw ArgException( MS::kFailure, "-d (-desiredName) not provided." );
-  args.desiredName = QString::fromUtf8(
-    argParser.flagArgumentString( "desiredName", 0 ).asChar()
-    );
-
-  args.pos = QPointF( 0, 0 );
-  if ( argParser.isFlagSet("xPos") )
-    args.pos.setX(
-      FTL::CStrRef(
-        argParser.flagArgumentString("xPos", 0).asChar()
-        ).toFloat64()
-      );
-  if ( argParser.isFlagSet("yPos") )
-    args.pos.setY(
-      FTL::CStrRef(
-        argParser.flagArgumentString("yPos", 0).asChar()
-        ).toFloat64()
-      );
-}
-
-FabricUI::DFG::DFGUICmd *FabricDFGAddBlockCommand::executeDFGUICmd(
-  MArgParser &argParser
-  )
-{
-  Args args;
-  GetArgs( argParser, args );
-
-  FabricUI::DFG::DFGUICmd_AddBlock *cmd =
-    new FabricUI::DFG::DFGUICmd_AddBlock(
-      args.binding,
-      args.execPath,
-      args.exec,
-      args.desiredName,
-      args.pos
-      );
-  cmd->doit();
-  setResult( cmd->getActualName().toUtf8().constData() );
-  return cmd;
-}
-
 // FabricDFGCreatePresetCommand
 
 void FabricDFGCreatePresetCommand::AddSyntax( MSyntax &syntax )
@@ -1914,6 +1862,12 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetCodeCommand::executeDFGUICmd(
   cmd->doit();
   return cmd;
 }
+
+
+
+// -------------------------
+
+
 
 // FabricDFGImportJSONCommand
 

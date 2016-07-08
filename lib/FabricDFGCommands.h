@@ -182,6 +182,68 @@ protected:
     );
 };
 
+class FabricDFGAddNodeCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QPointF pos;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+};
+
+class FabricDFGAddRefCommand
+  : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString desiredName;
+    QString varPath;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+};
+
+// -------------------------
+
+class FabricDFGRemoveNodesCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QStringList nodeNames;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGRemoveNodesCommand,
+  FabricUI::DFG::DFGUICmd_RemoveNodes
+  > MayaDFGUICmd_RemoveNodes;
+
 class FabricDFGConnectCommand
   : public FabricDFGExecCommand
 {
@@ -203,7 +265,6 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGConnectCommand,
   FabricUI::DFG::DFGUICmd_Connect
@@ -230,16 +291,15 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGDisconnectCommand,
   FabricUI::DFG::DFGUICmd_Disconnect
   > MayaDFGUICmd_Disconnect;
 
-class FabricDFGMoveNodesCommand
-  : public FabricDFGExecCommand
+class FabricDFGAddGraphCommand
+  : public FabricDFGAddNodeCommand
 {
-  typedef FabricDFGExecCommand Parent;
+  typedef FabricDFGAddNodeCommand Parent;
   
 protected:
 
@@ -247,8 +307,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    QStringList nodeNames;
-    QList<QPointF> poss;
+    QString title;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -257,16 +316,15 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGMoveNodesCommand,
-  FabricUI::DFG::DFGUICmd_MoveNodes
-  > MayaDFGUICmd_MoveNodes;
+  FabricDFGAddGraphCommand,
+  FabricUI::DFG::DFGUICmd_AddGraph
+  > MayaDFGUICmd_AddGraph;
 
-class FabricDFGImplodeNodesCommand
-  : public FabricDFGExecCommand
+class FabricDFGAddFuncCommand
+  : public FabricDFGAddNodeCommand
 {
-  typedef FabricDFGExecCommand Parent;
+  typedef FabricDFGAddNodeCommand Parent;
   
 protected:
 
@@ -274,8 +332,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    QStringList nodeNames;
-    QString desiredImplodedNodeName;
+    QString title;
+    QString code;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -284,16 +342,15 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGImplodeNodesCommand,
-  FabricUI::DFG::DFGUICmd_ImplodeNodes
-  > MayaDFGUICmd_ImplodeNodes;
+  FabricDFGAddFuncCommand,
+  FabricUI::DFG::DFGUICmd_AddFunc
+  > MayaDFGUICmd_AddFunc;
 
-class FabricDFGExplodeNodeCommand
-  : public FabricDFGExecCommand
+class FabricDFGInstPresetCommand
+  : public FabricDFGAddNodeCommand
 {
-  typedef FabricDFGExecCommand Parent;
+  typedef FabricDFGAddNodeCommand Parent;
   
 protected:
 
@@ -301,7 +358,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    QString node;
+    QString presetPath;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -310,16 +367,15 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGExplodeNodeCommand,
-  FabricUI::DFG::DFGUICmd_ExplodeNode
-  > MayaDFGUICmd_ExplodeNode;
+  FabricDFGInstPresetCommand,
+  FabricUI::DFG::DFGUICmd_InstPreset
+  > MayaDFGUICmd_InstPreset;
 
-class FabricDFGPasteCommand
-  : public FabricDFGExecCommand
+class FabricDFGAddVarCommand
+  : public FabricDFGAddNodeCommand
 {
-  typedef FabricDFGExecCommand Parent;
+  typedef FabricDFGAddNodeCommand Parent;
   
 protected:
 
@@ -327,8 +383,9 @@ protected:
 
   struct Args : Parent::Args
   {
-    QString text;
-    QPointF xy;
+    QString desiredName;
+    QString type;
+    QString extDep;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -337,65 +394,42 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGPasteCommand,
-  FabricUI::DFG::DFGUICmd_Paste
-  > MayaDFGUICmd_Paste;
+  FabricDFGAddVarCommand,
+  FabricUI::DFG::DFGUICmd_AddVar
+  > MayaDFGUICmd_AddVar;
 
-class FabricDFGResizeBackDropCommand
-  : public FabricDFGExecCommand
+class FabricDFGAddGetCommand
+  : public FabricDFGAddRefCommand
 {
-  typedef FabricDFGExecCommand Parent;
+  typedef FabricDFGAddRefCommand Parent;
   
 protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QString nodeName;
-    QPointF xy;
-    QSizeF wh;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
 
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGResizeBackDropCommand,
-  FabricUI::DFG::DFGUICmd_ResizeBackDrop
-  > MayaDFGUICmd_ResizeBackDrop;
+  FabricDFGAddGetCommand,
+  FabricUI::DFG::DFGUICmd_AddGet
+  > MayaDFGUICmd_AddGet;
 
-class FabricDFGRemoveNodesCommand
-  : public FabricDFGExecCommand
+class FabricDFGAddSetCommand
+  : public FabricDFGAddRefCommand
 {
-  typedef FabricDFGExecCommand Parent;
+  typedef FabricDFGAddRefCommand Parent;
   
 protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QStringList nodeNames;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
 
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGRemoveNodesCommand,
-  FabricUI::DFG::DFGUICmd_RemoveNodes
-  > MayaDFGUICmd_RemoveNodes;
+  FabricDFGAddSetCommand,
+  FabricUI::DFG::DFGUICmd_AddSet
+  > MayaDFGUICmd_AddSet;
 
 class FabricDFGAddPortCommand
   : public FabricDFGExecCommand
@@ -422,13 +456,12 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGAddPortCommand,
   FabricUI::DFG::DFGUICmd_AddPort
   > MayaDFGUICmd_AddPort;
 
-class FabricDFGAddBlockCommand
+class FabricDFGAddInstPortCommand
   : public FabricDFGExecCommand
 {
   typedef FabricDFGExecCommand Parent;
@@ -439,8 +472,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    QString desiredName;
-    QPointF pos;
+    // TODO
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -449,11 +481,35 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGAddBlockCommand,
-  FabricUI::DFG::DFGUICmd_AddBlock
-  > MayaDFGUICmd_AddBlock;
+  FabricDFGAddInstPortCommand,
+  FabricUI::DFG::DFGUICmd_AddInstPort
+  > MayaDFGUICmd_AddInstPort;
+
+class FabricDFGAddInstBlockPortCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    // TODO
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddInstBlockPortCommand,
+  FabricUI::DFG::DFGUICmd_AddInstBlockPort
+  > MayaDFGUICmd_AddInstBlockPort;
 
 class FabricDFGCreatePresetCommand
   : public FabricDFGExecCommand
@@ -477,7 +533,6 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGCreatePresetCommand,
   FabricUI::DFG::DFGUICmd_CreatePreset
@@ -507,65 +562,10 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGEditPortCommand,
   FabricUI::DFG::DFGUICmd_EditPort
   > MayaDFGUICmd_EditPort;
-
-class FabricDFGSetArgValueCommand
-  : public FabricDFGBindingCommand
-{
-  typedef FabricDFGBindingCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QString argName;
-    FabricCore::RTVal value;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGSetArgValueCommand,
-  FabricUI::DFG::DFGUICmd_SetArgValue
-  > MayaDFGUICmd_SetArgValue;
-
-class FabricDFGSetPortDefaultValueCommand
-  : public FabricDFGExecCommand
-{
-  typedef FabricDFGExecCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QString portPath;
-    FabricCore::RTVal value;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGSetPortDefaultValueCommand,
-  FabricUI::DFG::DFGUICmd_SetPortDefaultValue
-  > MayaDFGUICmd_SetPortDefaultValue;
 
 class FabricDFGRemovePortCommand
   : public FabricDFGExecCommand
@@ -587,11 +587,166 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGRemovePortCommand,
   FabricUI::DFG::DFGUICmd_RemovePort
   > MayaDFGUICmd_RemovePort;
+
+class FabricDFGMoveNodesCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QStringList nodeNames;
+    QList<QPointF> poss;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGMoveNodesCommand,
+  FabricUI::DFG::DFGUICmd_MoveNodes
+  > MayaDFGUICmd_MoveNodes;
+
+class FabricDFGResizeBackDropCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString nodeName;
+    QPointF xy;
+    QSizeF wh;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGResizeBackDropCommand,
+  FabricUI::DFG::DFGUICmd_ResizeBackDrop
+  > MayaDFGUICmd_ResizeBackDrop;
+
+class FabricDFGImplodeNodesCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QStringList nodeNames;
+    QString desiredImplodedNodeName;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGImplodeNodesCommand,
+  FabricUI::DFG::DFGUICmd_ImplodeNodes
+  > MayaDFGUICmd_ImplodeNodes;
+
+class FabricDFGExplodeNodeCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString node;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGExplodeNodeCommand,
+  FabricUI::DFG::DFGUICmd_ExplodeNode
+  > MayaDFGUICmd_ExplodeNode;
+
+class FabricDFGAddBackDropCommand
+  : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString title;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddBackDropCommand,
+  FabricUI::DFG::DFGUICmd_AddBackDrop
+  > MayaDFGUICmd_AddBackDrop;
+
+class FabricDFGSetNodeCommentCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString nodeName;
+    QString comment;
+    bool expanded;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSetNodeCommentCommand,
+  FabricUI::DFG::DFGUICmd_SetNodeComment
+  > MayaDFGUICmd_SetNodeComment;
 
 class FabricDFGSetCodeCommand
   : public FabricDFGExecCommand
@@ -613,90 +768,10 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGSetCodeCommand,
   FabricUI::DFG::DFGUICmd_SetCode
   > MayaDFGUICmd_SetCode;
-
-class FabricDFGSetRefVarPathCommand
-  : public FabricDFGExecCommand
-{
-  typedef FabricDFGExecCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QString refName;
-    QString varPath;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGSetRefVarPathCommand,
-  FabricUI::DFG::DFGUICmd_SetRefVarPath
-  > MayaDFGUICmd_SetRefVarPath;
-
-class FabricDFGReorderPortsCommand
-  : public FabricDFGExecCommand
-{
-  typedef FabricDFGExecCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QList<int> indices;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGReorderPortsCommand,
-  FabricUI::DFG::DFGUICmd_ReorderPorts
-  > MayaDFGUICmd_ReorderPorts;
-
-class FabricDFGDismissLoadDiagsCommand
-  : public FabricDFGBindingCommand
-{
-  typedef FabricDFGBindingCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QList<int> indices;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGDismissLoadDiagsCommand,
-  FabricUI::DFG::DFGUICmd_DismissLoadDiags
-  > MayaDFGUICmd_DismissLoadDiags;
 
 class FabricDFGEditNodeCommand
   : public FabricDFGExecCommand
@@ -721,7 +796,6 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGEditNodeCommand,
   FabricUI::DFG::DFGUICmd_EditNode
@@ -748,13 +822,12 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGRenamePortCommand,
   FabricUI::DFG::DFGUICmd_RenamePort
   > MayaDFGUICmd_RenamePort;
 
-class FabricDFGSetNodeCommentCommand
+class FabricDFGPasteCommand
   : public FabricDFGExecCommand
 {
   typedef FabricDFGExecCommand Parent;
@@ -765,9 +838,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    QString nodeName;
-    QString comment;
-    bool expanded;
+    QString text;
+    QPointF xy;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -776,13 +848,38 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGSetNodeCommentCommand,
-  FabricUI::DFG::DFGUICmd_SetNodeComment
-  > MayaDFGUICmd_SetNodeComment;
+  FabricDFGPasteCommand,
+  FabricUI::DFG::DFGUICmd_Paste
+  > MayaDFGUICmd_Paste;
 
-class FabricDFGAddNodeCommand
+class FabricDFGSetArgValueCommand
+  : public FabricDFGBindingCommand
+{
+  typedef FabricDFGBindingCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString argName;
+    FabricCore::RTVal value;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGSetArgValueCommand,
+  FabricUI::DFG::DFGUICmd_SetArgValue
+  > MayaDFGUICmd_SetArgValue;
+
+class FabricDFGSetPortDefaultValueCommand
   : public FabricDFGExecCommand
 {
   typedef FabricDFGExecCommand Parent;
@@ -793,24 +890,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    QPointF pos;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-};
-
-class FabricDFGAddBackDropCommand
-  : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QString title;
+    QString portPath;
+    FabricCore::RTVal value;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
@@ -819,16 +900,15 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGAddBackDropCommand,
-  FabricUI::DFG::DFGUICmd_AddBackDrop
-  > MayaDFGUICmd_AddBackDrop;
+  FabricDFGSetPortDefaultValueCommand,
+  FabricUI::DFG::DFGUICmd_SetPortDefaultValue
+  > MayaDFGUICmd_SetPortDefaultValue;
 
-class FabricDFGInstPresetCommand
-  : public FabricDFGAddNodeCommand
+class FabricDFGSetRefVarPathCommand
+  : public FabricDFGExecCommand
 {
-  typedef FabricDFGAddNodeCommand Parent;
+  typedef FabricDFGExecCommand Parent;
   
 protected:
 
@@ -836,158 +916,45 @@ protected:
 
   struct Args : Parent::Args
   {
-    QString presetPath;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGInstPresetCommand,
-  FabricUI::DFG::DFGUICmd_InstPreset
-  > MayaDFGUICmd_InstPreset;
-
-class FabricDFGAddGraphCommand
-  : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QString title;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGAddGraphCommand,
-  FabricUI::DFG::DFGUICmd_AddGraph
-  > MayaDFGUICmd_AddGraph;
-
-class FabricDFGAddFuncCommand
-  : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QString title;
-    QString code;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGAddFuncCommand,
-  FabricUI::DFG::DFGUICmd_AddFunc
-  > MayaDFGUICmd_AddFunc;
-
-class FabricDFGAddVarCommand
-  : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QString desiredName;
-    QString type;
-    QString extDep;
-  };
-
-  static void GetArgs( MArgParser &argParser, Args &args );
-
-  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
-    MArgParser &argParser
-    );
-};
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGAddVarCommand,
-  FabricUI::DFG::DFGUICmd_AddVar
-  > MayaDFGUICmd_AddVar;
-
-class FabricDFGAddRefCommand
-  : public FabricDFGAddNodeCommand
-{
-  typedef FabricDFGAddNodeCommand Parent;
-  
-protected:
-
-  static void AddSyntax( MSyntax &syntax );
-
-  struct Args : Parent::Args
-  {
-    QString desiredName;
+    QString refName;
     QString varPath;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
-};
-
-class FabricDFGAddGetCommand
-  : public FabricDFGAddRefCommand
-{
-  typedef FabricDFGAddRefCommand Parent;
-  
-protected:
 
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGAddGetCommand,
-  FabricUI::DFG::DFGUICmd_AddGet
-  > MayaDFGUICmd_AddGet;
+  FabricDFGSetRefVarPathCommand,
+  FabricUI::DFG::DFGUICmd_SetRefVarPath
+  > MayaDFGUICmd_SetRefVarPath;
 
-class FabricDFGAddSetCommand
-  : public FabricDFGAddRefCommand
+class FabricDFGReorderPortsCommand
+  : public FabricDFGExecCommand
 {
-  typedef FabricDFGAddRefCommand Parent;
+  typedef FabricDFGExecCommand Parent;
   
 protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QList<int> indices;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
 
   virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
-  FabricDFGAddSetCommand,
-  FabricUI::DFG::DFGUICmd_AddSet
-  > MayaDFGUICmd_AddSet;
-
-typedef MayaDFGUICmdWrapper<
-  FabricDFGDisconnectCommand,
-  FabricUI::DFG::DFGUICmd_Disconnect
-  > MayaDFGUICmd_Disconnect;
+  FabricDFGReorderPortsCommand,
+  FabricUI::DFG::DFGUICmd_ReorderPorts
+  > MayaDFGUICmd_ReorderPorts;
 
 class FabricDFGSetExtDepsCommand
   : public FabricDFGExecCommand
@@ -1009,7 +976,6 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGSetExtDepsCommand,
   FabricUI::DFG::DFGUICmd_SetExtDeps
@@ -1035,11 +1001,87 @@ protected:
     MArgParser &argParser
     );
 };
-
 typedef MayaDFGUICmdWrapper<
   FabricDFGSplitFromPresetCommand,
   FabricUI::DFG::DFGUICmd_SplitFromPreset
   > MayaDFGUICmd_SplitFromPreset;
+
+class FabricDFGDismissLoadDiagsCommand
+  : public FabricDFGBindingCommand
+{
+  typedef FabricDFGBindingCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QList<int> indices;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGDismissLoadDiagsCommand,
+  FabricUI::DFG::DFGUICmd_DismissLoadDiags
+  > MayaDFGUICmd_DismissLoadDiags;
+
+class FabricDFGAddBlockCommand
+  : public FabricDFGBindingCommand
+{
+  typedef FabricDFGBindingCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    // TODO
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddBlockCommand,
+  FabricUI::DFG::DFGUICmd_AddBlock
+  > MayaDFGUICmd_AddBlock;
+
+class FabricDFGAddBlockPortCommand
+  : public FabricDFGBindingCommand
+{
+  typedef FabricDFGBindingCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    // TODO
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddBlockPortCommand,
+  FabricUI::DFG::DFGUICmd_AddBlockPort
+  > MayaDFGUICmd_AddBlockPort;
+
+// -------------------------
 
 class FabricDFGImportJSONCommand
   : public FabricDFGBaseCommand
