@@ -564,6 +564,7 @@ protected:
   {
     QString oldPortName;
     QString desiredNewPortName;
+    FabricCore::DFGPortType portType;
     QString typeSpec;
     QString extDep;
     QString uiMetadata;
@@ -955,6 +956,7 @@ protected:
 
   struct Args : Parent::Args
   {
+    QString itemPath;
     QList<int> indices;
   };
 

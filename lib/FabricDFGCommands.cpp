@@ -1040,6 +1040,7 @@ void FabricDFGEditPortCommand::AddSyntax( MSyntax &syntax )
   Parent::AddSyntax( syntax );
   syntax.addFlag("-n", "-oldPortName", MSyntax::kString);
   syntax.addFlag("-d", "-desiredNewPortName", MSyntax::kString);
+  syntax.addFlag("-p", "-portType", MSyntax::kString);
   syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
   syntax.addFlag("-xd", "-extDep", MSyntax::kString);
   syntax.addFlag("-ui", "-uiMetadata", MSyntax::kString);
@@ -1064,6 +1065,19 @@ void FabricDFGEditPortCommand::GetArgs(
       );
   else
     args.desiredNewPortName = args.oldPortName;
+
+  if ( !argParser.isFlagSet( "portType" ) )
+    throw ArgException( MS::kFailure, "-p (-portType) not provided." );
+  MString portTypeString = argParser.flagArgumentString( "portType", 0 ).asChar();
+  portTypeString.toLowerCase(); 
+  if ( portTypeString == "in" )
+    args.portType = FabricCore::DFGPortType_In;
+  else if ( portTypeString == "io" )
+    args.portType = FabricCore::DFGPortType_IO;
+  else if ( portTypeString == "out" )
+    args.portType = FabricCore::DFGPortType_Out;
+  else
+    throw ArgException( MS::kFailure, "-p (-portType) value unrecognized" );
 
   if ( argParser.isFlagSet( "typeSpec" ) )
     args.typeSpec = QString::fromUtf8(
@@ -1095,6 +1109,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGEditPortCommand::executeDFGUICmd(
       args.exec,
       args.oldPortName,
       args.desiredNewPortName,
+      args.portType,
       args.typeSpec,
       args.extDep,
       args.uiMetadata
@@ -1875,6 +1890,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGSetRefVarPathCommand::executeDFGUICmd(
 void FabricDFGReorderPortsCommand::AddSyntax( MSyntax &syntax )
 {
   Parent::AddSyntax( syntax );
+  syntax.addFlag("-p", "-itemPath", MSyntax::kString);
   syntax.addFlag("-i", "-indices", MSyntax::kString);
 }
 
@@ -1884,6 +1900,12 @@ void FabricDFGReorderPortsCommand::GetArgs(
   )
 {
   Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "itemPath" ) )
+    throw ArgException( MS::kFailure, "-p (-itemPath) not provided." );
+  args.itemPath = QString::fromUtf8(
+    argParser.flagArgumentString( "itemPath", 0 ).asChar()
+    );
 
   if ( !argParser.isFlagSet( "indices" ) )
     throw ArgException( MS::kFailure, "-i (-indices) not provided." );
@@ -1917,6 +1939,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGReorderPortsCommand::executeDFGUICmd(
       args.binding,
       args.execPath,
       args.exec,
+      args.itemPath,
       args.indices
       );
   cmd->doit();

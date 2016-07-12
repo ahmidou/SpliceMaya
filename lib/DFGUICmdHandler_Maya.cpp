@@ -671,6 +671,7 @@ QString DFGUICmdHandler_Maya::dfgDoEditPort(
   FabricCore::DFGExec const &exec,
   QString oldPortName,
   QString desiredNewPortName,
+  FabricCore::DFGPortType portType,
   QString typeSpec,
   QString extDep,
   QString uiMetadata
@@ -682,6 +683,21 @@ QString DFGUICmdHandler_Maya::dfgDoEditPort(
   encodeStringArg( FTL_STR("n"), oldPortName, cmd );
   if ( !desiredNewPortName.isEmpty() )
     encodeStringArg( FTL_STR("d"), desiredNewPortName, cmd );
+  QString portTypeStr;
+  switch ( portType )
+  {
+    case FabricCore::DFGPortType_In:
+      portTypeStr = QString("In");
+      break;
+    case FabricCore::DFGPortType_IO:
+      portTypeStr = QString("IO");
+      break;
+    case FabricCore::DFGPortType_Out:
+      portTypeStr = QString("Out");
+      break;
+  }
+  if ( !portTypeStr.isEmpty() )
+    encodeStringArg( FTL_STR("p"), portTypeStr, cmd );
   if ( !typeSpec.isEmpty() )
     encodeStringArg( FTL_STR("t"), typeSpec, cmd );
   if ( !extDep.isEmpty() )
@@ -1069,12 +1085,14 @@ void DFGUICmdHandler_Maya::dfgDoReorderPorts(
   FabricCore::DFGBinding const &binding,
   QString execPath,
   FabricCore::DFGExec const &exec,
+  QString itemPath,
   QList<int> indices
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_ReorderPorts::CmdName();
   encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("p"), itemPath, cmd );
 
   cmd << " -i";
   cmd << " \"[";
