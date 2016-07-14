@@ -2107,8 +2107,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddBlockCommand::executeDFGUICmd(
   Args args;
   GetArgs( argParser, args );
 
-  FabricUI::DFG::DFGUICmd_AddGraph *cmd =
-    new FabricUI::DFG::DFGUICmd_AddGraph(
+  FabricUI::DFG::DFGUICmd_AddBlock *cmd =
+    new FabricUI::DFG::DFGUICmd_AddBlock(
       args.binding,
       args.execPath,
       args.exec,
@@ -2116,7 +2116,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddBlockCommand::executeDFGUICmd(
       args.pos
       );
   cmd->doit();
-  setResult( cmd->getActualNodeName().toUtf8().constData() );
+  setResult( cmd->getActualName().toUtf8().constData() );
   return cmd;
 }
 
