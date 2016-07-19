@@ -105,8 +105,6 @@ protected:
 
   // FabricSplice::DGGraph _spliceGraph;
   MStringArray _dirtyPlugs;
-  MStringArray _evalContextPlugNames;
-  MIntArray _evalContextPlugIds;
   bool _isTransferingInputs;
   bool _portObjectsDestroyed;
   std::vector<std::string> mSpliceMayaDataOverride;

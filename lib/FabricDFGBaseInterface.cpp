@@ -270,7 +270,6 @@ void FabricDFGBaseInterface::evaluate(){
       {
         m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
         m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
-        m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
       }
       catch(FabricCore::Exception e)
       {
@@ -281,9 +280,7 @@ void FabricDFGBaseInterface::evaluate(){
     {
       try
       {
-        m_evalContext.setMember("graph", FabricCore::RTVal::ConstructString(m_client, thisNode.name().asChar()));
         m_evalContext.setMember("time", FabricCore::RTVal::ConstructFloat32(m_client, MAnimControl::currentTime().as(MTime::kSeconds)));
-        m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, mayaGetLastLoadedScene().asChar()));
       }
       catch(FabricCore::Exception e)
       {

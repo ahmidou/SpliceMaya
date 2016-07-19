@@ -256,7 +256,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
   }
 
   FabricCore::RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
-  FabricCore::RTVal klevent = QtToKLEvent(event, *client, viewport);
+  FabricCore::RTVal klevent = QtToKLEvent(event, *client, viewport, "Maya" );
    
   if(klevent.isValid())
   {
@@ -271,6 +271,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     FabricCore::RTVal host = klevent.maybeGetMember("host");
     MString dirtifyDCCNode(host.maybeGetMember("dirtifyNode").getStringCString());
     if(dirtifyDCCNode.length() > 0){
+      fprintf(stderr, "DIRTIFY: %s\n", dirtifyDCCNode.asChar() );
       MGlobal::executeCommand(MString("dgdirty \"") + dirtifyDCCNode + MString("\""));
     }
 
@@ -287,6 +288,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
           FabricCore::RTVal valueVal = FabricSplice::constructStringRTVal("value");
 
           MString attribute = customCommandParams.callMethod("String", "getString", 1, &attributeVal).getStringCString();
+          fprintf(stderr, "SETATTR: %s\n", attribute.asChar());
           MString valueType = customCommandParams.callMethod("String", "getValueType", 1, &valueVal).getStringCString();
           FabricCore::RTVal value;
 
