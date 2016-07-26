@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <QtGui/QWidget>
-#include <QtGui/QComboBox>
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QComboBox>
 #include <QtCore/QEvent>
 
 class FabricSpliceComboWidget : public QComboBox {

@@ -3,11 +3,11 @@
 //
 
 #include <QtGui/QFont>
-#include <QtGui/QVBoxLayout>
+#include <QtWidgets/QVBoxLayout>
 #include <QtGui/QPainter>
-#include <QtGui/QApplication>
-#include <QtGui/QScrollBar>
-#include <QtGui/QToolTip>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QScrollBar>
+#include <QtWidgets/QToolTip>
 
 #include "FabricSpliceKLSourceCodeWidget.h"
 #include "FabricSpliceHelpers.h"
@@ -177,9 +177,9 @@ void FabricSpliceCodeCompletionMenu::keyPressEvent(QKeyEvent  *e)
   QString text = e->text();
   if(text.length() != 1)
     return QMenu::keyPressEvent(e);
-  if(isalnum(text.at(0).toAscii()))
+  if(isalnum(text.at(0).toLatin1()))
   {
-    mPressedKeySequence += text.at(0).toAscii();
+    mPressedKeySequence += text.at(0).toLatin1();
     update();
     e->accept();
     // e->ignore();

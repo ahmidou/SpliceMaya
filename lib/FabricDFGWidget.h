@@ -6,8 +6,8 @@
 
 #include "Foundation.h"
 #include "DFGUICmdHandler_Maya.h"
-#include <QtGui/QWidget>
-#include <QtGui/QSplitter>
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QSplitter>
 
 #include <map>
 

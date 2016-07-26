@@ -57,7 +57,11 @@ if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CCFLAGS'] = ['/wd4190']
 elif FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
-  mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
+  # FIXME other OSes
+  if int(float(str(MAYA_VERSION[:4]))) >= 2017:
+    mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL'])
+  else:
+    mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
 elif FABRIC_BUILD_OS == 'Darwin':
   mayaFlags['CPPDEFINES'] = ['OSMac_']
   qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
@@ -97,7 +101,7 @@ if not os.path.exists(uiSconscript.abspath):
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
 
-if(str(MAYA_VERSION[:4]) == "2016" or str(MAYA_VERSION[:4]) == "2016.5") :
+if int(float(str(MAYA_VERSION[:4]))) >= 2016:
   env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Render')])
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
@@ -139,7 +143,7 @@ target = 'FabricMaya'
 
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
-if(str(MAYA_VERSION[:4]) == "2016" or str(MAYA_VERSION[:4]) == "2016.5") :
+if int(float(str(MAYA_VERSION[:4]))) >= 2016:
   libSources += env.Glob('lib/Render/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 

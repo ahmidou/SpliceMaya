@@ -5,8 +5,8 @@
 #pragma once
 
 #include <QtCore/QDataStream>
-#include <QtGui/QTabWidget>
-#include <QtGui/QTextEdit>
+#include <QtWidgets/QTabWidget>
+#include <QtWidgets/QTextEdit>
 #include <QtCore/QEvent>
 
 #include <map>
