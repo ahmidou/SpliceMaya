@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <QtGui/QLineEdit>
+#include <QtWidgets/QLineEdit>
 #include "FabricSpliceBaseDialog.h"
 
 class FabricSpliceAddOpDialog : public FabricSpliceBaseDialog {

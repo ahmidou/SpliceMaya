@@ -4,13 +4,13 @@
 
 #pragma once
 
-#include <QtGui/QWidget>
-#include <QtGui/QPlainTextEdit>
+#include <QtWidgets/QWidget>
+#include <QtWidgets/QPlainTextEdit>
 #include <QtGui/QKeyEvent>
 #include <QtGui/QPaintEvent>
 #include <QtGui/QFont>
 #include <QtGui/QFontMetrics>
-#include <QtGui/QMenu>
+#include <QtWidgets/QMenu>
 
 #include "FabricSpliceKLSyntaxHighlighter.h"
 #include <FabricSplice.h>

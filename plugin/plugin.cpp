@@ -2,8 +2,8 @@
 // [andrew 20130620] all hell breaks loose in Linux if these aren't included first
 #include <QtCore/QDataStream>
 #include <QtCore/QMetaType>
-#include <QtGui/QTextEdit>
-#include <QtGui/QComboBox>
+#include <QtWidgets/QTextEdit>
+#include <QtWidgets/QComboBox>
 #include <QtCore/QEvent>
 
 #include "plugin.h"

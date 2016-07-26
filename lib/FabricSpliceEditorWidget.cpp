@@ -2,15 +2,15 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
-#include <QtGui/QHBoxLayout>
-#include <QtGui/QVBoxLayout>
-#include <QtGui/QLabel>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QLabel>
 #include <QtGui/QFont>
-#include <QtGui/QPushButton>
+#include <QtWidgets/QPushButton>
 #include <QtGui/QColor>
-#include <QtGui/QFileDialog>
-#include <QtGui/QTabWidget>
-#include <QtGui/QDockWidget>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QTabWidget>
+#include <QtWidgets/QDockWidget>
 
 #include "FabricSpliceEditorWidget.h"
 #include "FabricSpliceMayaNode.h"

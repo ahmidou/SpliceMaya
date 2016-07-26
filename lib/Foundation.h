@@ -11,7 +11,7 @@
 # include <QtCore/qdatastream.h>
 # include <QtCore/qmetatype.h>
 # include <QtCore/qvariant.h>
-# include <QtGui/qstyleoption.h>
+# include <QtWidgets/qstyleoption.h>
 # include <X11/Xlib.h>
 # undef CursorShape
 # undef KeyPress
