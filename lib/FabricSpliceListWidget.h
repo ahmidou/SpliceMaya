@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QListWidget>
+#include <QWidget>
+#include <QListWidget>
 
 class FabricSpliceListWidget : public QListWidget {
 public:

@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QDialog>
-#include <QtWidgets/QLayout>
+#include <QWidget>
+#include <QDialog>
+#include <QLayout>
 
 #include <FabricCore.h>
 

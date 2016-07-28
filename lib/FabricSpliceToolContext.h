@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <QtCore/QObject>
+#include <QObject>
 #include "Foundation.h"
 #include <FabricSplice.h>
 #include "FabricSpliceBaseInterface.h"

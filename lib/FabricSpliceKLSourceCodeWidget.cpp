@@ -2,12 +2,12 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
-#include <QtGui/QFont>
-#include <QtWidgets/QVBoxLayout>
-#include <QtGui/QPainter>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QScrollBar>
-#include <QtWidgets/QToolTip>
+#include <QFont>
+#include <QVBoxLayout>
+#include <QPainter>
+#include <QApplication>
+#include <QScrollBar>
+#include <QToolTip>
 
 #include "FabricSpliceKLSourceCodeWidget.h"
 #include "FabricSpliceHelpers.h"

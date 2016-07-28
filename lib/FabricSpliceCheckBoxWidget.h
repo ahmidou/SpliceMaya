@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QCheckBox>
+#include <QWidget>
+#include <QCheckBox>
 
 class FabricSpliceCheckBoxWidget : public QCheckBox {
 public:

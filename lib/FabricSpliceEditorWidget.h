@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <QtCore/QDataStream>
-#include <QtWidgets/QTabWidget>
-#include <QtWidgets/QTextEdit>
-#include <QtCore/QEvent>
+#include <QDataStream>
+#include <QTabWidget>
+#include <QTextEdit>
+#include <QEvent>
 
 #include <map>
 

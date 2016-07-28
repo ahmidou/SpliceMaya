@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <QtWidgets/QWidget>
-#include <QtGui/QMouseEvent>
-#include <QtGui/QPaintEvent>
-#include <QtGui/QPixmap>
+#include <QWidget>
+#include <QMouseEvent>
+#include <QPaintEvent>
+#include <QPixmap>
 
 class FabricSpliceLogoWidget : public QWidget {
 public:

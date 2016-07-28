@@ -7,7 +7,7 @@
 #include <maya/MArgDatabase.h>
 #include <maya/MQtUtil.h>
 
-#include <QtWidgets/QToolBox>
+#include <QToolBox>
 
 #define kActionFlag "-a"
 #define kActionFlagLong "-action"

@@ -34,6 +34,8 @@ qtMOCBuilder = Builder(
 )
 env.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 
+uses_qt5 = int(float(str(MAYA_VERSION[:4]))) >= 2017
+
 mayaFlags = {
   'CPPPATH': [
       env.Dir('lib'),
@@ -44,11 +46,23 @@ mayaFlags = {
     MAYA_LIB_DIR
   ],
 }
-if FABRIC_BUILD_OS == 'Windows':
-  mayaFlags['CPPPATH'].extend([MAYA_INCLUDE_DIR, os.path.join(MAYA_INCLUDE_DIR, 'Qt')])
-else:
-  mayaFlags['CCFLAGS'] = ['-isystem', MAYA_INCLUDE_DIR]
 
+if FABRIC_BUILD_OS == 'Windows':
+  maya_includes = os.path.join(MAYA_INCLUDE_DIR, 'Qt')
+else:
+  maya_includes = MAYA_INCLUDE_DIR
+
+mayaFlags['CPPPATH'] += [
+  MAYA_INCLUDE_DIR,
+  os.path.join(maya_includes, 'QtCore'),
+  os.path.join(maya_includes, 'QtGui'),
+  os.path.join(maya_includes, 'QtOpenGL'),
+  ]
+if uses_qt5:
+  mayaFlags['CPPPATH'] += [
+    os.path.join(maya_includes, 'QtWidgets'),
+    ]
+ 
 mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'OpenMayaRender', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
@@ -58,7 +72,7 @@ if FABRIC_BUILD_OS == 'Windows':
 elif FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
   # FIXME other OSes
-  if int(float(str(MAYA_VERSION[:4]))) >= 2017:
+  if uses_qt5:
     mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL'])
   else:
     mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
