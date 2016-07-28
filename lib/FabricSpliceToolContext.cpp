@@ -2,10 +2,10 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
-#include <QtWidgets/QWidget>
-#include <QtGui/QKeyEvent>
-#include <QtGui/QMouseEvent>
-#include <QtGui/QWheelEvent>
+#include <QWidget>
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QWheelEvent>
 
 #include "FabricSpliceToolContext.h"
 #include "FabricSpliceBaseInterface.h"

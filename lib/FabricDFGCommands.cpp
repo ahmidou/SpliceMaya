@@ -2,7 +2,7 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
-#include <QtWidgets/QFileDialog>  // [pzion 20150519] Must include first since something below defines macros that mess it up
+#include <QFileDialog>  // [pzion 20150519] Must include first since something below defines macros that mess it up
 
 #include "Foundation.h"
 #include "FabricDFGCommands.h"

@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <QtCore/QHash>
-#include <QtGui/QSyntaxHighlighter>
-#include <QtGui/QTextCharFormat>
-#include <QtGui/QTextDocument>
+#include <QHash>
+#include <QSyntaxHighlighter>
+#include <QTextCharFormat>
+#include <QTextDocument>
 
 #include <FabricCore.h>
 

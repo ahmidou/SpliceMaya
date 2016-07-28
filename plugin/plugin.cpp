@@ -1,10 +1,10 @@
 
 // [andrew 20130620] all hell breaks loose in Linux if these aren't included first
-#include <QtCore/QDataStream>
-#include <QtCore/QMetaType>
-#include <QtWidgets/QTextEdit>
-#include <QtWidgets/QComboBox>
-#include <QtCore/QEvent>
+#include <QDataStream>
+#include <QMetaType>
+#include <QTextEdit>
+#include <QComboBox>
+#include <QEvent>
 
 #include "plugin.h"
 #include <maya/MGlobal.h>

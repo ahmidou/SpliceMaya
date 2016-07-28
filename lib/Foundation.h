@@ -7,11 +7,11 @@
 // [andrew 20150520] these Qt headers need to be included before X11 due to
 // conflicting #defines
 #if defined(__linux__)
-# include <QtCore/qcoreevent.h>
-# include <QtCore/qdatastream.h>
-# include <QtCore/qmetatype.h>
-# include <QtCore/qvariant.h>
-# include <QtWidgets/qstyleoption.h>
+# include <qcoreevent.h>
+# include <qdatastream.h>
+# include <qmetatype.h>
+# include <qvariant.h>
+# include <qstyleoption.h>
 # include <X11/Xlib.h>
 # undef CursorShape
 # undef KeyPress

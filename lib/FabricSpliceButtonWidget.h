@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QPushButton>
-#include <QtGui/QMouseEvent>
+#include <QWidget>
+#include <QPushButton>
+#include <QMouseEvent>
 
 class FabricSpliceButtonWidget : public QPushButton {
 public:

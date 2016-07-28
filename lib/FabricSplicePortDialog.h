@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <QtWidgets/QLineEdit>
-#include <QtWidgets/QCheckBox>
+#include <QLineEdit>
+#include <QCheckBox>
 #include "FabricSpliceCheckBoxWidget.h"
 #include "FabricSpliceComboWidget.h"
 #include "FabricSpliceBaseDialog.h"

@@ -2,7 +2,7 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
-#include <QtWidgets/QFileDialog>
+#include <QFileDialog>
 
 #include "FabricSpliceCommand.h"
 #include "FabricSpliceConversion.h"
