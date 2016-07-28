@@ -52,35 +52,52 @@ if FABRIC_BUILD_OS == 'Windows':
 else:
   maya_includes = MAYA_INCLUDE_DIR
 
-mayaFlags['CPPPATH'] += [
+maya_include_paths = [
   MAYA_INCLUDE_DIR,
   os.path.join(maya_includes, 'QtCore'),
   os.path.join(maya_includes, 'QtGui'),
   os.path.join(maya_includes, 'QtOpenGL'),
   ]
 if uses_qt5:
-  mayaFlags['CPPPATH'] += [
+  maya_include_paths += [
     os.path.join(maya_includes, 'QtWidgets'),
     ]
+
+if FABRIC_BUILD_OS == 'Windows':
+  mayaFlags['CPPPATH'] += maya_include_paths
+else:
+  # [andrew 2016-07-28] this is required because there are warnings generated
+  # in the maya Qt headers themselves and we're compiling with -Werror
+  maya_include_flags = []
+  for path in maya_include_paths:
+      maya_include_flags += ['-isystem'+ path]
+  mayaFlags['CCFLAGS'] = maya_include_flags
  
 mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'OpenMayaRender', 'Foundation']
 if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
-  mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4', 'QtOpenGL4'])
+  if uses_qt5:
+    mayaFlags['LIBS'].extend(['QtCore5', 'QtGui5', 'QtOpenGL5'])
+  else:
+    mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4', 'QtOpenGL4'])
   # FE-4590
   mayaFlags['CCFLAGS'] = ['/wd4190']
 elif FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
-  # FIXME other OSes
   if uses_qt5:
     mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL'])
   else:
     mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
 elif FABRIC_BUILD_OS == 'Darwin':
   mayaFlags['CPPDEFINES'] = ['OSMac_']
-  qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
-  qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
-  qtOpenGLLib = File(os.path.join(MAYA_LIB_DIR, 'QtOpenGL'))
+  if uses_qt5:
+    qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'Qt5Core'))
+    qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'Qt5Gui'))
+    qtOpenGLLib = File(os.path.join(MAYA_LIB_DIR, 'Qt5OpenGL'))
+  else:
+    qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
+    qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
+    qtOpenGLLib = File(os.path.join(MAYA_LIB_DIR, 'QtOpenGL'))
   mayaFlags['LIBS'].extend([
     qtCoreLib,
     qtGuiLib,
