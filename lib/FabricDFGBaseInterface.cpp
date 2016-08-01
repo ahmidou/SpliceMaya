@@ -67,6 +67,10 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
 
   m_id = s_maxID++;
 
+  m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
+  m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
+  m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
+
   MAYADFG_CATCH_END(&stat);
 }
 
@@ -264,18 +268,6 @@ void FabricDFGBaseInterface::evaluate(){
 
   if (s_use_evalContext)
   {
-    if(!m_evalContext.isValid())
-    {
-      try
-      {
-        m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
-        m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
-      }
-      catch(FabricCore::Exception e)
-      {
-        mayaLogErrorFunc(e.getDesc_cstr());
-      }
-    }  
     if(m_evalContext.isValid())
     {
       try
@@ -287,6 +279,8 @@ void FabricDFGBaseInterface::evaluate(){
         mayaLogErrorFunc(e.getDesc_cstr());
       }
     }
+    else
+      mayaLogErrorFunc("EvalContext handle is invalid");
   }
 
   m_binding.execute_lockType( getLockType() );
