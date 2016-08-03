@@ -108,8 +108,8 @@ if FABRIC_BUILD_TYPE == 'Debug':
   env.Append(CPPDEFINES = ['_ITERATOR_DEBUG_LEVEL=2'])
 
 uiLibs = SConscript(uiSconscript, exports = {
-  'parentEnv': env, 
-  'uiLibPrefix': uiLibPrefix, 
+  'parentEnv': env,
+  'uiLibPrefix': uiLibPrefix,
   'qtDir': os.path.join(MAYA_INCLUDE_DIR, 'Qt'),
   'qtMOC': os.path.join(MAYA_BIN_DIR, 'moc'),
   'qtFlags': {
@@ -180,7 +180,7 @@ else:
   mayaModule = env.SharedLibrary(target = target, source = pluginSources, SHLIBSUFFIX=libSuffix, SHLIBPREFIX='')
 
 sedCmd = 'sed'
-if FABRIC_BUILD_OS == 'Windows':  
+if FABRIC_BUILD_OS == 'Windows':
   envPaths = os.environ['PATH'].split(os.pathsep)
   for envPath in envPaths:
     sedPath = os.path.join(envPath, 'sed.exe')
@@ -215,6 +215,8 @@ mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
 installedLibFabricMaya = env.Install(Dir(FABRIC_DIR).Dir('lib'), libFabricMaya)
 mayaFiles.append(installedLibFabricMaya)
 
+for png in ['canvasNode', 'out_canvasNode', 'canvasDeformer', 'out_canvasDeformer']:
+  mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'icons'), os.path.join('Module', 'icons', png+'.png')))
 for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
 for script in ['AEspliceMayaNodeTemplate', 'AEcanvasNodeTemplate']:
