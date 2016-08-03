@@ -67,10 +67,6 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
 
   m_id = s_maxID++;
 
-  m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
-  m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
-  m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
-
   MAYADFG_CATCH_END(&stat);
 }
 
@@ -125,6 +121,11 @@ void FabricDFGBaseInterface::constructBaseInterface(){
 
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
+
+  m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
+  m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
+  m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
+
   MAYADFG_CATCH_END(&stat);
 }
 
