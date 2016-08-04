@@ -18,6 +18,36 @@
 #define kNodeFlag "-n"
 #define kNodeFlagLong "-node"
 
+MSyntax FabricDFGGetFabricVersionCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGGetFabricVersionCommand::creator()
+{
+  return new FabricDFGGetFabricVersionCommand;
+}
+
+MStatus FabricDFGGetFabricVersionCommand::doIt(const MArgList &args)
+{
+  MString result;
+  try
+  {
+    result = FabricCore::GetVersionStr();
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    return mayaErrorOccured();
+  }
+
+  setResult(result);
+  return MS::kSuccess;
+}
+
 MSyntax FabricDFGGetContextIDCommand::newSyntax()
 {
   MSyntax syntax;
