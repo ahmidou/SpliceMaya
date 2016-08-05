@@ -266,8 +266,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    QString srcPort;
-    QString dstPort;
+    QStringList srcPorts;
+    QStringList dstPorts;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
