@@ -121,6 +121,11 @@ void FabricDFGBaseInterface::constructBaseInterface(){
 
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
+
+  m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
+  m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
+  m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
+
   MAYADFG_CATCH_END(&stat);
 }
 
@@ -264,32 +269,19 @@ void FabricDFGBaseInterface::evaluate(){
 
   if (s_use_evalContext)
   {
-    if(!m_evalContext.isValid())
-    {
-      try
-      {
-        m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
-        m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
-        m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
-      }
-      catch(FabricCore::Exception e)
-      {
-        mayaLogErrorFunc(e.getDesc_cstr());
-      }
-    }  
     if(m_evalContext.isValid())
     {
       try
       {
-        m_evalContext.setMember("graph", FabricCore::RTVal::ConstructString(m_client, thisNode.name().asChar()));
         m_evalContext.setMember("time", FabricCore::RTVal::ConstructFloat32(m_client, MAnimControl::currentTime().as(MTime::kSeconds)));
-        m_evalContext.setMember("currentFilePath", FabricCore::RTVal::ConstructString(m_client, mayaGetLastLoadedScene().asChar()));
       }
       catch(FabricCore::Exception e)
       {
         mayaLogErrorFunc(e.getDesc_cstr());
       }
     }
+    else
+      mayaLogErrorFunc("EvalContext handle is invalid");
   }
 
   m_binding.execute_lockType( getLockType() );
