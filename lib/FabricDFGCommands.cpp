@@ -348,8 +348,8 @@ void FabricDFGRemoveNodesCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "nodeName" ) )
     throw ArgException( MS::kFailure, "-n (-nodeName) not provided." );
-  FTL::StrRef nodeNameStr =
-    argParser.flagArgumentString( "nodeName", 0 ).asChar();
+  MString nodeNameMString = argParser.flagArgumentString( "nodeName", 0 );
+  FTL::StrRef nodeNameStr = nodeNameMString.asChar();
   while ( !nodeNameStr.empty() )
   {
     FTL::StrRef::Split split = nodeNameStr.trimSplit('|');
@@ -397,8 +397,8 @@ void FabricDFGConnectCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "srcPortPath" ) )
     throw ArgException( MS::kFailure, "-s (-srcPortPath) not provided." );
-  FTL::StrRef srcPortsStr =
-    argParser.flagArgumentString( "srcPortPath", 0 ).asChar();
+  MString srcPortsMString = argParser.flagArgumentString( "srcPortPath", 0 );
+  FTL::StrRef srcPortsStr = srcPortsMString.asChar();
   while ( !srcPortsStr.empty() )
   {
     FTL::StrRef::Split split = srcPortsStr.trimSplit('|');
@@ -409,9 +409,9 @@ void FabricDFGConnectCommand::GetArgs(
   }
 
   if ( !argParser.isFlagSet( "dstPortPath" ) )
-    throw ArgException( MS::kFailure, "-s (-dstPortPath) not provided." );
-  FTL::StrRef dstPortsStr =
-    argParser.flagArgumentString( "dstPortPath", 0 ).asChar();
+    throw ArgException( MS::kFailure, "-d (-dstPortPath) not provided." );
+  MString dstPortsMString = argParser.flagArgumentString( "dstPortPath", 0 );
+  FTL::StrRef dstPortsStr = dstPortsMString.asChar();
   while ( !dstPortsStr.empty() )
   {
     FTL::StrRef::Split split = dstPortsStr.trimSplit('|');
@@ -459,8 +459,8 @@ void FabricDFGDisconnectCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "srcPortPath" ) )
     throw ArgException( MS::kFailure, "-s (-srcPortPath) not provided." );
-  FTL::StrRef srcPortsStr =
-    argParser.flagArgumentString( "srcPortPath", 0 ).asChar();
+  MString srcPortsMString = argParser.flagArgumentString( "srcPortPath", 0 );
+  FTL::StrRef srcPortsStr = srcPortsMString.asChar();
   while ( !srcPortsStr.empty() )
   {
     FTL::StrRef::Split split = srcPortsStr.trimSplit('|');
@@ -471,9 +471,9 @@ void FabricDFGDisconnectCommand::GetArgs(
   }
 
   if ( !argParser.isFlagSet( "dstPortPath" ) )
-    throw ArgException( MS::kFailure, "-s (-dstPortPath) not provided." );
-  FTL::StrRef dstPortsStr =
-    argParser.flagArgumentString( "dstPortPath", 0 ).asChar();
+    throw ArgException( MS::kFailure, "-d (-dstPortPath) not provided." );
+  MString dstPortsMString = argParser.flagArgumentString( "dstPortPath", 0 );
+  FTL::StrRef dstPortsStr = dstPortsMString.asChar();
   while ( !dstPortsStr.empty() )
   {
     FTL::StrRef::Split split = dstPortsStr.trimSplit('|');
@@ -1220,8 +1220,8 @@ void FabricDFGMoveNodesCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "nodeName" ) )
     throw ArgException( MS::kFailure, "-n (-nodeName) not provided." );
-  FTL::StrRef nodeNameStr =
-    argParser.flagArgumentString( "nodeName", 0 ).asChar();
+  MString nodeNameMString = argParser.flagArgumentString( "nodeName", 0 );
+  FTL::StrRef nodeNameStr = nodeNameMString.asChar();
   while ( !nodeNameStr.empty() )
   {
     FTL::StrRef::Split split = nodeNameStr.trimSplit('|');
@@ -1365,8 +1365,8 @@ void FabricDFGImplodeNodesCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "nodeName" ) )
     throw ArgException( MS::kFailure, "-n (-nodeName) not provided." );
-  FTL::StrRef nodeNameStr =
-    argParser.flagArgumentString( "nodeName", 0 ).asChar();
+  MString nodeNameMString = argParser.flagArgumentString( "nodeName", 0 );
+  FTL::StrRef nodeNameStr = nodeNameMString.asChar();
   while ( !nodeNameStr.empty() )
   {
     FTL::StrRef::Split split = nodeNameStr.trimSplit('|');
@@ -2005,8 +2005,8 @@ void FabricDFGSetExtDepsCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "extDep" ) )
     throw ArgException( MS::kFailure, "-xd (-extDep) not provided." );
-  FTL::StrRef extDepStr =
-    argParser.flagArgumentString( "extDep", 0 ).asChar();
+  MString extDepMString = argParser.flagArgumentString( "extDep", 0 );
+  FTL::StrRef extDepStr = extDepMString.asChar();
   while ( !extDepStr.empty() )
   {
     FTL::StrRef::Split split = extDepStr.trimSplit('|');
