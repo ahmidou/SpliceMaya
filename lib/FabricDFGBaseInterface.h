@@ -60,6 +60,7 @@ public:
   unsigned int getId() const;
   FabricCore::Client getCoreClient();
   ASTWrapper::KLASTManager * getASTManager();
+  FabricCore::DFGHost getDFGHost();
   FabricCore::DFGBinding getDFGBinding();
   FabricCore::DFGExec getDFGExec();
 

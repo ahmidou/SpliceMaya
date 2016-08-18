@@ -180,6 +180,11 @@ FabricCore::Client FabricDFGBaseInterface::getCoreClient()
   return m_client;
 }
 
+FabricCore::DFGHost FabricDFGBaseInterface::getDFGHost()
+{
+  return m_binding.getHost();
+}
+
 FabricCore::DFGBinding FabricDFGBaseInterface::getDFGBinding()
 {
   return m_binding;
@@ -1811,6 +1816,10 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   FTL::CStrRef jsonStr
   )
 {
+  // [pz 20160818] We need a bracket here because some the options below
+  // can cause further notifications to be fired
+  FabricCore::DFGNotifBracket notifBrakcet( getDFGHost() );
+
   // MGlobal::displayInfo(jsonStr.data());
 
   FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
