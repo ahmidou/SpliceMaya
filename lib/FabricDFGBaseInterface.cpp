@@ -1402,6 +1402,10 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if(arrayType == "Single Value")
     {
       newAttribute = nAttr.createColor(plugName, plugName);
+      std::vector <double> defValue;
+      GetArgValueColor(m_binding, portName.asChar(), defValue);
+      if (defValue.size() == 4)
+        nAttr.setDefault(defValue[0], defValue[1], defValue[2]);
     }
     else if(arrayType == "Array (Multi)")
     {
@@ -1419,13 +1423,34 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      MObject x = nAttr.create(plugName+"X", plugName+"X", MFnNumericData::kDouble);
+      std::vector <double> defValue;
+      GetArgValueVec3(m_binding, portName.asChar(), defValue);
+      double defValueX = 0.0;
+      double defValueY = 0.0;
+      double defValueZ = 0.0;
+      if (defValue.size() == 3)
+      {
+        defValueX = defValue[0];
+        defValueY = defValue[1];
+        defValueZ = defValue[2];
+      }
+      if(uiHardMin < uiHardMax)
+      {
+        if(defValueX < uiHardMin)   defValueX = uiHardMin;
+        if(defValueX > uiHardMax)   defValueX = uiHardMax;
+        if(defValueY < uiHardMin)   defValueY = uiHardMin;
+        if(defValueY > uiHardMax)   defValueY = uiHardMax;
+        if(defValueZ < uiHardMin)   defValueZ = uiHardMin;
+        if(defValueZ > uiHardMax)   defValueZ = uiHardMax;
+      }
+
+      MObject x = nAttr.create(plugName+"X", plugName+"X", MFnNumericData::kDouble, defValueX);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      MObject y = nAttr.create(plugName+"Y", plugName+"Y", MFnNumericData::kDouble);
+      MObject y = nAttr.create(plugName+"Y", plugName+"Y", MFnNumericData::kDouble, defValueY);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble);
+      MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble, defValueZ);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
 
