@@ -1521,7 +1521,19 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
+      std::vector <double> defValue;
+      GetArgValueMat44(m_binding, portName.asChar(), defValue);
       newAttribute = mAttr.create(plugName, plugName);
+      if (defValue.size() == 16)
+      {
+        double vals[4][4] = {
+          { defValue[0], defValue[4], defValue[8],  defValue[12] },
+          { defValue[1], defValue[5], defValue[9],  defValue[13] },
+          { defValue[2], defValue[6], defValue[10], defValue[14] },
+          { defValue[3], defValue[7], defValue[11], defValue[15] }
+        };
+        mAttr.setDefault(MMatrix(vals));
+      }
     }
     else if(arrayType == "Array (Multi)")
     {
