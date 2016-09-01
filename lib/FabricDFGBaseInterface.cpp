@@ -2287,7 +2287,7 @@ int FabricDFGBaseInterface::GetArgValueString(FabricCore::DFGBinding &binding, c
         #ifdef _WIN32
           sprintf_s(s, sizeof(s), "%ld", i);
         #else
-          snprintf(s, sizeof(s), "%ld", i);
+          snprintf(s, sizeof(s), "%d", i);
         #endif
         out = s;
         return 0;
@@ -2449,7 +2449,7 @@ int FabricDFGBaseInterface::GetArgValueMat44(FabricCore::DFGBinding &binding, ch
                                                 #ifdef _WIN32
                                                   sprintf_s(member, sizeof(member), "row%ld", i);
                                                 #else
-                                                  snprintf(member, sizeof(member), "row%ld", i);
+                                                  snprintf(member, sizeof(member), "row%d", i);
                                                 #endif
                                                 rtRow = rtval.maybeGetMember(member);
                                                 out.push_back(rtRow.maybeGetMember("x").getFloat32());
@@ -2469,7 +2469,7 @@ int FabricDFGBaseInterface::GetArgValueMat44(FabricCore::DFGBinding &binding, ch
                                                 #ifdef _WIN32
                                                   sprintf_s(member, sizeof(member), "row%ld", i);
                                                 #else
-                                                  snprintf(member, sizeof(member), "row%ld", i);
+                                                  snprintf(member, sizeof(member), "row%d", i);
                                                 #endif
                                                 rtRow = rtmat44.maybeGetMember(member);
                                                 out.push_back(rtRow.maybeGetMember("x").getFloat32());
