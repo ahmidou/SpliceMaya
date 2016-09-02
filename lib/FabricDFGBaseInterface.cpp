@@ -180,6 +180,11 @@ FabricCore::Client FabricDFGBaseInterface::getCoreClient()
   return m_client;
 }
 
+FabricCore::DFGHost FabricDFGBaseInterface::getDFGHost()
+{
+  return m_binding.getHost();
+}
+
 FabricCore::DFGBinding FabricDFGBaseInterface::getDFGBinding()
 {
   return m_binding;
@@ -1099,19 +1104,12 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if (uiSoftMax > uiHardMax)  uiSoftMax = uiHardMax;
   }
 
-  // calc attribute's default value.
-  float attrDefValue = 0.0f;
-  if(uiHardMin < uiHardMax)   attrDefValue = uiHardMin;
-  if(uiSoftMin < uiSoftMax)   attrDefValue = uiSoftMin;
-
   MFnNumericAttribute nAttr;
   MFnTypedAttribute tAttr;
   MFnUnitAttribute uAttr;
   MFnMatrixAttribute mAttr;
   MFnMessageAttribute pAttr;
   MFnCompoundAttribute cAttr;
-  MFnStringData emptyStringData;
-  MObject emptyStringObject = emptyStringData.create("");
 
   bool storable = portType != FabricCore::DFGPortType_Out;
 
@@ -1196,7 +1194,9 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kBoolean);
+      bool defValue = 0;
+      GetArgValueBoolean(m_binding, portName.asChar(), defValue);
+      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kBoolean, (double)defValue);
     }
     else if(arrayType == "Array (Multi)")
     {
@@ -1214,7 +1214,14 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt, attrDefValue);
+      int defValue = 0;
+      GetArgValueInteger(m_binding, portName.asChar(), defValue);
+      if(uiHardMin < uiHardMax)
+      {
+        if(defValue < (int)uiHardMin)   defValue = (int)uiHardMin;
+        if(defValue > (int)uiHardMax)   defValue = (int)uiHardMax;
+      }
+      newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kInt, defValue);
       if(uiSoftMin < uiSoftMax)
       {
         nAttr.setSoftMin(uiSoftMin);
@@ -1269,15 +1276,23 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     std::string scalarUnit = "";
     if(arrayType == "Single Value" || arrayType == "Array (Multi)")
     {
+      double defValue = 0;
+      GetArgValueFloat(m_binding, portName.asChar(), defValue);
+      if(uiHardMin < uiHardMax)
+      {
+        if(defValue < uiHardMin)   defValue = uiHardMin;
+        if(defValue > uiHardMax)   defValue = uiHardMax;
+      }
+
       if(scalarUnit == "time")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kTime, attrDefValue);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kTime, defValue);
       else if(scalarUnit == "angle")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kAngle, attrDefValue);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kAngle, defValue);
       else if(scalarUnit == "distance")
-        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kDistance, attrDefValue);
+        newAttribute = uAttr.create(plugName, plugName, MFnUnitAttribute::kDistance, defValue);
       else
       {
-        newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kDouble, attrDefValue);
+        newAttribute = nAttr.create(plugName, plugName, MFnNumericData::kDouble, defValue);
         isUnitAttr = false;
       }
 
@@ -1362,12 +1377,17 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   }
   else if(FabricMaya::ParseDataType(dataTypeOverride.asChar()) == FabricMaya::DT_String)
   {
+    MFnStringData stringData;
     if(arrayType == "Single Value")
     {
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kString, emptyStringObject);
+      std::string defValue;
+      GetArgValueString(m_binding, portName.asChar(), defValue);
+      MObject defValueObject = stringData.create(defValue.c_str());
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kString, defValueObject);
     }
     else if(arrayType == "Array (Multi)"){
-      newAttribute = tAttr.create(plugName, plugName, MFnData::kString, emptyStringObject);
+      MObject defValueObject = stringData.create("");
+      newAttribute = tAttr.create(plugName, plugName, MFnData::kString, defValueObject);
       tAttr.setArray(true);
       tAttr.setUsesArrayDataBuilder(true);
     }
@@ -1382,6 +1402,10 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     if(arrayType == "Single Value")
     {
       newAttribute = nAttr.createColor(plugName, plugName);
+      std::vector <double> defValue;
+      GetArgValueColor(m_binding, portName.asChar(), defValue);
+      if (defValue.size() == 4)
+        nAttr.setDefault(defValue[0], defValue[1], defValue[2]);
     }
     else if(arrayType == "Array (Multi)")
     {
@@ -1399,13 +1423,34 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
-      MObject x = nAttr.create(plugName+"X", plugName+"X", MFnNumericData::kDouble);
+      std::vector <double> defValue;
+      GetArgValueVec3(m_binding, portName.asChar(), defValue);
+      double defValueX = 0.0;
+      double defValueY = 0.0;
+      double defValueZ = 0.0;
+      if (defValue.size() == 3)
+      {
+        defValueX = defValue[0];
+        defValueY = defValue[1];
+        defValueZ = defValue[2];
+      }
+      if(uiHardMin < uiHardMax)
+      {
+        if(defValueX < uiHardMin)   defValueX = uiHardMin;
+        if(defValueX > uiHardMax)   defValueX = uiHardMax;
+        if(defValueY < uiHardMin)   defValueY = uiHardMin;
+        if(defValueY > uiHardMax)   defValueY = uiHardMax;
+        if(defValueZ < uiHardMin)   defValueZ = uiHardMin;
+        if(defValueZ > uiHardMax)   defValueZ = uiHardMax;
+      }
+
+      MObject x = nAttr.create(plugName+"X", plugName+"X", MFnNumericData::kDouble, defValueX);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      MObject y = nAttr.create(plugName+"Y", plugName+"Y", MFnNumericData::kDouble);
+      MObject y = nAttr.create(plugName+"Y", plugName+"Y", MFnNumericData::kDouble, defValueY);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
-      MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble);
+      MObject z = nAttr.create(plugName+"Z", plugName+"Z", MFnNumericData::kDouble, defValueZ);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
 
@@ -1476,7 +1521,19 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   {
     if(arrayType == "Single Value")
     {
+      std::vector <double> defValue;
+      GetArgValueMat44(m_binding, portName.asChar(), defValue);
       newAttribute = mAttr.create(plugName, plugName);
+      if (defValue.size() == 16)
+      {
+        double vals[4][4] = {
+          { defValue[0], defValue[4], defValue[8],  defValue[12] },
+          { defValue[1], defValue[5], defValue[9],  defValue[13] },
+          { defValue[2], defValue[6], defValue[10], defValue[14] },
+          { defValue[3], defValue[7], defValue[11], defValue[15] }
+        };
+        mAttr.setDefault(MMatrix(vals));
+      }
     }
     else if(arrayType == "Array (Multi)")
     {
@@ -1811,6 +1868,10 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   FTL::CStrRef jsonStr
   )
 {
+  // [pz 20160818] We need a bracket here because some the options below
+  // can cause further notifications to be fired
+  FabricCore::DFGNotifBracket notifBrakcet( getDFGHost() );
+
   // MGlobal::displayInfo(jsonStr.data());
 
   FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
@@ -1993,3 +2054,440 @@ MStatus FabricDFGBaseInterface::preEvaluation(MObject thisMObject, const MDGCont
 }
 #endif
 
+bool FabricDFGBaseInterface::HasPort(const char *in_portName, const bool testForInput)
+{
+  try
+  {
+    // check/init.
+    if (!in_portName || in_portName[0] == '\0')  return false;
+    const FabricCore::DFGPortType portType = (testForInput ? FabricCore::DFGPortType_In : FabricCore::DFGPortType_Out);
+
+    // get the graph.
+    FabricCore::DFGExec graph = m_binding.getExec();
+    if (!graph.isValid())
+    {
+      std::string s = "BaseInterface::HasPort(): failed to get graph!";
+      mayaLogErrorFunc(s.c_str(), s.length());
+      return false;
+    }
+
+    // return result.
+    return (graph.haveExecPort(in_portName) && graph.getExecPortType(in_portName) == portType);
+  }
+  catch (FabricCore::Exception e)
+  {
+    return false;
+  }
+}
+
+bool FabricDFGBaseInterface::HasInputPort(const char *portName)
+{
+  return HasPort(portName, true);
+}
+
+int FabricDFGBaseInterface::GetArgValueBoolean(FabricCore::DFGBinding &binding, char const * argName, bool &out, bool strict)
+{
+  // init output.
+  out = false;
+
+  // set out from port value.
+  try
+  {
+    // invalid port?
+    if (!binding.getExec().haveExecPort(argName))
+      return -2;
+
+    std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+    FabricCore::RTVal rtval  = binding.getArgValue(argName);
+
+    if      (resolvedType.length() == 0)    return -1;
+
+    else if (resolvedType == "Boolean")     out = rtval.getBoolean();
+
+    else if (!strict)
+    {
+      if      (resolvedType == "Scalar")    out = (0 != rtval.getFloat32());
+      else if (resolvedType == "Float32")   out = (0 != rtval.getFloat32());
+      else if (resolvedType == "Float64")   out = (0 != rtval.getFloat64());
+
+      else if (resolvedType == "Integer")   out = (0 != rtval.getSInt32());
+      else if (resolvedType == "SInt8")     out = (0 != rtval.getSInt8());
+      else if (resolvedType == "SInt16")    out = (0 != rtval.getSInt16());
+      else if (resolvedType == "SInt32")    out = (0 != rtval.getSInt32());
+      else if (resolvedType == "SInt64")    out = (0 != rtval.getSInt64());
+
+      else if (resolvedType == "Byte")      out = (0 != rtval.getUInt8());
+      else if (resolvedType == "UInt8")     out = (0 != rtval.getUInt8());
+      else if (resolvedType == "UInt16")    out = (0 != rtval.getUInt16());
+      else if (resolvedType == "Count")     out = (0 != rtval.getUInt32());
+      else if (resolvedType == "Index")     out = (0 != rtval.getUInt32());
+      else if (resolvedType == "Size")      out = (0 != rtval.getUInt32());
+      else if (resolvedType == "UInt32")    out = (0 != rtval.getUInt32());
+      else if (resolvedType == "DataSize")  out = (0 != rtval.getUInt64());
+      else if (resolvedType == "UInt64")    out = (0 != rtval.getUInt64());
+
+      else return -1;
+    }
+    else return -1;
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return -4;
+  }
+
+  // done.
+  return 0;
+}
+
+int FabricDFGBaseInterface::GetArgValueInteger(FabricCore::DFGBinding &binding, char const * argName, int &out, bool strict)
+{
+  // init output.
+  out = 0;
+
+  // set out from port value.
+  try
+  {
+    // invalid port?
+    if (!binding.getExec().haveExecPort(argName))
+      return -2;
+
+    std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+    FabricCore::RTVal rtval  = binding.getArgValue(argName);
+
+    if      (resolvedType.length() == 0)    return -1;
+
+    else if (resolvedType == "Integer")     out = (int)rtval.getSInt32();
+    else if (resolvedType == "SInt8")       out = (int)rtval.getSInt8();
+    else if (resolvedType == "SInt16")      out = (int)rtval.getSInt16();
+    else if (resolvedType == "SInt32")      out = (int)rtval.getSInt32();
+    else if (resolvedType == "SInt64")      out = (int)rtval.getSInt64();
+
+    else if (resolvedType == "Byte")        out = (int)rtval.getUInt8();
+    else if (resolvedType == "UInt8")       out = (int)rtval.getUInt8();
+    else if (resolvedType == "UInt16")      out = (int)rtval.getUInt16();
+    else if (resolvedType == "Count")       out = (int)rtval.getUInt32();
+    else if (resolvedType == "Index")       out = (int)rtval.getUInt32();
+    else if (resolvedType == "Size")        out = (int)rtval.getUInt32();
+    else if (resolvedType == "UInt32")      out = (int)rtval.getUInt32();
+    else if (resolvedType == "DataSize")    out = (int)rtval.getUInt64();
+    else if (resolvedType == "UInt64")      out = (int)rtval.getUInt64();
+
+    else if (!strict)
+    {
+      if      (resolvedType == "Boolean")   out = (int)rtval.getBoolean();
+
+      else if (resolvedType == "Scalar")    out = (int)rtval.getFloat32();
+      else if (resolvedType == "Float32")   out = (int)rtval.getFloat32();
+      else if (resolvedType == "Float64")   out = (int)rtval.getFloat64();
+
+      else return -1;
+    }
+    else return -1;
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return -4;
+  }
+
+  // done.
+  return 0;
+}
+
+int FabricDFGBaseInterface::GetArgValueFloat(FabricCore::DFGBinding &binding, char const * argName, double &out, bool strict)
+{
+  // init output.
+  out = 0;
+
+  // set out from port value.
+  try
+  {
+    // invalid port?
+    if (!binding.getExec().haveExecPort(argName))
+      return -2;
+
+    std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+    FabricCore::RTVal rtval  = binding.getArgValue(argName);
+
+    if      (resolvedType.length() == 0)    return -1;
+
+    else if (resolvedType == "Scalar")      out = (double)rtval.getFloat32();
+    else if (resolvedType == "Float32")     out = (double)rtval.getFloat32();
+    else if (resolvedType == "Float64")     out = (double)rtval.getFloat64();
+
+    else if (!strict)
+    {
+      if      (resolvedType == "Boolean")   out = (double)rtval.getBoolean();
+
+      else if (resolvedType == "Integer")   out = (double)rtval.getSInt32();
+      else if (resolvedType == "SInt8")     out = (double)rtval.getSInt8();
+      else if (resolvedType == "SInt16")    out = (double)rtval.getSInt16();
+      else if (resolvedType == "SInt32")    out = (double)rtval.getSInt32();
+      else if (resolvedType == "SInt64")    out = (double)rtval.getSInt64();
+
+      else if (resolvedType == "Byte")      out = (double)rtval.getUInt8();
+      else if (resolvedType == "UInt8")     out = (double)rtval.getUInt8();
+      else if (resolvedType == "UInt16")    out = (double)rtval.getUInt16();
+      else if (resolvedType == "Count")     out = (double)rtval.getUInt32();
+      else if (resolvedType == "Index")     out = (double)rtval.getUInt32();
+      else if (resolvedType == "Size")      out = (double)rtval.getUInt32();
+      else if (resolvedType == "UInt32")    out = (double)rtval.getUInt32();
+      else if (resolvedType == "DataSize")  out = (double)rtval.getUInt64();
+      else if (resolvedType == "UInt64")    out = (double)rtval.getUInt64();
+
+      else return -1;
+    }
+    else return -1;
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return -4;
+  }
+
+  // done.
+  return 0;
+}
+
+int FabricDFGBaseInterface::GetArgValueString(FabricCore::DFGBinding &binding, char const * argName, std::string &out, bool strict)
+{
+  // init output.
+  out = "";
+
+  // set out from port value.
+  try
+  {
+    // invalid port?
+    if (!binding.getExec().haveExecPort(argName))
+      return -2;
+
+    std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+    FabricCore::RTVal rtval  = binding.getArgValue(argName);
+
+    if      (resolvedType.length() == 0)    return -1;
+
+    else if (resolvedType == "String")      out = rtval.getStringCString();
+
+    else if (!strict)
+    {
+      char    s[64];
+      bool    b;
+      int     i;
+      double  f;
+
+      if (GetArgValueBoolean(binding, argName, b, true) == 0)
+      {
+        out = (b ? "true" : "false");
+        return 0;
+      }
+
+      if (GetArgValueInteger(binding, argName, i, true) == 0)
+      {
+        #ifdef _WIN32
+          sprintf_s(s, sizeof(s), "%ld", i);
+        #else
+          snprintf(s, sizeof(s), "%d", i);
+        #endif
+        out = s;
+        return 0;
+      }
+
+      if (GetArgValueFloat(binding, argName, f, true) == 0)
+      {
+        #ifdef _WIN32
+          sprintf_s(s, sizeof(s), "%f", f);
+        #else
+          snprintf(s, sizeof(s), "%f", f);
+        #endif
+        out = s;
+        return 0;
+      }
+
+      return -1;
+    }
+    else
+      return -1;
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return -4;
+  }
+
+  // done.
+  return 0;
+}
+
+int FabricDFGBaseInterface::GetArgValueVec3(FabricCore::DFGBinding &binding, char const * argName, std::vector <double> &out, bool strict)
+{
+  // init output.
+  out.clear();
+
+  // set out from port value.
+  try
+  {
+    // invalid port?
+    if (!binding.getExec().haveExecPort(argName))
+      return -2;
+
+    std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+    FabricCore::RTVal rtval  = binding.getArgValue(argName);
+
+    if      (resolvedType.length() == 0)      return -1;
+
+    else if (resolvedType == "Vec3")        {
+                                              out.push_back(rtval.maybeGetMember("x").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("y").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("z").getFloat32());
+                                            }
+    else if (!strict)
+    {
+        if      (resolvedType == "Color")   {
+                                              out.push_back(rtval.maybeGetMember("r").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("g").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("b").getFloat32());
+                                            }
+        else if (resolvedType == "Vec4")    {
+                                              out.push_back(rtval.maybeGetMember("x").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("y").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("z").getFloat32());
+                                            }
+        else
+          return -1;
+    }
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return -4;
+  }
+
+  // done.
+  return 0;
+}
+
+int FabricDFGBaseInterface::GetArgValueColor(FabricCore::DFGBinding &binding, char const * argName, std::vector <double> &out, bool strict)
+{
+  // init output.
+  out.clear();
+
+  // set out from port value.
+  try
+  {
+    // invalid port?
+    if (!binding.getExec().haveExecPort(argName))
+      return -2;
+
+    std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+    FabricCore::RTVal rtval  = binding.getArgValue(argName);
+
+    if      (resolvedType.length() == 0)      return -1;
+
+    else if (resolvedType == "Color")      {
+                                              out.push_back(rtval.maybeGetMember("r").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("g").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("b").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("a").getFloat32());
+                                           }
+    else if (!strict)
+    {
+        if      (resolvedType == "Vec4")   {
+                                              out.push_back(rtval.maybeGetMember("x").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("y").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("z").getFloat32());
+                                              out.push_back(rtval.maybeGetMember("t").getFloat32());
+                                            }
+        else if (resolvedType == "RGB")     {
+                                              out.push_back(rtval.maybeGetMember("r").getUInt8() / 255.0);
+                                              out.push_back(rtval.maybeGetMember("g").getUInt8() / 255.0);
+                                              out.push_back(rtval.maybeGetMember("b").getUInt8() / 255.0);
+                                              out.push_back(1);
+                                            }
+        else if (resolvedType == "RGBA")    {
+                                              out.push_back(rtval.maybeGetMember("r").getUInt8() / 255.0);
+                                              out.push_back(rtval.maybeGetMember("g").getUInt8() / 255.0);
+                                              out.push_back(rtval.maybeGetMember("b").getUInt8() / 255.0);
+                                              out.push_back(rtval.maybeGetMember("a").getUInt8() / 255.0);
+                                            }
+        else
+          return -1;
+    }
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return -4;
+  }
+
+  // done.
+  return 0;
+}
+
+int FabricDFGBaseInterface::GetArgValueMat44(FabricCore::DFGBinding &binding, char const * argName, std::vector <double> &out, bool strict)
+{
+  // init output.
+  out.clear();
+
+  // set out from port value.
+  try
+  {
+    // invalid port?
+    if (!binding.getExec().haveExecPort(argName))
+      return -2;
+
+    std::string resolvedType = binding.getExec().getExecPortResolvedType(argName);
+    FabricCore::RTVal rtval  = binding.getArgValue(argName);
+
+    if      (resolvedType.length() == 0)      return -1;
+
+    else if (resolvedType == "Mat44")       {
+                                              char member[32];
+                                              FabricCore::RTVal rtRow;
+                                              for (int i = 0; i < 4; i++)
+                                              {
+                                                #ifdef _WIN32
+                                                  sprintf_s(member, sizeof(member), "row%ld", i);
+                                                #else
+                                                  snprintf(member, sizeof(member), "row%d", i);
+                                                #endif
+                                                rtRow = rtval.maybeGetMember(member);
+                                                out.push_back(rtRow.maybeGetMember("x").getFloat32());
+                                                out.push_back(rtRow.maybeGetMember("y").getFloat32());
+                                                out.push_back(rtRow.maybeGetMember("z").getFloat32());
+                                                out.push_back(rtRow.maybeGetMember("t").getFloat32());
+                                              }
+                                            }
+    else if (!strict)
+    {
+        if      (resolvedType == "Xfo")     {
+                                              FabricCore::RTVal rtmat44 = rtval.callMethod("Mat44", "toMat44", 0, NULL);
+                                              char member[32];
+                                              FabricCore::RTVal rtRow;
+                                              for (int i = 0; i < 4; i++)
+                                              {
+                                                #ifdef _WIN32
+                                                  sprintf_s(member, sizeof(member), "row%ld", i);
+                                                #else
+                                                  snprintf(member, sizeof(member), "row%d", i);
+                                                #endif
+                                                rtRow = rtmat44.maybeGetMember(member);
+                                                out.push_back(rtRow.maybeGetMember("x").getFloat32());
+                                                out.push_back(rtRow.maybeGetMember("y").getFloat32());
+                                                out.push_back(rtRow.maybeGetMember("z").getFloat32());
+                                                out.push_back(rtRow.maybeGetMember("t").getFloat32());
+                                              }
+                                            }
+        else
+          return -1;
+    }
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+    return -4;
+  }
+
+  // done.
+  return 0;
+}
