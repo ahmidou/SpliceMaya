@@ -5,6 +5,7 @@
 // [pzion 20150731] This needs to come first, otherwise macros will
 // mess up Qt headers
 #include <QtCore>
+#include <QtGui/qevent.h>
 
 #include "DFGUICmdHandler_Maya.h"
 #include "FabricDFGBaseInterface.h"
