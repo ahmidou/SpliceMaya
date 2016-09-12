@@ -47,10 +47,7 @@ mayaFlags = {
   ],
 }
 
-if FABRIC_BUILD_OS == 'Windows':
-  maya_includes = os.path.join(MAYA_INCLUDE_DIR, 'Qt')
-else:
-  maya_includes = MAYA_INCLUDE_DIR
+maya_includes = MAYA_INCLUDE_DIR
 
 maya_include_paths = [
   MAYA_INCLUDE_DIR,
@@ -77,7 +74,7 @@ mayaFlags['LIBS'] = ['OpenMaya', 'OpenMayaAnim', 'OpenMayaUI', 'OpenMayaRender',
 if FABRIC_BUILD_OS == 'Windows':
   mayaFlags['CPPDEFINES'] = ['NT_PLUGIN']
   if uses_qt5:
-    mayaFlags['LIBS'].extend(['QtCore5', 'QtGui5', 'QtOpenGL5'])
+    mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL', 'Qt5Widgets'])
   else:
     mayaFlags['LIBS'].extend(['QtCore4', 'QtGui4', 'QtOpenGL4'])
   # FE-4590
@@ -85,7 +82,7 @@ if FABRIC_BUILD_OS == 'Windows':
 elif FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
   if uses_qt5:
-    mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL'])
+    mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL', 'Qt5Widgets'])
   else:
     mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
 elif FABRIC_BUILD_OS == 'Darwin':
