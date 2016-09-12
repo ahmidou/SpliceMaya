@@ -202,36 +202,7 @@ void FabricSpliceBaseInterface::evaluate()
   {
     // setup the context
     FabricCore::RTVal context = _spliceGraph.getEvalContext();
-    context.setMember("host", FabricSplice::constructStringRTVal("Maya"));
-    context.setMember("graph", FabricSplice::constructStringRTVal(thisNode.name().asChar()));
     context.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
-    context.setMember("currentFilePath", FabricSplice::constructStringRTVal(mayaGetLastLoadedScene().asChar()));
-
-    if(_evalContextPlugNames.length() > 0)
-    {
-      for(unsigned int i=0;i<_evalContextPlugNames.length();i++)
-      {
-        MString name = _evalContextPlugNames[i];
-        MString portName = name;
-        int periodPos = portName.index('.');
-        if(periodPos > 0)
-          portName = portName.substring(0, periodPos-1);
-        FabricSplice::DGPort port = _spliceGraph.getDGPort(portName.asChar());
-        if(port.isValid()){
-          if(port.getMode() != FabricSplice::Port_Mode_OUT)
-          {
-            std::vector<FabricCore::RTVal> args(1);
-            args[0] = FabricSplice::constructStringRTVal(name.asChar());
-            if(_evalContextPlugIds[i] >= 0)
-              args.push_back(FabricSplice::constructSInt32RTVal(_evalContextPlugIds[i]));
-            context.callMethod("", "_addDirtyInput", args.size(), &args[0]);
-          }
-        }
-      }
-    
-      _evalContextPlugNames.clear();
-      _evalContextPlugIds.clear();
-    }
   }
 
   _spliceGraph.evaluate();
@@ -312,15 +283,6 @@ void FabricSpliceBaseInterface::collectDirtyPlug(MPlug const &inPlug)
   int bracketPos = name.index('[');
   if(bracketPos > -1)
     name = name.substring(0, bracketPos-1);
-
-  if(_spliceGraph.usesEvalContext())
-  {
-    _evalContextPlugNames.append(name);
-    if(inPlug.isElement())
-      _evalContextPlugIds.append(inPlug.logicalIndex());
-    else
-      _evalContextPlugIds.append(-1);
-  }
 
   if(inPlug.isChild()){
     // if plug belongs to translation or rotation we collect the parent to transfer all x,y,z values

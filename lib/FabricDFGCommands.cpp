@@ -18,6 +18,36 @@
 #define kNodeFlag "-n"
 #define kNodeFlagLong "-node"
 
+MSyntax FabricDFGGetFabricVersionCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGGetFabricVersionCommand::creator()
+{
+  return new FabricDFGGetFabricVersionCommand;
+}
+
+MStatus FabricDFGGetFabricVersionCommand::doIt(const MArgList &args)
+{
+  MString result;
+  try
+  {
+    result = FabricCore::GetVersionStr();
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    return mayaErrorOccured();
+  }
+
+  setResult(result);
+  return MS::kSuccess;
+}
+
 MSyntax FabricDFGGetContextIDCommand::newSyntax()
 {
   MSyntax syntax;
@@ -318,8 +348,8 @@ void FabricDFGRemoveNodesCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "nodeName" ) )
     throw ArgException( MS::kFailure, "-n (-nodeName) not provided." );
-  FTL::StrRef nodeNameStr =
-    argParser.flagArgumentString( "nodeName", 0 ).asChar();
+  MString nodeNameMString = argParser.flagArgumentString( "nodeName", 0 );
+  FTL::StrRef nodeNameStr = nodeNameMString.asChar();
   while ( !nodeNameStr.empty() )
   {
     FTL::StrRef::Split split = nodeNameStr.trimSplit('|');
@@ -367,17 +397,29 @@ void FabricDFGConnectCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "srcPortPath" ) )
     throw ArgException( MS::kFailure, "-s (-srcPortPath) not provided." );
-  args.srcPort =
-    QString::fromUtf8(
-      argParser.flagArgumentString( "srcPortPath", 0 ).asChar()
+  MString srcPortsMString = argParser.flagArgumentString( "srcPortPath", 0 );
+  FTL::StrRef srcPortsStr = srcPortsMString.asChar();
+  while ( !srcPortsStr.empty() )
+  {
+    FTL::StrRef::Split split = srcPortsStr.trimSplit('|');
+    args.srcPorts.append(
+      QString::fromUtf8( split.first.data(), split.first.size() )
       );
+    srcPortsStr = split.second;
+  }
 
   if ( !argParser.isFlagSet( "dstPortPath" ) )
     throw ArgException( MS::kFailure, "-d (-dstPortPath) not provided." );
-  args.dstPort =
-    QString::fromUtf8(
-      argParser.flagArgumentString( "dstPortPath", 0 ).asChar()
+  MString dstPortsMString = argParser.flagArgumentString( "dstPortPath", 0 );
+  FTL::StrRef dstPortsStr = dstPortsMString.asChar();
+  while ( !dstPortsStr.empty() )
+  {
+    FTL::StrRef::Split split = dstPortsStr.trimSplit('|');
+    args.dstPorts.append(
+      QString::fromUtf8( split.first.data(), split.first.size() )
       );
+    dstPortsStr = split.second;
+  }
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGConnectCommand::executeDFGUICmd(
@@ -392,8 +434,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGConnectCommand::executeDFGUICmd(
       args.binding,
       args.execPath,
       args.exec,
-      args.srcPort,
-      args.dstPort
+      args.srcPorts,
+      args.dstPorts
       );
   cmd->doit();
   return cmd;
@@ -417,8 +459,8 @@ void FabricDFGDisconnectCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "srcPortPath" ) )
     throw ArgException( MS::kFailure, "-s (-srcPortPath) not provided." );
-  FTL::StrRef srcPortsStr =
-    argParser.flagArgumentString( "srcPortPath", 0 ).asChar();
+  MString srcPortsMString = argParser.flagArgumentString( "srcPortPath", 0 );
+  FTL::StrRef srcPortsStr = srcPortsMString.asChar();
   while ( !srcPortsStr.empty() )
   {
     FTL::StrRef::Split split = srcPortsStr.trimSplit('|');
@@ -429,9 +471,9 @@ void FabricDFGDisconnectCommand::GetArgs(
   }
 
   if ( !argParser.isFlagSet( "dstPortPath" ) )
-    throw ArgException( MS::kFailure, "-s (-dstPortPath) not provided." );
-  FTL::StrRef dstPortsStr =
-    argParser.flagArgumentString( "dstPortPath", 0 ).asChar();
+    throw ArgException( MS::kFailure, "-d (-dstPortPath) not provided." );
+  MString dstPortsMString = argParser.flagArgumentString( "dstPortPath", 0 );
+  FTL::StrRef dstPortsStr = dstPortsMString.asChar();
   while ( !dstPortsStr.empty() )
   {
     FTL::StrRef::Split split = dstPortsStr.trimSplit('|');
@@ -1178,8 +1220,8 @@ void FabricDFGMoveNodesCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "nodeName" ) )
     throw ArgException( MS::kFailure, "-n (-nodeName) not provided." );
-  FTL::StrRef nodeNameStr =
-    argParser.flagArgumentString( "nodeName", 0 ).asChar();
+  MString nodeNameMString = argParser.flagArgumentString( "nodeName", 0 );
+  FTL::StrRef nodeNameStr = nodeNameMString.asChar();
   while ( !nodeNameStr.empty() )
   {
     FTL::StrRef::Split split = nodeNameStr.trimSplit('|');
@@ -1323,8 +1365,8 @@ void FabricDFGImplodeNodesCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "nodeName" ) )
     throw ArgException( MS::kFailure, "-n (-nodeName) not provided." );
-  FTL::StrRef nodeNameStr =
-    argParser.flagArgumentString( "nodeName", 0 ).asChar();
+  MString nodeNameMString = argParser.flagArgumentString( "nodeName", 0 );
+  FTL::StrRef nodeNameStr = nodeNameMString.asChar();
   while ( !nodeNameStr.empty() )
   {
     FTL::StrRef::Split split = nodeNameStr.trimSplit('|');
@@ -1963,8 +2005,8 @@ void FabricDFGSetExtDepsCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "extDep" ) )
     throw ArgException( MS::kFailure, "-xd (-extDep) not provided." );
-  FTL::StrRef extDepStr =
-    argParser.flagArgumentString( "extDep", 0 ).asChar();
+  MString extDepMString = argParser.flagArgumentString( "extDep", 0 );
+  FTL::StrRef extDepStr = extDepMString.asChar();
   while ( !extDepStr.empty() )
   {
     FTL::StrRef::Split split = extDepStr.trimSplit('|');

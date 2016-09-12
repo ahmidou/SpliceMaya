@@ -256,7 +256,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
   }
 
   FabricCore::RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
-  FabricCore::RTVal klevent = QtToKLEvent(event, *client, viewport);
+  FabricCore::RTVal klevent = QtToKLEvent(event, *client, viewport, "Maya" );
    
   if(klevent.isValid())
   {

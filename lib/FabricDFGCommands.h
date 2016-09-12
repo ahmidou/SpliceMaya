@@ -18,6 +18,17 @@
 #include <DFG/DFGUICmdHandler.h>
 #include <FTL/OwnedPtr.h>
 
+class FabricDFGGetFabricVersionCommand: public MPxCommand
+{
+public:
+
+  virtual const char * getName() { return "FabricCanvasGetFabricVersion"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+  virtual bool isUndoable() const { return false; }
+};
+
 class FabricDFGGetContextIDCommand: public MPxCommand
 {
 public:
@@ -255,8 +266,8 @@ protected:
 
   struct Args : Parent::Args
   {
-    QString srcPort;
-    QString dstPort;
+    QStringList srcPorts;
+    QStringList dstPorts;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );

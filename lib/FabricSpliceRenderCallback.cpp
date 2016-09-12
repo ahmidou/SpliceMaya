@@ -315,11 +315,7 @@ void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDr
   MString panelName;
   context.renderingDestination(panelName);
 
-  M3dView view;
-  M3dView::getM3dViewFromModelPanel(panelName, view);
-
-  MString renderName = getActiveRenderName(view);
-
+  MString renderName = getActiveRenderName();
   if(renderName != "Viewport2Override")
     return;
 
