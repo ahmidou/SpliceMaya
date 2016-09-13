@@ -82,7 +82,7 @@ if FABRIC_BUILD_OS == 'Windows':
 elif FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
   if uses_qt5:
-    mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL', 'Qt5Widgets'])
+    mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL'])
   else:
     mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
 elif FABRIC_BUILD_OS == 'Darwin':
