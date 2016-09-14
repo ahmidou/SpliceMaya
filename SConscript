@@ -47,9 +47,17 @@ mayaFlags = {
   ],
 }
 
-maya_includes = MAYA_INCLUDE_DIR
-
 maya_include_paths = [
+  MAYA_INCLUDE_DIR
+  ]
+
+if FABRIC_BUILD_OS == 'Windows' and int(float(str(MAYA_VERSION[:4]))) < 2016 :
+  maya_includes = os.path.join(MAYA_INCLUDE_DIR, 'Qt')
+  maya_include_paths += [ maya_includes ]
+else:
+  maya_includes = MAYA_INCLUDE_DIR
+
+maya_include_paths += [
   MAYA_INCLUDE_DIR,
   os.path.join(maya_includes, 'QtCore'),
   os.path.join(maya_includes, 'QtGui'),
