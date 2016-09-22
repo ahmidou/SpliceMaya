@@ -90,25 +90,21 @@ if FABRIC_BUILD_OS == 'Windows':
 elif FABRIC_BUILD_OS == 'Linux':
   mayaFlags['CPPDEFINES'] = ['LINUX']
   if uses_qt5:
-    mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL'])
+    mayaFlags['LIBS'].extend(['Qt5Core', 'Qt5Gui', 'Qt5OpenGL', 'Qt5Widgets'])
   else:
     mayaFlags['LIBS'].extend(['QtCore', 'QtGui', 'QtOpenGL'])
 elif FABRIC_BUILD_OS == 'Darwin':
   mayaFlags['CPPDEFINES'] = ['OSMac_']
   if uses_qt5:
-    qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'Qt5Core'))
-    qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'Qt5Gui'))
-    qtOpenGLLib = File(os.path.join(MAYA_LIB_DIR, 'Qt5OpenGL'))
+    qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'libQt5Core.dylib'))
+    qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'libQt5Gui.dylib'))
+    qtOpenGLLib = File(os.path.join(MAYA_LIB_DIR, 'libQt5OpenGL.dylib'))
+    mayaFlags['LIBS'].extend([File(os.path.join(MAYA_LIB_DIR,  'libQt5Widgets.dylib')])
   else:
     qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
     qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
     qtOpenGLLib = File(os.path.join(MAYA_LIB_DIR, 'QtOpenGL'))
-  mayaFlags['LIBS'].extend([
-    qtCoreLib,
-    qtGuiLib,
-    qtOpenGLLib,
-    File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
-    ])
+  mayaFlags['LIBS'].extend([qtCoreLib, qtGuiLib, qtOpenGLLib])
   mayaFlags['CCFLAGS'].extend(['-Wno-#warnings', '-Wno-return-type-c-linkage'])
 
 env.MergeFlags(mayaFlags)
