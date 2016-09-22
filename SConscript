@@ -99,7 +99,7 @@ elif FABRIC_BUILD_OS == 'Darwin':
     qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'libQt5Core.dylib'))
     qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'libQt5Gui.dylib'))
     qtOpenGLLib = File(os.path.join(MAYA_LIB_DIR, 'libQt5OpenGL.dylib'))
-    mayaFlags['LIBS'].extend([File(os.path.join(MAYA_LIB_DIR,  'libQt5Widgets.dylib')])
+    mayaFlags['LIBS'].extend([File(os.path.join(MAYA_LIB_DIR,  'libQt5Widgets.dylib'))])
   else:
     qtCoreLib = File(os.path.join(MAYA_LIB_DIR, 'QtCore'))
     qtGuiLib = File(os.path.join(MAYA_LIB_DIR, 'QtGui'))
