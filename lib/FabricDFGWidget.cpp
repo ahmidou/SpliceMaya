@@ -123,10 +123,6 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
       if (!styleSheet.isEmpty())
         getTreeWidget()->setStyleSheet( styleSheet );
 
-      styleSheet = LoadFabricStyleSheet("ValueEditor_Maya.qss");
-      if (!styleSheet.isEmpty())
-        getDfgValueEditor()->setStyleSheet( styleSheet );
-
       styleSheet = LoadFabricStyleSheet("DFGLogWidget_Maya.qss");
       if (!styleSheet.isEmpty())
         getDfgLogWidget()->setStyleSheet( styleSheet );
