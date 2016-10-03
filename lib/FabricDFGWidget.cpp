@@ -115,15 +115,6 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
           config);
 #endif
 
-    // [FE-6595] load and set the Maya specific style sheets.
-    {
-      QString styleSheet;
-
-      styleSheet = LoadFabricStyleSheet("PresetTreeWidget_Maya.qss");
-      if (!styleSheet.isEmpty())
-        getTreeWidget()->setStyleSheet( styleSheet );
-    }
-
     m_initialized = true;
   }
   else
