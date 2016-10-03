@@ -122,10 +122,6 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
       styleSheet = LoadFabricStyleSheet("PresetTreeWidget_Maya.qss");
       if (!styleSheet.isEmpty())
         getTreeWidget()->setStyleSheet( styleSheet );
-
-      styleSheet = LoadFabricStyleSheet("DFGLogWidget_Maya.qss");
-      if (!styleSheet.isEmpty())
-        getDfgLogWidget()->setStyleSheet( styleSheet );
     }
 
     m_initialized = true;
