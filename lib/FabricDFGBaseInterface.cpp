@@ -119,7 +119,6 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_client = FabricDFGWidget::GetCoreClient();
   FabricCore::DFGHost dfgHost = m_client.getDFGHost();
 
-  m_binding.setNotificationCallback( NULL, NULL );
   m_binding = dfgHost.createBindingToNewGraph();
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
   FabricCore::DFGExec exec = m_binding.getExec();
@@ -497,7 +496,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   if ( m_binding )
     m_binding.setNotificationCallback( NULL, NULL );
-  
+
   FabricCore::DFGHost dfgHost = m_client.getDFGHost();
   m_binding = dfgHost.createBindingFromJSON(json.asChar());
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
