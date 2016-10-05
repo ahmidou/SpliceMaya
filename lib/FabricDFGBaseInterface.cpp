@@ -70,11 +70,15 @@ FabricDFGBaseInterface::FabricDFGBaseInterface()
   MAYADFG_CATCH_END(&stat);
 }
 
-FabricDFGBaseInterface::~FabricDFGBaseInterface(){
-
-  // Release cached values and variables, for example InlineDrawingHandle
+FabricDFGBaseInterface::~FabricDFGBaseInterface()
+{
   if( m_binding )
+  {
+    m_binding.setNotificationCallback( NULL, NULL );
+
+    // Release cached values and variables, for example InlineDrawingHandle
     m_binding.deallocValues();
+  }
 
   m_binding = FabricCore::DFGBinding();
 
@@ -491,7 +495,9 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   FabricSplice::Logging::AutoTimer timer("Maya::restoreFromPersistenceData()");
 
-  m_binding.setNotificationCallback( NULL, NULL );
+  if ( m_binding )
+    m_binding.setNotificationCallback( NULL, NULL );
+  
   FabricCore::DFGHost dfgHost = m_client.getDFGHost();
   m_binding = dfgHost.createBindingFromJSON(json.asChar());
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
