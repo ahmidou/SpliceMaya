@@ -36,9 +36,9 @@ env.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 
 mayaFlags = {
   'CPPPATH': [
-      env.Dir('lib'),
-      env.Dir('lib').Dir('Render'),
-      env.Dir('plugin')
+      env.Dir('lib').srcnode(),
+      env.Dir('lib').Dir('Render').srcnode(),
+      env.Dir('plugin').srcnode(),
     ],
   'LIBPATH': [
     MAYA_LIB_DIR
