@@ -5,6 +5,7 @@
 #include "FabricDFGConversion.h"
 #include "FabricSpliceMayaData.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricDFGProfiling.h"
 
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>
@@ -586,9 +587,10 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
 void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_compoundArray");
+
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
@@ -599,9 +601,9 @@ void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data,
     for(unsigned int j=0;j<plug.numElements();j++) {
 
       MPlug element = plug.elementByPhysicalIndex(j);
-      timers->stop();
+      FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       MDataHandle handle = data.inputValue(element);
-      timers->resume();
+      pauseBracket.resume();
       MFnCompoundAttribute compound(element.attribute());
 
       FabricCore::RTVal compoundVal = FabricSplice::constructObjectRTVal("CompoundParam");
@@ -619,9 +621,10 @@ void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_compound");
+
   if(plug.isArray()){
     FabricCore::RTVal compoundVals = FabricSplice::constructObjectRTVal("CompoundParam[]");
     compoundVals.setArraySize(plug.numElements());
@@ -629,9 +632,9 @@ void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data,
     for(unsigned int j=0;j<plug.numElements();j++) {
 
       MPlug element = plug.elementByPhysicalIndex(j);
-      timers->stop();
+      FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       MDataHandle handle = data.inputValue(element);
-      timers->resume();
+      pauseBracket.resume();
       MFnCompoundAttribute compound(element.attribute());
 
       FabricCore::RTVal compoundVal;
@@ -641,9 +644,9 @@ void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data,
     binding.setArgValue_lockType(lockType, argName, compoundVals, false);
   }
   else{
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
-    timers->resume();
+    pauseBracket.resume();
     FabricCore::RTVal rtVal = FabricSplice::constructObjectRTVal("CompoundParam");
     MFnCompoundAttribute compound(plug.attribute());
     dfgPlugToPort_compound_convertCompound(compound, handle, rtVal);
@@ -654,14 +657,15 @@ void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_bool");
+
   if(plug.isArray()){
     
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-    timers->resume();
+    pauseBracket.resume();
 
     unsigned int elements = arrayHandle.elementCount();
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
@@ -678,9 +682,9 @@ void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data,
     binding.setArgValue_lockType(lockType, argName, rtVal, false);
   }
   else{
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
-    timers->resume();
+    pauseBracket.resume();
     binding.setArgValue_lockType(lockType, argName, FabricSplice::constructBooleanRTVal(handle.asBool()), false);
   }
 }
@@ -688,13 +692,14 @@ void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_integer");
+
   if(plug.isArray()){
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-    timers->resume();
+    pauseBracket.resume();
 
     unsigned int elements = arrayHandle.elementCount();
 
@@ -711,9 +716,9 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data,
 
     binding.setArgValue_lockType(lockType, argName, rtVal, false);
   }else{
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
-    timers->resume();
+    pauseBracket.resume();
     bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
     if(handle.type() == MFnData::kIntArray || isNativeArray) {
       MIntArray arrayValues = MFnIntArrayData(handle.data()).array();
@@ -740,15 +745,15 @@ void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_scalar");
 
   FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
   if(plug.isArray()){
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-    timers->resume();
+    pauseBracket.resume();
 
     unsigned int elements = arrayHandle.elementCount();
 
@@ -779,9 +784,9 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data,
 
     binding.setArgValue_lockType(lockType, argName, rtVal, false);
   }else{
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
-    timers->resume();
+    pauseBracket.resume();
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray()){
       MDoubleArray arrayValues = MFnDoubleArrayData(handle.data()).array();
@@ -822,15 +827,16 @@ void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_string(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_string");
+
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-    timers->resume();
+    pauseBracket.resume();
     unsigned int elements = arrayHandle.elementCount();
     FabricCore::RTVal stringArrayVal = FabricSplice::constructVariableArrayRTVal("String");
     FabricCore::RTVal elementsVal = FabricSplice::constructUInt32RTVal(elements);
@@ -847,10 +853,10 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data,
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray())
       return;
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MStatus mStatus;
     MDataHandle handle = data.inputValue( plug, &mStatus );
-    timers->resume();
+    pauseBracket.resume();
     if ( mStatus != MS::kSuccess
       || handle.type() != MFnData::kString )
     {
@@ -877,15 +883,16 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_color(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_color");
+
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-    timers->resume();
+    pauseBracket.resume();
     unsigned int elements = arrayHandle.elementCount();
     FabricCore::RTVal arrayVal = FabricSplice::constructVariableArrayRTVal("Color");
     FabricCore::RTVal color = FabricSplice::constructRTVal("Color");
@@ -916,9 +923,9 @@ void dfgPlugToPort_color(MPlug &plug, MDataBlock &data,
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray())
       return;
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
-    timers->resume();
+    pauseBracket.resume();
 
     FabricCore::RTVal color = FabricSplice::constructRTVal("Color");
     if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
@@ -943,13 +950,14 @@ void dfgPlugToPort_color(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_vec3");
+
   if(plug.isArray()){
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-    timers->resume();
+    pauseBracket.resume();
 
     unsigned int elements = arrayHandle.elementCount();
 
@@ -977,9 +985,9 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data,
 
     binding.setArgValue_lockType(lockType, argName, rtVal, false);
   }else{
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
-    timers->resume();
+    pauseBracket.resume();
     bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
     if(handle.type() == MFnData::kVectorArray || isNativeArray){
       MVectorArray arrayValues = MFnVectorArrayData(handle.data()).array();
@@ -1039,15 +1047,16 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_euler");
+
   CORE_CATCH_BEGIN;
 
   if(plug.isArray()){
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-    timers->resume();
+    pauseBracket.resume();
 
     unsigned int elements = arrayHandle.elementCount();
     FabricCore::RTVal arrayVal = FabricSplice::constructVariableArrayRTVal("Euler");
@@ -1078,9 +1087,9 @@ void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data,
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray())
       return;
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
-    timers->resume();
+    pauseBracket.resume();
 
     FabricCore::RTVal euler = FabricSplice::constructRTVal("Euler");
     if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
@@ -1104,51 +1113,70 @@ void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_mat44");
+
   if(plug.isArray()){
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-    timers->resume();
+    pauseBracket.resume();
 
     unsigned int elements = arrayHandle.elementCount();
 
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    rtVal.setArraySize(elements);
-    FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-    float * values = (float*)dataRtVal.getData();
-
-    unsigned int offset = 0;
-    for(unsigned int i = 0; i < elements; ++i){
-      arrayHandle.jumpToArrayElement(i);
-      MDataHandle handle = arrayHandle.inputValue();
-      const MMatrix& mayaMat = handle.asMatrix();
-      MMatrixToMat44_data(mayaMat, &values[offset]);
-      offset += 16;
+    FabricCore::RTVal rtVal;
+    float * values;
+    {
+      FabricMayaProfilingEvent bracket("getting float pointer");
+      rtVal = binding.getArgValue(argName);
+      rtVal.setArraySize(elements);
+      FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
+      values = (float*)dataRtVal.getData();
     }
 
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
+    unsigned int offset = 0;
+    {
+      FabricMayaProfilingEvent bracket("converting matrix array");
+      for(unsigned int i = 0; i < elements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        const MMatrix& mayaMat = handle.asMatrix();
+        MMatrixToMat44_data(mayaMat, &values[offset]);
+        offset += 16;
+      }
+    }
+
+    {
+      FabricMayaProfilingEvent bracket("binding.setArgValue_lockType");
+      binding.setArgValue_lockType(lockType, argName, rtVal, false);
+    }
   }
   else{
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
     if(rtVal.isArray())
       return;
-    timers->stop();
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
-    timers->resume();
-    const MMatrix& mayaMat = handle.asMatrix();
-    MMatrixToMat44(mayaMat, rtVal);
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
+    pauseBracket.resume();
+
+    {
+      FabricMayaProfilingEvent bracket("converting matrix");
+      const MMatrix& mayaMat = handle.asMatrix();
+      MMatrixToMat44(mayaMat, rtVal);
+    }
+    {
+      FabricMayaProfilingEvent bracket("binding.setArgValue_lockType");
+      binding.setArgValue_lockType(lockType, argName, rtVal, false);
+    }
   }
 }
 
 void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_PolygonMesh");
 
   std::vector<MDataHandle> handles;
   std::vector<FabricCore::RTVal> rtVals;
@@ -1160,9 +1188,9 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data,
     {
       portRTVal = binding.getArgValue(argName);
 
-      timers->stop();
+      FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-      timers->resume();
+      pauseBracket.resume();
 
       unsigned int elements = arrayHandle.elementCount();
       for(unsigned int i = 0; i < elements; ++i){
@@ -1198,9 +1226,9 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data,
     }
     else
     {
-      timers->stop();
+      FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       handles.push_back(data.inputValue(plug));
-      timers->resume();
+      pauseBracket.resume();
 
       if(binding.getExec().getExecPortType(argName) == FabricCore::DFGPortType_IO)
         portRTVal = binding.getArgValue(argName);
@@ -1345,9 +1373,9 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_Lines");
 
   std::vector<MDataHandle> handles;
   std::vector<FabricCore::RTVal> rtVals;
@@ -1359,9 +1387,9 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data,
     {
       portRTVal = binding.getArgValue(argName);
 
-      timers->stop();
+      FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-      timers->resume();
+      pauseBracket.resume();
 
       unsigned int elements = arrayHandle.elementCount();
       for(unsigned int i = 0; i < elements; ++i){
@@ -1388,9 +1416,9 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data,
     }
     else
     {
-      timers->stop();
+      FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       handles.push_back(data.inputValue(plug));
-      timers->resume();
+      pauseBracket.resume();
 
       if(binding.getExec().getExecPortType(argName) == FabricCore::DFGPortType_IO)
         portRTVal = binding.getArgValue(argName);
@@ -1456,6 +1484,8 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data,
 }
 
 void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal & trackVal) {
+
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_KeyframeTrack_helper");
 
   CORE_CATCH_BEGIN;
 
@@ -1573,8 +1603,7 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
 void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
   if(!plug.isArray()){
     
@@ -1635,9 +1664,10 @@ void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data,
 void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, 
     FabricCore::DFGBinding & binding,
     FabricCore::LockType lockType,
-    char const * argName,
-    DFGConversionTimers * timers)
+    char const * argName)
 {
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_spliceMayaData");
+
   try{
 
     const char *option = binding.getExec().getExecPortMetadata(argName, "disableSpliceMayaDataConversion");
@@ -1651,9 +1681,9 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data,
     }
 
     if(!plug.isArray()){
-      timers->stop();
+      FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       MDataHandle handle = data.inputValue(plug);
-      timers->resume();
+      pauseBracket.resume();
       MObject spliceMayaDataObj = handle.data();
       MFnPluginData mfn(spliceMayaDataObj);
       FabricSpliceMayaData *spliceMayaData = (FabricSpliceMayaData*)mfn.data();
@@ -1662,9 +1692,9 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data,
 
       binding.setArgValue_lockType(lockType, argName, spliceMayaData->getRTVal(), false);
     }else{
-      timers->stop();
+      FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-      timers->resume();
+      pauseBracket.resume();
       unsigned int elements = arrayHandle.elementCount();
 
       FabricCore::RTVal value = binding.getArgValue(argName);
@@ -2730,6 +2760,7 @@ void dfgPortToPlug_mat44(
     FabricCore::LockType lockType,
     char const * argName, MPlug &plug, MDataBlock &data)
 {
+  FabricMayaProfilingEvent bracket("dfgPortToPlug_mat44");
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
@@ -2740,15 +2771,18 @@ void dfgPortToPlug_mat44(
     FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
     float * values = (float*)dataRtVal.getData();
 
-    unsigned int offset = 0;
-    for(unsigned int i = 0; i < elements; ++i){
-      MDataHandle handle = arraybuilder.addElement(i);
+    {
+      FabricMayaProfilingEvent bracket("converting matrix array");
+      unsigned int offset = 0;
+      for(unsigned int i = 0; i < elements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
 
-      MMatrix mayaMat;
-      Mat44ToMMatrix_data(&values[offset], mayaMat);
-      offset += 16;
+        MMatrix mayaMat;
+        Mat44ToMMatrix_data(&values[offset], mayaMat);
+        offset += 16;
 
-      handle.setMMatrix(mayaMat);
+        handle.setMMatrix(mayaMat);
+      }
     }
 
     arrayHandle.set(arraybuilder);
@@ -2760,7 +2794,10 @@ void dfgPortToPlug_mat44(
     FabricCore::RTVal rtVal = binding.getArgValue(argName);
 
     MMatrix mayaMat;
-    Mat44ToMMatrix(rtVal, mayaMat);
+    {
+      FabricMayaProfilingEvent bracket("converting matrix");
+      Mat44ToMMatrix(rtVal, mayaMat);
+    }
 
     handle.setMMatrix(mayaMat);
   }

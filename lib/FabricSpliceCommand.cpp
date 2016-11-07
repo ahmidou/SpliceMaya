@@ -6,6 +6,7 @@
 
 #include "FabricSpliceCommand.h"
 #include "FabricSpliceConversion.h"
+#include "FabricDFGProfiling.h"
 
 #include <maya/MStringArray.h>
 #include <maya/MFnDependencyNode.h>
@@ -112,20 +113,12 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     }
     else if(actionStr == "startProfiling")
     {
-      FabricSplice::Logging::enableTimers();
-      for(unsigned int i=0;i<FabricSplice::Logging::getNbTimers();i++)
-      {
-        FabricSplice::Logging::resetTimer(FabricSplice::Logging::getTimerName(i));
-      }    
+      FabricMayaProfilingEvent::startProfiling();
       return mayaErrorOccured();
     }
     else if(actionStr == "stopProfiling")
     {
-      for(unsigned int i=0;i<FabricSplice::Logging::getNbTimers();i++)
-      {
-        FabricSplice::Logging::logTimer(FabricSplice::Logging::getTimerName(i));
-      }    
-      FabricSplice::Logging::disableTimers();
+      FabricMayaProfilingEvent::stopProfiling();
       return mayaErrorOccured();
     }
 

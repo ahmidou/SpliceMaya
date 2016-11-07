@@ -4,6 +4,7 @@
 
 #include "FabricDFGCanvasNode.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricDFGProfiling.h"
 
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>
@@ -35,6 +36,8 @@ void* FabricDFGMayaNode::creator(){
 }
 
 MStatus FabricDFGMayaNode::initialize(){
+  FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::initialize");
+
   MFnTypedAttribute typedAttr;
   MFnNumericAttribute nAttr;
 
@@ -56,6 +59,8 @@ MStatus FabricDFGMayaNode::initialize(){
 
 MStatus FabricDFGMayaNode::compute(const MPlug& plug, MDataBlock& data){
 
+  FabricMayaProfilingEvent bracket("FabricDFGMayaNode::compute");
+
   _outputsDirtied = false;
   
   MStatus stat;
@@ -68,8 +73,6 @@ MStatus FabricDFGMayaNode::compute(const MPlug& plug, MDataBlock& data){
   if (stateData.asShort() == 0)       // 0: Normal.
   {
     MAYADFG_CATCH_BEGIN(&stat);
-
-    FabricSplice::Logging::AutoTimer timer("Maya::compute()");
 
     // if(!_spliceGraph.checkErrors()){
     //   return MStatus::kFailure; // avoid evaluating on errors

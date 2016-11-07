@@ -5,6 +5,7 @@
 #include "FabricDFGCanvasDeformer.h"
 #include "FabricDFGConversion.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricDFGProfiling.h"
 
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>
@@ -59,6 +60,8 @@ MStatus FabricDFGMayaDeformer::initialize(){
 
 MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, const MMatrix&, unsigned int multiIndex)
 {
+  FabricMayaProfilingEvent bracket("FabricDFGMayaDeformer::deform");
+
   _outputsDirtied = false;
   
   MStatus stat;
@@ -71,8 +74,6 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
   if (stateData.asShort() == 0)       // 0: Normal.
   {
     MAYADFG_CATCH_BEGIN(&stat);
-
-    FabricSplice::Logging::AutoTimer timer("Maya::deform()");
 
     FabricCore::DFGBinding binding = getDFGBinding();
     FabricCore::DFGExec    exec    = getDFGExec();
@@ -208,6 +209,8 @@ void FabricDFGMayaDeformer::copyInternalData(MPxNode *node){
 
 int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBlock &data)
 {
+  FabricMayaProfilingEvent bracket("FabricDFGMayaDeformer::initializePolygonMeshPorts");
+
   MFnDependencyNode thisNode(getThisMObject());
 
   FabricCore::DFGExec exec = getDFGExec();
@@ -230,8 +233,7 @@ int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBloc
     return -1;
   }
 
-  DFGConversionTimers timers;
-  getDFGPlugToArgFunc("PolygonMesh")(meshPlug, data, m_binding, getLockType(), portName.asChar(), &timers);
+  getDFGPlugToArgFunc("PolygonMesh")(meshPlug, data, m_binding, getLockType(), portName.asChar());
   invalidatePlug(meshPlug);
   return 1;
 }

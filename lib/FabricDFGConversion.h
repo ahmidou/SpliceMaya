@@ -20,35 +20,12 @@
 
 #include <FTL/CStrRef.h>
 
-struct DFGConversionTimers
-{
-  FabricSplice::Logging::AutoTimer * globalTimer;
-
-  DFGConversionTimers()
-  {
-    globalTimer = NULL;
-  }
-
-  void stop()
-  {
-    if(globalTimer != NULL)
-      globalTimer->stop();
-  }
-
-  void resume()
-  {
-    if(globalTimer != NULL)
-      globalTimer->resume();
-  }
-};
-
 typedef void(*DFGPlugToArgFunc)(
   MPlug &plug,
   MDataBlock &data,
   FabricCore::DFGBinding & binding,
   FabricCore::LockType lockType,
-  char const * argName,
-  DFGConversionTimers * timers
+  char const * argName
   );
 
 typedef void(*DFGArgToPlugFunc)(
