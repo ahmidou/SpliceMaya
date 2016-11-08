@@ -3165,7 +3165,7 @@ void dfgPortToPlug_spliceMayaData(
   }
 }
 
-DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::CStrRef &dataType)
+DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType)
 {
   if(dataType == "Boolean")               return dfgPlugToPort_bool;
 
@@ -3213,7 +3213,7 @@ DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::CStrRef &dataType)
   return NULL;  
 }
 
-DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::CStrRef &dataType)
+DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::StrRef &dataType)
 {
   if(dataType == "Boolean")               return dfgPortToPlug_bool;
 

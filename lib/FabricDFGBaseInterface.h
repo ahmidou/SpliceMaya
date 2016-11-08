@@ -173,6 +173,34 @@ private:
       );
   }
 
+  struct VisitCallbackUserData
+  {
+    VisitCallbackUserData(MObject inNode, MDataBlock & inData)
+    : node(inNode)
+    , data(inData)
+    {
+    }
+
+    FabricDFGBaseInterface * interf;
+    MFnDependencyNode node;
+    bool isDeformer;
+    MDataBlock & data;
+  };
+
+  static void VisitOutputArgsCallback(
+    void *userdata,
+    unsigned argIndex,
+    char const *argName,
+    char const *argTypeName,
+    FEC_DFGPortType argOutsidePortType,
+    uint64_t argRawDataSize,
+    FEC_DFGBindingVisitArgs_GetCB getCB,
+    FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+    FEC_DFGBindingVisitArgs_SetCB setCB,
+    FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+    void *getSetUD
+    );  
+
   bool plugInArray(const MPlug &plug, const MPlugArray &array);
   void renamePlug(const MPlug &plug, MString oldName, MString newName);
   static MString resolveEnvironmentVariables(const MString & filePath);

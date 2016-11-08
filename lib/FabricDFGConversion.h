@@ -18,7 +18,7 @@
 #include <FabricCore.h>
 #include <FabricSplice.h>
 
-#include <FTL/CStrRef.h>
+#include <FTL/StrRef.h>
 
 typedef void(*DFGPlugToArgFunc)(
   MPlug &plug,
@@ -36,5 +36,5 @@ typedef void(*DFGArgToPlugFunc)(
   MDataBlock &data
   );
 
-DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::CStrRef &dataType);
-DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::CStrRef &dataType);
+DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType);
+DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::StrRef &dataType);
