@@ -1922,11 +1922,11 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   FTL::CStrRef jsonStr
   )
 {
-  // [hm 20161107] None of the cases below apply during playback 
+  // [hm 20161108] None of the cases below apply during playback 
   // so we should avoid the json decoding alltogether.
   if(_isEvaluating || _isTransferingInputs)
   {
-    // return;
+    return;
   }
 
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::bindingNotificationCallback");
