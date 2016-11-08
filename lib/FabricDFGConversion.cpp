@@ -2359,9 +2359,15 @@ void dfgPortToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDa
 }
 
 void dfgPortToPlug_compound(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   if(plug.isArray())
     return;
@@ -2374,9 +2380,15 @@ void dfgPortToPlug_compound(
 }
 
 void dfgPortToPlug_bool(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -2403,9 +2415,15 @@ void dfgPortToPlug_bool(
 }
 
 void dfgPortToPlug_integer(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -2452,9 +2470,15 @@ void dfgPortToPlug_integer(
 }
 
 void dfgPortToPlug_scalar(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   CORE_CATCH_BEGIN;
 
@@ -2530,9 +2554,15 @@ void dfgPortToPlug_scalar(
 }
 
 void dfgPortToPlug_string(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -2555,9 +2585,15 @@ void dfgPortToPlug_string(
 }
 
 void dfgPortToPlug_color(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug,
+  MDataBlock &data)
 {
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -2609,9 +2645,15 @@ void dfgPortToPlug_color(
 }
 
 void dfgPortToPlug_vec3(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -2704,9 +2746,15 @@ void dfgPortToPlug_vec3(
 }
 
 void dfgPortToPlug_euler(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -2756,20 +2804,26 @@ void dfgPortToPlug_euler(
 }
 
 void dfgPortToPlug_mat44(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
+  uint64_t elementDataSize = sizeof(float) * 16;
+  uint64_t numElements = argRawDataSize / elementDataSize;
+
   FabricMayaProfilingEvent bracket("dfgPortToPlug_mat44");
   if(plug.isArray()){
+
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    unsigned int elements = rtVal.getArraySize();
-
-    FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-    float * values = (float*)dataRtVal.getData();
+    float * values = (float*)getRawCB(getSetUD);
 
     {
       FabricMayaProfilingEvent bracket("converting matrix array");
@@ -2796,7 +2850,8 @@ void dfgPortToPlug_mat44(
     MMatrix mayaMat;
     {
       FabricMayaProfilingEvent bracket("converting matrix");
-      Mat44ToMMatrix(rtVal, mayaMat);
+      float * values = (float*)getRawCB(getSetUD);
+      Mat44ToMMatrix_data(values, mayaMat);
     }
 
     handle.setMMatrix(mayaMat);
@@ -2982,21 +3037,27 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
 }
 
 void dfgPortToPlug_PolygonMesh(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   try
   {
+    FabricCore::RTVal rtVal(getCB(getSetUD));
     if(plug.isArray())
     {
       MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
       MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-      FabricCore::RTVal polygonMeshArray = binding.getArgValue(argName);
-      unsigned int elements = polygonMeshArray.getArraySize();
+      unsigned int elements = rtVal.getArraySize();
       for(unsigned int i = 0; i < elements; ++i)
-        dfgPortToPlug_PolygonMesh_singleMesh(arraybuilder.addElement(i), polygonMeshArray.getArrayElement(i));
+        dfgPortToPlug_PolygonMesh_singleMesh(arraybuilder.addElement(i), rtVal.getArrayElement(i));
 
       arrayHandle.set(arraybuilder);
       arrayHandle.setAllClean();
@@ -3004,7 +3065,7 @@ void dfgPortToPlug_PolygonMesh(
     else
     {
       MDataHandle handle = data.outputValue(plug.attribute());
-      dfgPortToPlug_PolygonMesh_singleMesh(handle, binding.getArgValue(argName));
+      dfgPortToPlug_PolygonMesh_singleMesh(handle, rtVal);
     }
   }
   catch(FabricCore::Exception e)
@@ -3083,18 +3144,23 @@ void dfgPortToPlug_Lines_singleLines(MDataHandle handle, FabricCore::RTVal rtVal
 }
 
 void dfgPortToPlug_Lines(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, MDataBlock &data)
 {
   try
   {
+    FabricCore::RTVal rtVal(getCB(getSetUD));
     if(plug.isArray())
     {
       MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
       MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-      FabricCore::RTVal rtVal = binding.getArgValue(argName);
       unsigned int elements = rtVal.getArraySize();
       for(unsigned int i = 0; i < elements; ++i)
         dfgPortToPlug_Lines_singleLines(arraybuilder.addElement(i), rtVal.getArrayElement(i));
@@ -3105,7 +3171,7 @@ void dfgPortToPlug_Lines(
     else
     {
       MDataHandle handle = data.outputValue(plug.attribute());
-      dfgPortToPlug_Lines_singleLines(handle, binding.getArgValue(argName));
+      dfgPortToPlug_Lines_singleLines(handle, rtVal);
     }
   }
   catch(FabricCore::Exception e)
@@ -3121,36 +3187,42 @@ void dfgPortToPlug_Lines(
 }
 
 void dfgPortToPlug_spliceMayaData(
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName, MPlug &plug, MDataBlock &data)
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, MDataBlock &data)
 {
   MStatus status;
   try{
+    FabricCore::RTVal rtVal(getCB(getSetUD));
+
     if(!plug.isArray()){
       MFnFabricSpliceMayaData mfnpd;
       MObject spliceMayaDataObj = mfnpd.create(&status);
       FabricSpliceMayaData *spliceMayaData =(FabricSpliceMayaData *)mfnpd.data();
-      spliceMayaData->setRTVal(binding.getArgValue(argName));
+      spliceMayaData->setRTVal(rtVal);
 
       MDataHandle handle = data.outputValue(plug);
       handle.set(spliceMayaDataObj);
     } else {
-      FabricCore::RTVal value = binding.getArgValue(argName);
-      if(!value.isArray())
+      if(!rtVal.isArray())
         return;
 
       MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
       MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-      unsigned int elements = value.getArraySize();
+      unsigned int elements = rtVal.getArraySize();
       for(unsigned int i = 0; i < elements; ++i)
       {
         MDataHandle handle = arraybuilder.addElement(i);
         MFnFabricSpliceMayaData mfnpd;
         MObject spliceMayaDataObj = mfnpd.create(&status);
         FabricSpliceMayaData *spliceMayaData =(FabricSpliceMayaData *)mfnpd.data();
-        spliceMayaData->setRTVal(value.getArrayElement(i));
+        spliceMayaData->setRTVal(rtVal.getArrayElement(i));
         handle.set(spliceMayaDataObj);
       }
 

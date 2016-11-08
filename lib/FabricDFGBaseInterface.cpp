@@ -2076,9 +2076,13 @@ void FabricDFGBaseInterface::VisitOutputArgsCallback(
       DFGArgToPlugFunc func = getDFGArgToPlugFunc(portDataType);
       if(func != NULL) {
         (*func)(
-          ud->interf->m_binding,
-          ud->interf->getLockType(),
+          argIndex,
           argName,
+          argTypeName,
+          argRawDataSize,
+          getCB,
+          getRawCB,
+          getSetUD,
           plug,
           ud->data
           );

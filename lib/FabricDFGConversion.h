@@ -29,9 +29,13 @@ typedef void(*DFGPlugToArgFunc)(
   );
 
 typedef void(*DFGArgToPlugFunc)(
-  FabricCore::DFGBinding & binding,
-  FabricCore::LockType lockType,
-  char const * argName,
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
   MPlug &plug,
   MDataBlock &data
   );
