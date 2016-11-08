@@ -1134,9 +1134,9 @@ void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data,
       values = (float*)dataRtVal.getData();
     }
 
-    unsigned int offset = 0;
     {
       FabricMayaProfilingEvent bracket("converting matrix array");
+      unsigned int offset = 0;
       for(unsigned int i = 0; i < elements; ++i){
         arrayHandle.jumpToArrayElement(i);
         MDataHandle handle = arrayHandle.inputValue();

@@ -1922,11 +1922,18 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   FTL::CStrRef jsonStr
   )
 {
+  // [hm 20161107] None of the cases below apply during playback 
+  // so we should avoid the json decoding alltogether.
+  if(_isEvaluating || _isTransferingInputs)
+  {
+    // return;
+  }
+
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::bindingNotificationCallback");
 
   // [pz 20160818] We need a bracket here because some the options below
   // can cause further notifications to be fired
-  FabricCore::DFGNotifBracket notifBrakcet( getDFGHost() );
+  FabricCore::DFGNotifBracket notifBracket( getDFGHost() );
 
   // MGlobal::displayInfo(jsonStr.data());
 
@@ -1936,16 +1943,13 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     );
 
   FTL::CStrRef descStr = jsonObject->getString( FTL_STR("desc") );
-  MGlobal::displayInfo(descStr.c_str());
 
   if ( descStr == FTL_STR("dirty") )
   {
+    // when we receive this notification we need to 
+    // ensure that the DCC reevaluates the node
     if(!_isEvaluating && !_isTransferingInputs)
-    {
-      // when we receive this notification we need to 
-      // ensure that the DCC reevaluates the node
       incrementEvalID();
-    }
   }
   else if( descStr == FTL_STR("argTypeChanged") )
   {
