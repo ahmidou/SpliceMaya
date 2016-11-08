@@ -84,7 +84,8 @@ MStatus FabricDFGRigNode::initialize(){
   mAttr.setReadable(true);
   mAttr.setWritable(false);
   mAttr.setKeyable(false);
-  mAttr.setStorable(false);
+  mAttr.setCached(true);
+  mAttr.setStorable(true);
   addAttribute(matrixOutputs);
 
   scalarOutputs = nAttr.create("scalarOutputs", "scalarOut", MFnNumericData::kFloat);
@@ -93,7 +94,8 @@ MStatus FabricDFGRigNode::initialize(){
   nAttr.setReadable(true);
   nAttr.setWritable(false);
   nAttr.setKeyable(false);
-  nAttr.setStorable(false);
+  nAttr.setCached(true);
+  nAttr.setStorable(true);
   addAttribute(scalarOutputs);
 
   attributeAffects(evalID, matrixOutputs);
