@@ -55,9 +55,7 @@ public:
   static MObject refFilePath;
 
   static MObject matrixInputs;
-  static MObject vectorInputs;
   static MObject scalarInputs;
   static MObject matrixOutputs;
-  static MObject vectorOutputs;
   static MObject scalarOutputs;
 };

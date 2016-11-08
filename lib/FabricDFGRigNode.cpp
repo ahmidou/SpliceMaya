@@ -17,10 +17,8 @@ MObject FabricDFGRigNode::saveData;
 MObject FabricDFGRigNode::evalID;
 MObject FabricDFGRigNode::refFilePath;
 MObject FabricDFGRigNode::matrixInputs;
-MObject FabricDFGRigNode::vectorInputs;
 MObject FabricDFGRigNode::scalarInputs;
 MObject FabricDFGRigNode::matrixOutputs;
-MObject FabricDFGRigNode::vectorOutputs;
 MObject FabricDFGRigNode::scalarOutputs;
 
 FabricDFGRigNode::FabricDFGRigNode()
@@ -71,15 +69,6 @@ MStatus FabricDFGRigNode::initialize(){
   mAttr.setStorable(true);
   addAttribute(matrixInputs);
 
-  vectorInputs = nAttr.create("vectorInputs", "vectorIn", MFnNumericData::k3Float);
-  nAttr.setArray(true);
-  nAttr.setUsesArrayDataBuilder(true); // todo? is this required
-  nAttr.setReadable(false);
-  nAttr.setWritable(true);
-  nAttr.setKeyable(true);
-  nAttr.setStorable(true);
-  addAttribute(vectorInputs);
-
   scalarInputs = nAttr.create("scalarInputs", "scalarIn", MFnNumericData::kFloat);
   nAttr.setArray(true);
   nAttr.setUsesArrayDataBuilder(true); // todo? is this required
@@ -98,15 +87,6 @@ MStatus FabricDFGRigNode::initialize(){
   mAttr.setStorable(false);
   addAttribute(matrixOutputs);
 
-  vectorOutputs = nAttr.create("vectorOutputs", "vectorOut", MFnNumericData::k3Float);
-  nAttr.setArray(true);
-  nAttr.setUsesArrayDataBuilder(true); // todo? is this required
-  nAttr.setReadable(true);
-  nAttr.setWritable(false);
-  nAttr.setKeyable(false);
-  nAttr.setStorable(false);
-  addAttribute(vectorOutputs);
-
   scalarOutputs = nAttr.create("scalarOutputs", "scalarOut", MFnNumericData::kFloat);
   nAttr.setArray(true);
   nAttr.setUsesArrayDataBuilder(true); // todo? is this required
@@ -117,16 +97,10 @@ MStatus FabricDFGRigNode::initialize(){
   addAttribute(scalarOutputs);
 
   attributeAffects(evalID, matrixOutputs);
-  attributeAffects(evalID, vectorOutputs);
   attributeAffects(evalID, scalarOutputs);
   attributeAffects(matrixInputs, matrixOutputs);
-  attributeAffects(matrixInputs, vectorOutputs);
   attributeAffects(matrixInputs, scalarOutputs);
-  attributeAffects(vectorInputs, matrixOutputs);
-  attributeAffects(vectorInputs, vectorOutputs);
-  attributeAffects(vectorInputs, scalarOutputs);
   attributeAffects(scalarInputs, matrixOutputs);
-  attributeAffects(scalarInputs, vectorOutputs);
   attributeAffects(scalarInputs, scalarOutputs);
 
   return MS::kSuccess;
@@ -198,10 +172,8 @@ bool FabricDFGRigNode::setInternalValueInContext(const MPlug &plug, const MDataH
 MString FabricDFGRigNode::getPlugName(const MString &portName)
 {
   if      (portName == "matrixInputs")  return "matrixInputs";
-  else if (portName == "vectorInputs")  return "vectorInputs";
   else if (portName == "scalarInputs")  return "scalarInputs";
   else if (portName == "matrixOutputs") return "matrixOutputs";
-  else if (portName == "vectorOutputs") return "vectorOutputs";
   else if (portName == "scalarOutputs") return "scalarOutputs";
 
   return FabricDFGBaseInterface::getPlugName(portName);
@@ -210,10 +182,8 @@ MString FabricDFGRigNode::getPlugName(const MString &portName)
 MString FabricDFGRigNode::getPortName(const MString &plugName)
 {
   if      (plugName == "matrixInputs")  return "matrixInputs";
-  else if (plugName == "vectorInputs")  return "vectorInputs";
   else if (plugName == "scalarInputs")  return "scalarInputs";
   else if (plugName == "matrixOutputs") return "matrixOutputs";
-  else if (plugName == "vectorOutputs") return "vectorOutputs";
   else if (plugName == "scalarOutputs") return "scalarOutputs";
 
   return FabricDFGBaseInterface::getPortName(plugName);
@@ -235,13 +205,11 @@ void FabricDFGRigNode::setupMayaAttributeAffects(MString portName, FabricCore::D
   if(portType == FabricCore::DFGPortType_In)
   {
     userNode->attributeAffects(newAttribute, matrixOutputs);
-    userNode->attributeAffects(newAttribute, vectorOutputs);
     userNode->attributeAffects(newAttribute, scalarOutputs);
   }
   else
   {
     userNode->attributeAffects(matrixInputs, newAttribute);
-    userNode->attributeAffects(vectorInputs, newAttribute);
     userNode->attributeAffects(scalarInputs, newAttribute);
   }
 }
