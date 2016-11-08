@@ -862,8 +862,11 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
     // todo: performance considerations
     for(unsigned int i = 0; i < thisNode.attributeCount(); ++i){
       MFnAttribute attrib(thisNode.attribute(i));
-      if(!attrib.isDynamic())
-        continue;
+
+      // [hmathe 20161108] some nodes might have static attributes that need to be dirtied
+      //if(!attrib.isDynamic())
+      if(attrib.name() == "saveData" || attrib.name() == "svd")
+       continue;
 
       // check if the attribute is an output
       // otherwise continue

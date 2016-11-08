@@ -48,13 +48,16 @@ MStatus FabricUpgradeAttrCommand::doIt(const MArgList &args)
   }
   else
   {
-    MStringArray spliceMayaNodes, dfgMayaNodes;
+    MStringArray spliceMayaNodes, dfgMayaNodes, dfgRigNodes;
     MGlobal::executeCommand("ls -type \"spliceMayaNode\";", spliceMayaNodes);
-    MGlobal::executeCommand("ls -type \"dfgMayaNode\";", dfgMayaNodes);
+    MGlobal::executeCommand("ls -type \"canvasNode\";", dfgMayaNodes);
+    MGlobal::executeCommand("ls -type \"canvasRigNode\";", dfgRigNodes);
     for(unsigned int i=0;i<spliceMayaNodes.length();i++)
       nodeNames.append(spliceMayaNodes[i]);
     for(unsigned int i=0;i<dfgMayaNodes.length();i++)
       nodeNames.append(dfgMayaNodes[i]);
+    for(unsigned int i=0;i<dfgRigNodes.length();i++)
+      nodeNames.append(dfgRigNodes[i]);
   }
 
   for(unsigned int i=0;i<nodeNames.length();i++)

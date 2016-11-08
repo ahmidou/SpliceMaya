@@ -36,7 +36,7 @@ void* FabricDFGMayaNode::creator(){
 }
 
 MStatus FabricDFGMayaNode::initialize(){
-  FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::initialize");
+  FabricMayaProfilingEvent bracket("FabricDFGMayaNode::initialize");
 
   MFnTypedAttribute typedAttr;
   MFnNumericAttribute nAttr;

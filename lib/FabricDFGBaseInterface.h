@@ -96,10 +96,10 @@ public:
     { m_executeSharedDirty = true; }
 
 protected:
-  inline MString getPlugName(const MString &portName);
-  inline MString getPortName(const MString &plugName);
+  virtual MString getPlugName(const MString &portName);
+  virtual MString getPortName(const MString &plugName);
   void invalidatePlug(MPlug & plug);
-  void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
+  virtual void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
 
   // private members and helper methods
   bool _restoredFromPersistenceData;
@@ -110,10 +110,10 @@ protected:
   bool _portObjectsDestroyed;
   std::vector<std::string> mSpliceMayaDataOverride;
 
-  bool transferInputValuesToDFG(MDataBlock& data);
+  virtual bool transferInputValuesToDFG(MDataBlock& data);
   void evaluate();
-  void transferOutputValuesToMaya(MDataBlock& data, bool isDeformer = false);
-  void collectDirtyPlug(MPlug const &inPlug);
+  virtual void transferOutputValuesToMaya(MDataBlock& data, bool isDeformer = false);
+  virtual void collectDirtyPlug(MPlug const &inPlug);
   void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
   void copyInternalData(MPxNode *node);
   bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);

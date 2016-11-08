@@ -81,3 +81,6 @@ class AEcanvasNodeTemplate(AEcanvasBaseTemplate):
 
 class AEcanvasDeformerTemplate(AEcanvasBaseTemplate):
   _nodeType = 'canvasDeformer'
+
+class AEcanvasRigNodeTemplate(AEcanvasBaseTemplate):
+  _nodeType = 'canvasRigNode'

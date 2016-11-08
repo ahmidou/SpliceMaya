@@ -31,6 +31,7 @@
 #include "FabricDFGWidget.h"
 #include "FabricDFGCanvasNode.h"
 #include "FabricDFGCanvasDeformer.h"
+#include "FabricDFGRigNode.h"
 #include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricUpgradeAttrCommand.h"
@@ -51,6 +52,7 @@ const MTypeId gFirstValidNodeID(0x0011AE40);
 // FabricDFGMayaNode          0x0011AE46  /* no longer in use, but not available */
 // FabricDFGMayaNode          0x0011AE47  // canvasNode
 // FabricDFGMayaDeformer      0x0011AE48  // canvasDeformer
+// FabricDFGMayaNode          0x0011AE49  
 const MTypeId gLastValidNodeID(0x0011AF3F);
 
 MCallbackId gOnSceneNewCallbackId;
@@ -258,6 +260,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
   plugin.registerNode("canvasDeformer", FabricDFGMayaDeformer::id, FabricDFGMayaDeformer::creator, FabricDFGMayaDeformer::initialize, MPxNode::kDeformerNode);
+  plugin.registerNode("canvasRigNode", FabricDFGRigNode::id, FabricDFGRigNode::creator, FabricDFGRigNode::initialize);
 
   plugin.registerCommand("FabricCanvasGetFabricVersion",  FabricDFGGetFabricVersionCommand::creator, FabricDFGGetFabricVersionCommand ::newSyntax);
   plugin.registerCommand("FabricCanvasGetContextID",      FabricDFGGetContextIDCommand    ::creator, FabricDFGGetContextIDCommand     ::newSyntax);
@@ -403,6 +406,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   MQtUtil::deregisterUIType("FabricDFGWidget");
   plugin.deregisterNode(FabricDFGMayaNode::id);
   plugin.deregisterNode(FabricDFGMayaDeformer::id);
+  plugin.deregisterNode(FabricDFGRigNode::id);
 
   MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes         );
   MAYA_DEREGISTER_DFGUICMD( plugin, Connect             );
