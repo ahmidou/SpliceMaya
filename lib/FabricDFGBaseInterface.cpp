@@ -2104,6 +2104,8 @@ void FabricDFGBaseInterface::VisitInputArgsCallback(
   if(argOutsidePortType == FabricCore::DFGPortType_Out)
     return;
 
+  FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::VisitInputArgsCallback");
+
   VisitCallbackUserData * ud = (VisitCallbackUserData *)userdata;
 
   assert(argIndex < ud->interf->_argIndexToAttributeIndex.size());
@@ -2172,6 +2174,8 @@ void FabricDFGBaseInterface::VisitOutputArgsCallback(
 {
   if(argOutsidePortType == FabricCore::DFGPortType_In)
     return;
+
+  FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::VisitOutputArgsCallback");
 
   VisitCallbackUserData * ud = (VisitCallbackUserData *)userdata;
 

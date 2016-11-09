@@ -44,6 +44,8 @@ public:
 
   virtual bool useEvalContext() { return false; }
 
+  virtual FabricCore::LockType getLockType() { return FabricCore::LockType_Shared; }
+
 #if MAYA_API_VERSION >= 201600
   SchedulingType schedulingType() const
     { return kParallel; }
