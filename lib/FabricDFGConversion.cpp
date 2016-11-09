@@ -584,10 +584,19 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_compoundArray(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_compoundArray");
 
@@ -610,7 +619,7 @@ void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data,
       dfgPlugToPort_compound_convertCompound(compound, handle, compoundVal);
       compoundVals.callMethod("", "addParam", 1, &compoundVal);
     }
-    binding.setArgValue_lockType(lockType, argName, compoundVals, false);
+    setCB(getSetUD, compoundVals.getFECRTValRef());
   }
   else{
   }
@@ -618,10 +627,19 @@ void dfgPlugToPort_compoundArray(MPlug &plug, MDataBlock &data,
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_compound(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_compound");
 
@@ -641,7 +659,7 @@ void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data,
       dfgPlugToPort_compound_convertCompound(compound, handle, compoundVal);
       compoundVals.setArrayElement(j, compoundVal);
     }
-    binding.setArgValue_lockType(lockType, argName, compoundVals, false);
+    setCB(getSetUD, compoundVals.getFECRTValRef());
   }
   else{
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
@@ -650,16 +668,28 @@ void dfgPlugToPort_compound(MPlug &plug, MDataBlock &data,
     FabricCore::RTVal rtVal = FabricSplice::constructObjectRTVal("CompoundParam");
     MFnCompoundAttribute compound(plug.attribute());
     dfgPlugToPort_compound_convertCompound(compound, handle, rtVal);
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
+    setCB(getSetUD, rtVal.getFECRTValRef());
   }
 }
 
-void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_bool(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_bool");
+
+  uint64_t elementDataSize = sizeof(bool);
+  uint64_t currentNumElements = argRawDataSize / elementDataSize;
 
   if(plug.isArray()){
     
@@ -667,167 +697,188 @@ void dfgPlugToPort_bool(MPlug &plug, MDataBlock &data,
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
     pauseBracket.resume();
 
-    unsigned int elements = arrayHandle.elementCount();
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    rtVal.setArraySize(elements);
-    FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-    bool * values = (bool*)dataRtVal.getData();
+    unsigned int numElements = arrayHandle.elementCount();
+    std::vector<bool> values(numElements);
 
-    for(unsigned int i = 0; i < elements; ++i){
+    for(unsigned int i = 0; i < numElements; ++i){
       arrayHandle.jumpToArrayElement(i);
       MDataHandle handle = arrayHandle.inputValue();
       values[i] = handle.asBool();
     }
 
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
+    setRawCB(getSetUD, &values[0], elementDataSize * numElements);
   }
   else{
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
     pauseBracket.resume();
-    binding.setArgValue_lockType(lockType, argName, FabricSplice::constructBooleanRTVal(handle.asBool()), false);
+    setCB(getSetUD, FabricSplice::constructBooleanRTVal(handle.asBool()).getFECRTValRef());
   }
 }
 
-void dfgPlugToPort_integer(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_integer(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_integer");
+
+  uint64_t elementDataSize = sizeof(int32_t);
+  uint64_t currentNumElements = argRawDataSize / elementDataSize;
 
   if(plug.isArray()){
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
     pauseBracket.resume();
 
-    unsigned int elements = arrayHandle.elementCount();
+    unsigned int numElements = arrayHandle.elementCount();
+    std::vector<int32_t> buffer(numElements);
+    int32_t * values = &buffer[0];
 
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    rtVal.setArraySize(elements);
-    FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-    int32_t * values = (int32_t*)dataRtVal.getData();
-
-    for(unsigned int i = 0; i < elements; ++i){
+    for(unsigned int i = 0; i < numElements; ++i){
       arrayHandle.jumpToArrayElement(i);
       MDataHandle handle = arrayHandle.inputValue();
-      values[i] = handle.asLong();
+      values[i] = (int32_t)handle.asLong();
     }
 
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
+    setRawCB(getSetUD, values, elementDataSize * numElements);
   }else{
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
     pauseBracket.resume();
-    bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
-    if(handle.type() == MFnData::kIntArray || isNativeArray) {
+    // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+    if(handle.type() == MFnData::kIntArray) { // || isNativeArray) {
       MIntArray arrayValues = MFnIntArrayData(handle.data()).array();
-      unsigned int elements = arrayValues.length();
 
-      FabricCore::RTVal rtVal = binding.getArgValue(argName);
-      rtVal.setArraySize(elements);
-      FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-      int32_t * values = (int32_t*)dataRtVal.getData();
+      unsigned int numElements = arrayValues.length();
+      std::vector<int32_t> buffer(numElements);
+      int32_t * values = &buffer[0];
 
-      for(unsigned int i = 0; i < elements; ++i){
-        values[i] = arrayValues[i];
+      for(unsigned int i = 0; i < numElements; ++i) {
+        values[i] = (int32_t)arrayValues[i];
       }
 
-      binding.setArgValue_lockType(lockType, argName, rtVal, false);
+      setRawCB(getSetUD, values, elementDataSize * numElements);
     }else{
-      FabricCore::RTVal rtVal = binding.getArgValue(argName);
-      if(!rtVal.isArray())
-        binding.setArgValue_lockType(lockType, argName, FabricSplice::constructSInt32RTVal(handle.asLong()), false);
+      setCB(getSetUD, FabricSplice::constructSInt32RTVal(handle.asLong()).getFECRTValRef());
     }
   }
 }
 
-void dfgPlugToPort_scalar(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_scalar(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_scalar");
 
-  FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
+  uint64_t elementDataSize = sizeof(float);
+  uint64_t currentNumElements = argRawDataSize / elementDataSize;
+
+  // FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
   if(plug.isArray()){
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
     pauseBracket.resume();
 
-    unsigned int elements = arrayHandle.elementCount();
+    unsigned int numElements = arrayHandle.elementCount();
 
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    rtVal.setArraySize(elements);
-    FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-    float * values = (float*)dataRtVal.getData();
+    std::vector<float> buffer(numElements);
+    float * values = &buffer[0];
 
-    for(unsigned int i = 0; i < elements; ++i){
+    for(unsigned int i = 0; i < numElements; ++i){
       arrayHandle.jumpToArrayElement(i);
       MDataHandle handle = arrayHandle.inputValue();
 
+      // todo: renable units
+      /*
       if(scalarUnit == "time")
         values[i] = handle.asTime().as(MTime::kSeconds);
       else if(scalarUnit == "angle")
         values[i] = handle.asAngle().as(MAngle::kRadians);
       else if(scalarUnit == "distance")
         values[i] = handle.asDistance().as(MDistance::kMillimeters);
-      else
+      else */
       {
         if(handle.numericType() == MFnNumericData::kFloat){
           values[i] = handle.asFloat();
         }else{
-          values[i] = handle.asDouble();
+          values[i] = (float)handle.asDouble();
         }
       }
     }
+    setRawCB(getSetUD, values, elementDataSize * numElements);
 
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
   }else{
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
     pauseBracket.resume();
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    if(rtVal.isArray()){
+    if(currentNumElements > 1){
       MDoubleArray arrayValues = MFnDoubleArrayData(handle.data()).array();
-      unsigned int elements = arrayValues.length();
+      unsigned int numElements = arrayValues.length();
   
-      rtVal.setArraySize(elements);
-      FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-      float * values = (float*)dataRtVal.getData();
+      std::vector<float> buffer(numElements);
+      float * values = &buffer[0];
 
-      for(unsigned int i = 0; i < elements; ++i){
+      for(unsigned int i = 0; i < numElements; ++i){
         values[i] = arrayValues[i];
       }
 
-      binding.setArgValue_lockType(lockType, argName, rtVal, false);
+      setRawCB(getSetUD, values, elementDataSize * numElements);
     }
     else
     {
       // get the value of the source Maya plug.
       double plugValue = 0;
-      if      (scalarUnit == "time")      plugValue = handle.asTime().as(MTime::kSeconds);
+      /*if      (scalarUnit == "time")      plugValue = handle.asTime().as(MTime::kSeconds);
       else if (scalarUnit == "angle")     plugValue = handle.asAngle().as(MAngle::kRadians);
       else if (scalarUnit == "distance")  plugValue = handle.asDistance().as(MDistance::kMillimeters);
-      else
+      else */
       {
         if(handle.numericType() == MFnNumericData::kFloat)  plugValue = handle.asFloat();
         else                                                plugValue = handle.asDouble();
       }
 
       // get the resolved data type of the destination exec port and set its value.
-      FTL::CStrRef resolvedType = binding.getExec().getExecPortResolvedType(argName);
-      if      (resolvedType == "Scalar")  binding.setArgValue_lockType(lockType, argName, FabricSplice::constructFloat32RTVal((float)plugValue), false);
-      else if (resolvedType == "Float32") binding.setArgValue_lockType(lockType, argName, FabricSplice::constructFloat32RTVal((float)plugValue), false);
-      else if (resolvedType == "Float64") binding.setArgValue_lockType(lockType, argName, FabricSplice::constructFloat64RTVal(       plugValue), false);
+      FTL::CStrRef resolvedType = argTypeName;
+      if      (resolvedType == FTL_STR("Scalar"))  setCB(getSetUD, FabricSplice::constructFloat32RTVal((float)plugValue).getFECRTValRef());
+      else if (resolvedType == FTL_STR("Float32")) setCB(getSetUD, FabricSplice::constructFloat32RTVal((float)plugValue).getFECRTValRef());
+      else if (resolvedType == FTL_STR("Float64")) setCB(getSetUD, FabricSplice::constructFloat64RTVal(       plugValue).getFECRTValRef());
     }
   }
 }
 
-void dfgPlugToPort_string(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_string(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_string");
 
@@ -847,12 +898,9 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data,
       stringArrayVal.setArrayElement(i, FabricSplice::constructStringRTVal(handle.asString().asChar()));
     }
 
-    binding.setArgValue_lockType(lockType, argName, stringArrayVal, false);
+    setCB(getSetUD, stringArrayVal.getFECRTValRef());
   }
   else{
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    if(rtVal.isArray())
-      return;
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MStatus mStatus;
     MDataHandle handle = data.inputValue( plug, &mStatus );
@@ -869,23 +917,29 @@ void dfgPlugToPort_string(MPlug &plug, MDataBlock &data,
     }
     MString valueMString = handle.asString();
     char const *valueCStr = valueMString.asChar();
-    binding.setArgValue_lockType(
-      lockType,
-      argName,
-      FabricSplice::constructStringRTVal( valueCStr ),
-      false
-      );
+    setCB(getSetUD, FabricSplice::constructStringRTVal( valueCStr ).getFECRTValRef());
   }
 
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_color(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_color(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_color");
+
+  uint64_t elementDataSize = sizeof(float) * 4;
 
   CORE_CATCH_BEGIN;
 
@@ -893,81 +947,87 @@ void dfgPlugToPort_color(MPlug &plug, MDataBlock &data,
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
     pauseBracket.resume();
-    unsigned int elements = arrayHandle.elementCount();
-    FabricCore::RTVal arrayVal = FabricSplice::constructVariableArrayRTVal("Color");
-    FabricCore::RTVal color = FabricSplice::constructRTVal("Color");
-    FabricCore::RTVal arraySizeVal = FabricSplice::constructUInt32RTVal(elements);
-    arrayVal.callMethod("", "resize", 1, &arraySizeVal);
-    for(unsigned int i = 0; i < elements; ++i){
+    unsigned int numElements = arrayHandle.elementCount();
+
+    std::vector<float> buffer(numElements * 4);
+    float * values = &buffer[0];
+
+    unsigned int offset = 0;
+    for(unsigned int i = 0; i < numElements; ++i){
       arrayHandle.jumpToArrayElement(i);
       MDataHandle handle = arrayHandle.inputValue();
 
       if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
         MFloatVector v = handle.asFloatVector();
-        color.setMember("r", FabricSplice::constructFloat64RTVal(v.x));
-        color.setMember("g", FabricSplice::constructFloat64RTVal(v.y));
-        color.setMember("b", FabricSplice::constructFloat64RTVal(v.z));
+        values[offset++] = v.x;
+        values[offset++] = v.y;
+        values[offset++] = v.z;
       } else{
         MVector v = handle.asVector();
-        color.setMember("r", FabricSplice::constructFloat64RTVal(v.x));
-        color.setMember("g", FabricSplice::constructFloat64RTVal(v.y));
-        color.setMember("b", FabricSplice::constructFloat64RTVal(v.z));
+        values[offset++] = (float)v.x;
+        values[offset++] = (float)v.y;
+        values[offset++] = (float)v.z;
       }
-      color.setMember("a", FabricSplice::constructFloat64RTVal(1.0));
-      arrayVal.setArrayElement(i, color);
+      values[offset++] = 1.0f;
     }
 
-    binding.setArgValue_lockType(lockType, argName, arrayVal, false);
+    setRawCB(getSetUD, values, elementDataSize * numElements);
   }
   else {
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    if(rtVal.isArray())
-      return;
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
     pauseBracket.resume();
 
-    FabricCore::RTVal color = FabricSplice::constructRTVal("Color");
+    float values[4];
     if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
       MFloatVector v = handle.asFloatVector();
-      color.setMember("r", FabricSplice::constructFloat64RTVal(v.x));
-      color.setMember("g", FabricSplice::constructFloat64RTVal(v.y));
-      color.setMember("b", FabricSplice::constructFloat64RTVal(v.z));
+      values[0] = (float)v.x;
+      values[1] = (float)v.y;
+      values[2] = (float)v.z;
     } else{
       MVector v = handle.asVector();
-      color.setMember("r", FabricSplice::constructFloat64RTVal(v.x));
-      color.setMember("g", FabricSplice::constructFloat64RTVal(v.y));
-      color.setMember("b", FabricSplice::constructFloat64RTVal(v.z));
+      values[0] = (float)v.x;
+      values[1] = (float)v.y;
+      values[2] = (float)v.z;
     }
-    color.setMember("a", FabricSplice::constructFloat64RTVal(1.0));
+    values[3] = 1.0f;
 
-    binding.setArgValue_lockType(lockType, argName, color, false);
+    setRawCB(getSetUD, values, elementDataSize);
   }
 
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_vec3(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_vec3");
+
+  uint64_t elementDataSize = sizeof(float) * 3;
 
   if(plug.isArray()){
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
     pauseBracket.resume();
 
-    unsigned int elements = arrayHandle.elementCount();
+    unsigned int numElements = arrayHandle.elementCount();
 
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    rtVal.setArraySize(elements);
-    FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-    float * values = (float*)dataRtVal.getData();
+    std::vector<float> buffer(numElements * 3);
+    float * values = &buffer[0];
 
     unsigned int offset = 0;
-    for(unsigned int i = 0; i < elements; ++i){
+    for(unsigned int i = 0; i < numElements; ++i){
       arrayHandle.jumpToArrayElement(i);
       MDataHandle handle = arrayHandle.inputValue();
       if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
@@ -983,71 +1043,74 @@ void dfgPlugToPort_vec3(MPlug &plug, MDataBlock &data,
       }
     }
 
-    binding.setArgValue_lockType(lockType, argName, rtVal, false);
+    setRawCB(getSetUD, values, elementDataSize * numElements);
   }else{
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
     pauseBracket.resume();
-    bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
-    if(handle.type() == MFnData::kVectorArray || isNativeArray){
+    // todo: reenable the native array support
+    // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+    if(handle.type() == MFnData::kVectorArray) { // || isNativeArray){
       MVectorArray arrayValues = MFnVectorArrayData(handle.data()).array();
-      unsigned int elements = arrayValues.length();
+      unsigned int numElements = arrayValues.length();
 
-      FabricCore::RTVal rtVal = binding.getArgValue(argName);
-      rtVal.setArraySize(elements);
-      FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-      float * values = (float*)dataRtVal.getData();
+      std::vector<float> buffer(numElements * 3);
+      float * values = &buffer[0];
 
       size_t offset = 0;
-      for(unsigned int i = 0; i < elements; ++i){
+      for(unsigned int i = 0; i < numElements; ++i){
         values[offset++] = (float)arrayValues[i].x;
         values[offset++] = (float)arrayValues[i].y;
         values[offset++] = (float)arrayValues[i].z;
       }
 
-      binding.setArgValue_lockType(lockType, argName, rtVal, false);
+      setRawCB(getSetUD, values, elementDataSize * numElements);
     }else if(handle.type() == MFnData::kPointArray){
       MPointArray arrayValues = MFnPointArrayData(handle.data()).array();
-      unsigned int elements = arrayValues.length();
+      unsigned int numElements = arrayValues.length();
 
-      FabricCore::RTVal rtVal = binding.getArgValue(argName);
-      rtVal.setArraySize(elements);
-      FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-      float * values = (float*)dataRtVal.getData();
+      std::vector<float> buffer(numElements * 3);
+      float * values = &buffer[0];
 
       size_t offset = 0;
-      for(unsigned int i = 0; i < elements; ++i){
+      for(unsigned int i = 0; i < numElements; ++i){
         values[offset++] = (float)arrayValues[i].x;
         values[offset++] = (float)arrayValues[i].y;
         values[offset++] = (float)arrayValues[i].z;
       }
 
-      binding.setArgValue_lockType(lockType, argName, rtVal, false);
+      setRawCB(getSetUD, values, elementDataSize * numElements);
     }else{
-      FabricCore::RTVal rtVal = binding.getArgValue(argName);
-      if(rtVal.isArray())
-        return;
-      FabricCore::RTVal spliceVec = FabricSplice::constructRTVal("Vec3");
+      float values[3];
       if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
         const float3& mayaVec = handle.asFloat3();
-        spliceVec.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
-        spliceVec.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
-        spliceVec.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
+        values[0] = mayaVec[0];
+        values[1] = mayaVec[1];
+        values[2] = mayaVec[2];
       } else{
         const double3& mayaVec = handle.asDouble3();
-        spliceVec.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
-        spliceVec.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
-        spliceVec.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
+        values[0] = (float)mayaVec[0];
+        values[1] = (float)mayaVec[1];
+        values[2] = (float)mayaVec[2];
       }
-      binding.setArgValue_lockType(lockType, argName, spliceVec, false);
+      setRawCB(getSetUD, values, elementDataSize);
     }
   }
 }
 
-void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_euler(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_euler");
 
@@ -1081,10 +1144,10 @@ void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data,
       arrayVal.setArrayElement(i, euler);
     }
 
-    binding.setArgValue_lockType(lockType, argName, arrayVal, false);
+    setCB(getSetUD, arrayVal.getFECRTValRef());
   }
   else {
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
+    FabricCore::RTVal rtVal = getCB(getSetUD);
     if(rtVal.isArray())
       return;
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
@@ -1104,40 +1167,43 @@ void dfgPlugToPort_euler(MPlug &plug, MDataBlock &data,
       euler.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
     }
 
-    binding.setArgValue_lockType(lockType, argName, euler, false);
+    setCB(getSetUD, euler.getFECRTValRef());
   }
 
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_mat44(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_mat44");
+
+  uint64_t elementDataSize = sizeof(float) * 16;
+  uint64_t offset = 0;
 
   if(plug.isArray()){
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
     pauseBracket.resume();
 
-    unsigned int elements = arrayHandle.elementCount();
-
-    FabricCore::RTVal rtVal;
-    float * values;
-    {
-      FabricMayaProfilingEvent bracket("getting float pointer");
-      rtVal = binding.getArgValue(argName);
-      rtVal.setArraySize(elements);
-      FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-      values = (float*)dataRtVal.getData();
-    }
+    unsigned int numElements = arrayHandle.elementCount();
+    std::vector<float> buffer(numElements * 16);
+    float * values = &buffer[0];
 
     {
       FabricMayaProfilingEvent bracket("converting matrix array");
-      unsigned int offset = 0;
-      for(unsigned int i = 0; i < elements; ++i){
+      for(unsigned int i = 0; i < numElements; ++i){
         arrayHandle.jumpToArrayElement(i);
         MDataHandle handle = arrayHandle.inputValue();
         const MMatrix& mayaMat = handle.asMatrix();
@@ -1147,34 +1213,42 @@ void dfgPlugToPort_mat44(MPlug &plug, MDataBlock &data,
     }
 
     {
-      FabricMayaProfilingEvent bracket("binding.setArgValue_lockType");
-      binding.setArgValue_lockType(lockType, argName, rtVal, false);
+      FabricMayaProfilingEvent bracket("setRawCB");
+      setRawCB(getSetUD, values, elementDataSize * numElements);
     }
   }
   else{
-    FabricCore::RTVal rtVal = binding.getArgValue(argName);
-    if(rtVal.isArray())
-      return;
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
     pauseBracket.resume();
 
+    float values[16];
+
     {
       FabricMayaProfilingEvent bracket("converting matrix");
       const MMatrix& mayaMat = handle.asMatrix();
-      MMatrixToMat44(mayaMat, rtVal);
+      MMatrixToMat44_data(mayaMat, values);
     }
     {
-      FabricMayaProfilingEvent bracket("binding.setArgValue_lockType");
-      binding.setArgValue_lockType(lockType, argName, rtVal, false);
+      FabricMayaProfilingEvent bracket("setRawCB");
+      setRawCB(getSetUD, values, elementDataSize);
     }
   }
 }
 
-void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_PolygonMesh(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_PolygonMesh");
 
@@ -1186,7 +1260,7 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data,
   {
     if(plug.isArray())
     {
-      portRTVal = binding.getArgValue(argName);
+      portRTVal = getCB(getSetUD);
 
       FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
@@ -1230,8 +1304,8 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data,
       handles.push_back(data.inputValue(plug));
       pauseBracket.resume();
 
-      if(binding.getExec().getExecPortType(argName) == FabricCore::DFGPortType_IO)
-        portRTVal = binding.getArgValue(argName);
+      if(argOutsidePortType == FabricCore::DFGPortType_IO)
+        portRTVal = getCB(getSetUD);
       if(!portRTVal.isValid() || portRTVal.isNullObject())
         portRTVal = FabricSplice::constructObjectRTVal("PolygonMesh");
       rtVals.push_back(portRTVal);
@@ -1356,7 +1430,7 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data,
       mayaIndices.clear();
     }
 
-    binding.setArgValue_lockType(lockType, argName, portRTVal, false);
+    setCB(getSetUD, portRTVal.getFECRTValRef());
   }
   catch(FabricCore::Exception e)
   {
@@ -1370,10 +1444,19 @@ void dfgPlugToPort_PolygonMesh(MPlug &plug, MDataBlock &data,
   }
 }
 
-void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_Lines(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_Lines");
 
@@ -1385,7 +1468,7 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data,
   {
     if(plug.isArray())
     {
-      portRTVal = binding.getArgValue(argName);
+      portRTVal = getCB(getSetUD);
 
       FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
@@ -1420,8 +1503,8 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data,
       handles.push_back(data.inputValue(plug));
       pauseBracket.resume();
 
-      if(binding.getExec().getExecPortType(argName) == FabricCore::DFGPortType_IO)
-        portRTVal = binding.getArgValue(argName);
+      if(argOutsidePortType == FabricCore::DFGPortType_IO)
+        portRTVal = getCB(getSetUD);
       if(!portRTVal.isValid() || portRTVal.isNullObject())
         portRTVal = FabricSplice::constructObjectRTVal("Lines");
       rtVals.push_back(portRTVal);
@@ -1469,7 +1552,7 @@ void dfgPlugToPort_Lines(MPlug &plug, MDataBlock &data,
       rtVal.callMethod("", "_setTopologyFromExternalArray", 1, &mayaIndicesVal);
     }
 
-    binding.setArgValue_lockType(lockType, argName, portRTVal, false);
+    setCB(getSetUD, portRTVal.getFECRTValRef());
   }
   catch(FabricCore::Exception e)
   {
@@ -1600,10 +1683,19 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_KeyframeTrack(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   if(!plug.isArray()){
     
@@ -1625,7 +1717,7 @@ void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data,
 
     FabricCore::RTVal trackVal;
     dfgPlugToPort_KeyframeTrack_helper(curve, trackVal);
-    binding.setArgValue_lockType(lockType, argName, trackVal, false);
+    setCB(getSetUD, trackVal.getFECRTValRef());
   } else {
 
     FabricCore::RTVal trackVals = FabricSplice::constructRTVal("KeyframeTrack[]");
@@ -1657,19 +1749,30 @@ void dfgPlugToPort_KeyframeTrack(MPlug &plug, MDataBlock &data,
       trackVals.setArrayElement(j, trackVal);
     }
 
-    binding.setArgValue_lockType(lockType, argName, trackVals, false);
+    setCB(getSetUD, trackVals.getFECRTValRef());
   }
 }
 
-void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data, 
-    FabricCore::DFGBinding & binding,
-    FabricCore::LockType lockType,
-    char const * argName)
+void dfgPlugToPort_spliceMayaData(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_spliceMayaData");
 
   try{
 
+    /*
+    // todo: renable the disableSpliceMayaDataConversion feature
     const char *option = binding.getExec().getExecPortMetadata(argName, "disableSpliceMayaDataConversion");
     if(option)
     {
@@ -1679,6 +1782,7 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data,
         return;
       }
     }
+    */
 
     if(!plug.isArray()){
       FTL::AutoProfilingPauseEvent pauseBracket(bracket);
@@ -1690,14 +1794,14 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data,
       if(!spliceMayaData)
         return;
 
-      binding.setArgValue_lockType(lockType, argName, spliceMayaData->getRTVal(), false);
+      setCB(getSetUD, spliceMayaData->getRTVal().getFECRTValRef());
     }else{
       FTL::AutoProfilingPauseEvent pauseBracket(bracket);
       MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
       pauseBracket.resume();
       unsigned int elements = arrayHandle.elementCount();
 
-      FabricCore::RTVal value = binding.getArgValue(argName);
+      FabricCore::RTVal value = getCB(getSetUD);
       if(!value.isArray())
         return;
       value.setArraySize(elements);
@@ -1715,7 +1819,7 @@ void dfgPlugToPort_spliceMayaData(MPlug &plug, MDataBlock &data,
         value.setArrayElement(i, spliceMayaData->getRTVal());
       }
 
-      binding.setArgValue_lockType(lockType, argName, value, false);
+      setCB(getSetUD, value.getFECRTValRef());
     }
   }
   catch(FabricCore::Exception e)
@@ -2362,6 +2466,7 @@ void dfgPortToPlug_compound(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -2383,6 +2488,7 @@ void dfgPortToPlug_bool(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -2419,6 +2525,7 @@ void dfgPortToPlug_integer(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -2466,6 +2573,7 @@ void dfgPortToPlug_scalar(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -2550,6 +2658,7 @@ void dfgPortToPlug_string(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -2581,6 +2690,7 @@ void dfgPortToPlug_color(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -2645,6 +2755,7 @@ void dfgPortToPlug_vec3(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -2724,6 +2835,7 @@ void dfgPortToPlug_euler(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -2771,6 +2883,7 @@ void dfgPortToPlug_mat44(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -3002,6 +3115,7 @@ void dfgPortToPlug_PolygonMesh(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -3109,6 +3223,7 @@ void dfgPortToPlug_Lines(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -3152,6 +3267,7 @@ void dfgPortToPlug_spliceMayaData(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
@@ -3201,93 +3317,93 @@ void dfgPortToPlug_spliceMayaData(
 
 DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType)
 {
-  if(dataType == "Boolean")               return dfgPlugToPort_bool;
+  if(dataType == FTL_STR("Boolean"))               return dfgPlugToPort_bool;
 
-  if (dataType == "Scalar")               return dfgPlugToPort_scalar;
-  if (dataType == "Float32")              return dfgPlugToPort_scalar;
-  if (dataType == "Float64")              return dfgPlugToPort_scalar;
+  if (dataType == FTL_STR("Scalar"))               return dfgPlugToPort_scalar;
+  if (dataType == FTL_STR("Float32"))              return dfgPlugToPort_scalar;
+  if (dataType == FTL_STR("Float64"))              return dfgPlugToPort_scalar;
 
-  if (dataType == "Integer")              return dfgPlugToPort_integer;
-  if (dataType == "SInt8")                return dfgPlugToPort_integer;
-  if (dataType == "SInt16")               return dfgPlugToPort_integer;
-  if (dataType == "SInt32")               return dfgPlugToPort_integer;
-  if (dataType == "SInt64")               return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("Integer"))              return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("SInt8"))                return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("SInt16"))               return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("SInt32"))               return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("SInt64"))               return dfgPlugToPort_integer;
 
-  if (dataType == "Byte")                 return dfgPlugToPort_integer;
-  if (dataType == "UInt8")                return dfgPlugToPort_integer;
-  if (dataType == "UInt16")               return dfgPlugToPort_integer;
-  if (dataType == "Count")                return dfgPlugToPort_integer;
-  if (dataType == "Index")                return dfgPlugToPort_integer;
-  if (dataType == "Size")                 return dfgPlugToPort_integer;
-  if (dataType == "UInt32")               return dfgPlugToPort_integer;
-  if (dataType == "DataSize")             return dfgPlugToPort_integer;
-  if (dataType == "UInt64")               return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("Byte"))                 return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("UInt8"))                return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("UInt16"))               return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("Count"))                return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("Index"))                return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("Size"))                 return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("UInt32"))               return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("DataSize"))             return dfgPlugToPort_integer;
+  if (dataType == FTL_STR("UInt64"))               return dfgPlugToPort_integer;
 
-  if (dataType == "String")               return dfgPlugToPort_string;
+  if (dataType == FTL_STR("String"))               return dfgPlugToPort_string;
 
-  if (dataType == "Vec3")                 return dfgPlugToPort_vec3;
+  if (dataType == FTL_STR("Vec3"))                 return dfgPlugToPort_vec3;
 
-  if (dataType == "Euler")                return dfgPlugToPort_euler;
+  if (dataType == FTL_STR("Euler"))                return dfgPlugToPort_euler;
 
-  if (dataType == "Mat44")                return dfgPlugToPort_mat44;
+  if (dataType == FTL_STR("Mat44"))                return dfgPlugToPort_mat44;
 
-  if (dataType == "Color")                return dfgPlugToPort_color;
+  if (dataType == FTL_STR("Color"))                return dfgPlugToPort_color;
 
-  if (dataType == "PolygonMesh")          return dfgPlugToPort_PolygonMesh;
+  if (dataType == FTL_STR("PolygonMesh"))          return dfgPlugToPort_PolygonMesh;
 
-  if (dataType == "Lines")                return dfgPlugToPort_Lines;
+  if (dataType == FTL_STR("Lines"))                return dfgPlugToPort_Lines;
 
-  if (dataType == "KeyframeTrack")        return dfgPlugToPort_KeyframeTrack;
+  if (dataType == FTL_STR("KeyframeTrack"))        return dfgPlugToPort_KeyframeTrack;
 
-  if (dataType == "SpliceMayaData")      return dfgPlugToPort_spliceMayaData;
+  if (dataType == FTL_STR("SpliceMayaData"))      return dfgPlugToPort_spliceMayaData;
 
-  if(dataType == "CompoundParam")         return dfgPlugToPort_compound;
-  if(dataType == "CompoundArrayParam")    return dfgPlugToPort_compoundArray;
+  if(dataType == FTL_STR("CompoundParam"))         return dfgPlugToPort_compound;
+  if(dataType == FTL_STR("CompoundArrayParam"))    return dfgPlugToPort_compoundArray;
 
   return NULL;  
 }
 
 DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::StrRef &dataType)
 {
-  if(dataType == "Boolean")               return dfgPortToPlug_bool;
+  if(dataType == FTL_STR("Boolean"))               return dfgPortToPlug_bool;
 
-  if (dataType == "Scalar")               return dfgPortToPlug_scalar;
-  if (dataType == "Float32")              return dfgPortToPlug_scalar;
-  if (dataType == "Float64")              return dfgPortToPlug_scalar;
+  if (dataType == FTL_STR("Scalar"))               return dfgPortToPlug_scalar;
+  if (dataType == FTL_STR("Float32"))              return dfgPortToPlug_scalar;
+  if (dataType == FTL_STR("Float64"))              return dfgPortToPlug_scalar;
 
-  if (dataType == "Integer")              return dfgPortToPlug_integer;
-  if (dataType == "SInt8")                return dfgPortToPlug_integer;
-  if (dataType == "SInt16")               return dfgPortToPlug_integer;
-  if (dataType == "SInt32")               return dfgPortToPlug_integer;
-  if (dataType == "SInt64")               return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("Integer"))              return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("SInt8"))                return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("SInt16"))               return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("SInt32"))               return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("SInt64"))               return dfgPortToPlug_integer;
 
-  if (dataType == "Byte")                 return dfgPortToPlug_integer;
-  if (dataType == "UInt8")                return dfgPortToPlug_integer;
-  if (dataType == "UInt16")               return dfgPortToPlug_integer;
-  if (dataType == "Count")                return dfgPortToPlug_integer;
-  if (dataType == "Index")                return dfgPortToPlug_integer;
-  if (dataType == "Size")                 return dfgPortToPlug_integer;
-  if (dataType == "UInt32")               return dfgPortToPlug_integer;
-  if (dataType == "DataSize")             return dfgPortToPlug_integer;
-  if (dataType == "UInt64")               return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("Byte"))                 return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("UInt8"))                return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("UInt16"))               return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("Count"))                return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("Index"))                return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("Size"))                 return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("UInt32"))               return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("DataSize"))             return dfgPortToPlug_integer;
+  if (dataType == FTL_STR("UInt64"))               return dfgPortToPlug_integer;
 
-  if (dataType == "String")               return dfgPortToPlug_string;
+  if (dataType == FTL_STR("String"))               return dfgPortToPlug_string;
 
-  if (dataType == "Vec3")                 return dfgPortToPlug_vec3;
+  if (dataType == FTL_STR("Vec3"))                 return dfgPortToPlug_vec3;
 
-  if (dataType == "Euler")                return dfgPortToPlug_euler;
+  if (dataType == FTL_STR("Euler"))                return dfgPortToPlug_euler;
 
-  if (dataType == "Mat44")                return dfgPortToPlug_mat44;
+  if (dataType == FTL_STR("Mat44"))                return dfgPortToPlug_mat44;
 
-  if (dataType == "Color")                return dfgPortToPlug_color;
+  if (dataType == FTL_STR("Color"))                return dfgPortToPlug_color;
 
-  if (dataType == "PolygonMesh")          return dfgPortToPlug_PolygonMesh;
+  if (dataType == FTL_STR("PolygonMesh"))          return dfgPortToPlug_PolygonMesh;
 
-  if (dataType == "Lines")                return dfgPortToPlug_Lines;
+  if (dataType == FTL_STR("Lines"))                return dfgPortToPlug_Lines;
 
-  if (dataType == "SpliceMayaData")      return dfgPortToPlug_spliceMayaData;
+  if (dataType == FTL_STR("SpliceMayaData"))      return dfgPortToPlug_spliceMayaData;
 
-  if(dataType == "CompoundParam")         return dfgPortToPlug_compound;
+  if(dataType == FTL_STR("CompoundParam"))         return dfgPortToPlug_compound;
 
   return NULL;  
 }

@@ -43,6 +43,20 @@ public:
   virtual MStatus preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode);
 #endif
 
+  static void VisitMeshCallback(
+    void *userdata,
+    unsigned argIndex,
+    char const *argName,
+    char const *argTypeName,
+    FEC_DFGPortType argOutsidePortType,
+    uint64_t argRawDataSize,
+    FEC_DFGBindingVisitArgs_GetCB getCB,
+    FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+    FEC_DFGBindingVisitArgs_SetCB setCB,
+    FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+    void *getSetUD
+    );    
+
   // node attributes
   static MTypeId id;
   static MObject saveData;

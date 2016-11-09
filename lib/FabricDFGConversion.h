@@ -21,17 +21,25 @@
 #include <FTL/StrRef.h>
 
 typedef void(*DFGPlugToArgFunc)(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
   MPlug &plug,
-  MDataBlock &data,
-  FabricCore::DFGBinding & binding,
-  FabricCore::LockType lockType,
-  char const * argName
+  MDataBlock &data
   );
 
 typedef void(*DFGArgToPlugFunc)(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,

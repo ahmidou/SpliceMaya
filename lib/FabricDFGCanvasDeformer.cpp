@@ -225,15 +225,16 @@ int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBloc
   if (!exec.haveExecPort(portName.asChar())){
     MGlobal::displayWarning("FabricDFGMayaDeformer: missing port: " + portName);
     return 0;
-  }
+  }  
 
-  std::string dataType = exec.getExecPortResolvedType(portName.asChar());
-  if(dataType != "PolygonMesh[]"){
-    MGlobal::displayWarning("FabricDFGMayaDeformer: Wrong port data type: " + MString(dataType.c_str()));
-    return -1;
-  }
+  VisitCallbackUserData ud(getThisMObject(), data);
+  ud.interf = this;
+  ud.isDeformer = false;
+  ud.returnValue = 1;
+  getDFGBinding().visitArgs(getLockType(), &FabricDFGMayaDeformer::VisitMeshCallback, &ud);
+  if(ud.returnValue != 1)
+    return ud.returnValue;
 
-  getDFGPlugToArgFunc("PolygonMesh")(meshPlug, data, m_binding, getLockType(), portName.asChar());
   invalidatePlug(meshPlug);
   return 1;
 }
@@ -264,3 +265,58 @@ MStatus FabricDFGMayaDeformer::preEvaluation(const MDGContext& context, const ME
   return FabricDFGBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
 }
 #endif
+
+void FabricDFGMayaDeformer::VisitMeshCallback(
+  void *userdata,
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD
+  ) {
+
+  if(argOutsidePortType == FabricCore::DFGPortType_Out)
+    return;
+
+  VisitCallbackUserData * ud = (VisitCallbackUserData *)userdata;
+  FTL::StrRef argNameRef = argName;
+  if(argNameRef != FTL_STR("meshes"))
+    return;
+
+  FTL::StrRef argTypeNameRef = argTypeName;
+  if(argTypeNameRef != FTL_STR("PolygonMesh[]"))
+  {
+    MGlobal::displayWarning("FabricDFGMayaDeformer: Wrong port data type: " + MString(argTypeNameRef.data()));
+    ud->returnValue = -1;
+    return;
+  }
+
+  MString plugName = ud->interf->getPlugName(argName);
+  MPlug plug = ud->node.findPlug(plugName);
+  if(plug.isNull())
+    return;
+
+  DFGPlugToArgFunc func = getDFGPlugToArgFunc(FTL_STR("PolygonMesh"));
+  if(func == NULL)
+    return;
+
+  (*func)(
+    argIndex,
+    argName,
+    argTypeName,
+    argOutsidePortType,
+    argRawDataSize,
+    getCB,
+    getRawCB,
+    setCB,
+    setRawCB,
+    getSetUD,
+    plug,
+    ud->data
+    );
+}

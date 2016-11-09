@@ -62,7 +62,6 @@ MStatus FabricDFGRigNode::initialize(){
 
   matrixInputs = mAttr.create("matrixInputs", "matrixIn");
   mAttr.setArray(true);
-  mAttr.setUsesArrayDataBuilder(true); // todo? is this required
   mAttr.setReadable(false);
   mAttr.setWritable(true);
   mAttr.setKeyable(true);
@@ -71,7 +70,6 @@ MStatus FabricDFGRigNode::initialize(){
 
   scalarInputs = nAttr.create("scalarInputs", "scalarIn", MFnNumericData::kFloat);
   nAttr.setArray(true);
-  nAttr.setUsesArrayDataBuilder(true); // todo? is this required
   nAttr.setReadable(false);
   nAttr.setWritable(true);
   nAttr.setKeyable(true);

@@ -22,6 +22,8 @@
 #include <FabricSplice.h>
 #include <Commands/CommandStack.h>
 
+#include <FTL/OrderedStringMap.h>
+
 using namespace FabricServices;
 using namespace FabricUI;
 
@@ -95,9 +97,10 @@ public:
   void setExecuteSharedDirty()
     { m_executeSharedDirty = true; }
 
-protected:
   virtual MString getPlugName(const MString &portName);
   virtual MString getPortName(const MString &plugName);
+
+protected:
   void invalidatePlug(MPlug & plug);
   virtual void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
 
@@ -106,6 +109,11 @@ protected:
 
   // FabricSplice::DGGraph _spliceGraph;
   MStringArray _dirtyPlugs;
+
+  // todo: profile this against an array of straight mappings instead of a std::map
+  // std::map< unsigned int, unsigned int > _plugLogicalIndexToArgIndex;
+  // std::vector< bool > _isPlugIndexDirty;
+
   bool _isTransferingInputs;
   bool _portObjectsDestroyed;
   std::vector<std::string> mSpliceMayaDataOverride;
@@ -114,6 +122,7 @@ protected:
   void evaluate();
   virtual void transferOutputValuesToMaya(MDataBlock& data, bool isDeformer = false);
   virtual void collectDirtyPlug(MPlug const &inPlug);
+  // virtual void generatePlugLookup();
   void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
   void copyInternalData(MPxNode *node);
   bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);
@@ -128,7 +137,7 @@ protected:
   MObject addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType = "", bool compoundChild = false, MStatus * stat = NULL);
   void removeMayaAttribute(MString portName, MStatus * stat = NULL);
 
-  FabricCore::LockType getLockType()
+  virtual FabricCore::LockType getLockType()
   {
     return getExecuteShared()?
       FabricCore::LockType_Shared:
@@ -173,11 +182,14 @@ private:
       );
   }
 
+protected:
+
   struct VisitCallbackUserData
   {
     VisitCallbackUserData(MObject inNode, MDataBlock & inData)
     : node(inNode)
     , data(inData)
+    , returnValue(0)
     {
     }
 
@@ -185,7 +197,24 @@ private:
     MFnDependencyNode node;
     bool isDeformer;
     MDataBlock & data;
+    int returnValue;
   };
+
+private:
+
+  static void VisitInputArgsCallback(
+    void *userdata,
+    unsigned argIndex,
+    char const *argName,
+    char const *argTypeName,
+    FEC_DFGPortType argOutsidePortType,
+    uint64_t argRawDataSize,
+    FEC_DFGBindingVisitArgs_GetCB getCB,
+    FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+    FEC_DFGBindingVisitArgs_SetCB setCB,
+    FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+    void *getSetUD
+    );  
 
   static void VisitOutputArgsCallback(
     void *userdata,
