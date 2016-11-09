@@ -1201,21 +1201,15 @@ void dfgPlugToPort_mat44(
     std::vector<float> buffer(numElements * 16);
     float * values = &buffer[0];
 
-    {
-      FabricMayaProfilingEvent bracket("converting matrix array");
-      for(unsigned int i = 0; i < numElements; ++i){
-        arrayHandle.jumpToArrayElement(i);
-        MDataHandle handle = arrayHandle.inputValue();
-        const MMatrix& mayaMat = handle.asMatrix();
-        MMatrixToMat44_data(mayaMat, &values[offset]);
-        offset += 16;
-      }
+    for(unsigned int i = 0; i < numElements; ++i){
+      arrayHandle.jumpToArrayElement(i);
+      MDataHandle handle = arrayHandle.inputValue();
+      const MMatrix& mayaMat = handle.asMatrix();
+      MMatrixToMat44_data(mayaMat, &values[offset]);
+      offset += 16;
     }
 
-    {
-      FabricMayaProfilingEvent bracket("setRawCB");
-      setRawCB(getSetUD, values, elementDataSize * numElements);
-    }
+    setRawCB(getSetUD, values, elementDataSize * numElements);
   }
   else{
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
@@ -1223,16 +1217,9 @@ void dfgPlugToPort_mat44(
     pauseBracket.resume();
 
     float values[16];
-
-    {
-      FabricMayaProfilingEvent bracket("converting matrix");
-      const MMatrix& mayaMat = handle.asMatrix();
-      MMatrixToMat44_data(mayaMat, values);
-    }
-    {
-      FabricMayaProfilingEvent bracket("setRawCB");
-      setRawCB(getSetUD, values, elementDataSize);
-    }
+    const MMatrix& mayaMat = handle.asMatrix();
+    MMatrixToMat44_data(mayaMat, values);
+    setRawCB(getSetUD, values, elementDataSize);
   }
 }
 
@@ -2903,18 +2890,15 @@ void dfgPortToPlug_mat44(
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    {
-      FabricMayaProfilingEvent bracket("converting matrix array");
-      unsigned int offset = 0;
-      for(unsigned int i = 0; i < numElements; ++i){
-        MDataHandle handle = arraybuilder.addElement(i);
+    unsigned int offset = 0;
+    for(unsigned int i = 0; i < numElements; ++i){
+      MDataHandle handle = arraybuilder.addElement(i);
 
-        MMatrix mayaMat;
-        Mat44ToMMatrix_data(&values[offset], mayaMat);
-        offset += 16;
+      MMatrix mayaMat;
+      Mat44ToMMatrix_data(&values[offset], mayaMat);
+      offset += 16;
 
-        handle.setMMatrix(mayaMat);
-      }
+      handle.setMMatrix(mayaMat);
     }
 
     arrayHandle.set(arraybuilder);
@@ -2924,11 +2908,7 @@ void dfgPortToPlug_mat44(
     MDataHandle handle = data.outputValue(plug);
 
     MMatrix mayaMat;
-    {
-      FabricMayaProfilingEvent bracket("converting matrix");
-      Mat44ToMMatrix_data(values, mayaMat);
-    }
-
+    Mat44ToMMatrix_data(values, mayaMat);
     handle.setMMatrix(mayaMat);
   }
 }
