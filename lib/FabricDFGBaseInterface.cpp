@@ -379,18 +379,13 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::collectDirtyPlug");
 
   MStatus stat;
-  MString name;
-
-  name = inPlug.name();
-  int periodPos = name.rindex('.');
-  if(periodPos > -1)
-    name = name.substring(periodPos+1, name.length()-1);
-  int bracketPos = name.index('[');
-  if(bracketPos > -1)
-    name = name.substring(0, bracketPos-1);
+  MString plugName = inPlug.name();
+  FTL::StrRef nameRef = plugName.asChar();
+  nameRef = nameRef.rsplit('.').second;
+  nameRef = nameRef.split('[').first;
 
   // filter out savedata
-  if(name == "saveData" || name == "refFilePath")
+  if(nameRef == FTL_STR("saveData") || nameRef == FTL_STR("refFilePath"))
     return;
 
   // if(_spliceGraph.usesEvalContext())
@@ -415,7 +410,7 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   }
 
   // todo: get the attribute index
-  FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(name.asChar());
+  FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(nameRef);
   if(it != _attributeNameToIndex.end())
   {
     unsigned int index = it->second;
