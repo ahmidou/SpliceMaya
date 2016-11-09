@@ -16,6 +16,7 @@ MTypeId FabricDFGMayaDeformer::id(0x0011AE48);
 MObject FabricDFGMayaDeformer::saveData;
 MObject FabricDFGMayaDeformer::evalID;
 MObject FabricDFGMayaDeformer::refFilePath;
+MObject FabricDFGMayaDeformer::enableEvalContext;
 
 FabricDFGMayaDeformer::FabricDFGMayaDeformer()
 : FabricDFGBaseInterface()
@@ -54,6 +55,11 @@ MStatus FabricDFGMayaDeformer::initialize(){
   refFilePath = typedAttr.create("refFilePath", "rfp", MFnData::kString);
   typedAttr.setHidden(true);
   addAttribute(refFilePath);
+
+  enableEvalContext = nAttr.create("enableEvalContext", "ctx", MFnNumericData::kBoolean, 1.0);
+  nAttr.setHidden(true);
+  nAttr.setConnectable(false);
+  addAttribute(enableEvalContext);
 
   return MS::kSuccess;
 }

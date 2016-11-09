@@ -26,6 +26,7 @@ public:
   virtual MObject getThisMObject() { return thisMObject(); }
   virtual MPlug getSaveDataPlug() { return MPlug(thisMObject(), saveData); }
   virtual MPlug getRefFilePathPlug() { return MPlug(thisMObject(), refFilePath); }
+  virtual MPlug getEnableEvalContextPlug() { return MPlug(thisMObject(), enableEvalContext); }
 
   MStatus deform(MDataBlock& block, MItGeometry& iter, const MMatrix&, unsigned int multiIndex);
   MStatus setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs);
@@ -62,6 +63,7 @@ public:
   static MObject saveData;
   static MObject evalID;
   static MObject refFilePath;
+  static MObject enableEvalContext;
 
 protected:
   virtual void invalidateNode();

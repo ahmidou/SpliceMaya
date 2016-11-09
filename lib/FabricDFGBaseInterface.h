@@ -59,6 +59,7 @@ public:
   virtual MObject getThisMObject() = 0;
   virtual MPlug getSaveDataPlug() = 0;
   virtual MPlug getRefFilePathPlug() = 0;
+  virtual MPlug getEnableEvalContextPlug() = 0;
 
   unsigned int getId() const;
   FabricCore::Client getCoreClient();

@@ -1885,6 +1885,9 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
 
 bool FabricDFGBaseInterface::useEvalContext()
 {
+  MPlug enableEvalContextPlug = getEnableEvalContextPlug();
+  if(!enableEvalContextPlug.asBool())
+    return false;
   return s_use_evalContext;
 }
 

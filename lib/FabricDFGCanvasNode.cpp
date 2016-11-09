@@ -15,6 +15,7 @@ MTypeId FabricDFGMayaNode::id(0x0011AE47);
 MObject FabricDFGMayaNode::saveData;
 MObject FabricDFGMayaNode::evalID;
 MObject FabricDFGMayaNode::refFilePath;
+MObject FabricDFGMayaNode::enableEvalContext;
 
 FabricDFGMayaNode::FabricDFGMayaNode()
 : FabricDFGBaseInterface()
@@ -53,6 +54,11 @@ MStatus FabricDFGMayaNode::initialize(){
   refFilePath = typedAttr.create("refFilePath", "rfp", MFnData::kString);
   typedAttr.setHidden(true);
   addAttribute(refFilePath);
+
+  enableEvalContext = nAttr.create("enableEvalContext", "ctx", MFnNumericData::kBoolean, 1.0);
+  nAttr.setHidden(true);
+  nAttr.setConnectable(false);
+  addAttribute(enableEvalContext);
 
   return MS::kSuccess;
 }

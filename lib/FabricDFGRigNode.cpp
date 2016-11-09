@@ -20,6 +20,7 @@ MObject FabricDFGRigNode::matrixInputs;
 MObject FabricDFGRigNode::scalarInputs;
 MObject FabricDFGRigNode::matrixOutputs;
 MObject FabricDFGRigNode::scalarOutputs;
+MObject FabricDFGRigNode::enableEvalContext;
 
 FabricDFGRigNode::FabricDFGRigNode()
 : FabricDFGBaseInterface()
@@ -59,6 +60,11 @@ MStatus FabricDFGRigNode::initialize(){
   refFilePath = typedAttr.create("refFilePath", "rfp", MFnData::kString);
   typedAttr.setHidden(true);
   addAttribute(refFilePath);
+
+  enableEvalContext = nAttr.create("enableEvalContext", "ctx", MFnNumericData::kBoolean, 1.0);
+  nAttr.setHidden(true);
+  nAttr.setConnectable(false);
+  addAttribute(enableEvalContext);
 
   matrixInputs = mAttr.create("matrixInputs", "matrixIn");
   mAttr.setArray(true);
