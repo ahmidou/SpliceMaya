@@ -2878,13 +2878,14 @@ void dfgPortToPlug_mat44(
   MPlug &plug, 
   MDataBlock &data)
 {
+  FabricMayaProfilingEvent bracket("dfgPortToPlug_mat44");
+
   uint64_t elementDataSize = sizeof(float) * 16;
   uint64_t numElements = argRawDataSize / elementDataSize;
 
   const float * values;
   getRawCB(getSetUD, (const void**)&values);
 
-  FabricMayaProfilingEvent bracket("dfgPortToPlug_mat44");
   if(plug.isArray()){
 
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);

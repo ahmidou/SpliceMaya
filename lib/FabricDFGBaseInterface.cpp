@@ -3,7 +3,6 @@
 //
 
 #include "FabricDFGBaseInterface.h"
-#include "FabricDFGConversion.h"
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceMayaData.h"
 #include "FabricDFGWidget.h"
@@ -429,10 +428,13 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
 void FabricDFGBaseInterface::generatePlugLookups()
 {
   _attributeNameToIndex.clear();
+  _plugToArgFuncs.resize(0);
+  _argToPlugFuncs.resize(0);
 
   MFnDependencyNode thisNode(getThisMObject());
   FabricCore::DFGExec exec = getDFGBinding().getExec();
 
+  _attributePlugs.setLength(thisNode.attributeCount());
   for(unsigned int i = 0; i < thisNode.attributeCount(); ++i)
   {
     MFnAttribute attrib(thisNode.attribute(i));
@@ -441,12 +443,18 @@ void FabricDFGBaseInterface::generatePlugLookups()
       _isAttributeIndexDirty.push_back(false);
 
     _attributeNameToIndex.insert(attrib.name().asChar(), i);
+
+    _attributePlugs[i] = thisNode.findPlug(attrib.name());
   }
 
   _argIndexToAttributeIndex.resize(exec.getExecPortCount());
+  _plugToArgFuncs.resize(exec.getExecPortCount());
+  _argToPlugFuncs.resize(exec.getExecPortCount());
   for(unsigned i = 0; i < exec.getExecPortCount(); ++i)
   {
     _argIndexToAttributeIndex[i] = UINT_MAX;
+    _plugToArgFuncs[i] = NULL;
+    _argToPlugFuncs[i] = NULL;
     MString argName = exec.getExecPortName(i);
     MString plugName = getPlugName(argName);
     for(unsigned j=0;j<thisNode.attributeCount();j++)
@@ -2117,45 +2125,52 @@ void FabricDFGBaseInterface::VisitInputArgsCallback(
   if(!ud->interf->_isAttributeIndexDirty[attributeIndex])
     return;
 
-  MString plugName = ud->interf->getPlugName(argName);
-  MPlug plug = ud->node.findPlug(plugName);
-  if(plug.isNull())
-    return;
+  MPlug plug = ud->interf->_attributePlugs[attributeIndex];
 
-  FTL::StrRef portDataType = argTypeName;
-  if(portDataType.substr(portDataType.size()-2, 2) == FTL_STR("[]"))
-    portDataType = portDataType.substr(0, portDataType.size()-2);
-
-  // todo: the mSpliceMayaDataOverride should also be a uint32 lookup
-  for(size_t j=0;j<ud->interf->mSpliceMayaDataOverride.size();j++)
+  DFGPlugToArgFunc func = ud->interf->_plugToArgFuncs[argIndex];
+  if(func == NULL)
   {
-    if(ud->interf->mSpliceMayaDataOverride[j] == argName)
+    FabricMayaProfilingEvent bracket("finding conversion func");
+
+    FTL::StrRef portDataType = argTypeName;
+    if(portDataType.substr(portDataType.size()-2, 2) == FTL_STR("[]"))
+      portDataType = portDataType.substr(0, portDataType.size()-2);
+
+    // todo: the mSpliceMayaDataOverride should also be a uint32 lookup
+    for(size_t j=0;j<ud->interf->mSpliceMayaDataOverride.size();j++)
     {
-      portDataType = FTL_STR("SpliceMayaData");
-      break;
+      if(ud->interf->mSpliceMayaDataOverride[j] == argName)
+      {
+        portDataType = FTL_STR("SpliceMayaData");
+        break;
+      }
     }
+
+    func = getDFGPlugToArgFunc(portDataType);
+    if(func == NULL)
+      return;
+    ud->interf->_plugToArgFuncs[argIndex] = func;
   }
 
-  DFGPlugToArgFunc func = getDFGPlugToArgFunc(portDataType);
-  if(func == NULL)
-    return;
+  {
+    FabricMayaProfilingEvent bracket("conversion");
+    (*func)(
+      argIndex,
+      argName,
+      argTypeName,
+      argOutsidePortType,
+      argRawDataSize,
+      getCB,
+      getRawCB,
+      setCB,
+      setRawCB,
+      getSetUD,
+      plug,
+      ud->data
+      );
 
-  (*func)(
-    argIndex,
-    argName,
-    argTypeName,
-    argOutsidePortType,
-    argRawDataSize,
-    getCB,
-    getRawCB,
-    setCB,
-    setRawCB,
-    getSetUD,
-    plug,
-    ud->data
-    );
-
-  ud->interf->_isAttributeIndexDirty[attributeIndex] = false;
+    ud->interf->_isAttributeIndexDirty[attributeIndex] = false;
+  }
 }
 
 void FabricDFGBaseInterface::VisitOutputArgsCallback(
@@ -2179,48 +2194,58 @@ void FabricDFGBaseInterface::VisitOutputArgsCallback(
 
   VisitCallbackUserData * ud = (VisitCallbackUserData *)userdata;
 
-  MString plugName = ud->interf->getPlugName(argName);
-
-  FTL::StrRef portDataType = argTypeName;
-  if(portDataType.substr(portDataType.size()-2, 2) == FTL_STR("[]"))
-    portDataType = portDataType.substr(0, portDataType.size()-2);
-
-  MPlug plug = ud->node.findPlug(plugName);
-  if(plug.isNull())
+  assert(argIndex < ud->interf->_argIndexToAttributeIndex.size());
+  unsigned int attributeIndex = ud->interf->_argIndexToAttributeIndex[argIndex];
+  if(attributeIndex == UINT_MAX)
     return;
+  MPlug plug = ud->interf->_attributePlugs[attributeIndex];
 
-  for(size_t j=0;j<ud->interf->mSpliceMayaDataOverride.size();j++)
+  DFGArgToPlugFunc func = ud->interf->_argToPlugFuncs[argIndex];
+  if(func == NULL)
   {
-    if(ud->interf->mSpliceMayaDataOverride[j] == argName)
+    FabricMayaProfilingEvent bracket("getting conversion func");
+
+    FTL::StrRef portDataType = argTypeName;
+    if(portDataType.substr(portDataType.size()-2, 2) == FTL_STR("[]"))
+      portDataType = portDataType.substr(0, portDataType.size()-2);
+
+    for(size_t j=0;j<ud->interf->mSpliceMayaDataOverride.size();j++)
     {
-      portDataType = FTL_STR("SpliceMayaData");
-      break;
+      if(ud->interf->mSpliceMayaDataOverride[j] == argName)
+      {
+        portDataType = FTL_STR("SpliceMayaData");
+        break;
+      }
     }
+
+    if(ud->isDeformer && portDataType == FTL_STR("PolygonMesh"))
+      //data.setClean(plug);  // [FE-6087]
+                              // 'setClean()' need not be called for MPxDeformerNode.
+                              // (see comments of FE-6087 for more detailed information)
+      return;
+
+    func = getDFGArgToPlugFunc(portDataType);
+    if(func == NULL)
+      return;
+    ud->interf->_argToPlugFuncs[argIndex] = func;
   }
 
-  if(ud->isDeformer && portDataType == FTL_STR("PolygonMesh"))
-    //data.setClean(plug);  // [FE-6087]
-                            // 'setClean()' need not be called for MPxDeformerNode.
-                            // (see comments of FE-6087 for more detailed information)
-    return;
-
-  DFGArgToPlugFunc func = getDFGArgToPlugFunc(portDataType);
-  if(func == NULL)
-    return;
-
-  (*func)(
-    argIndex,
-    argName,
-    argTypeName,
-    argOutsidePortType,
-    argRawDataSize,
-    getCB,
-    getRawCB,
-    getSetUD,
-    plug,
-    ud->data
-    );
-  ud->data.setClean(plug);
+  {
+    FabricMayaProfilingEvent bracket("conversion");
+    (*func)(
+      argIndex,
+      argName,
+      argTypeName,
+      argOutsidePortType,
+      argRawDataSize,
+      getCB,
+      getRawCB,
+      getSetUD,
+      plug,
+      ud->data
+      );
+    ud->data.setClean(plug);
+  }
 }
 
 void FabricDFGBaseInterface::renamePlug(const MPlug &plug, MString oldName, MString newName)

@@ -8,6 +8,7 @@
 
 #include "FabricSpliceConversion.h"
 #include "DFGUICmdHandler_Maya.h"
+#include "FabricDFGConversion.h"
 
 #include <vector>
 
@@ -113,6 +114,9 @@ protected:
   std::vector< unsigned int > _argIndexToAttributeIndex;
   std::vector< bool > _isAttributeIndexDirty;
   FTL::OrderedStringMap< unsigned int > _attributeNameToIndex;
+  MPlugArray _attributePlugs;
+  std::vector< DFGPlugToArgFunc > _plugToArgFuncs;
+  std::vector< DFGArgToPlugFunc > _argToPlugFuncs;
 
   bool _isTransferingInputs;
   bool _portObjectsDestroyed;
@@ -131,7 +135,7 @@ protected:
   MStatus setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
 
 #if MAYA_API_VERSION >= 201600
-  MStatus preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode);
+  virtual MStatus preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode);
 #endif
 
   MObject addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType = "", bool compoundChild = false, MStatus * stat = NULL);
