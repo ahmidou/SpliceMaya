@@ -1808,6 +1808,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   if(!compoundChild)
     setupMayaAttributeAffects(portName, portType, newAttribute);
 
+  generatePlugLookups();
+
   _affectedPlugsDirty = true;
   return newAttribute;
 
@@ -1828,6 +1830,7 @@ void FabricDFGBaseInterface::removeMayaAttribute(MString portName, MStatus * sta
   if(!plug.isNull())
   {
     thisNode.removeAttribute(plug.attribute());
+    generatePlugLookups();
     _affectedPlugsDirty = true;
   }
 
