@@ -221,7 +221,7 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   FabricCore::DFGExec exec = getDFGExec();
   for(size_t i = 0; i < _dirtyPlugs.length(); ++i){
     MString plugName = _dirtyPlugs[i];
-    if(plugName == "evalID" || plugName == "saveData" || plugName == "refFilePath")
+    if(plugName == "evalID" || plugName == "saveData" || plugName == "refFilePath" || plugName == "enableEvalContext")
       continue;
 
     MString portName = getPortName(plugName);
@@ -385,7 +385,7 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   nameRef = nameRef.split('[').first;
 
   // filter out savedata
-  if(nameRef == FTL_STR("saveData") || nameRef == FTL_STR("refFilePath"))
+  if(nameRef == FTL_STR("saveData") || nameRef == FTL_STR("refFilePath") || nameRef == FTL_STR("enableEvalContext"))
     return;
 
   // if(_spliceGraph.usesEvalContext())
@@ -720,18 +720,20 @@ void FabricDFGBaseInterface::reloadFromReferencedFilePath()
 
 MString FabricDFGBaseInterface::getPlugName(const MString &portName)
 {
-  if      (portName == "message")       return "dfg_message";
-  else if (portName == "saveData")      return "dfg_saveData";
-  else if (portName == "refFilePath")   return "dfg_refFilePath";
-  else                                  return portName;
+  if      (portName == "message")            return "dfg_message";
+  else if (portName == "saveData")           return "dfg_saveData";
+  else if (portName == "refFilePath")        return "dfg_refFilePath";
+  else if (portName == "enableEvalContext")  return "dfg_enableEvalContext";
+  else                                       return portName;
 }
 
 MString FabricDFGBaseInterface::getPortName(const MString &plugName)
 {
-  if      (plugName == "dfg_message")     return "message";
-  else if (plugName == "dfg_saveData")    return "saveData";
-  else if (plugName == "dfg_refFilePath") return "refFilePath";
-  else                                    return plugName;
+  if      (plugName == "dfg_message")           return "message";
+  else if (plugName == "dfg_saveData")          return "saveData";
+  else if (plugName == "dfg_refFilePath")       return "refFilePath";
+  else if (plugName == "dfg_enableEvalContext") return "enableEvalContext";
+  else                                          return plugName;
 }
 
 void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
