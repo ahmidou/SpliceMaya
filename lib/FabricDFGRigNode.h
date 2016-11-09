@@ -42,6 +42,8 @@ public:
   virtual MStatus connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
   virtual MStatus connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
 
+  virtual bool useEvalContext() { return false; }
+
 #if MAYA_API_VERSION >= 201600
   SchedulingType schedulingType() const
     { return kParallel; }

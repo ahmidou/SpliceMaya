@@ -83,7 +83,7 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface()
 
   m_binding = FabricCore::DFGBinding();
 
-  if (s_use_evalContext)
+  if (useEvalContext())
     m_evalContext = FabricCore::RTVal();
 
   for(size_t i=0;i<_instances.size();i++){
@@ -285,7 +285,7 @@ void FabricDFGBaseInterface::evaluate(){
 
   managePortObjectValues(false); // recreate objects if not there yet
 
-  if (s_use_evalContext)
+  if (useEvalContext())
   {
     FabricMayaProfilingEvent bracket("setting up eval context");
 
@@ -1880,6 +1880,11 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricC
   MAYASPLICE_CATCH_END(stat);
 }
 
+bool FabricDFGBaseInterface::useEvalContext()
+{
+  return s_use_evalContext;
+}
+
 void FabricDFGBaseInterface::managePortObjectValues(bool destroy)
 {
   if(_portObjectsDestroyed == destroy)
@@ -2268,10 +2273,10 @@ MString FabricDFGBaseInterface::resolveEnvironmentVariables(const MString & file
 
 bool FabricDFGBaseInterface::getExecuteShared()
 {
-  FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::getExecuteShared");
-
   if ( m_executeSharedDirty )
   {
+    FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::getExecuteShared");
+
     FTL::CStrRef executeSharedMetadataCStr =
       m_binding.getMetadata( "executeShared" );
     if ( executeSharedMetadataCStr == FTL_STR("true") )

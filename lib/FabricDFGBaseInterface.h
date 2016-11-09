@@ -103,6 +103,7 @@ public:
 protected:
   void invalidatePlug(MPlug & plug);
   virtual void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
+  virtual bool useEvalContext();
 
   // private members and helper methods
   bool _restoredFromPersistenceData;
