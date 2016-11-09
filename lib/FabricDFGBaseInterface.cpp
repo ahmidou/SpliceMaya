@@ -270,8 +270,6 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   }
   */
 
-  _dirtyPlugs.clear();
-
   return true;
 }
 
@@ -417,19 +415,51 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
     }
   }
 
-  for(size_t i = 0; i < _dirtyPlugs.length(); ++i){
-    if(_dirtyPlugs[i] == name)
-      return;
+  // todo: get the attribute index
+  FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(name.asChar());
+  if(it != _attributeNameToIndex.end())
+  {
+    unsigned int index = it->second;
+    while(index >= _isAttributeIndexDirty.size())
+      _isAttributeIndexDirty.push_back(false);
+    _isAttributeIndexDirty[index] = true;
   }
-
-  _dirtyPlugs.append(name);
 }
 
-// todo
-// void FabricDFGBaseInterface::generatePlugLookup()
-// {
+void FabricDFGBaseInterface::generatePlugLookups()
+{
+  _attributeNameToIndex.clear();
 
-// }
+  MFnDependencyNode thisNode(getThisMObject());
+  FabricCore::DFGExec exec = getDFGBinding().getExec();
+
+  for(unsigned int i = 0; i < thisNode.attributeCount(); ++i)
+  {
+    MFnAttribute attrib(thisNode.attribute(i));
+
+    while(i >= _isAttributeIndexDirty.size())
+      _isAttributeIndexDirty.push_back(false);
+
+    _attributeNameToIndex.insert(attrib.name().asChar(), i);
+  }
+
+  _argIndexToAttributeIndex.resize(exec.getExecPortCount());
+  for(unsigned i = 0; i < exec.getExecPortCount(); ++i)
+  {
+    _argIndexToAttributeIndex[i] = UINT_MAX;
+    MString argName = exec.getExecPortName(i);
+    MString plugName = getPlugName(argName);
+    for(unsigned j=0;j<thisNode.attributeCount();j++)
+    {
+      MFnAttribute attrib(thisNode.attribute(j));
+      if(attrib.name() == plugName)
+      {
+        _argIndexToAttributeIndex[i] = j;
+        break;
+      }
+    }
+  }
+}
 
 void FabricDFGBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs){
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::affectChildPlugs");
@@ -653,6 +683,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   m_lastJson = json;
   // todo... set values?
+  generatePlugLookups();
 
   MAYADFG_CATCH_END(stat);
 }
@@ -2015,6 +2046,8 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
       removeMayaAttribute(nameStr.c_str());
+
+    generatePlugLookups();
   }
   else if( descStr == FTL_STR("argRenamed") )
   {
@@ -2028,9 +2061,12 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     // remove existing attributes if types match
     MPlug plug = thisNode.findPlug(oldPlugName);
     renamePlug(plug, oldPlugName, newPlugName);
+
+    generatePlugLookups();
   }
   else if( descStr == FTL_STR("argInserted") )
   {
+    generatePlugLookups();
   }
   else if(   descStr == FTL_STR("varInserted")
           || descStr == FTL_STR("varRemoved") )
@@ -2065,25 +2101,16 @@ void FabricDFGBaseInterface::VisitInputArgsCallback(
 
   VisitCallbackUserData * ud = (VisitCallbackUserData *)userdata;
 
-  // todo: this should be using a lookup
-  bool found = false;
-  for(size_t i = 0; i < ud->interf->_dirtyPlugs.length(); ++i){
-    if(ud->interf->_dirtyPlugs[i] == argName)
-    {
-      found = true;
-      break;
-    }
-  }
+  assert(argIndex < ud->interf->_argIndexToAttributeIndex.size());
+  unsigned int attributeIndex = ud->interf->_argIndexToAttributeIndex[argIndex];
+  if(attributeIndex == UINT_MAX)
+    return;
 
-  if(!found)
+  assert(attributeIndex < ud->interf->_isAttributeIndexDirty.size());
+  if(!ud->interf->_isAttributeIndexDirty[attributeIndex])
     return;
 
   MString plugName = ud->interf->getPlugName(argName);
-  // todo: do we even need this check? this should never happen since collectDirtyPlug
-  // is already filtering them
-  if(plugName == "evalID" || plugName == "saveData" || plugName == "refFilePath")
-    return;
-
   MPlug plug = ud->node.findPlug(plugName);
   if(plug.isNull())
     return;
@@ -2120,6 +2147,8 @@ void FabricDFGBaseInterface::VisitInputArgsCallback(
     plug,
     ud->data
     );
+
+  ud->interf->_isAttributeIndexDirty[attributeIndex] = false;
 }
 
 void FabricDFGBaseInterface::VisitOutputArgsCallback(

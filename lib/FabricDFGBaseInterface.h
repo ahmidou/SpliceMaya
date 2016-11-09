@@ -108,11 +108,10 @@ protected:
   bool _restoredFromPersistenceData;
 
   // FabricSplice::DGGraph _spliceGraph;
-  MStringArray _dirtyPlugs;
-
-  // todo: profile this against an array of straight mappings instead of a std::map
-  // std::map< unsigned int, unsigned int > _plugLogicalIndexToArgIndex;
-  // std::vector< bool > _isPlugIndexDirty;
+  // MStringArray _dirtyPlugs;
+  std::vector< unsigned int > _argIndexToAttributeIndex;
+  std::vector< bool > _isAttributeIndexDirty;
+  FTL::OrderedStringMap< unsigned int > _attributeNameToIndex;
 
   bool _isTransferingInputs;
   bool _portObjectsDestroyed;
@@ -122,7 +121,7 @@ protected:
   void evaluate();
   virtual void transferOutputValuesToMaya(MDataBlock& data, bool isDeformer = false);
   virtual void collectDirtyPlug(MPlug const &inPlug);
-  // virtual void generatePlugLookup();
+  virtual void generatePlugLookups();
   void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
   void copyInternalData(MPxNode *node);
   bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);
