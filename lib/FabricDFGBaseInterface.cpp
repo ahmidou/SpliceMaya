@@ -265,56 +265,6 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
   ud.isDeformer = isDeformer;
 
   getDFGBinding().visitArgs(getLockType(), &FabricDFGBaseInterface::VisitOutputArgsCallback, &ud);
-
-  /*
-  MFnDependencyNode thisNode(getThisMObject());
-
-  FabricCore::DFGExec exec = getDFGExec();
-
-  for(unsigned i = 0; i < exec.getExecPortCount(); ++i){
-
-    FabricCore::DFGPortType portType = exec.getExecPortType(i);
-    if(portType != FabricCore::DFGPortType_In){
-      
-      std::string portName = exec.getExecPortName(i);
-      std::string plugName = getPlugName(portName.c_str()).asChar();
-      std::string portDataType = exec.getExecPortResolvedType(i);
-
-      if(portDataType.substr(portDataType.length()-2, 2) == "[]")
-        portDataType = portDataType.substr(0, portDataType.length()-2);
-
-      MPlug plug = thisNode.findPlug(plugName.c_str());
-      if(!plug.isNull()){
-        for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
-        {
-          if(mSpliceMayaDataOverride[j] == portName)
-          {
-            portDataType = "SpliceMayaData";
-            break;
-          }
-        }
-
-        if(isDeformer && portDataType == "PolygonMesh") {
-          //data.setClean(plug);  // [FE-6087]
-                                  // 'setClean()' need not be called for MPxDeformerNode.
-                                  // (see comments of FE-6087 for more detailed information)
-        } else {
-          DFGArgToPlugFunc func = getDFGArgToPlugFunc(portDataType);
-          if(func != NULL) {
-            (*func)(
-              m_binding,
-              getLockType(),
-              portName.c_str(),
-              plug,
-              data
-              );
-            data.setClean(plug);
-          }
-        }
-      }
-    }
-  }
-  */
 }
 
 void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
