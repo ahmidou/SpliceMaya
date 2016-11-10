@@ -32,6 +32,7 @@
 #include <maya/MFileObject.h>
 #include <maya/MFnPluginData.h>
 #include <maya/MAnimControl.h>
+#include <maya/MQtUtil.h>
 
 #if MAYA_API_VERSION >= 201600
 # include <maya/MEvaluationNode.h>
@@ -943,10 +944,26 @@ void FabricDFGBaseInterface::onNodeAdded(MObject &node, void *clientData)
 void FabricDFGBaseInterface::onNodeRemoved(MObject &node, void *clientData)
 {
   MFnDependencyNode thisNode(node);
-  FabricDFGBaseInterface * interf = getInstanceByName(thisNode.name().asChar());
+  FabricDFGBaseInterface *interf = getInstanceByName(thisNode.name().asChar());
 
-  if(interf)
-    interf->managePortObjectValues(true); // detach
+  if (interf)
+  {
+    // detach
+    interf->managePortObjectValues(true);
+
+    // [FE-7513] check if the removed node is the one currently being
+    // displayed in Canvas. If that is the case then close Canvas.
+    if (MGlobal::mayaState() == MGlobal::kInteractive)
+    {
+      QWidget *w = MQtUtil().findWindow("FabricDFGUIPane");
+      if (w && interf == FabricDFGWidget::getBaseInterface())
+      {
+        bool success = w->close();
+        if (!success)
+          MGlobal::displayInfo("[Fabric] failed to close the Canvas window.");
+      }
+    }
+  }
 }
 
 void FabricDFGBaseInterface::onAnimCurveEdited(MObjectArray &editedCurves, void *clientData)

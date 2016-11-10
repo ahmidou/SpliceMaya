@@ -71,6 +71,17 @@ public:
     return m_dfgHost;
   }
 
+  static FabricDFGBaseInterface *getBaseInterface()
+  {
+    if (s_widget == NULL)
+      return NULL;
+
+    MString interfIdStr = s_widget->getDfgWidget()->getUIController()->getBinding().getMetadata("maya_id");
+    if (interfIdStr.length() == 0)
+      return NULL;
+    return FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
+  }
+
 public slots:
   virtual void onUndo();
   virtual void onRedo();
