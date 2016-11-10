@@ -80,10 +80,8 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface()
     m_binding.deallocValues();
   }
 
+  m_evalContext = FabricCore::RTVal();
   m_binding = FabricCore::DFGBinding();
-
-  if (useEvalContext())
-    m_evalContext = FabricCore::RTVal();
 
   for(size_t i=0;i<_instances.size();i++){
     if(_instances[i] == this){
@@ -214,61 +212,6 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   ud.isDeformer = false;
 
   getDFGBinding().visitArgs(getLockType(), &FabricDFGBaseInterface::VisitInputArgsCallback, &ud);
-
-  /*
-  MFnDependencyNode thisNode(getThisMObject());
-
-  FabricCore::DFGExec exec = getDFGExec();
-  for(size_t i = 0; i < _dirtyPlugs.length(); ++i){
-    MString plugName = _dirtyPlugs[i];
-    if(plugName == "evalID" || plugName == "saveData" || plugName == "refFilePath" || plugName == "enableEvalContext")
-      continue;
-
-    MString portName = getPortName(plugName);
-    MPlug plug = thisNode.findPlug(plugName);
-    if(!plug.isNull()){
-
-      if(!exec.haveExecPort(portName.asChar()))
-        continue;
-
-      if(exec.getExecPortType(portName.asChar()) != FabricCore::DFGPortType_Out){
-
-        char const *portDataTypeCStr = exec.getExecPortResolvedType(portName.asChar());
-        if ( !portDataTypeCStr )
-          continue;
-
-        std::string portDataType( portDataTypeCStr );
-
-        if(portDataType.substr(portDataType.length()-2, 2) == "[]")
-          portDataType = portDataType.substr(0, portDataType.length()-2);
-
-        for(size_t j=0;j<mSpliceMayaDataOverride.size();j++)
-        {
-          if(mSpliceMayaDataOverride[j] == portName.asChar())
-          {
-            portDataType = "SpliceMayaData";
-            break;
-          }
-        }
-
-        DFGPlugToArgFunc func = getDFGPlugToArgFunc(portDataType);
-        if(func != NULL)
-        {
-          FabricMayaProfilingEvent bracket("FabricDFGConversion");
-
-          (*func)(
-            plug,
-            data,
-            m_binding,
-            getLockType(),
-            portName.asChar()
-            );
-        }
-      }
-    }
-  }
-  */
-
   return true;
 }
 
@@ -378,6 +321,19 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
 
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::collectDirtyPlug");
 
+  // [hmathee 20161110] take a short cut - if we find the attribute index
+  // based on the attribute name then we can exit
+  {
+    MString attrName = MFnAttribute(inPlug.attribute()).name();
+    FTL::StrRef attrNameRef = attrName.asChar();
+    FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(attrNameRef);
+    if(it != _attributeNameToIndex.end())
+    {
+      _isAttributeIndexDirty[it->second] = true;
+      return;
+    }
+  }
+
   MStatus stat;
   MString plugName = inPlug.name();
   FTL::StrRef nameRef = plugName.asChar();
@@ -385,7 +341,12 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   nameRef = nameRef.split('[').first;
 
   // filter out savedata
-  if(nameRef == FTL_STR("saveData") || nameRef == FTL_STR("refFilePath") || nameRef == FTL_STR("enableEvalContext"))
+  if(nameRef == FTL_STR("saveData") || 
+    nameRef == FTL_STR("refFilePath") || 
+    nameRef == FTL_STR("enableEvalContext") ||
+    nameRef == FTL_STR("nodeState") ||
+    nameRef == FTL_STR("caching") ||
+    nameRef == FTL_STR("frozen"))
     return;
 
   // if(_spliceGraph.usesEvalContext())
@@ -415,13 +376,17 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   {
     unsigned int index = it->second;
     while(index >= _isAttributeIndexDirty.size())
-      _isAttributeIndexDirty.push_back(false);
+    {
+      _isAttributeIndexDirty.push_back(true);
+    }
     _isAttributeIndexDirty[index] = true;
   }
 }
 
-void FabricDFGBaseInterface::generatePlugLookups()
+void FabricDFGBaseInterface::generateAttributeLookups()
 {
+  FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::generateAttributeLookups");
+
   _attributeNameToIndex.clear();
   _plugToArgFuncs.resize(0);
   _argToPlugFuncs.resize(0);
@@ -433,13 +398,23 @@ void FabricDFGBaseInterface::generatePlugLookups()
   for(unsigned int i = 0; i < thisNode.attributeCount(); ++i)
   {
     MFnAttribute attrib(thisNode.attribute(i));
-
     while(i >= _isAttributeIndexDirty.size())
-      _isAttributeIndexDirty.push_back(false);
+    {
+      _isAttributeIndexDirty.push_back(true); 
+    }
+    _attributePlugs[i] = MPlug(getThisMObject(), thisNode.attribute(i));
+
+    MString attrName = attrib.name();
+    FTL::StrRef attrNameRef = attrName.asChar();
+    if(attrNameRef == FTL_STR("saveData") || 
+      attrNameRef == FTL_STR("refFilePath") || 
+      attrNameRef == FTL_STR("enableEvalContext") ||
+      attrNameRef == FTL_STR("nodeState") ||
+      attrNameRef == FTL_STR("caching") ||
+      attrNameRef == FTL_STR("frozen"))
+      continue;
 
     _attributeNameToIndex.insert(attrib.name().asChar(), i);
-
-    _attributePlugs[i] = thisNode.findPlug(attrib.name());
   }
 
   _argIndexToAttributeIndex.resize(exec.getExecPortCount());
@@ -686,7 +661,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   m_lastJson = json;
   // todo... set values?
-  generatePlugLookups();
+  generateAttributeLookups();
 
   MAYADFG_CATCH_END(stat);
 }
@@ -923,8 +898,15 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
 
       // [hmathe 20161108] some nodes might have static attributes that need to be dirtied
       //if(!attrib.isDynamic())
-      if(attrib.name() == "saveData" || attrib.name() == "svd")
-       continue;
+      MString attrName = attrib.name();
+      FTL::StrRef attrNameRef = attrName.asChar();
+      if(attrNameRef == FTL_STR("saveData") || 
+        attrNameRef == FTL_STR("refFilePath") || 
+        attrNameRef == FTL_STR("enableEvalContext") ||
+        attrNameRef == FTL_STR("nodeState") ||
+        attrNameRef == FTL_STR("caching") ||
+        attrNameRef == FTL_STR("frozen"))
+        continue;
 
       // check if the attribute is an output
       // otherwise continue
@@ -1111,6 +1093,8 @@ void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherP
       }
     }
   }
+
+  generateAttributeLookups();
 }
 
 MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType, bool compoundChild, MStatus * stat)
@@ -1810,7 +1794,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   if(!compoundChild)
     setupMayaAttributeAffects(portName, portType, newAttribute);
 
-  generatePlugLookups();
+  generateAttributeLookups();
 
   _affectedPlugsDirty = true;
   return newAttribute;
@@ -1832,7 +1816,7 @@ void FabricDFGBaseInterface::removeMayaAttribute(MString portName, MStatus * sta
   if(!plug.isNull())
   {
     thisNode.removeAttribute(plug.attribute());
-    generatePlugLookups();
+    generateAttributeLookups();
     _affectedPlugsDirty = true;
   }
 
@@ -2063,7 +2047,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     if(!plug.isNull())
       removeMayaAttribute(nameStr.c_str());
 
-    generatePlugLookups();
+    generateAttributeLookups();
   }
   else if( descStr == FTL_STR("argRenamed") )
   {
@@ -2078,11 +2062,11 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     MPlug plug = thisNode.findPlug(oldPlugName);
     renamePlug(plug, oldPlugName, newPlugName);
 
-    generatePlugLookups();
+    generateAttributeLookups();
   }
   else if( descStr == FTL_STR("argInserted") )
   {
-    generatePlugLookups();
+    generateAttributeLookups();
   }
   else if(   descStr == FTL_STR("varInserted")
           || descStr == FTL_STR("varRemoved") )

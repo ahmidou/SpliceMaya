@@ -127,7 +127,7 @@ protected:
   void evaluate();
   virtual void transferOutputValuesToMaya(MDataBlock& data, bool isDeformer = false);
   virtual void collectDirtyPlug(MPlug const &inPlug);
-  virtual void generatePlugLookups();
+  virtual void generateAttributeLookups();
   void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
   void copyInternalData(MPxNode *node);
   bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);
