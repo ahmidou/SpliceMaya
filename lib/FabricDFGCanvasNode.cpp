@@ -24,8 +24,6 @@ void FabricDFGMayaNode::postConstructor(){
   FabricDFGBaseInterface::constructBaseInterface();
   setExistWithoutInConnections(true);
   setExistWithoutOutConnections(true);
-  // [FE-7498] lock the 'saveData' attribute.
-  MGlobal::executeCommandOnIdle("setAttr -lock true " + name() + ".saveData");
 }
 
 FabricDFGMayaNode::~FabricDFGMayaNode()

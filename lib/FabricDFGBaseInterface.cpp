@@ -931,12 +931,18 @@ void FabricDFGBaseInterface::onNodeAdded(MObject &node, void *clientData)
 {
   MFnDependencyNode thisNode(node);
   FabricDFGBaseInterface * interf = getInstanceByName(thisNode.name().asChar());
-  if( interf ) {
-    interf->managePortObjectValues( false ); // reattach
+  if( interf )
+  {
+    // reattach
+    interf->managePortObjectValues( false );
 
     // In case it is from the delete of an undo, 
     // needs to be re-evaluated since values were flushed
     interf->invalidateNode();
+
+    // [FE-7498] lock the 'saveData' attribute to prevent problems
+    // when referencing .ma files that contain Canvas nodes.
+    MGlobal::executeCommandOnIdle("setAttr -lock true " + thisNode.name() + ".saveData");
   }
 }
 
