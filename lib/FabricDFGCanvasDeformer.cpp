@@ -237,6 +237,7 @@ int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBloc
   ud.interf = this;
   ud.isDeformer = false;
   ud.returnValue = 1;
+  ud.meshPlug = meshPlug;
   getDFGBinding().visitArgs(getLockType(), &FabricDFGMayaDeformer::VisitMeshCallback, &ud);
   if(ud.returnValue != 1)
     return ud.returnValue;
@@ -286,7 +287,7 @@ void FabricDFGMayaDeformer::VisitMeshCallback(
   void *getSetUD
   ) {
 
-  if(argOutsidePortType == FabricCore::DFGPortType_Out)
+  if(argOutsidePortType != FabricCore::DFGPortType_IO)
     return;
 
   VisitCallbackUserData * ud = (VisitCallbackUserData *)userdata;
@@ -301,11 +302,6 @@ void FabricDFGMayaDeformer::VisitMeshCallback(
     ud->returnValue = -1;
     return;
   }
-
-  MString plugName = ud->interf->getPlugName(argName);
-  MPlug plug = ud->node.findPlug(plugName);
-  if(plug.isNull())
-    return;
 
   DFGPlugToArgFunc func = getDFGPlugToArgFunc(FTL_STR("PolygonMesh"));
   if(func == NULL)
@@ -322,7 +318,7 @@ void FabricDFGMayaDeformer::VisitMeshCallback(
     setCB,
     setRawCB,
     getSetUD,
-    plug,
+    ud->meshPlug,
     ud->data
     );
 }

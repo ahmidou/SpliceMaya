@@ -201,6 +201,7 @@ protected:
     FabricDFGBaseInterface * interf;
     MFnDependencyNode node;
     bool isDeformer;
+    MPlug meshPlug;
     MDataBlock & data;
     int returnValue;
   };
