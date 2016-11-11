@@ -790,7 +790,12 @@ void dfgPlugToPort_scalar(
 {
   FabricMayaProfilingEvent bracket("dfgPlugToPort_scalar");
 
+  FTL::CStrRef resolvedType = argTypeName;
+  bool isDouble = resolvedType.substr(0, 7) == FTL_STR("Float64");
   uint64_t elementDataSize = sizeof(float);
+  if (isDouble)
+    elementDataSize = sizeof(double);
+
   uint64_t currentNumElements = argRawDataSize / elementDataSize;
 
   // FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
@@ -801,31 +806,36 @@ void dfgPlugToPort_scalar(
 
     unsigned int numElements = arrayHandle.elementCount();
 
-    std::vector<float> buffer(numElements);
-    float * values = &buffer[0];
-
-    for(unsigned int i = 0; i < numElements; ++i){
-      arrayHandle.jumpToArrayElement(i);
-      MDataHandle handle = arrayHandle.inputValue();
-
-      // todo: renable units
-      /*
-      if(scalarUnit == "time")
-        values[i] = handle.asTime().as(MTime::kSeconds);
-      else if(scalarUnit == "angle")
-        values[i] = handle.asAngle().as(MAngle::kRadians);
-      else if(scalarUnit == "distance")
-        values[i] = handle.asDistance().as(MDistance::kMillimeters);
-      else */
+    if (isDouble)
+    {
+      std::vector<double> buffer(numElements);
+      double * values = &buffer[0];
+      for (unsigned int i = 0; i < numElements; ++i)
       {
-        if(handle.numericType() == MFnNumericData::kFloat){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        if (handle.numericType() == MFnNumericData::kFloat)
           values[i] = handle.asFloat();
-        }else{
-          values[i] = (float)handle.asDouble();
-        }
+        else
+          values[i] = handle.asDouble();
       }
+      setRawCB(getSetUD, values, elementDataSize * numElements);
     }
-    setRawCB(getSetUD, values, elementDataSize * numElements);
+    else
+    {
+      std::vector<float> buffer(numElements);
+      float * values = &buffer[0];
+      for (unsigned int i = 0; i < numElements; ++i)
+      {
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        if (handle.numericType() == MFnNumericData::kFloat)
+          values[i] = handle.asFloat();
+        else
+          values[i] = (float)handle.asDouble();
+      }
+      setRawCB(getSetUD, values, elementDataSize * numElements);
+    }
 
   }else{
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
@@ -835,14 +845,22 @@ void dfgPlugToPort_scalar(
       MDoubleArray arrayValues = MFnDoubleArrayData(handle.data()).array();
       unsigned int numElements = arrayValues.length();
   
-      std::vector<float> buffer(numElements);
-      float * values = &buffer[0];
-
-      for(unsigned int i = 0; i < numElements; ++i){
-        values[i] = arrayValues[i];
+      if (isDouble)
+      {
+        std::vector<float> buffer(numElements);
+        float * values = &buffer[0];
+        for (unsigned int i = 0; i < numElements; ++i)
+          values[i] = (float)arrayValues[i];
+        setRawCB(getSetUD, values, elementDataSize * numElements);
       }
-
-      setRawCB(getSetUD, values, elementDataSize * numElements);
+      else
+      {
+        std::vector<double> buffer(numElements);
+        double * values = &buffer[0];
+        for (unsigned int i = 0; i < numElements; ++i)
+          values[i] = arrayValues[i];
+        setRawCB(getSetUD, values, elementDataSize * numElements);
+      }
     }
     else
     {
@@ -858,10 +876,10 @@ void dfgPlugToPort_scalar(
       }
 
       // get the resolved data type of the destination exec port and set its value.
-      FTL::CStrRef resolvedType = argTypeName;
-      if      (resolvedType == FTL_STR("Scalar"))  setCB(getSetUD, FabricSplice::constructFloat32RTVal((float)plugValue).getFECRTValRef());
-      else if (resolvedType == FTL_STR("Float32")) setCB(getSetUD, FabricSplice::constructFloat32RTVal((float)plugValue).getFECRTValRef());
-      else if (resolvedType == FTL_STR("Float64")) setCB(getSetUD, FabricSplice::constructFloat64RTVal(       plugValue).getFECRTValRef());
+      if(isDouble)
+        setCB(getSetUD, FabricSplice::constructFloat64RTVal(plugValue).getFECRTValRef());
+      else
+        setCB(getSetUD, FabricSplice::constructFloat32RTVal((float)plugValue).getFECRTValRef());
     }
   }
 }
@@ -2570,36 +2588,49 @@ void dfgPortToPlug_scalar(
 {
   CORE_CATCH_BEGIN;
 
+  FTL::CStrRef resolvedType = argTypeName;
+  bool isDouble = resolvedType.substr(0, 7) == FTL_STR("Float64");
   uint64_t elementDataSize = sizeof(float);
+  if (isDouble)
+    elementDataSize = sizeof(double);
+
   uint64_t numElements = argRawDataSize / elementDataSize;
 
-  const float * values;
-  getRawCB(getSetUD, (const void**)&values);
+  const float * floatValues = NULL;
+  const double * doubleValues = NULL;
+  if(isDouble)
+  {
+    getRawCB(getSetUD, (const void**)&doubleValues);
+  }
+  else
+  {
+    getRawCB(getSetUD, (const void**)&floatValues);
+  }
   unsigned int offset = 0;
 
   // FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
-  // todo: port metadata
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    for(unsigned int i = 0; i < numElements; ++i){
-      MDataHandle handle = arraybuilder.addElement(i);
-
-      /*
-      // todo
-      if(scalarUnit == "time")
-        handle.setMTime(MTime(values[i], MTime::kSeconds));
-      else if(scalarUnit == "angle")
-        handle.setMAngle(MAngle(values[i], MAngle::kRadians));
-      else if(scalarUnit == "distance")
-        handle.setMDistance(MDistance(values[i], MDistance::kMillimeters));
-      else*/
-      {
+    if(isDouble)
+    {
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
         if(handle.numericType() == MFnNumericData::kFloat)
-          handle.setFloat(values[i]);
+          handle.setFloat((float)doubleValues[i]);
         else
-          handle.setDouble(values[i]);
+          handle.setDouble(doubleValues[i]);
+      }
+    }
+    else
+    {
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        if(handle.numericType() == MFnNumericData::kFloat)
+          handle.setFloat(floatValues[i]);
+        else
+          handle.setDouble(floatValues[i]);
       }
     }
 
@@ -2610,31 +2641,34 @@ void dfgPortToPlug_scalar(
     MDataHandle handle = data.outputValue(plug);
     if(numElements > 1) {
 
-      MDoubleArray doubleValues;
-      doubleValues.setLength(numElements);
+      MDoubleArray mayaDoubleValues;
+      mayaDoubleValues.setLength(numElements);
 
-      for(unsigned int i=0;i<numElements;i++)
-        doubleValues[i] = values[i];
+      if(isDouble)
+      {
+        for(unsigned int i=0;i<numElements;i++)
+          mayaDoubleValues[i] = doubleValues[i];
+      }
+      else
+      {
+        for(unsigned int i=0;i<numElements;i++)
+          mayaDoubleValues[i] = floatValues[i];
+      }
 
-      handle.set(MFnDoubleArrayData().create(doubleValues));
+      handle.set(MFnDoubleArrayData().create(mayaDoubleValues));
     }else{
-      double value = values[0];
+      double value = 0.0;
+      if(isDouble)
+        value = doubleValues[0];
+      else
+        value = floatValues[0];
       if(value == DBL_MAX)
         return;
-      /*
-      if(scalarUnit == "time")
-        handle.setMTime(MTime(value, MTime::kSeconds));
-      else if(scalarUnit == "angle")
-        handle.setMAngle(MAngle(value, MAngle::kRadians));
-      else if(scalarUnit == "distance")
-        handle.setMDistance(MDistance(value, MDistance::kMillimeters));
-      else*/
-      {
-        if(handle.numericType() == MFnNumericData::kFloat)
-          handle.setFloat(value);
-        else
-          handle.setDouble(value);
-      }
+      
+      if(handle.numericType() == MFnNumericData::kFloat)
+        handle.setFloat(value);
+      else
+        handle.setDouble(value);
     }
   }
 
