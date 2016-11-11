@@ -955,11 +955,12 @@ void FabricDFGBaseInterface::onNodeRemoved(MObject &node, void *clientData)
     // displayed in Canvas. If that is the case then close Canvas.
     if (MGlobal::mayaState() == MGlobal::kInteractive)
     {
-      QWidget *w = MQtUtil().findWindow("FabricDFGUIPane");
-      if (w && interf == FabricDFGWidget::getBaseInterface())
+      if (interf == FabricDFGWidget::getBaseInterface())
       {
-        bool success = w->close();
-        if (!success)
+        QWidget *w = MQtUtil().findWindow("FabricDFGUIPane");
+        if (!w)  w = MQtUtil().findLayout("FabricDFGUIPane", MQtUtil().mainWindow());
+        if (!w)  return;
+        if (!w->close())
           MGlobal::displayInfo("[Fabric] failed to close the Canvas window.");
       }
     }
