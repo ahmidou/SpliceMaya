@@ -75,8 +75,8 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   }
 
   // menu items
-  menuItem -p $fabricSpliceMenu -ec 1 -c ("createNode \"canvasNode\";") "Create Graph (Node)";
-  menuItem -p $fabricSpliceMenu -ec 1 -c ("addCanvasDeformer();") "Create Graph (Deformer)";
+  menuItem -p $fabricSpliceMenu -ec 1 -c ("createNode \"canvasNode\";") "Create Canvas Node";
+  menuItem -p $fabricSpliceMenu -ec 1 -c ("addCanvasDeformer();") "Create Canvas Deformer";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("createReferencedDFGNode();") "Create referenced Graph";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("reloadReferencedDFGNode();") "Reload referenced Graph";
