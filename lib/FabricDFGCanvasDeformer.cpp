@@ -89,8 +89,7 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
 
     if(transferInputValuesToDFG(block))
     {
-      FabricCore::RTVal rtValToSet;
-      FabricCore::RTVal rtMesh;
+      FabricCore::RTVal rtMesh, rtMeshes;
 
       MString portName = "meshes";
       if (!exec.haveExecPort(portName.asChar()))
@@ -102,17 +101,10 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
       { mayaLogFunc("FabricDFGMayaDeformer: port \"meshes\" has the wrong resolved data type");
         return MStatus::kSuccess; }
 
-      FabricCore::RTVal rtMeshes = binding.getArgValue(portName.asChar());
-      //FabricCore::RTVal rtMeshes = port.getRTVal( FabricCore::LockType_Exclusive );
-      /* [mootzoid] as far as I can see the exclusive flag in Canvas/DFG is handled by
-                    the FabricDFGBaseInterface through its the member m_executeSharedDirty.
-      */
-
+      rtMeshes = binding.getArgValue(portName.asChar());
       if(!rtMeshes.isValid()) return MStatus::kSuccess;
       if(!rtMeshes.isArray()) return MStatus::kSuccess;
-      rtValToSet = rtMeshes;
-      rtMesh     = rtMeshes.getArrayElement(multiIndex);
-
+      rtMesh = rtMeshes.getArrayElement(multiIndex);
       if(!rtMesh.isValid() || rtMesh.isNullObject())
         return MStatus::kSuccess;
 
@@ -131,9 +123,20 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
         mayaLogErrorFunc(e.getDesc_cstr());
         return MStatus::kSuccess;
       }
-      binding.setArgValue_lockType(getLockType(), portName.asChar(), rtValToSet, false);
+      binding.setArgValue_lockType(getLockType(), portName.asChar(), rtMeshes, false);
 
       evaluate();
+
+      // [FE-7528] the Canvas graph could be using a different
+      // mesh for the output as for the input, so we get the
+      // argument value and mesh RTVal again to ensure we are
+      // using the right one.
+      rtMeshes = binding.getArgValue(portName.asChar());
+      if(!rtMeshes.isValid()) return MStatus::kSuccess;
+      if(!rtMeshes.isArray()) return MStatus::kSuccess;
+      rtMesh = rtMeshes.getArrayElement(multiIndex);
+      if(!rtMesh.isValid() || rtMesh.isNullObject())
+        return MStatus::kSuccess;
 
       try
       {
