@@ -35,6 +35,7 @@
 
 #if MAYA_API_VERSION >= 201600
 # include <maya/MEvaluationNode.h>
+# include <maya/MEvaluationManager.h>
 #endif
 
 std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
@@ -833,10 +834,16 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
   // we can't ask for the plug value here, so we fill an array for the compute to only transfer newly dirtied values
   collectDirtyPlug(inPlug);
 
-  if(_outputsDirtied)
+#if MAYA_API_VERSION >= 201600
+  bool emConstructionActive = MEvaluationManager::graphConstructionActive();
+#else
+  bool emConstructionActive = false;
+#endif
+
+  if(_outputsDirtied && !emConstructionActive)
     return MS::kSuccess;
 
-  if(_affectedPlugsDirty)
+  if(_affectedPlugsDirty || emConstructionActive)
   {
     FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::setDependentsDirty _affectedPlugsDirty");
     
@@ -2280,9 +2287,15 @@ MStatus FabricDFGBaseInterface::preEvaluation(MObject thisMObject, const MDGCont
   for (MEvaluationNodeIterator dirtyIt = evaluationNode.iterator();
       !dirtyIt.isDone(); dirtyIt.next())
   {
+    _outputsDirtied = true;
     collectDirtyPlug(dirtyIt.plug());
   }
   return MS::kSuccess;
+}
+
+MStatus FabricDFGBaseInterface::postEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode, MPxNode::PostEvaluationType evalType)
+{
+  return MStatus::kSuccess;
 }
 #endif
 

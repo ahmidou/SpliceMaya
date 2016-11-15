@@ -42,6 +42,7 @@ public:
   SchedulingType schedulingType() const
     { return kParallel; }
   virtual MStatus preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode);
+  virtual MStatus postEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType);
 #endif
 
   static void VisitMeshCallback(

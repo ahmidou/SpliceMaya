@@ -271,6 +271,11 @@ MStatus FabricDFGMayaDeformer::preEvaluation(const MDGContext& context, const ME
 {
   return FabricDFGBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
 }
+
+MStatus FabricDFGMayaDeformer::postEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType)
+{
+  return FabricDFGBaseInterface::postEvaluation(thisMObject(), context, evaluationNode, evalType);
+}
 #endif
 
 void FabricDFGMayaDeformer::VisitMeshCallback(

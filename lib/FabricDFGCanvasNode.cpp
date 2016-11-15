@@ -65,8 +65,10 @@ MStatus FabricDFGMayaNode::initialize(){
 
 MStatus FabricDFGMayaNode::compute(const MPlug& plug, MDataBlock& data){
 
-  FabricMayaProfilingEvent bracket("FabricDFGMayaNode::compute");
+  if(!_outputsDirtied)
+    return MS::kSuccess;
 
+  FabricMayaProfilingEvent bracket("FabricDFGMayaNode::compute");
   _outputsDirtied = false;
   
   MStatus stat;
@@ -142,5 +144,10 @@ MStatus FabricDFGMayaNode::connectionBroken(const MPlug &plug, const MPlug &othe
 MStatus FabricDFGMayaNode::preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode)
 {
   return FabricDFGBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
+}
+
+MStatus FabricDFGMayaNode::postEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType)
+{
+  return FabricDFGBaseInterface::postEvaluation(thisMObject(), context, evaluationNode, evalType);
 }
 #endif
