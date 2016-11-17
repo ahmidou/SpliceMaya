@@ -17,6 +17,7 @@
 #include <maya/MTransformationMatrix.h>
 
 MTypeId FabricConstraint::id(0x0011AE49);
+MObject FabricConstraint::parent;
 MObject FabricConstraint::input;
 MObject FabricConstraint::offset;
 MObject FabricConstraint::rotateOrder;
@@ -43,6 +44,13 @@ MStatus FabricConstraint::initialize(){
   MFnUnitAttribute uAttr;
 
   MObject x, y, z;
+
+  parent = mAttr.create("parent", "parent");
+  mAttr.setWritable(true);
+  mAttr.setReadable(false);
+  mAttr.setKeyable(true);
+  mAttr.setConnectable(true);
+  addAttribute(parent);
 
   input = mAttr.create("input", "input");
   mAttr.setWritable(true);
@@ -111,6 +119,9 @@ MStatus FabricConstraint::initialize(){
   nAttr.setReadable(true);
   addAttribute(scale);
 
+  attributeAffects(parent, translate);
+  attributeAffects(parent, rotate);
+  attributeAffects(parent, scale);
   attributeAffects(input, translate);
   attributeAffects(input, rotate);
   attributeAffects(input, scale);
@@ -124,9 +135,10 @@ MStatus FabricConstraint::initialize(){
 
 MStatus FabricConstraint::compute(const MPlug& plug, MDataBlock& data){
 
+  MMatrix parentValue = data.inputValue(parent).asMatrix().inverse();
   MMatrix inputValue = data.inputValue(input).asMatrix();
   MMatrix offsetValue = data.inputValue(offset).asMatrix();
-  MTransformationMatrix result = offsetValue * inputValue;
+  MTransformationMatrix result = offsetValue * inputValue * parentValue;
 
   if(plug.attribute() == translate)
   {

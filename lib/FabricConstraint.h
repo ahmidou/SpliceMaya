@@ -21,6 +21,7 @@ public:
   // node attributes
   static MTypeId id;
   static MObject mode;
+  static MObject parent;
   static MObject input;
   static MObject rotateOrder;
   static MObject offset;
