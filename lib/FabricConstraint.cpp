@@ -2,6 +2,8 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
+#include <ostream>
+
 #include "FabricConstraint.h"
 
 #include <maya/MGlobal.h>
