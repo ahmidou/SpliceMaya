@@ -689,7 +689,7 @@ void dfgPlugToPort_bool(
   FabricMayaProfilingEvent bracket("dfgPlugToPort_bool");
 
   uint64_t elementDataSize = sizeof(bool);
-  uint64_t currentNumElements = argRawDataSize / elementDataSize;
+  // uint64_t currentNumElements = argRawDataSize / elementDataSize;
 
   if(plug.isArray()){
     
@@ -698,7 +698,7 @@ void dfgPlugToPort_bool(
     pauseBracket.resume();
 
     unsigned int numElements = arrayHandle.elementCount();
-    std::vector<bool> values(numElements);
+    std::vector<uint8_t> values(numElements);
 
     for(unsigned int i = 0; i < numElements; ++i){
       arrayHandle.jumpToArrayElement(i);
@@ -706,7 +706,9 @@ void dfgPlugToPort_bool(
       values[i] = handle.asBool();
     }
 
-    setRawCB(getSetUD, &values[0], elementDataSize * numElements);
+    void const *dataVoidPtr = values.data();
+    size_t size = elementDataSize * numElements;
+    setRawCB( getSetUD, dataVoidPtr, size );
   }
   else{
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
@@ -733,7 +735,7 @@ void dfgPlugToPort_integer(
   FabricMayaProfilingEvent bracket("dfgPlugToPort_integer");
 
   uint64_t elementDataSize = sizeof(int32_t);
-  uint64_t currentNumElements = argRawDataSize / elementDataSize;
+  // uint64_t currentNumElements = argRawDataSize / elementDataSize;
 
   if(plug.isArray()){
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
@@ -2506,7 +2508,7 @@ void dfgPortToPlug_bool(
 
   const bool * values;
   getRawCB(getSetUD, (const void**)&values);
-  unsigned int offset = 0;
+  // unsigned int offset = 0;
 
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -2543,7 +2545,7 @@ void dfgPortToPlug_integer(
 
   const int32_t * values;
   getRawCB(getSetUD, (const void**)&values);
-  unsigned int offset = 0;
+  // unsigned int offset = 0;
 
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -2606,7 +2608,7 @@ void dfgPortToPlug_scalar(
   {
     getRawCB(getSetUD, (const void**)&floatValues);
   }
-  unsigned int offset = 0;
+  // unsigned int offset = 0;
 
   // FTL::CStrRef scalarUnit = binding.getExec().getExecPortMetadata(argName, "scalarUnit");
   if(plug.isArray()){
