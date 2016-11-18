@@ -286,6 +286,7 @@ void FabricDFGMayaDeformer::VisitMeshCallback(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
+  char const *argTypeCanonicalName,
   FEC_DFGPortType argOutsidePortType,
   uint64_t argRawDataSize,
   FEC_DFGBindingVisitArgs_GetCB getCB,
