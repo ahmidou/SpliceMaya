@@ -1,0 +1,14 @@
+global proc AEfabricConstraintTemplate(string $nodeName)
+{
+	editorTemplate -beginScrollLayout;
+
+		editorTemplate -beginLayout "File" -collapse false -beginNoOptimize;
+			editorTemplate -addControl	"rotateOrder";
+		editorTemplate -endLayout -endNoOptimize;
+	
+		AEdependNodeTemplate $nodeName;
+
+		editorTemplate -addExtraControls;
+
+	editorTemplate -endScrollLayout;
+}
