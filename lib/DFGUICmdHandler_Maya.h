@@ -158,7 +158,7 @@ protected:
     FabricCore::DFGBinding const &binding,
     QString execPath,
     FabricCore::DFGExec const &exec,
-    QString portName
+    QStringList portNames
     );
 
   virtual void dfgDoMoveNodes(

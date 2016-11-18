@@ -603,7 +603,7 @@ protected:
 
   struct Args : Parent::Args
   {
-    QString portName;
+    QStringList portNames;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );
