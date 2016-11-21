@@ -10,6 +10,7 @@
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
+#include <maya/MFnEnumAttribute.h>
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnUnitAttribute.h>
 #include <maya/MVector.h>
@@ -40,6 +41,7 @@ void* FabricConstraint::creator(){
 MStatus FabricConstraint::initialize(){
 
   MFnNumericAttribute nAttr;
+  MFnEnumAttribute eAttr;
   MFnMatrixAttribute mAttr;
   MFnUnitAttribute uAttr;
 
@@ -62,19 +64,25 @@ MStatus FabricConstraint::initialize(){
   offset = mAttr.create("offset", "offset");
   mAttr.setWritable(true);
   mAttr.setReadable(false);
-  mAttr.setKeyable(false);
   mAttr.setKeyable(true);
   mAttr.setConnectable(true);
   addAttribute(offset);
 
-  rotateOrder = nAttr.create("rotateOrder", "rotateOrder", MFnNumericData::kInt, 0);
-  nAttr.setWritable(true);
-  nAttr.setReadable(false);
-  nAttr.setKeyable(false);
-  nAttr.setKeyable(false);
-  nAttr.setConnectable(false);
-  nAttr.setMin(0);
-  nAttr.setMax(5);
+  rotateOrder = eAttr.create("rotateOrder", "rotateOrder", MTransformationMatrix::RotationOrder::kXYZ);
+  MStringArray aStr;
+  MIntArray    aInt;
+  aStr.append("XYZ");   aInt.append(MTransformationMatrix::RotationOrder::kXYZ);
+  aStr.append("YZX");   aInt.append(MTransformationMatrix::RotationOrder::kYZX);
+  aStr.append("ZXY");   aInt.append(MTransformationMatrix::RotationOrder::kZXY);
+  aStr.append("XZY");   aInt.append(MTransformationMatrix::RotationOrder::kXZY);
+  aStr.append("YXZ");   aInt.append(MTransformationMatrix::RotationOrder::kYXZ);
+  aStr.append("ZYX");   aInt.append(MTransformationMatrix::RotationOrder::kZYX);
+	for (unsigned int i=0;i<aStr.length();i++)
+		eAttr.addField(aStr[i].asChar(), (short)aInt[i]);
+  eAttr.setWritable(true);
+  eAttr.setReadable(false);
+  eAttr.setKeyable(false);
+  eAttr.setConnectable(false);
   addAttribute(rotateOrder);
 
   x = nAttr.create("translateX", "translateX", MFnNumericData::kDouble, 0.0);
