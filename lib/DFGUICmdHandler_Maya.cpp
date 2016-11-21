@@ -735,13 +735,13 @@ void DFGUICmdHandler_Maya::dfgDoRemovePort(
   FabricCore::DFGBinding const &binding,
   QString execPath,
   FabricCore::DFGExec const &exec,
-  QString portName
+  QStringList portNames
   )
 {
   std::stringstream cmd;
   cmd << FabricUI::DFG::DFGUICmd_RemovePort::CmdName();
   encodeExec( binding, execPath, exec, cmd );
-  encodeStringArg( FTL_STR("n"), portName, cmd );
+  encodeStringsArg( FTL_STR("n"), portNames, cmd );
   cmd << ';';
 
   MGlobal::executeCommand(

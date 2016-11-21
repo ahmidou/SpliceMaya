@@ -1178,9 +1178,16 @@ void FabricDFGRemovePortCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "portName" ) )
     throw ArgException( MS::kFailure, "-n (-portName) not provided." );
-  args.portName = QString::fromUtf8(
-    argParser.flagArgumentString( "portName", 0 ).asChar()
-    );
+  MString portNamesMString = argParser.flagArgumentString( "portName", 0 );
+  FTL::StrRef portNamesStr = portNamesMString.asChar();
+  while ( !portNamesStr.empty() )
+  {
+    FTL::StrRef::Split split = portNamesStr.trimSplit('|');
+    args.portNames.append(
+      QString::fromUtf8( split.first.data(), split.first.size() )
+      );
+    portNamesStr = split.second;
+  }
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGRemovePortCommand::executeDFGUICmd(
@@ -1195,7 +1202,7 @@ FabricUI::DFG::DFGUICmd *FabricDFGRemovePortCommand::executeDFGUICmd(
       args.binding,
       args.execPath,
       args.exec,
-      args.portName
+      args.portNames
       );
   cmd->doit();
   return cmd;
