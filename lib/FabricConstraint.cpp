@@ -68,15 +68,15 @@ MStatus FabricConstraint::initialize(){
   mAttr.setConnectable(true);
   addAttribute(offset);
 
-  rotateOrder = eAttr.create("rotateOrder", "rotateOrder", MTransformationMatrix::RotationOrder::kXYZ);
+  rotateOrder = eAttr.create("rotateOrder", "rotateOrder", MTransformationMatrix::kXYZ);
   MStringArray aStr;
   MIntArray    aInt;
-  aStr.append("XYZ");   aInt.append(MTransformationMatrix::RotationOrder::kXYZ);
-  aStr.append("YZX");   aInt.append(MTransformationMatrix::RotationOrder::kYZX);
-  aStr.append("ZXY");   aInt.append(MTransformationMatrix::RotationOrder::kZXY);
-  aStr.append("XZY");   aInt.append(MTransformationMatrix::RotationOrder::kXZY);
-  aStr.append("YXZ");   aInt.append(MTransformationMatrix::RotationOrder::kYXZ);
-  aStr.append("ZYX");   aInt.append(MTransformationMatrix::RotationOrder::kZYX);
+  aStr.append("XYZ");   aInt.append(MTransformationMatrix::kXYZ);
+  aStr.append("YZX");   aInt.append(MTransformationMatrix::kYZX);
+  aStr.append("ZXY");   aInt.append(MTransformationMatrix::kZXY);
+  aStr.append("XZY");   aInt.append(MTransformationMatrix::kXZY);
+  aStr.append("YXZ");   aInt.append(MTransformationMatrix::kYXZ);
+  aStr.append("ZYX");   aInt.append(MTransformationMatrix::kZYX);
   for (unsigned int i=0;i<aStr.length();i++)
     eAttr.addField(aStr[i].asChar(), (short)aInt[i]);
   eAttr.setWritable(true);
