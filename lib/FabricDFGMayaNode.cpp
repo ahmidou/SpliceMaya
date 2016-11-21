@@ -2,9 +2,9 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
-#include "FabricDFGCanvasNode.h"
-#include "FabricSpliceHelpers.h"
+#include "FabricDFGMayaNode.h"
 #include "FabricDFGProfiling.h"
+#include "FabricSpliceHelpers.h"
 
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>
@@ -141,13 +141,29 @@ MStatus FabricDFGMayaNode::connectionBroken(const MPlug &plug, const MPlug &othe
 }
 
 #if MAYA_API_VERSION >= 201600
-MStatus FabricDFGMayaNode::preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode)
+MStatus FabricDFGMayaNode::preEvaluation(
+  const MDGContext& context,
+  const MEvaluationNode& evaluationNode
+  )
 {
-  return FabricDFGBaseInterface::preEvaluation(thisMObject(), context, evaluationNode);
+  return FabricDFGBaseInterface::doPreEvaluation(
+    thisMObject(),
+    context,
+    evaluationNode
+    );
 }
 
-MStatus FabricDFGMayaNode::postEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType)
+MStatus FabricDFGMayaNode::postEvaluation(
+  const MDGContext& context,
+  const MEvaluationNode& evaluationNode,
+  PostEvaluationType evalType
+  )
 {
-  return FabricDFGBaseInterface::postEvaluation(thisMObject(), context, evaluationNode, evalType);
+  return FabricDFGBaseInterface::doPostEvaluation(
+    thisMObject(),
+    context,
+    evaluationNode,
+    evalType
+    );
 }
 #endif

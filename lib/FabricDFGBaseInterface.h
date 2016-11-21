@@ -136,8 +136,17 @@ protected:
   MStatus setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
 
 #if MAYA_API_VERSION >= 201600
-  virtual MStatus preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode);
-  virtual MStatus postEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode, MPxNode::PostEvaluationType evalType);
+  MStatus doPreEvaluation(
+    MObject thisMObject,
+    const MDGContext& context,
+    const MEvaluationNode& evaluationNode
+    );
+  MStatus doPostEvaluation(
+    MObject thisMObject,
+    const MDGContext& context,
+    const MEvaluationNode& evaluationNode,
+    MPxNode::PostEvaluationType evalType
+    );
 #endif
 
   MObject addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType = "", bool compoundChild = false, MStatus * stat = NULL);

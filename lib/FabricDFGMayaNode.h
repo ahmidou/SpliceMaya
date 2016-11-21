@@ -11,6 +11,8 @@
 #include <maya/MNodeMessage.h>
 #include <maya/MStringArray.h>
 
+#include <FTL/Config.h>
+
 class FabricDFGMayaNode: public MPxNode, public FabricDFGBaseInterface{
 
 public:
@@ -40,8 +42,15 @@ public:
 #if MAYA_API_VERSION >= 201600
   SchedulingType schedulingType() const
     { return kParallel; }
-  virtual MStatus preEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode);
-  virtual MStatus postEvaluation(const MDGContext& context, const MEvaluationNode& evaluationNode, PostEvaluationType evalType);
+  virtual MStatus preEvaluation(
+    const MDGContext& context,
+    const MEvaluationNode& evaluationNode
+    ) FTL_OVERRIDE;
+  virtual MStatus postEvaluation(
+    const MDGContext& context,
+    const MEvaluationNode& evaluationNode,
+    PostEvaluationType evalType
+    ) FTL_OVERRIDE;
 #endif
 
   // node attributes

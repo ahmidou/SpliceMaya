@@ -2300,7 +2300,11 @@ bool FabricDFGBaseInterface::getExecuteShared()
 }
 
 #if MAYA_API_VERSION >= 201600
-MStatus FabricDFGBaseInterface::preEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode)
+MStatus FabricDFGBaseInterface::doPreEvaluation(
+  MObject thisMObject,
+  const MDGContext& context,
+  const MEvaluationNode& evaluationNode
+  )
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::preEvaluation");
 
@@ -2319,7 +2323,12 @@ MStatus FabricDFGBaseInterface::preEvaluation(MObject thisMObject, const MDGCont
   return MS::kSuccess;
 }
 
-MStatus FabricDFGBaseInterface::postEvaluation(MObject thisMObject, const MDGContext& context, const MEvaluationNode& evaluationNode, MPxNode::PostEvaluationType evalType)
+MStatus FabricDFGBaseInterface::doPostEvaluation(
+  MObject thisMObject,
+  const MDGContext& context,
+  const MEvaluationNode& evaluationNode,
+  MPxNode::PostEvaluationType evalType
+  )
 {
   return MStatus::kSuccess;
 }
