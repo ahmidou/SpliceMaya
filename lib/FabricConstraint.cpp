@@ -77,8 +77,8 @@ MStatus FabricConstraint::initialize(){
   aStr.append("XZY");   aInt.append(MTransformationMatrix::RotationOrder::kXZY);
   aStr.append("YXZ");   aInt.append(MTransformationMatrix::RotationOrder::kYXZ);
   aStr.append("ZYX");   aInt.append(MTransformationMatrix::RotationOrder::kZYX);
-	for (unsigned int i=0;i<aStr.length();i++)
-		eAttr.addField(aStr[i].asChar(), (short)aInt[i]);
+  for (unsigned int i=0;i<aStr.length();i++)
+    eAttr.addField(aStr[i].asChar(), (short)aInt[i]);
   eAttr.setWritable(true);
   eAttr.setReadable(false);
   eAttr.setKeyable(false);
