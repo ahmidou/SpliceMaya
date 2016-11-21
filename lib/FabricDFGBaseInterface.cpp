@@ -2306,7 +2306,7 @@ MStatus FabricDFGBaseInterface::doPreEvaluation(
   const MEvaluationNode& evaluationNode
   )
 {
-  FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::preEvaluation");
+  FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::doPreEvaluation");
 
   MStatus status;
   if(!context.isNormal()) 
