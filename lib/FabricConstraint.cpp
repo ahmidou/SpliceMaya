@@ -157,8 +157,8 @@ MStatus FabricConstraint::compute(const MPlug& plug, MDataBlock& data){
   }
   else if(plug.attribute() == rotate)
   {
-    int rotateOrderValue = data.inputValue(rotateOrder).asInt();
-    result.reorderRotation((MTransformationMatrix::RotationOrder)(rotateOrderValue+1));
+    int rotateOrderValue = data.inputValue(rotateOrder).asShort();
+    result.reorderRotation((MTransformationMatrix::RotationOrder)rotateOrderValue);
 
     double value[3];
     MTransformationMatrix::RotationOrder ro;
