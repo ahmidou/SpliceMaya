@@ -180,7 +180,6 @@ protected:
   FabricServices::ASTWrapper::KLASTManager * m_manager;
   FabricCore::DFGBinding m_binding;
   FabricCore::RTVal m_evalContext;
-  std::map<std::string, std::string> _argTypes;
   DFGUICmdHandler_Maya m_cmdHandler;
 
 private:

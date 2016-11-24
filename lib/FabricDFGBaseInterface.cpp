@@ -346,15 +346,23 @@ void FabricDFGBaseInterface::generateAttributeLookups()
   MFnDependencyNode thisNode(getThisMObject());
   FabricCore::DFGExec exec = getDFGBinding().getExec();
 
-  _attributePlugs.setLength(thisNode.attributeCount());
+  // FE-7682 Reducing the lenght of the plugArray makes Maya crashes 
+  // because it invokes the destruction of the plug whereas the plug has already been deleted before.
+  // http://download.autodesk.com/us/maya/2011help/api/class_m_plug_array.html#97f9b95167d95e3512ab82b559263ba3
+  // _attributePlugs.setLength(thisNode.attributeCount());
   for(unsigned int i = 0; i < thisNode.attributeCount(); ++i)
   {
     MFnAttribute attrib(thisNode.attribute(i));
+
     while(i >= _isAttributeIndexDirty.size())
     {
       _isAttributeIndexDirty.push_back(true); 
     }
-    _attributePlugs[i] = MPlug(getThisMObject(), thisNode.attribute(i));
+
+    if( i < _attributePlugs.length() )
+      _attributePlugs.set(MPlug(getThisMObject(), thisNode.attribute(i)), i);
+    else
+      _attributePlugs.insert(MPlug(getThisMObject(), thisNode.attribute(i)), i);
 
     MString attrName = attrib.name();
     FTL::StrRef attrNameRef = attrName.asChar();
@@ -368,6 +376,9 @@ void FabricDFGBaseInterface::generateAttributeLookups()
 
     _attributeNameToIndex.insert(attrib.name().asChar(), i);
   }
+
+  for(unsigned int i = thisNode.attributeCount(); i < _attributePlugs.length(); ++i)
+    _attributePlugs.remove(i);
 
   _argIndexToAttributeIndex.resize(exec.getExecPortCount());
   _plugToArgFuncs.resize(exec.getExecPortCount());
@@ -2001,20 +2012,12 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     if(!plug.isNull())
     {
       return;
-      // std::map<std::string, std::string>::iterator it = _argTypes.find(nameStr);
-      // if(it != _argTypes.end())
-      // {
-      //   if(it->second == newTypeStr)
-      //     continue;
-      // }
       // removeMayaAttribute(nameStr.c_str());
-      // _argTypes.erase(it);
     }
 
     FabricCore::DFGExec exec = getDFGExec();
     FabricCore::DFGPortType portType = exec.getExecPortType(nameStr.c_str());
     addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
-    _argTypes.insert(std::pair<std::string, std::string>(nameStr, newTypeStr));
   }
   else if( descStr == FTL_STR("argRemoved") )
   {
