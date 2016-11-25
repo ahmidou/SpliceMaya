@@ -139,6 +139,15 @@ void FabricSpliceToolContext::getClassName(MString & name) const {
 
 void FabricSpliceToolContext::toolOnSetup(MEvent &) {
   M3dView view = M3dView::active3dView();
+  setCursor(MCursor::editCursor);
+  setHelpString(helpString);
+  setTitleString("FabricSplice Tool");
+
+  MString moduleFolder = getModuleFolder();
+  MString imagePath = moduleFolder + "/ui/FE_tool.xpm";
+  setImage(imagePath, kImage1);
+  setImage(imagePath, kImage2);
+  setImage(imagePath, kImage3);
 
   const FabricCore::Client *client = 0;
   FECS_DGGraph_getClient(&client);
@@ -177,15 +186,7 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
   view.widget()->installEventFilter(&sEventFilterObject);
   view.widget()->setFocus();
 
-  setCursor(MCursor::editCursor);
-  setHelpString(helpString);
-  setTitleString("FabricSplice Tool");
-
-  MString moduleFolder = getModuleFolder();
-  MString imagePath = moduleFolder + "/ui/FE_tool.xpm";
-  setImage(imagePath, kImage1);
-  setImage(imagePath, kImage2);
-  setImage(imagePath, kImage3);
+  
 
   view.refresh(true, true);
 }
@@ -258,7 +259,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
   FabricCore::RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
   FabricCore::RTVal klevent = QtToKLEvent(event, *client, viewport, "Maya" );
    
-  if(klevent.isValid())
+  if(klevent.isValid() && !klevent.isNullObject())
   {
     //////////////////////////
     // Invoke the event...
