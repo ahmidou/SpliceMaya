@@ -14,12 +14,32 @@
 #include "FabricSpliceHelpers.h"
 
 #include <FabricUI/Util/LoadFabricStyleSheet.h>
-
+#include <maya/MEventMessage.h>
 #include <maya/MGlobal.h>
 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
 FabricCore::Client FabricDFGWidget::s_coreClient;
+
+
+inline void OnSelectCanvasNodeInDCC(void *client) {
+  // When selecting objects in the Outliner, check if there are canvasNodes
+  // If so, update the DFGView with the content of the fist node selected.
+
+  MSelectionList sList;
+  MGlobal::getActiveSelectionList(sList);
+
+  MStringArray array;
+  sList.getSelectionStrings(array);
+  for (unsigned int  i = 0; i < array.length(); ++i) 
+  {
+    if(array[i].substring(0, 9) == "canvasNode")
+    {
+      MGlobal::executeCommandOnIdle(MString("fabricDFG -a changeNode -node ") + array[i], false /* displayEnabled */);
+      break;
+    }
+  } 
+}
 
 FabricDFGWidget::FabricDFGWidget(QWidget * parent)
   : FabricDFGWidgetBaseClass(parent)
@@ -34,10 +54,13 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
   QObject::connect(
     this, SIGNAL( portEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, FTL::JSONObjectEnc<>*)),
     this, SLOT( onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, FTL::JSONObjectEnc<>*)) );
+
+  m_onSelectionChangedCallbackId = MEventMessage::addEventCallback("SelectionChanged", &OnSelectCanvasNodeInDCC);
 }
 
 FabricDFGWidget::~FabricDFGWidget()
 {
+  MMessage::removeCallback(m_onSelectionChangedCallbackId);
   s_widget = NULL;
 }
 
@@ -154,7 +177,6 @@ void FabricDFGWidget::onImportGraphInDCC()
   {
     MFnDependencyNode mayaNode(interf->getThisMObject());
     MGlobal::executeCommand(MString("dfgImportJSON -m ") + mayaNode.name() + MString(" -f \"\""), true /* displayEnabled */, false /* undoEnabled */);
-
     // refresh Canvas.
     MGlobal::executeCommandOnIdle(MString("fabricDFG -a showUI -node ") + mayaNode.name(), false /* displayEnabled */);
   }

@@ -98,6 +98,7 @@ protected:
   void setCurrentUINodeName(const char * node);
 
 private:
+  MCallbackId m_onSelectionChangedCallbackId;
 
   DFGUICmdHandler_Maya m_cmdHandler;
   FabricCore::DFGHost m_dfgHost;
