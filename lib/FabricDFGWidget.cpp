@@ -22,18 +22,20 @@ FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
 FabricCore::Client FabricDFGWidget::s_coreClient;
 
 
-inline void OnSelectCanvasNodeInDCC(void *client) {
+void FabricDFGWidget::OnSelectCanvasNodeInDCC(void *client) {
   // When selecting objects in the Outliner, check if there are canvasNodes
   // If so, update the DFGView with the content of the fist node selected.
 
   MSelectionList sList;
   MGlobal::getActiveSelectionList(sList);
 
+  FabricDFGBaseInterface *baseInterface = s_widget->getBaseInterface();
   MStringArray array;
   sList.getSelectionStrings(array);
   for (unsigned int  i = 0; i < array.length(); ++i) 
   {
-    if(array[i].substring(0, 9) == "canvasNode")
+    std::string str = array[i].asChar();
+    if(baseInterface->getInstanceByName(str))
     {
       MGlobal::executeCommandOnIdle(MString("fabricDFG -a changeNode -node ") + array[i], false /* displayEnabled */);
       break;
@@ -55,12 +57,14 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
     this, SIGNAL( portEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, FTL::JSONObjectEnc<>*)),
     this, SLOT( onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog *, FTL::JSONObjectEnc<>*)) );
 
-  m_onSelectionChangedCallbackId = MEventMessage::addEventCallback("SelectionChanged", &OnSelectCanvasNodeInDCC);
+  // For the moment, don't allow the update the the canvas graph on selection
+  // Must be completed in FE-7690
+  //m_onSelectionChangedCallbackId = MEventMessage::addEventCallback("SelectionChanged", &FabricDFGWidget::OnSelectCanvasNodeInDCC);
 }
 
 FabricDFGWidget::~FabricDFGWidget()
 {
-  MMessage::removeCallback(m_onSelectionChangedCallbackId);
+  //MMessage::removeCallback(m_onSelectionChangedCallbackId);
   s_widget = NULL;
 }
 

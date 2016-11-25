@@ -82,6 +82,8 @@ public:
     return FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
   }
 
+  static void OnSelectCanvasNodeInDCC(void *client);
+
 public slots:
   virtual void onUndo();
   virtual void onRedo();
