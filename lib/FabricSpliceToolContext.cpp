@@ -256,6 +256,12 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     return false;
   }
 
+  if(!FabricSpliceRenderCallback::sDrawContext.isValid())
+  {
+    mayaLogFunc("InlineDrawing not constructed yet. A DrawingHandle Node must be created before the manipulation tool can be activated.");
+    return false;
+  }
+
   FabricCore::RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
   FabricCore::RTVal klevent = QtToKLEvent(event, *client, viewport, "Maya" );
    
