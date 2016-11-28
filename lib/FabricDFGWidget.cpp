@@ -181,6 +181,11 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
 
   DFG::DFGEditPortDialog * editPortDialog = (DFG::DFGEditPortDialog *)dialog;
   QString title = editPortDialog->title();
+
+  // FE-6747 : Don't edit the port if it's been set already.
+  if(!editPortDialog->dataType().isEmpty())
+    editPortDialog->setDataTypeReadOnly(true);
+
   bool addAttribute = true;
   bool native = false;
   bool opaque = false;
