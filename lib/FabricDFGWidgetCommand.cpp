@@ -65,7 +65,30 @@ MStatus FabricDFGWidgetCommand::doIt(const MArgList &args)
     MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
     if (commandStatus != MStatus::kSuccess)
       MGlobal::displayError("Failed to load FabricSpliceMenu.mel. Adjust your MAYA_SCRIPT_PATH!");
+
+    // Change the title of the window
+    cmd = "source \"FabricDFGUI.mel\"; setDFGWidgetLabel(\"";
+    cmd += argData.flagArgumentString("node", 0).asChar();
+    cmd += "\");";
+    commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
+    if (commandStatus != MStatus::kSuccess)
+      MGlobal::displayError("Failed to load FabricSpliceMenu.mel. Adjust your MAYA_SCRIPT_PATH!");
   }
+
+  else if(action == "changeNode")
+  {
+    // inform the UI of the next node to edit
+    FabricDFGWidget::SetCurrentUINodeName(argData.flagArgumentString("node", 0).asChar());
+ 
+    // Change the title of the window
+    MString cmd = "source \"FabricDFGUI.mel\"; setDFGWidgetLabel(\"";
+    cmd += argData.flagArgumentString("node", 0).asChar();
+    cmd += "\");";
+    MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
+    if (commandStatus != MStatus::kSuccess)
+      MGlobal::displayError("Failed to load FabricSpliceMenu.mel. Adjust your MAYA_SCRIPT_PATH!");
+  }
+
   else
   {
     mayaLogErrorFunc("fabricDFG: Action '" + action + "' not supported.");

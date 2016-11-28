@@ -41,3 +41,11 @@ global proc deleteDFGWidget()
     deleteUI FabricDFGUIPane;
   }
 }
+
+global proc setDFGWidgetLabel(string $label)
+{
+  if (`window -exists FabricDFGUIPane` == 1)
+  {
+    dockControl -e -label $label FabricDFGUIPane;
+  }
+}
