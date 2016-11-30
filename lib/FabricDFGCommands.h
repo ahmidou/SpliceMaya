@@ -51,6 +51,17 @@ public:
   virtual bool isUndoable() const { return false; }
 };
 
+class FabricDFGPackageExtensionsCommand: public MPxCommand
+{
+public:
+
+  virtual const char * getName() { return "FabricCanvasPackageExtensions"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+  virtual bool isUndoable() const { return false; }
+};
+
 class FabricDFGGetBindingIDCommand: public MPxCommand
 {
 public:

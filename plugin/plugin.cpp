@@ -31,6 +31,7 @@
 #include "FabricDFGCommands.h"
 #include "FabricDFGMayaDeformer.h"
 #include "FabricDFGMayaNode.h"
+#include "FabricExtensionPackageNode.h"
 #include "FabricDFGWidget.h"
 #include "FabricDFGWidgetCommand.h"
 #include "FabricSpliceHelpers.h"
@@ -53,6 +54,7 @@ const MTypeId gFirstValidNodeID(0x0011AE40);
 // FabricDFGMayaNode          0x0011AE47  // canvasNode
 // FabricDFGMayaDeformer      0x0011AE48  // canvasDeformer
 // FabricConstraint           0x0011AE49  // constraintNode
+// FabricExtensionPackageNode 0x0011AE50  // extensionPackageNode
 const MTypeId gLastValidNodeID(0x0011AF3F);
 
 MCallbackId gOnSceneNewCallbackId;
@@ -261,11 +263,13 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
   plugin.registerNode("canvasDeformer", FabricDFGMayaDeformer::id, FabricDFGMayaDeformer::creator, FabricDFGMayaDeformer::initialize, MPxNode::kDeformerNode);
   plugin.registerNode("fabricConstraint", FabricConstraint::id, FabricConstraint::creator, FabricConstraint::initialize);
+  plugin.registerNode("fabricExtensionPackage", FabricExtensionPackageNode::id, FabricExtensionPackageNode::creator, FabricExtensionPackageNode::initialize);
 
-  plugin.registerCommand("FabricCanvasGetFabricVersion",  FabricDFGGetFabricVersionCommand::creator, FabricDFGGetFabricVersionCommand ::newSyntax);
-  plugin.registerCommand("FabricCanvasGetContextID",      FabricDFGGetContextIDCommand    ::creator, FabricDFGGetContextIDCommand     ::newSyntax);
-  plugin.registerCommand("FabricCanvasGetBindingID",      FabricDFGGetBindingIDCommand    ::creator, FabricDFGGetBindingIDCommand     ::newSyntax);
-  plugin.registerCommand("FabricCanvasDestroyClient",     FabricDFGDestroyClientCommand   ::creator, FabricDFGDestroyClientCommand    ::newSyntax);
+  plugin.registerCommand("FabricCanvasGetFabricVersion",  FabricDFGGetFabricVersionCommand  ::creator, FabricDFGGetFabricVersionCommand  ::newSyntax);
+  plugin.registerCommand("FabricCanvasGetContextID",      FabricDFGGetContextIDCommand      ::creator, FabricDFGGetContextIDCommand      ::newSyntax);
+  plugin.registerCommand("FabricCanvasGetBindingID",      FabricDFGGetBindingIDCommand      ::creator, FabricDFGGetBindingIDCommand      ::newSyntax);
+  plugin.registerCommand("FabricCanvasDestroyClient",     FabricDFGDestroyClientCommand     ::creator, FabricDFGDestroyClientCommand     ::newSyntax);
+  plugin.registerCommand("FabricCanvasPackageExtensions", FabricDFGPackageExtensionsCommand ::creator, FabricDFGPackageExtensionsCommand ::newSyntax);
 
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes         );
   MAYA_REGISTER_DFGUICMD( plugin, Connect             );
@@ -407,6 +411,13 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterNode(FabricDFGMayaNode::id);
   plugin.deregisterNode(FabricDFGMayaDeformer::id);
   plugin.deregisterNode(FabricConstraint::id);
+  plugin.deregisterNode(FabricExtensionPackageNode::id);
+
+  plugin.deregisterCommand("FabricCanvasGetFabricVersion");
+  plugin.deregisterCommand("FabricCanvasGetContextID");
+  plugin.deregisterCommand("FabricCanvasGetBindingID");
+  plugin.deregisterCommand("FabricCanvasDestroyClient");
+  plugin.deregisterCommand("FabricCanvasPackageExtensions");
 
   MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes         );
   MAYA_DEREGISTER_DFGUICMD( plugin, Connect             );
