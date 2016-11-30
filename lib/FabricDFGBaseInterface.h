@@ -19,6 +19,9 @@
 #include <maya/MNodeMessage.h>
 #include <maya/MStringArray.h>
 #include <maya/MFnCompoundAttribute.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MFnTypedAttribute.h>
+#include <maya/MFnMatrixAttribute.h>
 
 #include <FabricSplice.h>
 #include <Commands/CommandStack.h>
@@ -149,6 +152,7 @@ protected:
     );
 #endif
 
+ 
   MObject addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType = "", bool compoundChild = false, MStatus * stat = NULL);
   void removeMayaAttribute(MString portName, MStatus * stat = NULL);
 
@@ -180,6 +184,7 @@ protected:
   FabricServices::ASTWrapper::KLASTManager * m_manager;
   FabricCore::DFGBinding m_binding;
   FabricCore::RTVal m_evalContext;
+  std::map<std::string, std::string> _argTypes;
   DFGUICmdHandler_Maya m_cmdHandler;
 
 private:
@@ -272,18 +277,4 @@ public:
   // returns true if the binding's executable has an input port called portName.
   bool HasInputPort(const char *portName);
   bool HasInputPort(const std::string &portName);
-
-  // gets the value of an argument (= a "port").
-  // params:  binding     ref at binding.
-  //          argName     name of the argument (= the "port").
-  //          out         will contain the result.
-  //          strict      true: the type must match perfectly, false: the type must 'kind of' match and will be converted if necessary (and if possible).
-  // returns: 0 on success, -1 wrong port type, -2 invalid port, -3 unknown, -4 Fabric exception.
-  static int GetArgValueBoolean(FabricCore::DFGBinding &binding, char const *argName, bool                 &out, bool strict = false);
-  static int GetArgValueInteger(FabricCore::DFGBinding &binding, char const *argName, int                  &out, bool strict = false);
-  static int GetArgValueFloat  (FabricCore::DFGBinding &binding, char const *argName, double               &out, bool strict = false);
-  static int GetArgValueString (FabricCore::DFGBinding &binding, char const *argName, std::string          &out, bool strict = false);
-  static int GetArgValueVec3   (FabricCore::DFGBinding &binding, char const *argName, std::vector <double> &out, bool strict = false);
-  static int GetArgValueColor  (FabricCore::DFGBinding &binding, char const *argName, std::vector <double> &out, bool strict = false);
-  static int GetArgValueMat44  (FabricCore::DFGBinding &binding, char const *argName, std::vector <double> &out, bool strict = false);
 };
