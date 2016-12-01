@@ -43,8 +43,11 @@ std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
 unsigned int FabricDFGBaseInterface::s_maxID = 1;
 bool FabricDFGBaseInterface::s_use_evalContext = true; // [FE-6287]
 
-FabricDFGBaseInterface::FabricDFGBaseInterface()
+FabricDFGBaseInterface::FabricDFGBaseInterface(
+  CreateDFGBindingFunc createDFGBinding
+  )
   : m_executeSharedDirty( true )
+  , m_createDFGBinding( createDFGBinding )
 {
 
   MStatus stat;
@@ -116,7 +119,7 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   m_client = FabricDFGWidget::GetCoreClient();
   FabricCore::DFGHost dfgHost = m_client.getDFGHost();
 
-  m_binding = dfgHost.createBindingToNewGraph();
+  m_binding = m_createDFGBinding( dfgHost );
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
   FabricCore::DFGExec exec = m_binding.getExec();
 

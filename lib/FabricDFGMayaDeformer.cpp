@@ -12,14 +12,15 @@
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 
-MTypeId FabricDFGMayaDeformer::id(0x0011AE48);
 MObject FabricDFGMayaDeformer::saveData;
 MObject FabricDFGMayaDeformer::evalID;
 MObject FabricDFGMayaDeformer::refFilePath;
 MObject FabricDFGMayaDeformer::enableEvalContext;
 
-FabricDFGMayaDeformer::FabricDFGMayaDeformer()
-: FabricDFGBaseInterface()
+FabricDFGMayaDeformer::FabricDFGMayaDeformer(
+  FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding
+  )
+  : FabricDFGBaseInterface( createDFGBinding )
 {
   mGeometryInitialized = 0;
 }
@@ -32,11 +33,6 @@ void FabricDFGMayaDeformer::postConstructor(){
 
 FabricDFGMayaDeformer::~FabricDFGMayaDeformer()
 {
-}
-
-void* FabricDFGMayaDeformer::creator()
-{
-	return new FabricDFGMayaDeformer();
 }
 
 MStatus FabricDFGMayaDeformer::initialize(){

@@ -50,7 +50,9 @@ class FabricDFGBaseInterface {
 
 public:
 
-  FabricDFGBaseInterface();
+  typedef FabricCore::DFGBinding (*CreateDFGBindingFunc)( FabricCore::DFGHost &dfgHost );
+
+  FabricDFGBaseInterface( CreateDFGBindingFunc createDFGBinding );
   virtual ~FabricDFGBaseInterface();
   void constructBaseInterface();
 
@@ -106,6 +108,7 @@ public:
   virtual MString getPortName(const MString &plugName);
 
 protected:
+
   void invalidatePlug(MPlug & plug);
   virtual void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
   virtual bool useEvalContext();
@@ -262,6 +265,7 @@ private:
   bool m_executeShared;
   MString m_lastJson;
   bool m_isStoringJson;
+  CreateDFGBindingFunc m_createDFGBinding;
 
 // [FE-6287]
 public:
