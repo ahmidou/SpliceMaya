@@ -79,5 +79,11 @@ class AEcanvasBaseTemplate(ui.AETemplate):
 class AEcanvasNodeTemplate(AEcanvasBaseTemplate):
   _nodeType = 'canvasNode'
 
+class AEcanvasFuncNodeTemplate(AEcanvasBaseTemplate):
+  _nodeType = 'canvasFuncNode'
+
 class AEcanvasDeformerTemplate(AEcanvasBaseTemplate):
   _nodeType = 'canvasDeformer'
+
+class AEcanvasFuncDeformerTemplate(AEcanvasBaseTemplate):
+  _nodeType = 'canvasFuncDeformer'

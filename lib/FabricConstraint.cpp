@@ -71,12 +71,12 @@ MStatus FabricConstraint::initialize(){
   rotateOrder = eAttr.create("rotateOrder", "rotateOrder", MTransformationMatrix::kXYZ);
   MStringArray aStr;
   MIntArray    aInt;
-  aStr.append("XYZ");   aInt.append(MTransformationMatrix::kXYZ);
-  aStr.append("YZX");   aInt.append(MTransformationMatrix::kYZX);
-  aStr.append("ZXY");   aInt.append(MTransformationMatrix::kZXY);
-  aStr.append("XZY");   aInt.append(MTransformationMatrix::kXZY);
-  aStr.append("YXZ");   aInt.append(MTransformationMatrix::kYXZ);
-  aStr.append("ZYX");   aInt.append(MTransformationMatrix::kZYX);
+  aStr.append("XYZ");   aInt.append(MTransformationMatrix::kXYZ - 1);
+  aStr.append("YZX");   aInt.append(MTransformationMatrix::kYZX - 1);
+  aStr.append("ZXY");   aInt.append(MTransformationMatrix::kZXY - 1);
+  aStr.append("XZY");   aInt.append(MTransformationMatrix::kXZY - 1);
+  aStr.append("YXZ");   aInt.append(MTransformationMatrix::kYXZ - 1);
+  aStr.append("ZYX");   aInt.append(MTransformationMatrix::kZYX - 1);
   for (unsigned int i=0;i<aStr.length();i++)
     eAttr.addField(aStr[i].asChar(), (short)aInt[i]);
   eAttr.setWritable(true);
@@ -158,7 +158,7 @@ MStatus FabricConstraint::compute(const MPlug& plug, MDataBlock& data){
   else if(plug.attribute() == rotate)
   {
     int rotateOrderValue = data.inputValue(rotateOrder).asShort();
-    result.reorderRotation((MTransformationMatrix::RotationOrder)rotateOrderValue);
+    result.reorderRotation((MTransformationMatrix::RotationOrder)(rotateOrderValue+1));
 
     double value[3];
     MTransformationMatrix::RotationOrder ro;

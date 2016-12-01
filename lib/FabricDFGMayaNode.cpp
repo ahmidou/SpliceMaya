@@ -11,14 +11,15 @@
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
 
-MTypeId FabricDFGMayaNode::id(0x0011AE47);
 MObject FabricDFGMayaNode::saveData;
 MObject FabricDFGMayaNode::evalID;
 MObject FabricDFGMayaNode::refFilePath;
 MObject FabricDFGMayaNode::enableEvalContext;
 
-FabricDFGMayaNode::FabricDFGMayaNode()
-: FabricDFGBaseInterface()
+FabricDFGMayaNode::FabricDFGMayaNode(
+  FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding
+  )
+  : FabricDFGBaseInterface( createDFGBinding )
 {
 }
 
@@ -30,10 +31,6 @@ void FabricDFGMayaNode::postConstructor(){
 
 FabricDFGMayaNode::~FabricDFGMayaNode()
 {
-}
-
-void* FabricDFGMayaNode::creator(){
-	return new FabricDFGMayaNode();
 }
 
 MStatus FabricDFGMayaNode::initialize(){
