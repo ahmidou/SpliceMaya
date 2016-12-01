@@ -1690,7 +1690,6 @@ inline bool AddGeometryAttributes(
     return false;
   }
 
-  MFnMatrixAttribute::Type matType = MFnMatrixAttribute::kFloat;
   uint32_t portIndex = binding.getExec().getExecPortIndex(portName.asChar());
  
   if(binding.getExec().isExecPortResolvedType(portIndex, "PolygonMesh") ||
