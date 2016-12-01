@@ -2,7 +2,9 @@
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
 
+#include "Foundation.h"
 #include "FabricExtensionPackageNode.h"
+#include "FabricSpliceHelpers.h"
 
 #include <maya/MGlobal.h>
 #include <maya/MSelectionList.h>
@@ -79,4 +81,53 @@ FabricExtensionPackageNode * FabricExtensionPackageNode::getInstanceByIndex(unsi
 unsigned int FabricExtensionPackageNode::getNumInstances()
 {
   return (unsigned int)_instances.size();
+}
+
+MStringArray FabricExtensionPackageNode::getExtensionNames() const
+{
+  MString joined = MPlug(thisMObject(), extensionNames).asString();
+  MStringArray result;
+  joined.split(',', result);
+  return result;
+}
+
+void FabricExtensionPackageNode::setExtensionNames(MStringArray values) const
+{
+  MString joined;
+  for(unsigned int i=0;i<values.length();i++)
+  {
+    if(i > 0)
+      joined += ",";
+    joined += values[i];
+  }
+  MPlug(thisMObject(), extensionNames).setString(joined);
+}
+
+MStatus FabricExtensionPackageNode::loadPackage(FabricCore::Client client)
+{
+  if(!client.isValid())
+    return MStatus::kInvalidParameter;
+
+  try
+  {
+    MString content = getExtensionPackage();
+    FabricCore::ImportKLExtensions(client, content.asChar());
+
+    MStringArray names = getExtensionNames();
+    for(unsigned int i=0;i<names.length();i++)
+    {
+      MString name = names[i] + getExtensionSuffix();
+      client.loadExtension(name.asChar(), "", false);
+    }
+  }
+  catch(FabricCore::Exception e)
+  {
+    MString nodeName = MFnDependencyNode(thisMObject()).name();
+
+    // we are not using an error here
+    mayaLogFunc(nodeName + ": "+e.getDesc_cstr());
+    return mayaErrorOccured();
+  }
+
+  return MStatus::kSuccess;
 }

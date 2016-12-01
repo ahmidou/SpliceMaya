@@ -132,6 +132,29 @@ void onSceneLoad(void *userData){
   MStatus status = MS::kSuccess;
   mayaSetLastLoadedScene(MFileIO::currentFile());
 
+  // visit all existing extension package nodes and check if this has already been packaged.
+  // check for all names with the same suffix.
+  if(FabricExtensionPackageNode::getNumInstances() > 0)
+  {
+    // since we need to reload the packages - we need to destoy the client
+    // maybe this can be optimized
+    FabricSplice::DestroyClient();
+
+    try
+    {
+      FabricCore::Client client = FabricSplice::ConstructClient();
+      for(unsigned int i=0;i<FabricExtensionPackageNode::getNumInstances();i++)
+      {
+        FabricExtensionPackageNode * existingPackage = FabricExtensionPackageNode::getInstanceByIndex(i);
+        existingPackage->loadPackage(client);
+      }
+    }
+    catch(FabricCore::Exception e)
+    {
+      mayaLogErrorFunc(e.getDesc_cstr());
+    }
+  }
+
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
   // each node will only restore once, so it's safe for import too

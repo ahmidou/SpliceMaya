@@ -8,6 +8,7 @@
 #include <maya/MTypeId.h> 
 
 #include <vector>
+#include <FabricCore.h>
 
 class FabricExtensionPackageNode: public MPxNode {
 
@@ -22,12 +23,14 @@ public:
   static FabricExtensionPackageNode * getInstanceByIndex(unsigned int index);
   static unsigned int getNumInstances();
 
-  MString getExtensionNames() const { return MPlug(thisMObject(), extensionNames).asString(); }
+  MStringArray getExtensionNames() const;
   MString getExtensionSuffix() const { return MPlug(thisMObject(), extensionSuffix).asString(); }
   MString getExtensionPackage() const { return MPlug(thisMObject(), extensionPackage).asString(); }
-  void setExtensionNames(MString value) const { MPlug(thisMObject(), extensionNames).setString(value); }
+  void setExtensionNames(MStringArray values) const;
   void setExtensionSuffix(MString value) const { MPlug(thisMObject(), extensionSuffix).setString(value); }
   void setExtensionPackage(MString value) const { MPlug(thisMObject(), extensionPackage).setString(value); }
+
+  MStatus loadPackage(FabricCore::Client client);
 
   // node attributes
   static MTypeId id;

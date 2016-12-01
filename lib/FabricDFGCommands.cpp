@@ -6,6 +6,7 @@
 
 #include "Foundation.h"
 #include "FabricDFGCommands.h"
+#include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricExtensionPackageNode.h"
 
@@ -180,19 +181,6 @@ MStatus FabricDFGPackageExtensionsCommand::doIt(const MArgList &args)
     return mayaErrorOccured();
   }
 
-  // todo: visit all existing extension package nodes and check if this has already been packaged.
-  // check for all names with the same suffix.
-
-  MString extensionNamesClean;
-  extensionNamesCStr.resize(extensionNamesSTL.size());
-  for(size_t i=0;i<extensionNamesSTL.size();i++)
-  {
-    if(i > 0)
-      extensionNamesClean += L",";
-    extensionNamesClean += extensionNamesSTL[i].c_str();
-    extensionNamesCStr[i] = extensionNamesSTL[i].c_str();
-  }
-
   MString suffix;
   if(argData.isFlagSet("suffix"))
     suffix = argData.flagArgumentString("suffix", 0);
@@ -201,10 +189,48 @@ MStatus FabricDFGPackageExtensionsCommand::doIt(const MArgList &args)
   if(argData.isFlagSet("autoNamespace"))
     flags = FabricCore::ExportKLExtensions_Flag_RequireAutoNamespace;
 
+  MStringArray extensionNamesClean;
+  extensionNamesCStr.resize(extensionNamesSTL.size());
+  std::vector< std::string > extensionNamesNewSTL(extensionNamesSTL.size());
+  std::vector< char const * > extensionNamesNewCStr(extensionNamesSTL.size());
+  for(size_t i=0;i<extensionNamesSTL.size();i++)
+  {
+    extensionNamesClean.append(extensionNamesSTL[i].c_str());
+    extensionNamesCStr[i] = extensionNamesSTL[i].c_str();
+    extensionNamesNewSTL[i] = extensionNamesSTL[i] + suffix.asChar();
+    extensionNamesNewCStr[i] = extensionNamesNewSTL[i].c_str();
+  }
+
+  // visit all existing extension package nodes and check if this has already been packaged.
+  // check for all names with the same suffix.
+  for(unsigned int i=0;i<FabricExtensionPackageNode::getNumInstances();i++)
+  {
+    FabricExtensionPackageNode * existingPackage = FabricExtensionPackageNode::getInstanceByIndex(i);
+    if(existingPackage->getExtensionSuffix() != suffix)
+      continue;
+    MStringArray existingExtensionNames = existingPackage->getExtensionNames();
+    for(unsigned int j=0;j<extensionNamesClean.length();j++)
+    {
+      for(unsigned int k=0;k<existingExtensionNames.length();k++)
+      {
+        if(extensionNamesClean[j] == existingExtensionNames[k])
+        {
+          MFnDependencyNode existingNode(existingPackage->thisMObject());
+          mayaLogErrorFunc(MString(getName()) + ": Extension "+extensionNamesClean[j]+" is already packaged in node "+existingNode.name());
+          return mayaErrorOccured();
+        }
+      }
+    }
+  }
+
   MString packageContent;
+  FabricCore::Client client;
   try
   {
-    FabricCore::Client client = FabricSplice::ConstructClient();
+    client = FabricSplice::ConstructClient();
+
+    for(size_t i=0;i<extensionNamesCStr.size();i++)
+      client.loadExtension(extensionNamesCStr[i], "", false);
 
     FabricCore::String packageFabricStr = FabricCore::ExportKLExtensions(
       client,
@@ -239,8 +265,39 @@ MStatus FabricDFGPackageExtensionsCommand::doIt(const MArgList &args)
   packageNode->setExtensionSuffix(suffix);
   packageNode->setExtensionPackage(packageContent);
 
-  // todo: load the extension package using FabricCore::ImportKLExtensions
-  // Call DFGBinding.renameExts for each DFGBinding, passing the rename map and the unique root preset namespace for changed presets (you can just use the same suffix)
+  // only load the package if it differs from the original
+  if(suffix.length() > 0 || flags == FabricCore::ExportKLExtensions_Flag_RequireAutoNamespace)
+  {
+    // load the extension package
+    status = packageNode->loadPackage(client);
+    if(status != MS::kSuccess)
+      return status;
+
+    // loop over all DFGBindings and rename their extensions...!
+    for(unsigned int i=0;i<FabricDFGBaseInterface::getNumInstances();i++)
+    {
+      FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByIndex(i);
+      MFnDependencyNode node(interf->getThisMObject());
+      MString rootPresetName = node.name()+suffix;
+      try
+      {
+        FabricCore::DFGBinding binding = interf->getDFGBinding();
+        binding.renameExts(
+          extensionNamesCStr.size(),
+          &extensionNamesCStr[0],
+          &extensionNamesNewCStr[0],
+          rootPresetName.asChar(),
+          false);
+      }
+      catch(FabricCore::Exception e)
+      {
+        mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
+        return mayaErrorOccured();
+      }
+    }
+
+    MGlobal::executeCommand("flushUndo");
+  }
 
   setResult(MFnDependencyNode(packageMObject).name());
   return MS::kSuccess;
