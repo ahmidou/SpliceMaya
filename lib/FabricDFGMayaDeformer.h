@@ -17,10 +17,12 @@
 class FabricDFGMayaDeformer: public MPxDeformerNode, public FabricDFGBaseInterface{
 
 public:
-  static void* creator();
+
   static MStatus initialize();
 
-  FabricDFGMayaDeformer();
+  FabricDFGMayaDeformer(
+    FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding
+    );
   void postConstructor();
   ~FabricDFGMayaDeformer();
 
@@ -70,7 +72,6 @@ public:
     );    
 
   // node attributes
-  static MTypeId id;
   static MObject saveData;
   static MObject evalID;
   static MObject refFilePath;

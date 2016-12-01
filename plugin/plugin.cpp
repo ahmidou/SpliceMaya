@@ -20,8 +20,8 @@
 #include <maya/MFileIO.h>
 
 #include <FabricSplice.h>
-#include "FabricSpliceMayaNode.h"
 #include "FabricSpliceMayaDeformer.h"
+#include "FabricSpliceMayaNode.h"
 #include "FabricConstraint.h"
 #include "FabricSpliceCommand.h"
 #include "FabricSpliceEditorCmd.h"
@@ -29,8 +29,10 @@
 #include "FabricSpliceToolContext.h"
 #include "FabricSpliceRenderCallback.h"
 #include "FabricDFGCommands.h"
-#include "FabricDFGMayaDeformer.h"
-#include "FabricDFGMayaNode.h"
+#include "FabricDFGMayaDeformer_Func.h"
+#include "FabricDFGMayaDeformer_Graph.h"
+#include "FabricDFGMayaNode_Func.h"
+#include "FabricDFGMayaNode_Graph.h"
 #include "FabricDFGWidget.h"
 #include "FabricDFGWidgetCommand.h"
 #include "FabricSpliceHelpers.h"
@@ -53,6 +55,8 @@ const MTypeId gFirstValidNodeID(0x0011AE40);
 // FabricDFGMayaNode          0x0011AE47  // canvasNode
 // FabricDFGMayaDeformer      0x0011AE48  // canvasDeformer
 // FabricConstraint           0x0011AE49  // constraintNode
+// FabricDFGMayaFuncNode      0x0011AE4A  // canvasFuncNode
+// FabricDFGMayaFuncDeformer  0x0011AE4B  // canvasFuncDeformer
 const MTypeId gLastValidNodeID(0x0011AF3F);
 
 MCallbackId gOnSceneNewCallbackId;
@@ -249,17 +253,18 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("fabricSpliceEditor", FabricSpliceEditorCmd::creator, FabricSpliceEditorCmd::newSyntax);
   plugin.registerCommand("fabricSpliceManipulation", FabricSpliceManipulationCmd::creator);
 
-  plugin.registerNode("spliceMayaNode", FabricSpliceMayaNode::id, FabricSpliceMayaNode::creator, FabricSpliceMayaNode::initialize);
-  plugin.registerNode("spliceMayaDeformer", FabricSpliceMayaDeformer::id, FabricSpliceMayaDeformer::creator, FabricSpliceMayaDeformer::initialize, MPxNode::kDeformerNode);
-
+  plugin.registerNode("spliceMayaGraphNode", FabricSpliceMayaNode::id, FabricSpliceMayaNode::creator, FabricSpliceMayaNode::initialize);
+  plugin.registerNode("spliceMayaGraphDeformer", FabricSpliceMayaDeformer::id, FabricSpliceMayaDeformer::creator, FabricSpliceMayaDeformer::initialize, MPxNode::kDeformerNode);
 
   MQtUtil::registerUIType("FabricSpliceEditor", FabricSpliceEditorWidget::creator, "fabricSpliceEditor");
 
   plugin.registerCommand("fabricDFG", FabricDFGWidgetCommand::creator, FabricDFGWidgetCommand::newSyntax);
   MQtUtil::registerUIType("FabricDFGWidget", FabricDFGWidget::creator, "fabricDFGWidget");
 
-  plugin.registerNode("canvasNode", FabricDFGMayaNode::id, FabricDFGMayaNode::creator, FabricDFGMayaNode::initialize);
-  plugin.registerNode("canvasDeformer", FabricDFGMayaDeformer::id, FabricDFGMayaDeformer::creator, FabricDFGMayaDeformer::initialize, MPxNode::kDeformerNode);
+  plugin.registerNode("canvasNode", FabricDFGMayaNode_Graph::id, FabricDFGMayaNode_Graph::creator, FabricDFGMayaNode_Graph::initialize);
+  plugin.registerNode("canvasDeformer", FabricDFGMayaDeformer_Graph::id, FabricDFGMayaDeformer_Graph::creator, FabricDFGMayaDeformer_Graph::initialize, MPxNode::kDeformerNode);
+  plugin.registerNode("canvasFuncNode", FabricDFGMayaNode_Func::id, FabricDFGMayaNode_Func::creator, FabricDFGMayaNode_Func::initialize);
+  plugin.registerNode("canvasFuncDeformer", FabricDFGMayaDeformer_Func::id, FabricDFGMayaDeformer_Func::creator, FabricDFGMayaDeformer_Func::initialize, MPxNode::kDeformerNode);
   plugin.registerNode("fabricConstraint", FabricConstraint::id, FabricConstraint::creator, FabricConstraint::initialize);
 
   plugin.registerCommand("FabricCanvasGetFabricVersion",  FabricDFGGetFabricVersionCommand::creator, FabricDFGGetFabricVersionCommand ::newSyntax);
@@ -404,8 +409,10 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 
   plugin.deregisterCommand("fabricDFG");
   MQtUtil::deregisterUIType("FabricDFGWidget");
-  plugin.deregisterNode(FabricDFGMayaNode::id);
-  plugin.deregisterNode(FabricDFGMayaDeformer::id);
+  plugin.deregisterNode(FabricDFGMayaNode_Graph::id);
+  plugin.deregisterNode(FabricDFGMayaDeformer_Graph::id);
+  plugin.deregisterNode(FabricDFGMayaNode_Func::id);
+  plugin.deregisterNode(FabricDFGMayaDeformer_Func::id);
   plugin.deregisterNode(FabricConstraint::id);
 
   MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes         );

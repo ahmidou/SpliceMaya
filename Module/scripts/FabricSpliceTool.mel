@@ -4,7 +4,16 @@ global proc fabricSpliceActivateTool()
   global string $gFabricSpliceToolName;
   if(size($gFabricSpliceToolName) == 0)
     $gFabricSpliceToolName = `eval "FabricSpliceToolContext"`;
-  setToolTo($gFabricSpliceToolName);
+
+  string $currentTool = `currentCtx`;
+  if($currentTool == $gFabricSpliceToolName)
+  {
+  	setToolTo("selectSuperContext");
+  }
+  else
+  {
+  	setToolTo($gFabricSpliceToolName);
+  }
 }
 
 global proc fabricSpliceSaveSplice()

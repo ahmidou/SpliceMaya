@@ -16,10 +16,12 @@
 class FabricDFGMayaNode: public MPxNode, public FabricDFGBaseInterface{
 
 public:
-  static void* creator();
+  
   static MStatus initialize();
 
-  FabricDFGMayaNode();
+  FabricDFGMayaNode(
+    FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding
+    );
   void postConstructor();
   ~FabricDFGMayaNode();
 
@@ -54,7 +56,6 @@ public:
 #endif
 
   // node attributes
-  static MTypeId id;
   static MObject saveData;
   static MObject evalID;
   static MObject refFilePath;

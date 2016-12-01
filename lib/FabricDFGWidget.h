@@ -82,6 +82,8 @@ public:
     return FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
   }
 
+  static void OnSelectCanvasNodeInDCC(void *client);
+
 public slots:
   virtual void onUndo();
   virtual void onRedo();
@@ -98,6 +100,7 @@ protected:
   void setCurrentUINodeName(const char * node);
 
 private:
+  MCallbackId m_onSelectionChangedCallbackId;
 
   DFGUICmdHandler_Maya m_cmdHandler;
   FabricCore::DFGHost m_dfgHost;
