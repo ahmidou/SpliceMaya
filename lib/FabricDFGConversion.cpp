@@ -79,7 +79,7 @@ double dfgGetFloat64FromRTVal(FabricCore::RTVal rtVal)
   return DBL_MAX;
 }
 
-inline void Mat44ToMMatrix_data(float const *data, MFloatMatrix &matrix) {
+inline void Mat44ToMFloatMatrix_data(float const *data, MFloatMatrix &matrix) {
   float vals[4][4] ={
     { data[0], data[4], data[8],  data[12] },
     { data[1], data[5], data[9],  data[13] },
@@ -87,6 +87,26 @@ inline void Mat44ToMMatrix_data(float const *data, MFloatMatrix &matrix) {
     { data[3], data[7], data[11], data[15] }
   };
   matrix = MFloatMatrix(vals);
+}
+
+inline void Mat44ToMFloatMatrix_data(double const *data, MFloatMatrix &matrix) {
+  float vals[4][4] ={
+    { (float)data[0], (float)data[4], (float)data[8],  (float)data[12] },
+    { (float)data[1], (float)data[5], (float)data[9],  (float)data[13] },
+    { (float)data[2], (float)data[6], (float)data[10], (float)data[14] },
+    { (float)data[3], (float)data[7], (float)data[11], (float)data[15] }
+  };
+  matrix = MFloatMatrix(vals);
+}
+
+inline void Mat44ToMMatrix_data(float const *data, MMatrix &matrix) {
+  double vals[4][4] ={
+    { (double)data[0], (double)data[4], (double)data[8],  (double)data[12] },
+    { (double)data[1], (double)data[5], (double)data[9],  (double)data[13] },
+    { (double)data[2], (double)data[6], (double)data[10], (double)data[14] },
+    { (double)data[3], (double)data[7], (double)data[11], (double)data[15] }
+  };
+  matrix = MMatrix(vals);
 }
 
 inline void Mat44ToMMatrix_data(double const *data, MMatrix &matrix) {
@@ -102,7 +122,7 @@ inline void Mat44ToMMatrix_data(double const *data, MMatrix &matrix) {
 inline void Mat44ToMMatrix(FabricCore::RTVal &rtVal, MFloatMatrix &matrix) {
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
   float * data = (float*)dataRtVal.getData();
-  Mat44ToMMatrix_data(data, matrix);
+  Mat44ToMFloatMatrix_data(data, matrix);
 }
 
 inline void Mat44ToMMatrix(FabricCore::RTVal &rtVal, MMatrix &matrix) {
@@ -130,23 +150,23 @@ inline void MMatrixToMat44_data(MMatrix const &matrix, double *data) {
   data[15] = matrix[3][3];
 }
 
-inline void MMatrixToMat44_data(MFloatMatrix const &matrix, float *data) {
-  data[0]  = (float)matrix[0][0];
-  data[1]  = (float)matrix[1][0];
-  data[2]  = (float)matrix[2][0];
-  data[3]  = (float)matrix[3][0];
-  data[4]  = (float)matrix[0][1];
-  data[5]  = (float)matrix[1][1];
-  data[6]  = (float)matrix[2][1];
-  data[7]  = (float)matrix[3][1];
-  data[8]  = (float)matrix[0][2];
-  data[9]  = (float)matrix[1][2];
-  data[10] = (float)matrix[2][2];
-  data[11] = (float)matrix[3][2];
-  data[12] = (float)matrix[0][3];
-  data[13] = (float)matrix[1][3];
-  data[14] = (float)matrix[2][3];
-  data[15] = (float)matrix[3][3];
+inline void MFloatMatrixToMat44_data(MFloatMatrix const &matrix, float *data) {
+  data[0]  = matrix[0][0];
+  data[1]  = matrix[1][0];
+  data[2]  = matrix[2][0];
+  data[3]  = matrix[3][0];
+  data[4]  = matrix[0][1];
+  data[5]  = matrix[1][1];
+  data[6]  = matrix[2][1];
+  data[7]  = matrix[3][1];
+  data[8]  = matrix[0][2];
+  data[9]  = matrix[1][2];
+  data[10] = matrix[2][2];
+  data[11] = matrix[3][2];
+  data[12] = matrix[0][3];
+  data[13] = matrix[1][3];
+  data[14] = matrix[2][3];
+  data[15] = matrix[3][3];
 }
 
 inline void MMatrixToMat44_data(MMatrix const &matrix, float *data) {
@@ -168,23 +188,23 @@ inline void MMatrixToMat44_data(MMatrix const &matrix, float *data) {
   data[15] = (float)matrix[3][3];
 }
 
-inline void MMatrixToMat44_data(MFloatMatrix const &matrix, double *data) {
-  data[0]  = matrix[0][0];
-  data[1]  = matrix[1][0];
-  data[2]  = matrix[2][0];
-  data[3]  = matrix[3][0];
-  data[4]  = matrix[0][1];
-  data[5]  = matrix[1][1];
-  data[6]  = matrix[2][1];
-  data[7]  = matrix[3][1];
-  data[8]  = matrix[0][2];
-  data[9]  = matrix[1][2];
-  data[10] = matrix[2][2];
-  data[11] = matrix[3][2];
-  data[12] = matrix[0][3];
-  data[13] = matrix[1][3];
-  data[14] = matrix[2][3];
-  data[15] = matrix[3][3];
+inline void MFloatMatrixToMat44_data(MFloatMatrix const &matrix, double *data) {
+  data[0]  = (double)matrix[0][0];
+  data[1]  = (double)matrix[1][0];
+  data[2]  = (double)matrix[2][0];
+  data[3]  = (double)matrix[3][0];
+  data[4]  = (double)matrix[0][1];
+  data[5]  = (double)matrix[1][1];
+  data[6]  = (double)matrix[2][1];
+  data[7]  = (double)matrix[3][1];
+  data[8]  = (double)matrix[0][2];
+  data[9]  = (double)matrix[1][2];
+  data[10] = (double)matrix[2][2];
+  data[11] = (double)matrix[3][2];
+  data[12] = (double)matrix[0][3];
+  data[13] = (double)matrix[1][3];
+  data[14] = (double)matrix[2][3];
+  data[15] = (double)matrix[3][3];
 }
 
 inline void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
@@ -196,7 +216,7 @@ inline void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
 inline void MMatrixToMat44(MFloatMatrix const &matrix, FabricCore::RTVal &rtVal) {
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
   float * data = (float*)dataRtVal.getData();
-  MMatrixToMat44_data(matrix, data);
+  MFloatMatrixToMat44_data(matrix, data);
 }
 
 void dfgPlugToPort_compound_convertMat44(const MMatrix & matrix, FabricCore::RTVal & rtVal) {
@@ -1741,7 +1761,7 @@ void dfgPlugToPort_mat44(
   uint64_t elementDataSize = sizeof(float) * 16;
   uint64_t offset = 0;
 
-  MFnMatrixAttribute attribute(plug.attribute());
+  bool isFloatMatrix = plug.attribute().hasFn(MFn::kFloatMatrixAttribute);
 
   if(plug.isArray()){
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
@@ -1751,13 +1771,14 @@ void dfgPlugToPort_mat44(
     unsigned int numElements = arrayHandle.elementCount();
     std::vector<float> buffer(numElements * 16);
     float * values = &buffer[0];
-    if(attribute.type() == MFn::kFloatMatrixAttribute)
+
+    if(isFloatMatrix)
     {
       for(unsigned int i = 0; i < numElements; ++i){
         arrayHandle.jumpToArrayElement(i);
         MDataHandle handle = arrayHandle.inputValue();
         const MFloatMatrix& mayaMat = handle.asFloatMatrix();
-        MMatrixToMat44_data(mayaMat, &values[offset]);
+        MFloatMatrixToMat44_data(mayaMat, &values[offset]);
         offset += 16;
       }
     }
@@ -1781,10 +1802,10 @@ void dfgPlugToPort_mat44(
 
     float values[16];
 
-    if(attribute.type() == MFn::kFloatMatrixAttribute)
+    if(isFloatMatrix)
     {
       const MFloatMatrix& mayaMat = handle.asFloatMatrix();
-      MMatrixToMat44_data(mayaMat, values);
+      MFloatMatrixToMat44_data(mayaMat, values);
     }
     else
     {
@@ -1815,7 +1836,7 @@ void dfgPlugToPort_mat44_float64(
   uint64_t elementDataSize = sizeof(double) * 16;
   uint64_t offset = 0;
 
-  MFnMatrixAttribute attribute(plug.attribute());
+  bool isFloatMatrix = plug.attribute().hasFn(MFn::kFloatMatrixAttribute);
 
   if(plug.isArray()){
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
@@ -1826,13 +1847,13 @@ void dfgPlugToPort_mat44_float64(
     std::vector<double> buffer(numElements * 16);
     double * values = &buffer[0];
 
-    if(attribute.type() == MFn::kFloatMatrixAttribute)
+    if(isFloatMatrix)
     {
       for(unsigned int i = 0; i < numElements; ++i){
         arrayHandle.jumpToArrayElement(i);
         MDataHandle handle = arrayHandle.inputValue();
         const MFloatMatrix& mayaMat = handle.asFloatMatrix();
-        MMatrixToMat44_data(mayaMat, &values[offset]);
+        MFloatMatrixToMat44_data(mayaMat, &values[offset]);
         offset += 16;
       }
     }
@@ -1855,10 +1876,10 @@ void dfgPlugToPort_mat44_float64(
     pauseBracket.resume();
 
     double values[16];
-    if(attribute.type() == MFn::kFloatMatrixAttribute)
+    if(isFloatMatrix)
     {
       const MFloatMatrix& mayaMat = handle.asFloatMatrix();
-      MMatrixToMat44_data(mayaMat, values);
+      MFloatMatrixToMat44_data(mayaMat, values);
     }
     else
     {
@@ -3902,20 +3923,35 @@ void dfgPortToPlug_mat44(
   const float * values;
   getRawCB(getSetUD, (const void**)&values);
 
+  bool isFloatMatrix = plug.attribute().hasFn(MFn::kFloatMatrixAttribute);
+
   if(plug.isArray()){
 
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
     unsigned int offset = 0;
-    for(unsigned int i = 0; i < numElements; ++i){
-      MDataHandle handle = arraybuilder.addElement(i);
+    if(isFloatMatrix)
+    {
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
 
-      MFloatMatrix mayaMat;
-      Mat44ToMMatrix_data(&values[offset], mayaMat);
-      offset += 16;
+        MFloatMatrix mayaMat;
+        Mat44ToMFloatMatrix_data(&values[offset], mayaMat);
+        handle.setMFloatMatrix(mayaMat);
+        offset += 16;
+      }
+    } // double
+    else
+    {
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
 
-      handle.setMFloatMatrix(mayaMat);
+        MMatrix mayaMat;
+        Mat44ToMMatrix_data(&values[offset], mayaMat);
+        handle.setMMatrix(mayaMat);
+        offset += 16;
+      }
     }
 
     arrayHandle.set(arraybuilder);
@@ -3924,9 +3960,18 @@ void dfgPortToPlug_mat44(
   else{
     MDataHandle handle = data.outputValue(plug);
 
-    MFloatMatrix mayaMat;
-    Mat44ToMMatrix_data(values, mayaMat);
-    handle.setMFloatMatrix(mayaMat);
+    if(isFloatMatrix)
+    {
+      MFloatMatrix mayaMat;
+      Mat44ToMFloatMatrix_data(values, mayaMat);
+      handle.setMFloatMatrix(mayaMat);
+    }
+    else
+    {
+      MMatrix mayaMat;
+      Mat44ToMMatrix_data(values, mayaMat);
+      handle.setMMatrix(mayaMat);
+    }
   }
 }
 
@@ -3950,20 +3995,33 @@ void dfgPortToPlug_mat44_float64(
   const double * values;
   getRawCB(getSetUD, (const void**)&values);
 
+  bool isFloatMatrix = plug.attribute().hasFn(MFn::kFloatMatrixAttribute);
+
   if(plug.isArray()){
 
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
     MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
     unsigned int offset = 0;
-    for(unsigned int i = 0; i < numElements; ++i){
-      MDataHandle handle = arraybuilder.addElement(i);
-
-      MMatrix mayaMat;
-      Mat44ToMMatrix_data(&values[offset], mayaMat);
-      offset += 16;
-
-      handle.setMMatrix(mayaMat);
+    if(isFloatMatrix)
+    {
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        MFloatMatrix mayaMat;
+        Mat44ToMFloatMatrix_data(&values[offset], mayaMat);
+        handle.setMFloatMatrix(mayaMat);
+        offset += 16;
+      }
+    }
+    else
+    {
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        MMatrix mayaMat;
+        Mat44ToMMatrix_data(&values[offset], mayaMat);
+        handle.setMMatrix(mayaMat);
+        offset += 16;
+      }
     }
 
     arrayHandle.set(arraybuilder);
@@ -3972,9 +4030,18 @@ void dfgPortToPlug_mat44_float64(
   else{
     MDataHandle handle = data.outputValue(plug);
 
-    MMatrix mayaMat;
-    Mat44ToMMatrix_data(values, mayaMat);
-    handle.setMMatrix(mayaMat);
+    if(isFloatMatrix)
+    {
+      MFloatMatrix mayaMat;
+      Mat44ToMFloatMatrix_data(values, mayaMat);
+      handle.setMFloatMatrix(mayaMat);
+    }
+    else
+    {
+      MMatrix mayaMat;
+      Mat44ToMMatrix_data(values, mayaMat);
+      handle.setMMatrix(mayaMat);
+    }
   }
 }
 
