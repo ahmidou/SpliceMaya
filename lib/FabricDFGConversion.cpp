@@ -1751,8 +1751,7 @@ void dfgPlugToPort_mat44(
     unsigned int numElements = arrayHandle.elementCount();
     std::vector<float> buffer(numElements * 16);
     float * values = &buffer[0];
-
-    if(attribute.type() == MFnMatrixAttribute::kFloat)
+    if(attribute.type() == MFn::kFloatMatrixAttribute)
     {
       for(unsigned int i = 0; i < numElements; ++i){
         arrayHandle.jumpToArrayElement(i);
@@ -1782,7 +1781,7 @@ void dfgPlugToPort_mat44(
 
     float values[16];
 
-    if(attribute.type() == MFnMatrixAttribute::kFloat)
+    if(attribute.type() == MFn::kFloatMatrixAttribute)
     {
       const MFloatMatrix& mayaMat = handle.asFloatMatrix();
       MMatrixToMat44_data(mayaMat, values);
@@ -1827,7 +1826,7 @@ void dfgPlugToPort_mat44_float64(
     std::vector<double> buffer(numElements * 16);
     double * values = &buffer[0];
 
-    if(attribute.type() == MFnMatrixAttribute::kFloat)
+    if(attribute.type() == MFn::kFloatMatrixAttribute)
     {
       for(unsigned int i = 0; i < numElements; ++i){
         arrayHandle.jumpToArrayElement(i);
@@ -1856,7 +1855,7 @@ void dfgPlugToPort_mat44_float64(
     pauseBracket.resume();
 
     double values[16];
-    if(attribute.type() == MFnMatrixAttribute::kFloat)
+    if(attribute.type() == MFn::kFloatMatrixAttribute)
     {
       const MFloatMatrix& mayaMat = handle.asFloatMatrix();
       MMatrixToMat44_data(mayaMat, values);
