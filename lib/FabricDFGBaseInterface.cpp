@@ -552,59 +552,6 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
     if(addAttribute != "false")
       addMayaAttribute(portName.c_str(), dataType.c_str(), portType, arrayType.c_str());
-
-    if(portType != FabricCore::DFGPortType_Out)
-    {
-      MFnDependencyNode thisNode(getThisMObject());
-      MPlug plug = thisNode.findPlug(plugName);
-      if(!plug.isNull())
-      {
-        FabricCore::RTVal value = m_binding.getArgValue(portName.c_str());
-        std::string typeName = value.getTypeName().getStringCString();
-        if(typeName == "String")
-          plug.setString(value.getStringCString());
-        else if(typeName == "Boolean")
-          plug.setBool(value.getBoolean());
-        else if(!value.isValid())
-          continue;
-        else if(value.isArray())
-          continue;
-        else if(value.isDict())
-          continue;
-        else
-        {
-          float fvalue = 0.0;
-          if(typeName == "SInt8")
-            fvalue = (float)value.getSInt8();
-          else if(typeName == "SInt16")
-            fvalue = (float)value.getSInt16();
-          else if(typeName == "SInt32")
-            fvalue = (float)value.getSInt32();
-          else if(typeName == "SInt64")
-            fvalue = (float)value.getSInt64();
-          else if(typeName == "UInt8")
-            fvalue = (float)value.getUInt8();
-          else if(typeName == "UInt16")
-            fvalue = (float)value.getUInt16();
-          else if(typeName == "UInt32")
-            fvalue = (float)value.getUInt32();
-          else if(typeName == "UInt64")
-            fvalue = (float)value.getUInt64();
-          else if(typeName == "Float32")
-            fvalue = (float)value.getFloat32();
-          else if(typeName == "Float64")
-            fvalue = (float)value.getFloat64();
-
-          MDataHandle handle = plug.asMDataHandle();
-          if(handle.numericType() == MFnNumericData::kFloat)
-            plug.setFloat(fvalue);
-          else if(handle.numericType() == MFnNumericData::kDouble)
-            plug.setDouble(fvalue);
-          else if(handle.numericType() == MFnNumericData::kInt)
-            plug.setInt((int)fvalue);
-        }
-      }
-    }
   }
 
   for(unsigned i = 0; i < exec.getExecPortCount(); ++i){
@@ -625,7 +572,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   }
 
   m_lastJson = json;
-  // todo... set values?
+
   generateAttributeLookups();
 
   MAYADFG_CATCH_END(stat);
