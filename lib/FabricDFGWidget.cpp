@@ -19,7 +19,6 @@
 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
-FabricCore::Client FabricDFGWidget::s_coreClient;
 
 
 void FabricDFGWidget::OnSelectCanvasNodeInDCC(void *client) {
@@ -48,7 +47,7 @@ FabricDFGWidget::FabricDFGWidget(QWidget * parent)
   , m_initialized( false )
 {
   GetCoreClient();
-  m_dfgHost = s_coreClient.getDFGHost();
+  m_dfgHost = GetCoreClient().getDFGHost();
 
   QObject::connect(
     this, SIGNAL( portEditDialogCreated(FabricUI::DFG::DFGBaseDialog *)),
@@ -72,7 +71,7 @@ FabricDFGWidget *FabricDFGWidget::Instance()
 {
   if ( !s_widget )
   {
-    s_manager = new FabricServices::ASTWrapper::KLASTManager( &s_coreClient );
+    s_manager = new FabricServices::ASTWrapper::KLASTManager( &GetCoreClient() );
     s_widget = new FabricDFGWidget( NULL );
   }
   return s_widget;
@@ -84,7 +83,6 @@ void FabricDFGWidget::Destroy()
   s_widget = NULL;
   delete s_manager;
   s_manager = NULL;
-  s_coreClient = FabricCore::Client();
 }
 
 QWidget * FabricDFGWidget::creator(QWidget * parent, const QString & name)
@@ -120,7 +118,7 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
     config.graphConfig.useOpenGL = false;
 
 #ifdef FABRIC_SCENEHUB
-    init( s_coreClient,
+    init( GetCoreClient(),
           s_manager,
           m_dfgHost,
           binding,
@@ -131,7 +129,7 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
           false, 
           config);
 #else
-    init( s_coreClient,
+    init( GetCoreClient(),
           s_manager, 
           m_dfgHost, 
           binding, 

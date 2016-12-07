@@ -146,7 +146,7 @@ void onSceneLoad(void *userData){
 
     try
     {
-      FabricCore::Client client = FabricSplice::ConstructClient();
+      FabricCore::Client client = FabricDFGWidget::GetCoreClient();
       for(unsigned int i=0;i<FabricExtensionPackageNode::getNumInstances();i++)
       {
         FabricExtensionPackageNode * existingPackage = FabricExtensionPackageNode::getInstanceByIndex(i);

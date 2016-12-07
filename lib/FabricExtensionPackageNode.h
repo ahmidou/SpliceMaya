@@ -32,6 +32,8 @@ public:
 
   MStatus loadPackage(FabricCore::Client client);
 
+  bool isLoaded() const { return _loaded; }
+
   // node attributes
   static MTypeId id;
   static MObject extensionNames;
@@ -40,5 +42,6 @@ public:
 
 private:
   static std::vector<FabricExtensionPackageNode*> _instances;
+  bool _loaded;
 
 };

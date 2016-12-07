@@ -20,6 +20,7 @@ std::vector<FabricExtensionPackageNode*> FabricExtensionPackageNode::_instances;
 
 FabricExtensionPackageNode::FabricExtensionPackageNode()
 {
+  _loaded = false;
   _instances.push_back(this);
 }
 
@@ -105,6 +106,9 @@ void FabricExtensionPackageNode::setExtensionNames(MStringArray values) const
 
 MStatus FabricExtensionPackageNode::loadPackage(FabricCore::Client client)
 {
+  if(_loaded)
+    return MStatus::kSuccess;
+
   if(!client.isValid())
     return MStatus::kInvalidParameter;
 
@@ -129,5 +133,6 @@ MStatus FabricExtensionPackageNode::loadPackage(FabricCore::Client client)
     return mayaErrorOccured();
   }
 
+  _loaded = true;
   return MStatus::kSuccess;
 }
