@@ -71,7 +71,8 @@ FabricDFGWidget *FabricDFGWidget::Instance()
 {
   if ( !s_widget )
   {
-    s_manager = new FabricServices::ASTWrapper::KLASTManager( &GetCoreClient() );
+    FabricCore::Client client = GetCoreClient();
+    s_manager = new FabricServices::ASTWrapper::KLASTManager( &client );
     s_widget = new FabricDFGWidget( NULL );
   }
   return s_widget;
@@ -117,8 +118,9 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
     DFG::DFGConfig config;
     config.graphConfig.useOpenGL = false;
 
+    FabricCore::Client client = GetCoreClient();
 #ifdef FABRIC_SCENEHUB
-    init( GetCoreClient(),
+    init( client,
           s_manager,
           m_dfgHost,
           binding,
@@ -129,7 +131,7 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
           false, 
           config);
 #else
-    init( GetCoreClient(),
+    init( client,
           s_manager, 
           m_dfgHost, 
           binding, 
