@@ -2220,6 +2220,167 @@ void dfgPlugToPort_Lines(
   }
 }
 
+void dfgPlugToPort_CurveOrCurves(
+  bool singleCurve,
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug,
+  MDataBlock &data ) {
+  // If singleCurve, then the port type is "Curve", we get its internal "Curves" object and only set the 1st one.
+  FabricMayaProfilingEvent bracket( "dfgPlugToPort_Curves" );
+
+  std::vector<MDataHandle> handles;
+  FabricCore::RTVal rtVal;
+  FabricCore::RTVal portRTVal;
+
+  try {
+    if( plug.isArray() ) {
+      portRTVal = getCB( getSetUD );
+
+      FTL::AutoProfilingPauseEvent pauseBracket( bracket );
+      MArrayDataHandle arrayHandle = data.inputArrayValue( plug );
+      pauseBracket.resume();
+
+      unsigned int elements = arrayHandle.elementCount();
+      for( unsigned int i = 0; i < elements; ++i ) {
+        arrayHandle.jumpToArrayElement( i );
+        handles.push_back( arrayHandle.inputValue() );
+      }
+    } else {
+      FTL::AutoProfilingPauseEvent pauseBracket( bracket );
+      handles.push_back( data.inputValue( plug ) );
+      pauseBracket.resume();
+    }
+
+    if( argOutsidePortType == FabricCore::DFGPortType_IO )
+      portRTVal = getCB( getSetUD );
+
+    FabricCore::RTVal curveCountRTVal = FabricSplice::constructUInt32RTVal( handles.size() );
+
+    if( singleCurve ) {
+      // Maya single curve: converts to Curve struct (with its own internal Curves)
+      if( !portRTVal.isValid() )
+        portRTVal = FabricSplice::constructRTVal( "Curve", 0, 0 );
+
+      rtVal = portRTVal.callMethod( "Curves", "createCurvesContainerIfNone", 0, 0 );
+    } else {
+      // Maya curve array: converts to Curves object
+      if( !portRTVal.isValid() || portRTVal.isNullObject() )
+        portRTVal = FabricSplice::constructObjectRTVal( "Curves" );
+      rtVal = portRTVal;
+      rtVal.callMethod( "", "setCurveCount", 1, &curveCountRTVal );
+    }
+
+    FabricCore::RTVal args[ 6 ];
+    args[0] = curveCountRTVal;//curveIndex: Just reuse that RTVal to avoid creating another one
+    args[1] = FabricSplice::constructUInt8RTVal(3);//curveType = curveType_NURBS
+    args[2] = FabricSplice::constructUInt8RTVal(3);//degree
+    args[3] = FabricSplice::constructUInt8RTVal(0);//curveForm
+
+    for( size_t handleIndex = 0; handleIndex<handles.size(); handleIndex++ ) {
+      MObject curveObj = handles[handleIndex].asNurbsCurve();
+      MFnNurbsCurve curve( curveObj );
+
+      args[0].setUInt32( handleIndex );//curveIndex
+
+      args[2].setUInt8( uint8_t( curve.degree() ) );
+
+      uint8_t curveForm = uint8_t(curve.form());
+      if( curveForm == MFnNurbsCurve::kOpen )
+        curveForm = 0;//curveForm_open
+      else if( curveForm == MFnNurbsCurve::kClosed )
+        curveForm = 1;//curveForm_closed
+      else if( curveForm == MFnNurbsCurve::kPeriodic )
+        curveForm = 2;//curveForm_periodic
+      args[3].setUInt8( curveForm );
+
+      MPointArray mayaPoints;
+      curve.getCVs( mayaPoints );
+      args[4] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaPoints.length() * 4, &mayaPoints[0] );
+
+      MDoubleArray mayaKnots;
+      curve.getKnots( mayaKnots );
+      args[5] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaKnots.length(), &mayaKnots[0] );
+
+      rtVal.callMethod( "", "setCurveFromMaya", 6, args );
+    }
+
+    setCB( getSetUD, portRTVal.getFECRTValRef() );
+  } catch( FabricCore::Exception e ) {
+    mayaLogErrorFunc( e.getDesc_cstr() );
+    return;
+  } catch( FabricSplice::Exception e ) {
+    mayaLogErrorFunc( e.what() );
+    return;
+  }
+}
+
+void dfgPlugToPort_Curves(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug,
+  MDataBlock &data ) {
+  dfgPlugToPort_CurveOrCurves(
+    false,
+    argIndex,
+    argName,
+    argTypeName,
+    argOutsidePortType,
+    argRawDataSize,
+    getCB,
+    getRawCB,
+    setCB,
+    setRawCB,
+    getSetUD,
+    plug,
+    data );
+}
+
+void dfgPlugToPort_Curve(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug,
+  MDataBlock &data ) {
+  dfgPlugToPort_CurveOrCurves(
+    true,
+    argIndex,
+    argName,
+    argTypeName,
+    argOutsidePortType,
+    argRawDataSize,
+    getCB,
+    getRawCB,
+    setCB,
+    setRawCB,
+    getSetUD,
+    plug,
+    data );
+}
+
 void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal & trackVal) {
 
   FabricMayaProfilingEvent bracket("dfgPlugToPort_KeyframeTrack_helper");
@@ -4375,6 +4536,116 @@ void dfgPortToPlug_Lines(
   }
 }
 
+void dfgPortToPlug_Curves_single( MDataHandle handle, FabricCore::RTVal rtVal, int index ) {
+  CORE_CATCH_BEGIN;
+
+  MFnNurbsCurve::Form form = MFnNurbsCurve::kOpen;
+  unsigned int nbPoints = 0;
+  unsigned int nbKnots = 0;
+  unsigned int degree = 1;
+  bool isRational = false;
+
+  FabricCore::RTVal args[6];
+  args[0] = FabricSplice::constructUInt32RTVal( index );//curveIndex
+
+  if( !rtVal.isNullObject() ) {
+    args[1] = FabricSplice::constructUInt8RTVal( 1 );//degree
+    args[2] = FabricSplice::constructUInt8RTVal( 0 );//curveForm
+    args[3] = FabricSplice::constructBooleanRTVal( false );//isRational
+    args[4] = FabricSplice::constructUInt32RTVal( 0 );//knotCount
+    args[5] = FabricSplice::constructUInt32RTVal( 0 );//pointCountWithDuplicates
+
+    rtVal.callMethod( "", "getCurveInfoForMaya", 6, args );
+
+    degree = args[1].getUInt8();
+
+    int fabricForm = args[2].getUInt8();
+    if( fabricForm == 1 )
+      form = MFnNurbsCurve::kClosed;
+    else if( fabricForm == 2 )
+      form = MFnNurbsCurve::kPeriodic;
+
+    isRational = args[3].getBoolean();
+
+    nbKnots = args[4].getUInt32();
+    nbPoints = args[5].getUInt32();
+  }
+
+  MPointArray mayaPoints( nbPoints );
+  MDoubleArray mayaKnots( nbKnots );
+
+  if( nbPoints > 0 ) {
+    args[1] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaPoints.length() * 4, &mayaPoints[0] );//points
+    args[2] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaKnots.length(), &mayaKnots[0] );//knots
+
+    rtVal.callMethod( "", "getCurveDataForMaya", 3, args );
+  }
+
+  MFnNurbsCurveData curveDataFn;
+  MObject curveObject;
+  MFnNurbsCurve curve;
+  curveObject = curveDataFn.create();
+
+  curve.create(
+    mayaPoints, mayaKnots, degree,
+    form,
+    false,
+    isRational,
+    curveObject );
+
+  handle.set( curveObject );
+  handle.setClean();
+
+  CORE_CATCH_END;
+}
+
+void dfgPortToPlug_Curves(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, MDataBlock &data ) {
+
+  FabricCore::RTVal rtVal( getCB( getSetUD ) );
+  if( plug.isArray() ) {
+    MArrayDataHandle arrayHandle = data.outputArrayValue( plug );
+    MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+    unsigned int elements = rtVal.isNullObject() ? 0 : rtVal.callMethod( "UInt32", "curveCount", 0, 0 ).getUInt32();
+    for( unsigned int i = 0; i < elements; ++i )
+      dfgPortToPlug_Curves_single( arraybuilder.addElement( i ), rtVal, i );
+
+    arrayHandle.set( arraybuilder );
+    arrayHandle.setAllClean();
+  } else {
+    MDataHandle handle = data.outputValue( plug.attribute() );
+    dfgPortToPlug_Curves_single( handle, rtVal, 0 );
+  }
+}
+
+void dfgPortToPlug_Curve(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, MDataBlock &data ) {
+
+  FabricCore::RTVal rtVal( getCB( getSetUD ) );
+  FabricCore::RTVal curvesRTVal = rtVal.callMethod( "Curves", "createCurvesContainerIfNone", 0, 0 );
+  unsigned int curveIndex = rtVal.callMethod( "UInt32", "getCurveIndex", 0, 0 ).getUInt32();
+
+  MDataHandle handle = data.outputValue( plug.attribute() );
+  dfgPortToPlug_Curves_single( handle, curvesRTVal, curveIndex );
+}
+
 void dfgPortToPlug_spliceMayaData(
   unsigned argIndex,
   char const *argName,
@@ -4468,6 +4739,10 @@ DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType)
 
   if (dataType == FTL_STR("Lines"))                return dfgPlugToPort_Lines;
 
+  if( dataType == FTL_STR( "Curve" ) )            return dfgPlugToPort_Curve;
+
+  if( dataType == FTL_STR( "Curves" ) )            return dfgPlugToPort_Curves;
+
   if (dataType == FTL_STR("KeyframeTrack"))        return dfgPlugToPort_KeyframeTrack;
 
   if (dataType == FTL_STR("SpliceMayaData"))      return dfgPlugToPort_spliceMayaData;
@@ -4515,7 +4790,11 @@ DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::StrRef &dataType)
 
   if (dataType == FTL_STR("Lines"))                return dfgPortToPlug_Lines;
 
-  if (dataType == FTL_STR("SpliceMayaData"))       return dfgPortToPlug_spliceMayaData;
+  if( dataType == FTL_STR( "Curve" ) )             return dfgPortToPlug_Curve;
+
+  if( dataType == FTL_STR( "Curves" ) )            return dfgPortToPlug_Curves;
+
+  if( dataType == FTL_STR( "SpliceMayaData" ) )    return dfgPortToPlug_spliceMayaData;
 
   if(dataType == FTL_STR("CompoundParam"))         return dfgPortToPlug_compound;
 

@@ -87,6 +87,10 @@ DataType ParseDataType( FTL::StrRef dataTypeStr )
 
   else if ( dataTypeOverride == FTL_STR("PolygonMesh"))     return DT_PolygonMesh;
 
+  else if( dataTypeOverride == FTL_STR( "Curves" ) )     return DT_Curves;
+
+  else if( dataTypeOverride == FTL_STR( "Curve" ) )     return DT_Curve;
+
   else if ( dataTypeOverride == FTL_STR("Lines"))           return DT_Lines;
 
   else if ( dataTypeOverride == FTL_STR("KeyframeTrack"))   return DT_KeyframeTrack;
@@ -138,6 +142,8 @@ static void SetupMayaAttribute(
   switch ( dataType )
   {
     case DT_PolygonMesh:
+    case DT_Curves:
+    case DT_Curve:
     case DT_Lines:
     case DT_SpliceMayaData:
       attr.setStorable( false );
@@ -625,6 +631,48 @@ MObject CreateMayaAttribute(
         break;
 
         default: ThrowIncompatibleDataArrayTypes( dataTypeStr, arrayTypeStr );
+      }
+    }
+    break;
+
+    case DT_Curves:
+    {
+      // Curves only map to arrays; else Curve should be used
+      switch( arrayType ) {
+        case AT_Array_Multi:
+        {
+          MFnTypedAttribute tAttr;
+          obj = tAttr.create( name, name, MFnData::kNurbsCurve );
+        }
+        break;
+
+        case AT_Single: {
+          throw FabricCore::Exception( "DataType 'Curves' is only compatible with Array type, 'Curve' should be used instead" );
+        }
+
+        default:
+          ThrowIncompatibleDataArrayTypes( dataTypeStr, arrayTypeStr );
+      }
+    }
+    break;
+
+    case DT_Curve:
+    {
+      // Curves only map to single; else Curves should be used
+      switch( arrayType ) {
+        case AT_Single:
+        {
+          MFnTypedAttribute tAttr;
+          obj = tAttr.create( name, name, MFnData::kNurbsCurve );
+        }
+        break;
+
+        case AT_Array_Multi: {
+          throw FabricCore::Exception( "DataType 'Curve' is not compatible with Array type, 'Curves' should be used instead" );
+        }
+
+        default:
+          ThrowIncompatibleDataArrayTypes( dataTypeStr, arrayTypeStr );
       }
     }
     break;

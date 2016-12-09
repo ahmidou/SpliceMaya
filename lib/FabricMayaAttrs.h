@@ -21,6 +21,8 @@ enum DataType
   DT_Mat44,
   DT_Color,
   DT_PolygonMesh,
+  DT_Curves,
+  DT_Curve,
   DT_Lines,
   DT_KeyframeTrack,
   DT_SpliceMayaData,

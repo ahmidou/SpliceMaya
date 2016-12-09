@@ -537,7 +537,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     FabricServices::CodeCompletion::KLTypeDesc typeDesc(dataType);
 
     std::string arrayType = "Single Value";
-    if(typeDesc.isArray())
+    if( typeDesc.isArray() )
     {
       arrayType = "Array (Multi)";
       FTL::StrRef nativeArray = exec.getExecPortMetadata(portName.c_str(), "nativeArray");
@@ -546,7 +546,8 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
         arrayType = "Array (Native)";
         exec.setExecPortMetadata(portName.c_str(), "nativeArray", "true", false /* canUndo */);
       }
-    }
+    } else if( dataType == "Curves" )//We map single Curves to Maya curve arrays
+      arrayType = "Array (Multi)";
 
     FTL::StrRef addAttribute = exec.getExecPortMetadata(portName.c_str(), "addAttribute");
 
@@ -1659,9 +1660,11 @@ inline bool AddGeometryAttributes(
   }
 
   else if(binding.getExec().isExecPortResolvedType(portIndex, "Lines") ||
-      binding.getExec().isExecPortResolvedType(portIndex, "Lines[]") )
+      binding.getExec().isExecPortResolvedType(portIndex, "Lines[]") ||
+      binding.getExec().isExecPortResolvedType( portIndex, "Curves" ) ||
+      binding.getExec().isExecPortResolvedType( portIndex, "Curve" ) )
   {
-    if(arrayType == "Single Value")
+    if(arrayType == "Single Value" )
     {
       newAttribute = tAttr.create(plugName, plugName, MFnData::kNurbsCurve);
       storable = false;
@@ -1884,6 +1887,8 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
         arrayType = "Array (Multi)";
     }
   }
+  if( dataTypeOverride == "Curves" ) // Curves is implicitly mapped to an array
+    arrayType = "Array (Multi)";
 
   if(arrayType.length() == 0)
     arrayType = "Single Value";
@@ -2447,7 +2452,7 @@ void FabricDFGBaseInterface::VisitOutputArgsCallback(
       }
     }
 
-    if(ud->isDeformer && portDataType == FTL_STR("PolygonMesh"))
+    if( ud->isDeformer && ( portDataType == FTL_STR( "PolygonMesh" ) || portDataType == FTL_STR( "Lines" ) || portDataType == FTL_STR( "Curves" ) || portDataType == FTL_STR( "Curve" ) ) )
       //data.setClean(plug);  // [FE-6087]
                               // 'setClean()' need not be called for MPxDeformerNode.
                               // (see comments of FE-6087 for more detailed information)

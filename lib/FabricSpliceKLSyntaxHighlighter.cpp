@@ -99,6 +99,8 @@ FabricSpliceKLSyntaxHighlighter::FabricSpliceKLSyntaxHighlighter(QTextDocument *
     << "\\bBezierXfo\\b"
     << "\\bPoints\\b"
     << "\\bLines\\b"
+    << "\\bCurves\\b"
+    << "\\bCurve\\b"
     << "\\bPolygonMesh\\b"
     << "\\bGeometryAttributes\\b"
     << "\\bGeometryAttribute\\b"
