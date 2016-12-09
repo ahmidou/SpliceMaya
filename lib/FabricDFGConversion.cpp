@@ -2281,9 +2281,8 @@ void dfgPlugToPort_CurveOrCurves(
 
     FabricCore::RTVal args[ 6 ];
     args[0] = curveCountRTVal;//curveIndex: Just reuse that RTVal to avoid creating another one
-    args[1] = FabricSplice::constructUInt8RTVal(3);//curveType = curveType_NURBS
-    args[2] = FabricSplice::constructUInt8RTVal(3);//degree
-    args[3] = FabricSplice::constructUInt8RTVal(0);//curveForm
+    args[1] = FabricSplice::constructUInt8RTVal(3);//degree
+    args[2] = FabricSplice::constructUInt8RTVal(0);//curveForm
 
     for( size_t handleIndex = 0; handleIndex<handles.size(); handleIndex++ ) {
       MObject curveObj = handles[handleIndex].asNurbsCurve();
@@ -2291,7 +2290,7 @@ void dfgPlugToPort_CurveOrCurves(
 
       args[0].setUInt32( handleIndex );//curveIndex
 
-      args[2].setUInt8( uint8_t( curve.degree() ) );
+      args[1].setUInt8( uint8_t( curve.degree() ) );
 
       uint8_t curveForm = uint8_t(curve.form());
       if( curveForm == MFnNurbsCurve::kOpen )
@@ -2300,17 +2299,17 @@ void dfgPlugToPort_CurveOrCurves(
         curveForm = 1;//curveForm_closed
       else if( curveForm == MFnNurbsCurve::kPeriodic )
         curveForm = 2;//curveForm_periodic
-      args[3].setUInt8( curveForm );
+      args[2].setUInt8( curveForm );
 
       MPointArray mayaPoints;
       curve.getCVs( mayaPoints );
-      args[4] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaPoints.length() * 4, &mayaPoints[0] );
+      args[3] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaPoints.length() * 4, &mayaPoints[0] );
 
       MDoubleArray mayaKnots;
       curve.getKnots( mayaKnots );
-      args[5] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaKnots.length(), &mayaKnots[0] );
+      args[4] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaKnots.length(), &mayaKnots[0] );
 
-      rtVal.callMethod( "", "setCurveFromMaya", 6, args );
+      rtVal.callMethod( "", "setCurveFromMaya", 5, args );
     }
 
     setCB( getSetUD, portRTVal.getFECRTValRef() );
