@@ -11,6 +11,7 @@
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
+#include <maya/MFileIO.h>
 
 MObject FabricDFGMayaDeformer::saveData;
 MObject FabricDFGMayaDeformer::evalID;
@@ -26,7 +27,8 @@ FabricDFGMayaDeformer::FabricDFGMayaDeformer(
 }
 
 void FabricDFGMayaDeformer::postConstructor(){
-  FabricDFGBaseInterface::constructBaseInterface();
+  if(!MFileIO::isOpeningFile())
+    FabricDFGBaseInterface::constructBaseInterface();
   setExistWithoutInConnections(true);
   setExistWithoutOutConnections(true);
 }

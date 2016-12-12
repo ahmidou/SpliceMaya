@@ -6,7 +6,9 @@
 
 #include "Foundation.h"
 #include "FabricDFGCommands.h"
+#include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricExtensionPackageNode.h"
 
 #include <FabricUI/DFG/DFGUICmdHandler.h>
 
@@ -14,6 +16,8 @@
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
 #include <maya/MQtUtil.h>
+#include <maya/MDGModifier.h>
+#include <maya/MFnDependencyNode.h>
 
 #define kNodeFlag "-n"
 #define kNodeFlagLong "-node"
@@ -106,6 +110,196 @@ MStatus FabricDFGDestroyClientCommand::doIt(const MArgList &args)
   }
 
   setResult(result);
+  return MS::kSuccess;
+}
+
+MSyntax FabricDFGPackageExtensionsCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  syntax.addFlag( "-e", "-extensions", MSyntax::kString );
+  syntax.addFlag( "-s", "-suffix", MSyntax::kString );
+  syntax.addFlag( "-ns", "-autoNamespace", MSyntax::kString );
+  return syntax;
+}
+
+void* FabricDFGPackageExtensionsCommand::creator()
+{
+  return new FabricDFGPackageExtensionsCommand;
+}
+
+MStatus FabricDFGPackageExtensionsCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argData(syntax(), args, &status);
+
+  MString result;
+  if(!argData.isFlagSet("extensions"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Extensions (-e, -extensions) not provided.");
+    return mayaErrorOccured();
+  }
+
+  MString extensionsStr = argData.flagArgumentString("extensions", 0);
+  MStringArray extensions;
+  std::vector< std::string > extensionNamesSTL;
+  std::vector< char const * > extensionNamesCStr;
+  extensionsStr.split(',', extensions);
+  for(unsigned int i=0;i<extensions.length();i++)
+  {
+    extensionNamesSTL.push_back(extensions[i].asChar());
+    if(extensionNamesSTL[i].length() > 0)
+    {
+      while(extensionNamesSTL[i].length() > 0)
+      {
+        if(extensionNamesSTL[i][0] == ' ' || extensionNamesSTL[i][0] == '\t')
+        {
+          extensionNamesSTL[i] = extensionNamesSTL[i].substr(1);
+        }
+        else if(*extensionNamesSTL[i].rbegin() == ' ' || *extensionNamesSTL[i].rbegin() == '\t')
+        {
+          extensionNamesSTL[i] = extensionNamesSTL[i].substr(0, extensionNamesSTL[i].length()-1);
+        }
+        else
+        {
+          break;
+        }
+      }
+
+      if(extensionNamesSTL[i].length() == 0)
+      {
+        mayaLogErrorFunc(MString(getName()) + ": Extensions list is not valid.");
+        return mayaErrorOccured();
+      }
+    }
+  }
+
+  if(extensionNamesSTL.size() == 0)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Extensions list is empty.");
+    return mayaErrorOccured();
+  }
+
+  MString suffix;
+  if(argData.isFlagSet("suffix"))
+    suffix = argData.flagArgumentString("suffix", 0);
+
+  FabricCore::ExportKLExtensions_Flags flags = FabricCore::ExportKLExtensions_Flags_Default;
+  if(argData.isFlagSet("autoNamespace"))
+    flags = FabricCore::ExportKLExtensions_Flag_RequireAutoNamespace;
+
+  MStringArray extensionNamesClean;
+  extensionNamesCStr.resize(extensionNamesSTL.size());
+  std::vector< std::string > extensionNamesNewSTL(extensionNamesSTL.size());
+  std::vector< char const * > extensionNamesNewCStr(extensionNamesSTL.size());
+  for(size_t i=0;i<extensionNamesSTL.size();i++)
+  {
+    extensionNamesClean.append(extensionNamesSTL[i].c_str());
+    extensionNamesCStr[i] = extensionNamesSTL[i].c_str();
+    extensionNamesNewSTL[i] = extensionNamesSTL[i] + suffix.asChar();
+    extensionNamesNewCStr[i] = extensionNamesNewSTL[i].c_str();
+  }
+
+  // visit all existing extension package nodes and check if this has already been packaged.
+  // check for all names with the same suffix.
+  for(unsigned int i=0;i<FabricExtensionPackageNode::getNumInstances();i++)
+  {
+    FabricExtensionPackageNode * existingPackage = FabricExtensionPackageNode::getInstanceByIndex(i);
+    if(existingPackage->getExtensionSuffix() != suffix)
+      continue;
+    MStringArray existingExtensionNames = existingPackage->getExtensionNames();
+    for(unsigned int j=0;j<extensionNamesClean.length();j++)
+    {
+      for(unsigned int k=0;k<existingExtensionNames.length();k++)
+      {
+        if(extensionNamesClean[j] == existingExtensionNames[k])
+        {
+          MFnDependencyNode existingNode(existingPackage->thisMObject());
+          mayaLogErrorFunc(MString(getName()) + ": Extension "+extensionNamesClean[j]+" is already packaged in node "+existingNode.name());
+          return mayaErrorOccured();
+        }
+      }
+    }
+  }
+
+  MString packageContent;
+  FabricCore::Client client;
+  try
+  {
+    client = FabricSplice::ConstructClient();
+
+    for(size_t i=0;i<extensionNamesCStr.size();i++)
+      client.loadExtension(extensionNamesCStr[i], "", false);
+
+    FabricCore::String packageFabricStr = FabricCore::ExportKLExtensions(
+      client,
+      extensionNamesCStr.size(),
+      &extensionNamesCStr[0],
+      suffix.asChar(),
+      flags
+      );
+
+    packageContent = packageFabricStr.getCStr();
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
+    return mayaErrorOccured();
+  }
+
+  MDGModifier dgMod;
+  MObject packageMObject = dgMod.createNode(FabricExtensionPackageNode::id, &status);
+  if(status != MStatus::kSuccess)
+    return status;
+  dgMod.doIt();
+
+  FabricExtensionPackageNode * packageNode = FabricExtensionPackageNode::getInstanceByMObject(packageMObject);
+  if(packageNode == NULL)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Unexpected error - no node created.");
+    return mayaErrorOccured();
+  }
+
+  packageNode->setExtensionNames(extensionNamesClean);
+  packageNode->setExtensionSuffix(suffix);
+  packageNode->setExtensionPackage(packageContent);
+
+  // only load the package if it differs from the original
+  if(suffix.length() > 0 || flags == FabricCore::ExportKLExtensions_Flag_RequireAutoNamespace)
+  {
+    // load the extension package
+    status = packageNode->loadPackage(client);
+    if(status != MS::kSuccess)
+      return status;
+
+    // loop over all DFGBindings and rename their extensions...!
+    for(unsigned int i=0;i<FabricDFGBaseInterface::getNumInstances();i++)
+    {
+      FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByIndex(i);
+      MFnDependencyNode node(interf->getThisMObject());
+      MString rootPresetName = node.name()+suffix;
+      try
+      {
+        FabricCore::DFGBinding binding = interf->getDFGBinding();
+        binding.renameExts(
+          extensionNamesCStr.size(),
+          &extensionNamesCStr[0],
+          &extensionNamesNewCStr[0],
+          rootPresetName.asChar(),
+          false);
+      }
+      catch(FabricCore::Exception e)
+      {
+        mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
+        return mayaErrorOccured();
+      }
+    }
+
+    MGlobal::executeCommand("flushUndo");
+  }
+
+  setResult(MFnDependencyNode(packageMObject).name());
   return MS::kSuccess;
 }
 

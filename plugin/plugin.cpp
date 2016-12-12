@@ -33,6 +33,7 @@
 #include "FabricDFGMayaDeformer_Graph.h"
 #include "FabricDFGMayaNode_Func.h"
 #include "FabricDFGMayaNode_Graph.h"
+#include "FabricExtensionPackageNode.h"
 #include "FabricDFGWidget.h"
 #include "FabricDFGWidgetCommand.h"
 #include "FabricSpliceHelpers.h"
@@ -57,6 +58,7 @@ const MTypeId gFirstValidNodeID(0x0011AE40);
 // FabricConstraint           0x0011AE49  // constraintNode
 // FabricDFGMayaFuncNode      0x0011AE4A  // canvasFuncNode
 // FabricDFGMayaFuncDeformer  0x0011AE4B  // canvasFuncDeformer
+// FabricExtensionPackageNode 0x0011AE4C  // extensionPackageNode
 const MTypeId gLastValidNodeID(0x0011AF3F);
 
 MCallbackId gOnSceneNewCallbackId;
@@ -133,6 +135,29 @@ void onSceneLoad(void *userData){
 
   MStatus status = MS::kSuccess;
   mayaSetLastLoadedScene(MFileIO::currentFile());
+
+  // visit all existing extension package nodes and check if this has already been packaged.
+  // check for all names with the same suffix.
+  if(FabricExtensionPackageNode::getNumInstances() > 0)
+  {
+    // since we need to reload the packages - we need to destoy the client
+    // maybe this can be optimized
+    FabricSplice::DestroyClient();
+
+    try
+    {
+      FabricCore::Client client = FabricDFGWidget::GetCoreClient();
+      for(unsigned int i=0;i<FabricExtensionPackageNode::getNumInstances();i++)
+      {
+        FabricExtensionPackageNode * existingPackage = FabricExtensionPackageNode::getInstanceByIndex(i);
+        existingPackage->loadPackage(client);
+      }
+    }
+    catch(FabricCore::Exception e)
+    {
+      mayaLogErrorFunc(e.getDesc_cstr());
+    }
+  }
 
   std::vector<FabricSpliceBaseInterface*> instances = FabricSpliceBaseInterface::getInstances();
 
@@ -266,11 +291,13 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerNode("canvasFuncNode", FabricDFGMayaNode_Func::id, FabricDFGMayaNode_Func::creator, FabricDFGMayaNode_Func::initialize);
   plugin.registerNode("canvasFuncDeformer", FabricDFGMayaDeformer_Func::id, FabricDFGMayaDeformer_Func::creator, FabricDFGMayaDeformer_Func::initialize, MPxNode::kDeformerNode);
   plugin.registerNode("fabricConstraint", FabricConstraint::id, FabricConstraint::creator, FabricConstraint::initialize);
+  plugin.registerNode("fabricExtensionPackage", FabricExtensionPackageNode::id, FabricExtensionPackageNode::creator, FabricExtensionPackageNode::initialize);
 
-  plugin.registerCommand("FabricCanvasGetFabricVersion",  FabricDFGGetFabricVersionCommand::creator, FabricDFGGetFabricVersionCommand ::newSyntax);
-  plugin.registerCommand("FabricCanvasGetContextID",      FabricDFGGetContextIDCommand    ::creator, FabricDFGGetContextIDCommand     ::newSyntax);
-  plugin.registerCommand("FabricCanvasGetBindingID",      FabricDFGGetBindingIDCommand    ::creator, FabricDFGGetBindingIDCommand     ::newSyntax);
-  plugin.registerCommand("FabricCanvasDestroyClient",     FabricDFGDestroyClientCommand   ::creator, FabricDFGDestroyClientCommand    ::newSyntax);
+  plugin.registerCommand("FabricCanvasGetFabricVersion",  FabricDFGGetFabricVersionCommand  ::creator, FabricDFGGetFabricVersionCommand  ::newSyntax);
+  plugin.registerCommand("FabricCanvasGetContextID",      FabricDFGGetContextIDCommand      ::creator, FabricDFGGetContextIDCommand      ::newSyntax);
+  plugin.registerCommand("FabricCanvasGetBindingID",      FabricDFGGetBindingIDCommand      ::creator, FabricDFGGetBindingIDCommand      ::newSyntax);
+  plugin.registerCommand("FabricCanvasDestroyClient",     FabricDFGDestroyClientCommand     ::creator, FabricDFGDestroyClientCommand     ::newSyntax);
+  plugin.registerCommand("FabricCanvasPackageExtensions", FabricDFGPackageExtensionsCommand ::creator, FabricDFGPackageExtensionsCommand ::newSyntax);
 
   MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes         );
   MAYA_REGISTER_DFGUICMD( plugin, Connect             );
@@ -414,6 +441,13 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterNode(FabricDFGMayaNode_Func::id);
   plugin.deregisterNode(FabricDFGMayaDeformer_Func::id);
   plugin.deregisterNode(FabricConstraint::id);
+  plugin.deregisterNode(FabricExtensionPackageNode::id);
+
+  plugin.deregisterCommand("FabricCanvasGetFabricVersion");
+  plugin.deregisterCommand("FabricCanvasGetContextID");
+  plugin.deregisterCommand("FabricCanvasGetBindingID");
+  plugin.deregisterCommand("FabricCanvasDestroyClient");
+  plugin.deregisterCommand("FabricCanvasPackageExtensions");
 
   MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes         );
   MAYA_DEREGISTER_DFGUICMD( plugin, Connect             );
