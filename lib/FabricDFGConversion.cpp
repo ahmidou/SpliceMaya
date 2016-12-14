@@ -2434,9 +2434,9 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
       
       float x,y;
       curve.getTangent(i, x, y, true);
-      
-      float weight = 1.0f/3.0f;
-      float gradient = 0.0;
+   
+      float weight = -1.0f/3.0f;
+      float gradient = 0.0f;
       
       // Weighted out tangents are defined as 3*(P4 - P3),
       // So multiplly by 1/3 to get P3, and then divide by timeDelta
@@ -2445,7 +2445,7 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
       // will create equally spaced handles, effectively the same as
       // Maya's non-weighted curves.
       if(weighted && fabs(timeDelta) > 0.0001)
-        weight = (x*-1.0/3.0)/timeDelta;
+        weight = x*weight/timeDelta;
       if(fabs(x) > 0.0001)
         gradient = y/x;
         //gradient = ((y*1.0/3.0)/valueDelta)/((x*1.0/3.0)/timeDelta);
@@ -2461,9 +2461,9 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
       
       float x,y;
       curve.getTangent(i, x, y, false);
-      
+    
       float weight = 1.0f/3.0f;
-      float gradient = 0.0;
+      float gradient = 0.0f;
       
       // Weighted out tangents are defined as 3*(P2 - P1),
       // So multiplly by 1/3 to get P2, and then divide by timeDelta
@@ -2472,11 +2472,11 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
       // will create equally spaced handles, effectively the same as
       // Maya's non-weighted curves.
       if(weighted && fabs(timeDelta) > 0.0001)
-        weight = (x*1.0/3.0)/timeDelta;
+       weight = x*weight/timeDelta;
       if(fabs(x) > 0.0001)
         gradient = y/x;
         //gradient = ((y*1.0/3.0)/valueDelta)/((x*1.0/3.0)/timeDelta);
-      
+
       outTangentVal.setMember("x", FabricSplice::constructFloat64RTVal(weight));
       outTangentVal.setMember("y", FabricSplice::constructFloat64RTVal(gradient));
     }
@@ -2484,10 +2484,12 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
     keyVal.setMember("inTangent", inTangentVal);
     keyVal.setMember("outTangent", outTangentVal);
     int interpolation = 2;
-    if(curve.outTangentType(i) == MFnAnimCurve::kTangentFlat)
+    if(curve.outTangentType(i) == MFnAnimCurve::kTangentStep)
       interpolation = 0;
     else if(curve.outTangentType(i) == MFnAnimCurve::kTangentLinear)
       interpolation = 1;
+     else if(curve.outTangentType(i) == MFnAnimCurve::kTangentStepNext)
+      interpolation = 3;
     keyVal.setMember("interpolation", FabricSplice::constructSInt32RTVal(interpolation));
     keysVal.setArrayElement(i, keyVal);
   }
