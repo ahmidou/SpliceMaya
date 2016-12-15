@@ -2568,7 +2568,7 @@ MStatus FabricDFGImportJSONCommand::doIt(const MArgList &args)
 
     // check if the graph is not empty
     FabricCore::DFGExec exec = interf->getDFGExec();
-    if(exec.getExecPortCount() > 1 || exec.getNodeCount() > 0)
+    if(exec.getExecPortCount() > 1 || (exec.getType() == FEC_DFGExecType_Graph && exec.getNodeCount() > 0))
       throw ArgException( MS::kFailure, MString(getName()) + ": The Canvas Graph is not empty. You can only load graphs onto empty Canvas nodes.");
 
     interf->restoreFromJSON(json);
