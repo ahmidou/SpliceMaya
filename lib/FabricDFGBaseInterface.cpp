@@ -647,6 +647,8 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
     return;
   if(plug.attribute().isNull())
     return;
+  if(!m_binding.isValid())
+    return;
 
   // filter plugs containing [-1]
   MString plugName = plug.name();
