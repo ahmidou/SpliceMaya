@@ -1258,7 +1258,7 @@ inline bool AddBaseTypeAttributes(
   
   else if(binding.getExec().isExecPortResolvedType(portIndex, "SInt8") ||
           binding.getExec().isExecPortResolvedType(portIndex, "SInt8[]"))     
-    numType = MFnNumericData::kChar;
+    numType = MFnNumericData::kInt;
   
   else if(binding.getExec().isExecPortResolvedType(portIndex, "UInt16") ||
           binding.getExec().isExecPortResolvedType(portIndex, "UInt16[]"))     
