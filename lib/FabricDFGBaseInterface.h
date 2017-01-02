@@ -175,7 +175,6 @@ protected:
   bool _isEvaluating;
   bool _dgDirtyQueued;
   unsigned int m_evalID;
-  unsigned int m_evalIDAtLastEvaluate;
   MPlugArray _affectedPlugs;
 
 #if MAYA_API_VERSION < 201300

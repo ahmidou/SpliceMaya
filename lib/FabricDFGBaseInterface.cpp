@@ -65,7 +65,6 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(
   _isEvaluating = false;
   _dgDirtyQueued = false;
   m_evalID = 0;
-  m_evalIDAtLastEvaluate = 0;
   m_isStoringJson = false;
   _instances.push_back(this);
 
@@ -231,7 +230,6 @@ void FabricDFGBaseInterface::evaluate(){
 
   FTL::AutoSet<bool> transfersInputs(_isEvaluating, true);
   _dgDirtyQueued = false;
-  m_evalIDAtLastEvaluate = m_evalID;
 
   MFnDependencyNode thisNode(getThisMObject());
 
@@ -804,15 +802,19 @@ void FabricDFGBaseInterface::invalidateNode()
 void FabricDFGBaseInterface::incrementEvalID()
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::incrementEvalID");
-  if( m_evalID == m_evalIDAtLastEvaluate )
-  {
-    MFnDependencyNode thisNode(getThisMObject());
-    MPlug evalIDPlug = thisNode.findPlug("evalID");
-    if(evalIDPlug.isNull())
-      return;
 
-    evalIDPlug.setValue( (int)++m_evalID );
-  } 
+  MFnDependencyNode thisNode(getThisMObject());
+  MPlug evalIDPlug = thisNode.findPlug("evalID");
+  if(evalIDPlug.isNull())
+    return;
+
+  m_evalID++;
+
+  MString plugName = evalIDPlug.name();
+  MString command("setAttr ");
+  MString evalIDStr;
+  evalIDStr.set(m_evalID);
+  MGlobal::executeCommandOnIdle(command+plugName+" "+evalIDStr);
 }
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
