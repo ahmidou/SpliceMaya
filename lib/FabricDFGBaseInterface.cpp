@@ -382,7 +382,30 @@ void FabricDFGBaseInterface::generateAttributeLookups()
       attrNameRef == FTL_STR("frozen"))
       continue;
 
-    _attributeNameToIndex.insert(attrib.name().asChar(), i);
+    // find the top level attribute
+    MPlug plug(getThisMObject(), thisNode.attribute(i));
+    while(plug.isChild()) {
+      if(plug.parent().isElement())
+        plug = plug.parent().array();
+      else
+        plug = plug.parent();
+    }
+
+    // for attributes which are not top level attributes
+    // we need to store the index of the top level attribute
+    // in the map. so say if plug positions[11].x is hit, we
+    // need to store the index like so for example:
+    // _attributeNameToIndex["positions"] = 3
+    // _attributeNameToIndex["positions[11].x"] = 3
+    // where 3 is the index of the positions attribute.
+    MFnAttribute parentAttribute(plug.attribute());
+    MString parentAttributeName = parentAttribute.name();
+    FTL::StrRef parentAttributeNameRef = parentAttributeName.asChar();
+    FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(parentAttributeNameRef);
+    if(it != _attributeNameToIndex.end())
+      _attributeNameToIndex.insert(attrib.name().asChar(), it->second);
+    else
+      _attributeNameToIndex.insert(attrib.name().asChar(), i);
   }
 
   for(unsigned int i = thisNode.attributeCount(); i < _attributePlugs.length(); ++i)
@@ -2371,10 +2394,8 @@ void FabricDFGBaseInterface::VisitInputArgsCallback(
     return;
 
   assert(attributeIndex < ud->interf->_isAttributeIndexDirty.size());
-  // Julien
-  // Bug when updating a single component of a struct (for ex, x corrdinate of a Vec3)
-  //if(!ud->interf->_isAttributeIndexDirty[attributeIndex])
-  //  return;
+  if(!ud->interf->_isAttributeIndexDirty[attributeIndex])
+   return;
 
   MPlug plug = ud->interf->_attributePlugs[attributeIndex];
 
