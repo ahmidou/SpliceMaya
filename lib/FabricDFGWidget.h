@@ -82,6 +82,8 @@ public:
 
   static void OnSelectCanvasNodeInDCC(void *client);
 
+  virtual void keyPressEvent(QKeyEvent * event);
+
 public slots:
   virtual void onUndo();
   virtual void onRedo();
