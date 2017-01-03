@@ -842,17 +842,119 @@ void dfgPlugToPort_integer(
     MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
     pauseBracket.resume();
 
-    unsigned int numElements = arrayHandle.elementCount();
-    std::vector<int32_t> buffer(numElements);
-    int32_t * values = &buffer[0];
+    FTL::CStrRef resolvedType = argTypeName;
+    if(resolvedType == FTL_STR("SInt8[]"))
+    {
+      unsigned int numElements = arrayHandle.elementCount();
+      std::vector<int8_t> buffer(numElements);
+      int8_t * values = &buffer[0];
 
-    for(unsigned int i = 0; i < numElements; ++i){
-      arrayHandle.jumpToArrayElement(i);
-      MDataHandle handle = arrayHandle.inputValue();
-      values[i] = (int32_t)handle.asLong();
+      for(unsigned int i = 0; i < numElements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        values[i] = (int8_t)handle.asLong();
+      }
+
+      setRawCB(getSetUD, values, elementDataSize * numElements);
     }
+    else if(resolvedType == FTL_STR("UInt8[]"))
+    {
+      unsigned int numElements = arrayHandle.elementCount();
+      std::vector<uint8_t> buffer(numElements);
+      uint8_t * values = &buffer[0];
 
-    setRawCB(getSetUD, values, elementDataSize * numElements);
+      for(unsigned int i = 0; i < numElements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        values[i] = (uint8_t)handle.asLong();
+      }
+
+      setRawCB(getSetUD, values, elementDataSize * numElements);
+    }
+    else if(resolvedType == FTL_STR("SInt16[]"))
+    {
+      unsigned int numElements = arrayHandle.elementCount();
+      std::vector<int16_t> buffer(numElements);
+      int16_t * values = &buffer[0];
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        values[i] = (int16_t)handle.asLong();
+      }
+
+      setRawCB(getSetUD, values, elementDataSize * numElements);
+    }
+    else if(resolvedType == FTL_STR("UInt16[]"))
+    {
+      unsigned int numElements = arrayHandle.elementCount();
+      std::vector<uint16_t> buffer(numElements);
+      uint16_t * values = &buffer[0];
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        values[i] = (uint16_t)handle.asLong();
+      }
+
+      setRawCB(getSetUD, values, elementDataSize * numElements);
+    }
+    else if(resolvedType == FTL_STR("SInt32[]"))
+    {
+      unsigned int numElements = arrayHandle.elementCount();
+      std::vector<int32_t> buffer(numElements);
+      int32_t * values = &buffer[0];
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        values[i] = (int32_t)handle.asLong();
+      }
+
+      setRawCB(getSetUD, values, elementDataSize * numElements);
+    }
+    else if(resolvedType == FTL_STR("UInt32[]"))
+    {
+      unsigned int numElements = arrayHandle.elementCount();
+      std::vector<uint32_t> buffer(numElements);
+      uint32_t * values = &buffer[0];
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        values[i] = (uint32_t)handle.asLong();
+      }
+
+      setRawCB(getSetUD, values, elementDataSize * numElements);
+    }
+    else if(resolvedType == FTL_STR("SInt64[]"))
+    {
+      unsigned int numElements = arrayHandle.elementCount();
+      std::vector<int64_t> buffer(numElements);
+      int64_t * values = &buffer[0];
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        values[i] = (int64_t)handle.asLong();
+      }
+
+      setRawCB(getSetUD, values, elementDataSize * numElements);
+    }
+    else if(resolvedType == FTL_STR("UInt64[]"))
+    {
+      unsigned int numElements = arrayHandle.elementCount();
+      std::vector<uint64_t> buffer(numElements);
+      uint64_t * values = &buffer[0];
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        values[i] = (uint64_t)handle.asLong();
+      }
+
+      setRawCB(getSetUD, values, elementDataSize * numElements);
+    }
   }else{
     FTL::AutoProfilingPauseEvent pauseBracket(bracket);
     MDataHandle handle = data.inputValue(plug);
@@ -871,7 +973,40 @@ void dfgPlugToPort_integer(
 
       setRawCB(getSetUD, values, elementDataSize * numElements);
     }else{
-      setCB(getSetUD, FabricSplice::constructSInt32RTVal(handle.asLong()).getFECRTValRef());
+
+      FTL::CStrRef resolvedType = argTypeName;
+      if(resolvedType == FTL_STR("SInt8"))
+      {
+        setCB(getSetUD, FabricSplice::constructSInt8RTVal(handle.asLong()).getFECRTValRef());
+      }
+      else if(resolvedType == FTL_STR("UInt8"))
+      {
+        setCB(getSetUD, FabricSplice::constructUInt8RTVal(handle.asLong()).getFECRTValRef());
+      }
+      else if(resolvedType == FTL_STR("SInt16"))
+      {
+        setCB(getSetUD, FabricSplice::constructSInt16RTVal(handle.asLong()).getFECRTValRef());
+      }
+      else if(resolvedType == FTL_STR("UInt16"))
+      {
+        setCB(getSetUD, FabricSplice::constructUInt16RTVal(handle.asLong()).getFECRTValRef());
+      }
+      else if(resolvedType == FTL_STR("SInt32"))
+      {
+        setCB(getSetUD, FabricSplice::constructSInt32RTVal(handle.asLong()).getFECRTValRef());
+      }
+      else if(resolvedType == FTL_STR("UInt32"))
+      {
+        setCB(getSetUD, FabricSplice::constructUInt32RTVal(handle.asLong()).getFECRTValRef());
+      }
+      else if(resolvedType == FTL_STR("SInt64"))
+      {
+        setCB(getSetUD, FabricSplice::constructSInt64RTVal(handle.asLong()).getFECRTValRef());
+      }
+      else if(resolvedType == FTL_STR("UInt64"))
+      {
+        setCB(getSetUD, FabricSplice::constructUInt64RTVal(handle.asLong()).getFECRTValRef());
+      }
     }
   }
 }
@@ -3353,38 +3488,301 @@ void dfgPortToPlug_integer(
   MPlug &plug, 
   MDataBlock &data)
 {
-  uint64_t elementDataSize = sizeof(int32_t);
-  uint64_t numElements = argRawDataSize / elementDataSize;
+  FTL::CStrRef resolvedType = argTypeName;
+  if(resolvedType == FTL_STR("SInt8") || resolvedType == FTL_STR("SInt8[]"))
+  {
+    uint64_t elementDataSize = sizeof(int8_t);
+    uint64_t numElements = argRawDataSize / elementDataSize;
 
-  const int32_t * values;
-  getRawCB(getSetUD, (const void**)&values);
-  // unsigned int offset = 0;
+    const int8_t * values;
+    getRawCB(getSetUD, (const void**)&values);
+    // unsigned int offset = 0;
 
-  if(plug.isArray()){
-    MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
-    MArrayDataBuilder arraybuilder = arrayHandle.builder();
+    if(plug.isArray()){
+      MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+      MArrayDataBuilder arraybuilder = arrayHandle.builder();
 
-    for(unsigned int i = 0; i < numElements; ++i){
-      MDataHandle handle = arraybuilder.addElement(i);
-      handle.setInt(values[i]);
-    }
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        handle.setInt(values[i]);
+      }
 
-    arrayHandle.set(arraybuilder);
-    arrayHandle.setAllClean();
-  }else{
-    MDataHandle handle = data.outputValue(plug);
-    // todo
-    // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
-    if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {// || isNativeArray) {
-
-      MIntArray arrayValues;
-      arrayValues.setLength(numElements);
-      for(unsigned int i = 0; i < numElements; ++i)
-        arrayValues[i] = values[i];
-
-      handle.set(MFnIntArrayData().create(arrayValues));
+      arrayHandle.set(arraybuilder);
+      arrayHandle.setAllClean();
     }else{
-      handle.setInt(values[0]);
+      MDataHandle handle = data.outputValue(plug);
+      // todo
+      // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+      if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {// || isNativeArray) {
+
+        MIntArray arrayValues;
+        arrayValues.setLength(numElements);
+        for(unsigned int i = 0; i < numElements; ++i)
+          arrayValues[i] = values[i];
+
+        handle.set(MFnIntArrayData().create(arrayValues));
+      }else{
+        handle.setInt(values[0]);
+      }
+    }
+  }
+  else if(resolvedType == FTL_STR("UInt8") || resolvedType == FTL_STR("UInt8[]"))
+  {
+    uint64_t elementDataSize = sizeof(uint8_t);
+    uint64_t numElements = argRawDataSize / elementDataSize;
+
+    const uint8_t * values;
+    getRawCB(getSetUD, (const void**)&values);
+    // unsigned int offset = 0;
+
+    if(plug.isArray()){
+      MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+      MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        handle.setInt(values[i]);
+      }
+
+      arrayHandle.set(arraybuilder);
+      arrayHandle.setAllClean();
+    }else{
+      MDataHandle handle = data.outputValue(plug);
+      // todo
+      // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+      if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {// || isNativeArray) {
+
+        MIntArray arrayValues;
+        arrayValues.setLength(numElements);
+        for(unsigned int i = 0; i < numElements; ++i)
+          arrayValues[i] = values[i];
+
+        handle.set(MFnIntArrayData().create(arrayValues));
+      }else{
+        handle.setInt(values[0]);
+      }
+    }
+  }
+  else if(resolvedType == FTL_STR("SInt16") || resolvedType == FTL_STR("SInt16[]"))
+  {
+    uint64_t elementDataSize = sizeof(int16_t);
+    uint64_t numElements = argRawDataSize / elementDataSize;
+
+    const int16_t * values;
+    getRawCB(getSetUD, (const void**)&values);
+    // unsigned int offset = 0;
+
+    if(plug.isArray()){
+      MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+      MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        handle.setInt(values[i]);
+      }
+
+      arrayHandle.set(arraybuilder);
+      arrayHandle.setAllClean();
+    }else{
+      MDataHandle handle = data.outputValue(plug);
+      // todo
+      // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+      if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {// || isNativeArray) {
+
+        MIntArray arrayValues;
+        arrayValues.setLength(numElements);
+        for(unsigned int i = 0; i < numElements; ++i)
+          arrayValues[i] = values[i];
+
+        handle.set(MFnIntArrayData().create(arrayValues));
+      }else{
+        handle.setInt(values[0]);
+      }
+    }
+  }
+  else if(resolvedType == FTL_STR("UInt16") || resolvedType == FTL_STR("UInt16[]"))
+  {
+    uint64_t elementDataSize = sizeof(uint16_t);
+    uint64_t numElements = argRawDataSize / elementDataSize;
+
+    const uint16_t * values;
+    getRawCB(getSetUD, (const void**)&values);
+    // unsigned int offset = 0;
+
+    if(plug.isArray()){
+      MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+      MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        handle.setInt(values[i]);
+      }
+
+      arrayHandle.set(arraybuilder);
+      arrayHandle.setAllClean();
+    }else{
+      MDataHandle handle = data.outputValue(plug);
+      // todo
+      // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+      if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {// || isNativeArray) {
+
+        MIntArray arrayValues;
+        arrayValues.setLength(numElements);
+        for(unsigned int i = 0; i < numElements; ++i)
+          arrayValues[i] = values[i];
+
+        handle.set(MFnIntArrayData().create(arrayValues));
+      }else{
+        handle.setInt(values[0]);
+      }
+    }
+  }
+  else if(resolvedType == FTL_STR("SInt32") || resolvedType == FTL_STR("SInt32[]"))
+  {
+    uint64_t elementDataSize = sizeof(int32_t);
+    uint64_t numElements = argRawDataSize / elementDataSize;
+
+    const int32_t * values;
+    getRawCB(getSetUD, (const void**)&values);
+    // unsigned int offset = 0;
+
+    if(plug.isArray()){
+      MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+      MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        handle.setInt(values[i]);
+      }
+
+      arrayHandle.set(arraybuilder);
+      arrayHandle.setAllClean();
+    }else{
+      MDataHandle handle = data.outputValue(plug);
+      // todo
+      // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+      if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {// || isNativeArray) {
+
+        MIntArray arrayValues;
+        arrayValues.setLength(numElements);
+        for(unsigned int i = 0; i < numElements; ++i)
+          arrayValues[i] = values[i];
+
+        handle.set(MFnIntArrayData().create(arrayValues));
+      }else{
+        handle.setInt(values[0]);
+      }
+    }
+  }
+  else if(resolvedType == FTL_STR("UInt32") || resolvedType == FTL_STR("UInt32[]"))
+  {
+    uint64_t elementDataSize = sizeof(uint32_t);
+    uint64_t numElements = argRawDataSize / elementDataSize;
+
+    const uint32_t * values;
+    getRawCB(getSetUD, (const void**)&values);
+    // unsigned int offset = 0;
+
+    if(plug.isArray()){
+      MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+      MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        handle.setInt(values[i]);
+      }
+
+      arrayHandle.set(arraybuilder);
+      arrayHandle.setAllClean();
+    }else{
+      MDataHandle handle = data.outputValue(plug);
+      // todo
+      // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+      if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {// || isNativeArray) {
+
+        MIntArray arrayValues;
+        arrayValues.setLength(numElements);
+        for(unsigned int i = 0; i < numElements; ++i)
+          arrayValues[i] = values[i];
+
+        handle.set(MFnIntArrayData().create(arrayValues));
+      }else{
+        handle.setInt(values[0]);
+      }
+    }
+  }
+  else if(resolvedType == FTL_STR("SInt64") || resolvedType == FTL_STR("SInt64[]"))
+  {
+    uint64_t elementDataSize = sizeof(int64_t);
+    uint64_t numElements = argRawDataSize / elementDataSize;
+
+    const int64_t * values;
+    getRawCB(getSetUD, (const void**)&values);
+    // unsigned int offset = 0;
+
+    if(plug.isArray()){
+      MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+      MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        handle.setInt(values[i]);
+      }
+
+      arrayHandle.set(arraybuilder);
+      arrayHandle.setAllClean();
+    }else{
+      MDataHandle handle = data.outputValue(plug);
+      // todo
+      // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+      if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {// || isNativeArray) {
+
+        MIntArray arrayValues;
+        arrayValues.setLength(numElements);
+        for(unsigned int i = 0; i < numElements; ++i)
+          arrayValues[i] = values[i];
+
+        handle.set(MFnIntArrayData().create(arrayValues));
+      }else{
+        handle.setInt(values[0]);
+      }
+    }
+  }
+  else if(resolvedType == FTL_STR("UInt64") || resolvedType == FTL_STR("UInt64[]"))
+  {
+    uint64_t elementDataSize = sizeof(uint64_t);
+    uint64_t numElements = argRawDataSize / elementDataSize;
+
+    const uint64_t * values;
+    getRawCB(getSetUD, (const void**)&values);
+    // unsigned int offset = 0;
+
+    if(plug.isArray()){
+      MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+      MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+      for(unsigned int i = 0; i < numElements; ++i){
+        MDataHandle handle = arraybuilder.addElement(i);
+        handle.setInt(values[i]);
+      }
+
+      arrayHandle.set(arraybuilder);
+      arrayHandle.setAllClean();
+    }else{
+      MDataHandle handle = data.outputValue(plug);
+      // todo
+      // bool isNativeArray = FTL::CStrRef(binding.getExec().getExecPortMetadata(argName, "nativeArray")) == "true";
+      if(MFnTypedAttribute(plug.attribute()).attrType() == MFnData::kIntArray) {// || isNativeArray) {
+
+        MIntArray arrayValues;
+        arrayValues.setLength(numElements);
+        for(unsigned int i = 0; i < numElements; ++i)
+          arrayValues[i] = values[i];
+
+        handle.set(MFnIntArrayData().create(arrayValues));
+      }else{
+        handle.setInt(values[0]);
+      }
     }
   }
 }
