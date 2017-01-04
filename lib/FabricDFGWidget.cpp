@@ -277,3 +277,17 @@ void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog, FTL::
     }
   }
 }
+
+void FabricDFGWidget::keyPressEvent(QKeyEvent * event)
+{
+  if(event->modifiers() == Qt::NoModifier)
+  {
+    Qt::Key key = (Qt::Key)event->key();
+    if(key != Qt::Key_Escape)
+    {
+      event->accept();
+      return;
+    }
+  }
+  FabricDFGWidgetBaseClass::keyPressEvent(event);
+}
