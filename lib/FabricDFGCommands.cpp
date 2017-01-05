@@ -15,6 +15,8 @@
 #include <maya/MStringArray.h>
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
+#include <maya/MArgList.h>
+#include <maya/MArgParser.h>
 #include <maya/MQtUtil.h>
 #include <maya/MDGModifier.h>
 #include <maya/MFnDependencyNode.h>

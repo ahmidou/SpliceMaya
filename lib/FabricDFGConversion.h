@@ -50,3 +50,5 @@ typedef void(*DFGArgToPlugFunc)(
 
 DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType);
 DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::StrRef &dataType);
+
+MObject dfgPolygonMeshToMfnMesh(FabricCore::RTVal rtMesh, bool insideCompute = true);

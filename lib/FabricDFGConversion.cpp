@@ -4605,8 +4605,9 @@ void dfgPortToPlug_mat44_float64(
   }
 }
 
-void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtMesh)
+MObject dfgPolygonMeshToMfnMesh(FabricCore::RTVal rtMesh, bool insideCompute)
 {
+  MObject result;
   CORE_CATCH_BEGIN;
 
   unsigned int nbPoints   = 0;
@@ -4651,15 +4652,19 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
     mayaIndices[2] = 2;
 
     MFnMeshData meshDataFn;
-    MObject meshObject;
     MFnMesh mesh;
-    meshObject = meshDataFn.create();
 
-    mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+    if(insideCompute)
+    {
+      MObject meshObject = meshDataFn.create();
+      mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+      result = meshObject;
+    }
+    else
+    {
+      result = mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, MObject::kNullObj );
+    }
     mesh.updateSurface();
-
-    handle.set( meshObject );
-    handle.setClean();
   }
   else
 
@@ -4693,9 +4698,7 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
     }
 
     MFnMeshData meshDataFn;
-    MObject meshObject;
     MFnMesh mesh;
-    meshObject = meshDataFn.create();
 
     MIntArray normalFace, normalVertex;
     normalFace.setLength( mayaIndices.length() );
@@ -4717,7 +4720,17 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
       }
     }
 
-    mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+    if(insideCompute)
+    {
+      MObject meshObject = meshDataFn.create();
+      mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+      result = meshObject;
+    }
+    else
+    {
+      result = mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, MObject::kNullObj );
+    }
+
     mesh.updateSurface();
     mayaPoints.clear();
     mesh.setFaceVertexNormals( mayaNormals, normalFace, normalVertex );
@@ -4776,11 +4789,18 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
       }
     }
 
-    handle.set( meshObject );
-    handle.setClean();
   }
 
   CORE_CATCH_END;
+
+  return result;
+}
+
+void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtMesh)
+{
+  MObject meshObject = dfgPolygonMeshToMfnMesh( rtMesh );
+  handle.set( meshObject );
+  handle.setClean();
 }
 
 void dfgPortToPlug_PolygonMesh(
