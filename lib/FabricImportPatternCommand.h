@@ -32,6 +32,8 @@ private:
   std::map< std::string, MObject > m_nodes;
   std::map< std::string, MObject > m_materialSets;
 
+  MString m_rootPrefix;
+
   MString parentPath(MString path, MString * name = NULL);
   MString simplifyPath(MString path);
   MObject getOrCreateNodeForPath(MString path, MString type="transform", bool createIfMissing = true);

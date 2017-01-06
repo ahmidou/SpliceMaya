@@ -14,6 +14,8 @@
 #include <maya/MFnNumericData.h>
 #include <maya/MStringArray.h>
 #include <maya/MDataHandle.h>
+#include <maya/MFnMesh.h>
+#include <maya/MFnNurbsCurve.h>
 
 #include <FabricCore.h>
 #include <FabricSplice.h>
@@ -51,4 +53,8 @@ typedef void(*DFGArgToPlugFunc)(
 DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType);
 DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::StrRef &dataType);
 
-MObject dfgPolygonMeshToMfnMesh(FabricCore::RTVal rtMesh, bool insideCompute = true);
+// make low level conversion available since it can be useful for other code paths
+FabricCore::RTVal dfgMFnMeshToPolygonMesh(MFnMesh & mesh, FabricCore::RTVal rtMesh);
+bool dfgMFnNurbsCurveToCurves(unsigned int index, MFnNurbsCurve & curve, FabricCore::RTVal & rtCurves);
+MObject dfgPolygonMeshToMFnMesh(FabricCore::RTVal rtMesh, bool insideCompute = true);
+// todo: MObject dfgCurvesMeshToMfnNurbsCurve(FabricCore::RTVal rtCurves, bool insideCompute = true);

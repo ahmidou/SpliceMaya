@@ -33,8 +33,10 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.enableQuery(false);
   syntax.enableEdit(false);
   syntax.addFlag( "-f", "-filepath", MSyntax::kString );
-  //syntax.addFlag( "-s", "-suffix", MSyntax::kString );
-  //syntax.addFlag( "-ns", "-autoNamespace", MSyntax::kString );
+  syntax.addFlag( "-n", "-canvasnode", MSyntax::kString );
+  syntax.addFlag( "-r", "-root", MSyntax::kString );
+  syntax.addFlag( "-a", "-args", MSyntax::kString );
+  syntax.addFlag( "-g", "-geometries", MSyntax::kString );
   return syntax;
 }
 
@@ -48,71 +50,341 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   MStatus status;
   MArgParser argParser(syntax(), args, &status);
 
+  FabricDFGBaseInterface * interf = NULL;
   MString filepath;
-  if ( argParser.isFlagSet("filepath") )
-  {
-    filepath = argParser.flagArgumentString("filepath", 0);
-  }
-  else
-  {
-    QString qFileName = QFileDialog::getOpenFileName( 
-      MQtUtil::mainWindow(), 
-      "Choose canvas file", 
-      QDir::currentPath(), 
-      "Canvas files (*.canvas);;All files (*.*)"
-    );
 
-    if(qFileName.isNull())
+  if ( argParser.isFlagSet("canvasnode") )
+  {
+    MString canvasnode = argParser.flagArgumentString("canvasnode", 0);
+    interf = FabricDFGBaseInterface::getInstanceByName(canvasnode.asChar());
+    if(interf == NULL)
     {
-      mayaLogErrorFunc("No filepath specified.");
+      mayaLogErrorFunc("Canvas node \""+canvasnode+"\" does no exist.");
       return mayaErrorOccured();
     }
-
-    filepath = qFileName.toUtf8().constData();      
   }
 
-  if(!FTL::FSExists(filepath.asChar()))
+  if(interf == NULL)
   {
-    mayaLogErrorFunc("FilePath \""+filepath+"\" does no exist.");
-    return mayaErrorOccured();
-  }
-
-  MStringArray result;
-  FabricCore::DFGBinding binding;
-  try
-  {
-    FabricCore::Client client = FabricDFGWidget::GetCoreClient();
-    client.loadExtension("GenericImporter", "", false);
-
-    MString json;
-    FILE * file = fopen(filepath.asChar(), "rb");
-    if(!file)
+    if ( argParser.isFlagSet("filepath") )
     {
-      mayaLogErrorFunc("FilePath '"+filepath+"' cannot be opened.");
-      return MS::kFailure;
+      filepath = argParser.flagArgumentString("filepath", 0);
     }
     else
     {
-      fseek( file, 0, SEEK_END );
-      long fileSize = ftell( file );
-      rewind( file );
+      QString qFileName = QFileDialog::getOpenFileName( 
+        MQtUtil::mainWindow(), 
+        "Choose canvas file", 
+        QDir::currentPath(), 
+        "Canvas files (*.canvas);;All files (*.*)"
+      );
 
-      char * buffer = (char*) malloc(fileSize + 1);
-      buffer[fileSize] = '\0';
+      if(qFileName.isNull())
+      {
+        mayaLogErrorFunc("No filepath specified.");
+        return mayaErrorOccured();
+      }
 
-      size_t readBytes = fread(buffer, 1, fileSize, file);
-      assert(readBytes == size_t(fileSize));
-      (void)readBytes;
-
-      fclose(file);
-
-      json = buffer;
-      free(buffer);
+      filepath = qFileName.toUtf8().constData();      
     }
 
-    FabricCore::DFGHost dfgHost = client.getDFGHost();
-    binding = dfgHost.createBindingFromJSON(json.asChar());
+    if(!FTL::FSExists(filepath.asChar()))
+    {
+      mayaLogErrorFunc("FilePath \""+filepath+"\" does no exist.");
+      return mayaErrorOccured();
+    }
+  }
 
+  if ( argParser.isFlagSet("root") )
+  {
+    m_rootPrefix = argParser.flagArgumentString("root", 0);
+    if(m_rootPrefix.length() > 0)
+    {
+      if(m_rootPrefix.asChar()[m_rootPrefix.length()-1] != '/')
+        m_rootPrefix += "/";
+    }
+  }
+
+  MStringArray result;
+  FabricCore::Client client;
+  FabricCore::DFGBinding binding;
+
+  if(interf != NULL)
+  {
+    try
+    {
+      client = interf->getCoreClient();
+      client.loadExtension("GenericImporter", "", false);
+      binding = interf->getDFGBinding();
+    }
+    catch(FabricSplice::Exception e)
+    {
+      mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    }
+  }
+  else
+  {
+    try
+    {
+      client = FabricDFGWidget::GetCoreClient();
+      client.loadExtension("GenericImporter", "", false);
+  
+      MString json;
+      FILE * file = fopen(filepath.asChar(), "rb");
+      if(!file)
+      {
+        mayaLogErrorFunc("FilePath '"+filepath+"' cannot be opened.");
+        return MS::kFailure;
+      }
+      else
+      {
+        fseek( file, 0, SEEK_END );
+        long fileSize = ftell( file );
+        rewind( file );
+
+        char * buffer = (char*) malloc(fileSize + 1);
+        buffer[fileSize] = '\0';
+
+        size_t readBytes = fread(buffer, 1, fileSize, file);
+        assert(readBytes == size_t(fileSize));
+        (void)readBytes;
+
+        fclose(file);
+
+        json = buffer;
+        free(buffer);
+      }
+
+      FabricCore::DFGHost dfgHost = client.getDFGHost();
+      binding = dfgHost.createBindingFromJSON(json.asChar());
+
+      if ( argParser.isFlagSet("args") )
+      {
+        FabricCore::DFGExec exec = binding.getExec();
+
+        MString args = argParser.flagArgumentString("args", 0);
+
+        FTL::JSONStrWithLoc argsSrcWithLoc( FTL::StrRef( args.asChar(), args.length() ) );
+        FTL::OwnedPtr<FTL::JSONValue const> argsValue( FTL::JSONValue::Decode( argsSrcWithLoc ) );
+        FTL::JSONObject const *argsObject = argsValue->cast<FTL::JSONObject>();
+
+        for ( FTL::JSONObject::const_iterator it = argsObject->begin(); it != argsObject->end(); ++it )
+        {
+          FTL::CStrRef key = it->first;
+          
+          bool found = false;
+          for(unsigned int i=0;i<exec.getExecPortCount();i++)
+          {
+            if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
+              continue;
+
+            FTL::CStrRef name = exec.getExecPortName(i);
+            if(name != key)
+              continue;
+
+            FTL::CStrRef type = exec.getExecPortResolvedType(i);
+            if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(client, type.c_str()))
+            {
+              mayaLogFunc("Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
+              continue;
+            }
+
+            std::string json = it->second->encode();
+            FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
+            binding.setArgValue(name.c_str(), value);
+            found = true;
+            break;
+          }
+
+          if(!found)
+          {
+            mayaLogFunc("Argument "+MString(key.c_str())+" does not exist in import pattern.");
+            return mayaErrorOccured();
+          }
+        }
+      }
+      else
+      {
+        FabricImportPatternDialog * dialog = new FabricImportPatternDialog(MQtUtil().mainWindow(), binding);
+        dialog->setModal(true);
+        dialog->setWindowModality(Qt::ApplicationModal);
+        dialog->exec();
+
+        if(!dialog->wasAccepted())
+          return MS::kFailure;
+      }
+
+      std::map< std::string, MObject > geometryObjects;
+      if ( argParser.isFlagSet("geometries") )
+      {
+        FabricCore::DFGExec exec = binding.getExec();
+
+        MString geometries = argParser.flagArgumentString("geometries", 0);
+
+        FTL::JSONStrWithLoc geometrySrcWithLoc( FTL::StrRef( geometries.asChar(), geometries.length() ) );
+        FTL::OwnedPtr<FTL::JSONValue const> geometryValue( FTL::JSONValue::Decode( geometrySrcWithLoc ) );
+        FTL::JSONObject const *geometryObject = geometryValue->cast<FTL::JSONObject>();
+
+        for ( FTL::JSONObject::const_iterator it = geometryObject->begin(); it != geometryObject->end(); ++it )
+        {
+          FTL::CStrRef key = it->first;
+
+          if(!it->second->isString())
+          {
+            mayaLogFunc("Warning: Provided geometry "+MString(key.c_str())+" is not a string - needs to be the name of the geometry in the scene.");
+            continue;
+          }
+          
+          bool found = false;
+          for(unsigned int i=0;i<exec.getExecPortCount();i++)
+          {
+            if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
+              continue;
+
+            FTL::CStrRef name = exec.getExecPortName(i);
+            if(name != key)
+              continue;
+
+            FTL::CStrRef type = exec.getExecPortResolvedType(i);
+            if(type != "PolygonMesh" && type != "Curves")
+            {
+              mayaLogFunc("Warning: Geometry "+MString(name.c_str())+" cannot be set since the canvas port is not valid geometry type.");
+              continue;
+            }
+
+            MString geometryName = it->second->getStringValue().c_str();
+            MSelectionList sl;
+            sl.add(geometryName);
+            if(sl.length() == 0)
+            {
+              mayaLogErrorFunc("Provided geometry "+geometryName+" cannot be found in scene.");
+              return mayaErrorOccured();
+            }
+
+            MObject depNode;
+            sl.getDependNode(0, depNode);
+            geometryObjects.insert( std::pair< std::string, MObject >(name.c_str(), depNode));
+            found = true;
+            break;
+          }
+
+          if(!found)
+          {
+            mayaLogFunc("Geometry argument "+MString(key.c_str())+" does not exist in import pattern.");
+            return mayaErrorOccured();
+          }
+        }
+      }
+      else
+      {
+        // parse the selection list for geometries
+        MSelectionList sl;
+        MGlobal::getActiveSelectionList(sl);
+
+        MSelectionList geometries;
+        for(unsigned int i=0;i<sl.length();i++)
+        {
+          MObject obj;
+          sl.getDependNode(i, obj);
+          if(obj.isNull())
+            continue;
+          
+          // for transforms check their shapes
+          MDagPath dag;
+          sl.getDagPath(i, dag);
+          dag.extendToShape();
+          // if(MS::kSuccess != dag.extendToShape())
+          //   sl.getDagPath(i, dag);
+
+          MFnDependencyNode node(obj);
+          MString typeName = node.typeName();
+
+          if(typeName != "mesh" && typeName != "nurbsCurve")
+            continue;
+
+          geometries.add(dag.node());
+        }
+        
+        unsigned int offset = 0;
+
+        FabricCore::DFGExec exec = binding.getExec();
+        for(unsigned int i=0;i<exec.getExecPortCount(), offset<geometries.length();i++)
+        {
+          if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
+            continue;
+
+          FTL::CStrRef type = exec.getExecPortResolvedType(i);
+          if(type != "PolygonMesh" && type != "Curves")
+          {
+            continue;
+          }
+
+          MObject obj;
+          geometries.getDependNode(offset++, obj);
+          MFnDependencyNode node(obj);
+
+          FTL::CStrRef name = exec.getExecPortName(i);
+
+          if(type == "PolygonMesh")
+          {
+            if(node.typeName() != "mesh")
+            {
+              mayaLogErrorFunc("Provided geometry "+node.name()+" is a "+node.typeName()+", but argument "+MString(name.c_str())+" is a "+MString(type.c_str())+".");
+              return mayaErrorOccured();
+            }
+          }
+          else if(type == "Curves")
+          {
+            if(node.typeName() != "nurbsCurve")
+            {
+              mayaLogErrorFunc("Provided geometry "+node.name()+" is a "+node.typeName()+", but argument "+MString(name.c_str())+" is a "+MString(type.c_str())+".");
+              return mayaErrorOccured();
+            }
+          }
+
+          geometryObjects.insert( std::pair< std::string, MObject >(name.c_str(), obj));
+          offset++;
+        }
+      }
+
+      for(std::map< std::string, MObject >::iterator it = geometryObjects.begin(); it != geometryObjects.end(); it++)
+      {
+        MString name = it->first.c_str();
+        MObject obj = it->second;
+        MFnDependencyNode node(obj);
+        if(node.typeName() == "mesh")
+        {
+          MFnMesh mesh(obj);
+          FabricCore::RTVal polygonMesh = FabricCore::RTVal::Create(client, "PolygonMesh", 0, 0);
+          polygonMesh = dfgMFnMeshToPolygonMesh(mesh, polygonMesh);
+          binding.setArgValue(name.asChar(), polygonMesh);
+        }
+        else if(node.typeName() == "nurbsCurve")
+        {
+          MFnNurbsCurve nurbsCurve(obj);
+          FabricCore::RTVal curves = FabricCore::RTVal::Create(client, "Curves", 0, 0);
+          dfgMFnNurbsCurveToCurves(0, nurbsCurve, curves);
+          binding.setArgValue(name.asChar(), curves);
+        }
+      }
+
+      binding.execute();
+    }
+    catch(FabricSplice::Exception e)
+    {
+      mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+
+      if(binding.isValid())
+      {
+        MString errors = binding.getErrors(true).getCString();
+        mayaLogErrorFunc(errors);
+      }
+      return mayaErrorOccured();
+    }
+  }
+
+  try
+  {
     m_context = FabricCore::RTVal::Construct(client, "ImporterContext", 0, 0);
     FabricCore::RTVal contextHost = m_context.maybeGetMember("host");
     MString mayaVersion;
@@ -120,17 +392,6 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     contextHost.setMember("name", FabricCore::RTVal::ConstructString(client, "Maya"));
     contextHost.setMember("version", FabricCore::RTVal::ConstructString(client, mayaVersion.asChar()));
     m_context.setMember("host", contextHost);
-
-    // todo: make this optional - users need the ability to provide arg values by script
-    FabricImportPatternDialog * dialog = new FabricImportPatternDialog(MQtUtil().mainWindow(), binding);
-    dialog->setModal(true);
-    dialog->setWindowModality(Qt::ApplicationModal);
-    dialog->exec();
-
-    if(!dialog->wasAccepted())
-      return MS::kFailure;
-
-    binding.execute();
 
     FabricCore::DFGExec exec = binding.getExec();
 
@@ -151,7 +412,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         obj = FabricCore::RTVal::Create(client, "ImporterObject", 1, &obj);
 
         MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-        path = simplifyPath(path);
+        path = m_rootPrefix + simplifyPath(path);
 
         m_objectMap.insert(std::pair< std::string, size_t > (path.asChar(), m_objectList.size()));
         m_objectList.push_back(obj);
@@ -171,7 +432,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         continue;
 
       MString path = parent.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-      path = simplifyPath(path);
+      path = m_rootPrefix + simplifyPath(path);
 
       std::map< std::string, size_t >::iterator it = m_objectMap.find(path.asChar());
       if(it != m_objectMap.end())
@@ -192,21 +453,12 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     {
       updateTransformForObject(m_objectList[i]);
       updateShapeForObject(m_objectList[i]);
-      // todo: shapes, light, cameras etc..
-      // materials
+      // todo: light, cameras etc..
     }
-
   }
   catch(FabricSplice::Exception e)
   {
     mayaLogErrorFunc(MString(getName()) + ": "+e.what());
-
-    if(binding.isValid())
-    {
-      MString errors = binding.getErrors(true).getCString();
-      mayaLogErrorFunc(errors);
-    }
-    return mayaErrorOccured();
   }
 
   setResult(result);
@@ -222,7 +474,8 @@ MString FabricImportPatternCommand::parentPath(MString path, MString * name)
   int rindex = path.rindex('/');
   if(rindex > 0)
   {
-    *name = path.substring(rindex + 1, path.length()-1);
+    if(name)
+      *name = path.substring(rindex + 1, path.length()-1);
     return path.substring(0, rindex-1);
   }
   return "";
@@ -307,6 +560,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForObject(FabricCore::RTVal o
 {
   MString type = obj.callMethod("String", "getType", 0, 0).getStringCString();
   MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
+  path = m_rootPrefix + simplifyPath(path);
 
   if(type == "Layer" || type == "Group" || type == "Transform" || type == "Instance")
   {
@@ -350,7 +604,7 @@ bool FabricImportPatternCommand::updateTransformForObject(FabricCore::RTVal obj,
   if(node.isNull())
   {
     MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-    path = simplifyPath(path);
+    path = m_rootPrefix + simplifyPath(path);
 
     node = getOrCreateNodeForPath(path, "transform", false);
     if(node.isNull())
@@ -402,7 +656,7 @@ bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
   uuid = "uuid | " + uuid;
 
   MString instancePath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-  instancePath = simplifyPath(instancePath);
+  instancePath = m_rootPrefix + simplifyPath(instancePath);
 
   MString name;
   instancePath = parentPath(instancePath, &name);
@@ -417,7 +671,7 @@ bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
     if (polygonMesh.isNullObject())
       return false;
 
-    node = dfgPolygonMeshToMfnMesh(polygonMesh, false /* insideCompute */);
+    node = dfgPolygonMeshToMFnMesh(polygonMesh, false /* insideCompute */);
     m_nodes.insert(std::pair< std::string, MObject > (uuid.asChar(), node));
 
     MDagModifier modif;
@@ -544,9 +798,6 @@ bool FabricImportPatternCommand::updateMaterialForObject(FabricCore::RTVal obj, 
 
   MFnSet shadingEngineSet(shadingEngine);
   shadingEngineSet.addMember(node);
-  // MFnDependencyNode depNode(node);
-  // MString cmd = "sets -e -forceElement "+shadingEngineSet.name()+" "+depNode.name()+";";
-  // MGlobal::executeCommandOnIdle(cmd);
 
   return true;
 }
