@@ -284,17 +284,10 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         MSelectionList geometries;
         for(unsigned int i=0;i<sl.length();i++)
         {
-          MObject obj;
-          sl.getDependNode(i, obj);
-          if(obj.isNull())
-            continue;
-          
-          // for transforms check their shapes
           MDagPath dag;
           sl.getDagPath(i, dag);
           dag.extendToShape();
-          // if(MS::kSuccess != dag.extendToShape())
-          //   sl.getDagPath(i, dag);
+          MObject obj = dag.node();
 
           MFnDependencyNode node(obj);
           MString typeName = node.typeName();
@@ -320,7 +313,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
           }
 
           MObject obj;
-          geometries.getDependNode(offset++, obj);
+          geometries.getDependNode(offset, obj);
           MFnDependencyNode node(obj);
 
           FTL::CStrRef name = exec.getExecPortName(i);
@@ -363,6 +356,8 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         {
           MFnNurbsCurve nurbsCurve(obj);
           FabricCore::RTVal curves = FabricCore::RTVal::Create(client, "Curves", 0, 0);
+          FabricCore::RTVal curveCountRTVal = FabricSplice::constructUInt32RTVal( 1 );
+          curves.callMethod( "", "setCurveCount", 1, &curveCountRTVal );
           dfgMFnNurbsCurveToCurves(0, nurbsCurve, curves);
           binding.setArgValue(name.asChar(), curves);
         }
