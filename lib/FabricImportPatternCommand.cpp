@@ -303,7 +303,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         unsigned int offset = 0;
 
         FabricCore::DFGExec exec = binding.getExec();
-        for(unsigned int i=0;i<exec.getExecPortCount(), offset<geometries.length();i++)
+        for(unsigned int i=0;i<exec.getExecPortCount() && offset<geometries.length();i++)
         {
           if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
             continue;
@@ -417,7 +417,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     }
 
     // ensure that we have the parents!
-    for(int i=0;i<m_objectList.size();i++)
+    for(size_t i=0;i<m_objectList.size();i++)
     {
       FabricCore::RTVal obj = m_objectList[i];
       FabricCore::RTVal transform = FabricCore::RTVal::Create(obj.getContext(), "ImporterTransform", 1, &obj);
@@ -440,13 +440,13 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     }
 
     // create the groups first
-    for(int i=0;i<m_objectList.size();i++)
+    for(size_t i=0;i<m_objectList.size();i++)
     {
       getOrCreateNodeForObject(m_objectList[i]);
     }
 
     // now perform all remaining tasks
-    for(int i=0;i<m_objectList.size();i++)
+    for(size_t i=0;i<m_objectList.size();i++)
     {
       updateTransformForObject(m_objectList[i]);
       updateShapeForObject(m_objectList[i]);
