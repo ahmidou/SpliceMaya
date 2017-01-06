@@ -19,7 +19,13 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
   m_owner->initConnections();
   m_owner->emitReplaceModelRoot( m_bindingItem );
 
+  setSizePolicy(QSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding ));
+  setMinimumWidth(500);
+  setMaximumWidth(1200);
+  setMinimumHeight(800);
+
   QWidget * widget = m_owner->getWidget();
+  widget->setSizePolicy(QSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding ));
   widget->setParent(this);
 
   QVBoxLayout * layout = new QVBoxLayout();
