@@ -261,9 +261,11 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
               return mayaErrorOccured();
             }
 
-            MObject depNode;
-            sl.getDependNode(0, depNode);
-            geometryObjects.insert( std::pair< std::string, MObject >(name.c_str(), depNode));
+            MDagPath dag;
+            sl.getDagPath(0, dag);
+            dag.extendToShape();
+            MObject obj = dag.node();
+            geometryObjects.insert( std::pair< std::string, MObject >(name.c_str(), obj));
             found = true;
             break;
           }
@@ -454,6 +456,12 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   catch(FabricSplice::Exception e)
   {
     mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+  }
+
+  for(std::map< std::string, MObject >::iterator it = m_nodes.begin(); it != m_nodes.end(); it++)
+  {
+    MFnDagNode node(it->second);
+    result.append(node.fullPathName());
   }
 
   setResult(result);
