@@ -32,7 +32,7 @@ using namespace FabricServices;
 using namespace FabricUI;
 
 #define MAYADFG_CATCH_BEGIN(statusPtr) \
-  if(statusPtr) \
+  if((MStatus *)(statusPtr) != NULL) \
     *statusPtr=MS::kSuccess; \
   try {
 
@@ -40,10 +40,10 @@ using namespace FabricUI;
   catch (FabricCore::Exception e) { \
     if (e.getDescLength()) \
       mayaLogErrorFunc(e.getDesc_cstr()); \
-    if (statusPtr) \
+    if ((MStatus *)(statusPtr) != NULL) \
       *statusPtr=MS::kFailure; \
   }
-
+  
 class FabricDFGWidget;
 
 class FabricDFGBaseInterface {
