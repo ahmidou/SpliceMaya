@@ -1269,11 +1269,8 @@ void dfgPlugToPort_vec2_float32(
 {
   uint32_t elementSize = 2;
   FabricMayaProfilingEvent bracket("dfgPlugToPort_vec2_float32");
-  std::cout << "dfgPlugToPort_vec2 " << plug.isArray() << std::endl;
-  std::cout << "argName " << argName << " argTypeName " << argTypeName << std::endl;
 
   uint64_t elementDataSize = sizeof(float) * elementSize;
-  std::cout << "argRawDataSize " << argRawDataSize << " elementDataSize " << elementDataSize << std::endl;
   
   if(plug.isArray())
   {
@@ -1327,11 +1324,8 @@ void dfgPlugToPort_vec2_float64(
 {
   uint32_t elementSize = 2;
   FabricMayaProfilingEvent bracket("\ndfgPlugToPort_vec2_float64");
-  std::cout << "dfgPlugToPort_vec2_d " << plug.isArray() << std::endl;
-  std::cout << "argName " << argName << " argTypeName " << argTypeName << std::endl;
 
   uint64_t elementDataSize = sizeof(double) * elementSize;
-  std::cout << "argRawDataSize " << argRawDataSize << " elementDataSize " << elementDataSize << std::endl;
   
   if(plug.isArray())
   {
@@ -1385,11 +1379,8 @@ void dfgPlugToPort_vec2_sint32(
 {
   uint32_t elementSize = 2;
   FabricMayaProfilingEvent bracket("\ndfgPlugToPort_vec2_sint32");
-  std::cout << "dfgPlugToPort_vec2_i " << plug.isArray() << std::endl;
-  std::cout << "argName " << argName << " argTypeName " << argTypeName << std::endl;
 
   uint64_t elementDataSize = sizeof(int) * elementSize;
-  std::cout << "argRawDataSize " << argRawDataSize << " elementDataSize " << elementDataSize << std::endl;
   
   if(plug.isArray())
   {
@@ -1543,11 +1534,8 @@ void dfgPlugToPort_vec3_float64(
 {
   uint32_t elementSize = 3;
   FabricMayaProfilingEvent bracket("\ndfgPlugToPort_vec3_float64");
-  std::cout << "dfgPlugToPort_vec3_float64 " << plug.isArray() << std::endl;
-  std::cout << "argName " << argName << " argTypeName " << argTypeName << std::endl;
 
   uint64_t elementDataSize = sizeof(double) * elementSize;
-  std::cout << "argRawDataSize " << argRawDataSize << " elementDataSize " << elementDataSize << std::endl;
   
   if(plug.isArray())
   {
@@ -1625,11 +1613,8 @@ void dfgPlugToPort_vec3_sint32(
 {
   uint32_t elementSize = 3;
   FabricMayaProfilingEvent bracket("\ndfgPlugToPort_vec3_sint32");
-  std::cout << "dfgPlugToPort_vec3_sint32 " << plug.isArray() << std::endl;
-  std::cout << "argName " << argName << " argTypeName " << argTypeName << std::endl;
 
   uint64_t elementDataSize = sizeof(int) * elementSize;
-  std::cout << "argRawDataSize " << argRawDataSize << " elementDataSize " << elementDataSize << std::endl;
   
   if(plug.isArray())
   {
