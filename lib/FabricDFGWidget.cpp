@@ -212,6 +212,16 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
   if(!editPortDialog->dataType().isEmpty())
     editPortDialog->setDataTypeReadOnly(true);
 
+  // FE-7369 :
+  editPortDialog->setSoftRangeReadOnly(true);
+  editPortDialog->setHardRangeReadOnly(true);
+  editPortDialog->setComboReadOnly(true);
+
+  if(editPortDialog->dataType().isEmpty())
+    editPortDialog->setVisibilityReadOnly(true);
+  else
+    editPortDialog->setVisibilityReadOnly(false);
+
   bool addAttribute = true;
   bool native = false;
   bool opaque = false;
