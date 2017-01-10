@@ -80,6 +80,8 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("createReferencedDFGNode();") "Create referenced Graph";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("reloadReferencedDFGNode();") "Reload referenced Graph";
+  // menuItem -p $fabricSpliceMenu -divider true;
+  // menuItem -p $fabricSpliceMenu -ec 1 -c ("fabricImportPattern();") "Run Import Pattern";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c $toolCmd "Toggle Tool";
   menuItem -p $fabricSpliceMenu -divider true;

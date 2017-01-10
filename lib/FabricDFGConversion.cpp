@@ -28,9 +28,7 @@
 #include <maya/MDistance.h>
 #include <maya/MArrayDataBuilder.h>
 #include <maya/MFnPluginData.h>
-#include <maya/MFnMesh.h>
 #include <maya/MFnMeshData.h>
-#include <maya/MFnNurbsCurve.h>
 #include <maya/MFnNurbsCurveData.h>
 #include <maya/MFloatVectorArray.h>
 #include <maya/MFnAnimCurve.h>
@@ -2010,6 +2008,126 @@ void dfgPlugToPort_mat44_float64(
   }
 }
 
+FabricCore::RTVal dfgMFnMeshToPolygonMesh(MFnMesh & mesh, FabricCore::RTVal rtMesh)
+{
+  if(!rtMesh.isValid())
+    return rtMesh;
+
+  // determine if we need a topology update
+  bool requireTopoUpdate = false;
+  if(!requireTopoUpdate)
+  {
+    uint64_t nbPolygons = rtMesh.callMethod("UInt64", "polygonCount", 0, 0).getUInt64();
+    requireTopoUpdate = nbPolygons != (uint64_t)mesh.numPolygons();
+  }
+  if(!requireTopoUpdate)
+  {
+    uint64_t nbSamples = rtMesh.callMethod("UInt64", "polygonPointsCount", 0, 0).getUInt64();
+    requireTopoUpdate = nbSamples != (uint64_t)mesh.numFaceVertices();
+  }
+
+  MPointArray mayaPoints;
+  MIntArray mayaCounts, mayaIndices;
+
+  mesh.getPoints(mayaPoints);
+
+  if(requireTopoUpdate)
+  {
+    // clear the mesh
+    rtMesh.callMethod("", "clear", 0, NULL);
+  }
+
+  if(mayaPoints.length() > 0)
+  {
+    std::vector<FabricCore::RTVal> args(2);
+    args[0] = FabricSplice::constructExternalArrayRTVal("Float64", mayaPoints.length() * 4, &mayaPoints[0]);
+    args[1] = FabricSplice::constructUInt32RTVal(4); // components
+    rtMesh.callMethod("", "setPointsFromExternalArray_d", 2, &args[0]);
+    mayaPoints.clear();
+  }
+
+  if(requireTopoUpdate)
+  {
+    mesh.getVertices(mayaCounts, mayaIndices);
+    std::vector<FabricCore::RTVal> args(2);
+    args[0] = FabricSplice::constructExternalArrayRTVal("UInt32", mayaCounts.length(), &mayaCounts[0]);
+    args[1] = FabricSplice::constructExternalArrayRTVal("UInt32", mayaIndices.length(), &mayaIndices[0]);
+    rtMesh.callMethod("", "setTopologyFromCountsIndicesExternalArrays", 2, &args[0]);
+  }
+
+  MFloatVectorArray mayaNormals;
+  MIntArray mayaNormalsCounts, mayaNormalsIds;
+  mesh.getNormals(mayaNormals);
+  mesh.getNormalIds(mayaNormalsCounts, mayaNormalsIds);
+
+  if(mayaNormals.length() > 0 && mayaNormalsCounts.length() > 0 && mayaNormalsIds.length() > 0)
+  {
+    MFloatVectorArray values;
+    values.setLength(mayaNormalsIds.length());
+
+    unsigned int offset = 0;
+    for(unsigned int i=0;i<mayaNormalsIds.length();i++)
+      values[offset++] = mayaNormals[mayaNormalsIds[i]];
+
+    std::vector<FabricCore::RTVal> args(1);
+    args[0] = FabricSplice::constructExternalArrayRTVal("Float32", values.length() * 3, &values[0]);
+    rtMesh.callMethod("", "setNormalsFromExternalArray", 1, &args[0]);
+    values.clear();
+  }
+
+  if(mesh.numUVSets() > 0)
+  {
+    MFloatArray u, v, values;
+    mesh.getUVs(u, v);
+    unsigned int offset = 0;
+
+    MIntArray counts, indices;
+    mesh.getAssignedUVs(counts, indices);
+    counts.clear();
+    values.setLength(indices.length() * 2);
+    if(values.length() > 0)
+    {
+      for(unsigned int i=0;i<indices.length(); i++)
+      {
+        values[offset++] = u[indices[i]];
+        values[offset++] = v[indices[i]];
+      }
+      u.clear();
+      v.clear();
+
+      std::vector<FabricCore::RTVal> args(2);
+      args[0] = FabricSplice::constructExternalArrayRTVal("Float32", values.length(), &values[0]);
+      args[1] = FabricSplice::constructUInt32RTVal(2); // components
+      rtMesh.callMethod("", "setUVsFromExternalArray", 2, &args[0]);
+      values.clear();
+    }
+  }
+
+  if(mesh.numColorSets() > 0)
+  {
+    MColorArray faceValues;
+
+    MStringArray colorSetNames;
+    mesh.getColorSetNames(colorSetNames);
+    MString colorSetName = colorSetNames[0];
+
+    mesh.getFaceVertexColors(faceValues, &colorSetName);
+    if(faceValues.length() > 0)
+    {
+      std::vector<FabricCore::RTVal> args(2);
+      args[0] = FabricSplice::constructExternalArrayRTVal("Float32", faceValues.length() * 4, &faceValues[0]);
+      args[1] = FabricSplice::constructUInt32RTVal(4); // components
+      rtMesh.callMethod("", "setVertexColorsFromExternalArray", 2, &args[0]);
+      faceValues.clear();
+    }
+  }
+
+  mayaCounts.clear();
+  mayaIndices.clear();
+
+  return rtMesh;
+}
+
 void dfgPlugToPort_PolygonMesh(
   unsigned argIndex,
   char const *argName,
@@ -2090,118 +2208,7 @@ void dfgPlugToPort_PolygonMesh(
       MObject meshObj = handles[handleIndex].asMesh();
       MFnMesh mesh(meshObj);
       FabricCore::RTVal polygonMesh = rtVals[handleIndex];
-
-      // determine if we need a topology update
-      bool requireTopoUpdate = false;
-      if(!requireTopoUpdate)
-      {
-        uint64_t nbPolygons = polygonMesh.callMethod("UInt64", "polygonCount", 0, 0).getUInt64();
-        requireTopoUpdate = nbPolygons != (uint64_t)mesh.numPolygons();
-      }
-      if(!requireTopoUpdate)
-      {
-        uint64_t nbSamples = polygonMesh.callMethod("UInt64", "polygonPointsCount", 0, 0).getUInt64();
-        requireTopoUpdate = nbSamples != (uint64_t)mesh.numFaceVertices();
-      }
-
-      MPointArray mayaPoints;
-      MIntArray mayaCounts, mayaIndices;
-
-      mesh.getPoints(mayaPoints);
-
-      if(requireTopoUpdate)
-      {
-        // clear the mesh
-        polygonMesh.callMethod("", "clear", 0, NULL);
-      }
-
-      if(mayaPoints.length() > 0)
-      {
-        std::vector<FabricCore::RTVal> args(2);
-        args[0] = FabricSplice::constructExternalArrayRTVal("Float64", mayaPoints.length() * 4, &mayaPoints[0]);
-        args[1] = FabricSplice::constructUInt32RTVal(4); // components
-        polygonMesh.callMethod("", "setPointsFromExternalArray_d", 2, &args[0]);
-        mayaPoints.clear();
-      }
-
-      if(requireTopoUpdate)
-      {
-        mesh.getVertices(mayaCounts, mayaIndices);
-        std::vector<FabricCore::RTVal> args(2);
-        args[0] = FabricSplice::constructExternalArrayRTVal("UInt32", mayaCounts.length(), &mayaCounts[0]);
-        args[1] = FabricSplice::constructExternalArrayRTVal("UInt32", mayaIndices.length(), &mayaIndices[0]);
-        polygonMesh.callMethod("", "setTopologyFromCountsIndicesExternalArrays", 2, &args[0]);
-      }
-
-      MFloatVectorArray mayaNormals;
-      MIntArray mayaNormalsCounts, mayaNormalsIds;
-      mesh.getNormals(mayaNormals);
-      mesh.getNormalIds(mayaNormalsCounts, mayaNormalsIds);
-
-      if(mayaNormals.length() > 0 && mayaNormalsCounts.length() > 0 && mayaNormalsIds.length() > 0)
-      {
-        MFloatVectorArray values;
-        values.setLength(mayaNormalsIds.length());
-
-        unsigned int offset = 0;
-        for(unsigned int i=0;i<mayaNormalsIds.length();i++)
-          values[offset++] = mayaNormals[mayaNormalsIds[i]];
-
-        std::vector<FabricCore::RTVal> args(1);
-        args[0] = FabricSplice::constructExternalArrayRTVal("Float32", values.length() * 3, &values[0]);
-        polygonMesh.callMethod("", "setNormalsFromExternalArray", 1, &args[0]);
-        values.clear();
-      }
-
-      if(mesh.numUVSets() > 0)
-      {
-        MFloatArray u, v, values;
-        mesh.getUVs(u, v);
-        unsigned int offset = 0;
-
-        MIntArray counts, indices;
-        mesh.getAssignedUVs(counts, indices);
-        counts.clear();
-        values.setLength(indices.length() * 2);
-        if(values.length() > 0)
-        {
-          for(unsigned int i=0;i<indices.length(); i++)
-          {
-            values[offset++] = u[indices[i]];
-            values[offset++] = v[indices[i]];
-          }
-          u.clear();
-          v.clear();
-
-          std::vector<FabricCore::RTVal> args(2);
-          args[0] = FabricSplice::constructExternalArrayRTVal("Float32", values.length(), &values[0]);
-          args[1] = FabricSplice::constructUInt32RTVal(2); // components
-          polygonMesh.callMethod("", "setUVsFromExternalArray", 2, &args[0]);
-          values.clear();
-        }
-      }
-
-      if(mesh.numColorSets() > 0)
-      {
-        MColorArray faceValues;
-
-        MStringArray colorSetNames;
-        mesh.getColorSetNames(colorSetNames);
-        MString colorSetName = colorSetNames[0];
-
-        mesh.getFaceVertexColors(faceValues, &colorSetName);
-        if(faceValues.length() > 0)
-        {
-          std::vector<FabricCore::RTVal> args(2);
-          args[0] = FabricSplice::constructExternalArrayRTVal("Float32", faceValues.length() * 4, &faceValues[0]);
-          args[1] = FabricSplice::constructUInt32RTVal(4); // components
-          polygonMesh.callMethod("", "setVertexColorsFromExternalArray", 2, &args[0]);
-          faceValues.clear();
-        }
-      }
-
-      mayaCounts.clear();
-      mayaIndices.clear();
+      polygonMesh = dfgMFnMeshToPolygonMesh(mesh, polygonMesh);
     }
 
     setCB(getSetUD, portRTVal.getFECRTValRef());
@@ -2340,6 +2347,37 @@ void dfgPlugToPort_Lines(
   }
 }
 
+bool dfgMFnNurbsCurveToCurves(unsigned int index, MFnNurbsCurve & curve, FabricCore::RTVal & rtCurves)
+{
+  if(!rtCurves.isValid())
+    return false;
+
+  FabricCore::RTVal args[ 6 ];
+  args[0] = FabricSplice::constructUInt8RTVal(index);
+  args[1] = FabricSplice::constructUInt8RTVal(uint8_t( curve.degree() ));
+
+  uint8_t curveForm = uint8_t(curve.form());
+  if( curveForm == MFnNurbsCurve::kOpen )
+    curveForm = 0;//curveForm_open
+  else if( curveForm == MFnNurbsCurve::kClosed )
+    curveForm = 1;//curveForm_closed
+  else if( curveForm == MFnNurbsCurve::kPeriodic )
+    curveForm = 2;//curveForm_periodic
+
+  args[2] = FabricSplice::constructUInt8RTVal(curveForm);
+
+  MPointArray mayaPoints;
+  curve.getCVs( mayaPoints );
+  args[3] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaPoints.length() * 4, &mayaPoints[0] );
+
+  MDoubleArray mayaKnots;
+  curve.getKnots( mayaKnots );
+  args[4] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaKnots.length(), &mayaKnots[0] );
+
+  rtCurves.callMethod( "", "setCurveFromMaya", 5, args );
+  return true;
+}
+
 void dfgPlugToPort_CurveOrCurves(
   bool singleCurve,
   unsigned argIndex,
@@ -2399,37 +2437,10 @@ void dfgPlugToPort_CurveOrCurves(
       rtVal.callMethod( "", "setCurveCount", 1, &curveCountRTVal );
     }
 
-    FabricCore::RTVal args[ 6 ];
-    args[0] = curveCountRTVal;//curveIndex: Just reuse that RTVal to avoid creating another one
-    args[1] = FabricSplice::constructUInt8RTVal(3);//degree
-    args[2] = FabricSplice::constructUInt8RTVal(0);//curveForm
-
     for( size_t handleIndex = 0; handleIndex<handles.size(); handleIndex++ ) {
       MObject curveObj = handles[handleIndex].asNurbsCurve();
       MFnNurbsCurve curve( curveObj );
-
-      args[0].setUInt32( handleIndex );//curveIndex
-
-      args[1].setUInt8( uint8_t( curve.degree() ) );
-
-      uint8_t curveForm = uint8_t(curve.form());
-      if( curveForm == MFnNurbsCurve::kOpen )
-        curveForm = 0;//curveForm_open
-      else if( curveForm == MFnNurbsCurve::kClosed )
-        curveForm = 1;//curveForm_closed
-      else if( curveForm == MFnNurbsCurve::kPeriodic )
-        curveForm = 2;//curveForm_periodic
-      args[2].setUInt8( curveForm );
-
-      MPointArray mayaPoints;
-      curve.getCVs( mayaPoints );
-      args[3] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaPoints.length() * 4, &mayaPoints[0] );
-
-      MDoubleArray mayaKnots;
-      curve.getKnots( mayaKnots );
-      args[4] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaKnots.length(), &mayaKnots[0] );
-
-      rtVal.callMethod( "", "setCurveFromMaya", 5, args );
+      dfgMFnNurbsCurveToCurves((unsigned int)handleIndex, curve, rtVal);
     }
 
     setCB( getSetUD, portRTVal.getFECRTValRef() );
@@ -4590,8 +4601,9 @@ void dfgPortToPlug_mat44_float64(
   }
 }
 
-void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtMesh)
+MObject dfgPolygonMeshToMFnMesh(FabricCore::RTVal rtMesh, bool insideCompute)
 {
+  MObject result;
   CORE_CATCH_BEGIN;
 
   unsigned int nbPoints   = 0;
@@ -4636,15 +4648,19 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
     mayaIndices[2] = 2;
 
     MFnMeshData meshDataFn;
-    MObject meshObject;
     MFnMesh mesh;
-    meshObject = meshDataFn.create();
 
-    mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+    if(insideCompute)
+    {
+      MObject meshObject = meshDataFn.create();
+      mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+      result = meshObject;
+    }
+    else
+    {
+      result = mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, MObject::kNullObj );
+    }
     mesh.updateSurface();
-
-    handle.set( meshObject );
-    handle.setClean();
   }
   else
 
@@ -4678,9 +4694,7 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
     }
 
     MFnMeshData meshDataFn;
-    MObject meshObject;
     MFnMesh mesh;
-    meshObject = meshDataFn.create();
 
     MIntArray normalFace, normalVertex;
     normalFace.setLength( mayaIndices.length() );
@@ -4702,7 +4716,17 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
       }
     }
 
-    mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+    if(insideCompute)
+    {
+      MObject meshObject = meshDataFn.create();
+      mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, meshObject );
+      result = meshObject;
+    }
+    else
+    {
+      result = mesh.create( mayaPoints.length(), mayaCounts.length(), mayaPoints, mayaCounts, mayaIndices, MObject::kNullObj );
+    }
+
     mesh.updateSurface();
     mayaPoints.clear();
     mesh.setFaceVertexNormals( mayaNormals, normalFace, normalVertex );
@@ -4761,11 +4785,18 @@ void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal 
       }
     }
 
-    handle.set( meshObject );
-    handle.setClean();
   }
 
   CORE_CATCH_END;
+
+  return result;
+}
+
+void dfgPortToPlug_PolygonMesh_singleMesh(MDataHandle handle, FabricCore::RTVal rtMesh)
+{
+  MObject meshObject = dfgPolygonMeshToMFnMesh(rtMesh, true);
+  handle.set( meshObject );
+  handle.setClean();
 }
 
 void dfgPortToPlug_PolygonMesh(
