@@ -24,6 +24,7 @@
 #include <maya/MFnMesh.h>
 #include <maya/MFnSet.h>
 #include <maya/MFnLambertShader.h>
+#include <maya/MCommandResult.h>
 
 #include <FTL/FS.h>
 
@@ -72,20 +73,27 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     }
     else
     {
-      QString qFileName = QFileDialog::getOpenFileName( 
-        MQtUtil::mainWindow(), 
-        "Choose canvas file", 
-        QDir::currentPath(), 
-        "Canvas files (*.canvas);;All files (*.*)"
-      );
+      MCommandResult result;
+      MString command = "fileDialog2 -ff \"*.canvas\" -ds 2 -fm 1";
+      MGlobal::executeCommand(command, result);
+      if(result.resultType() == MCommandResult::kString)
+      {
+        result.getResult(filepath);
+      }
+      else if(result.resultType() == MCommandResult::kStringArray)
+      {
+        MStringArray filepaths;
+        result.getResult(filepaths);
 
-      if(qFileName.isNull())
+        if(filepaths.length() > 0)
+          filepath = filepaths[0];
+      }
+
+      if(filepath.length() == 0)
       {
         mayaLogErrorFunc("No filepath specified.");
         return mayaErrorOccured();
       }
-
-      filepath = qFileName.toUtf8().constData();      
     }
 
     if(!FTL::FSExists(filepath.asChar()))
@@ -121,6 +129,8 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     {
       mayaLogErrorFunc(MString(getName()) + ": "+e.what());
     }
+
+    return invoke(binding, m_rootPrefix);
   }
   else
   {
@@ -157,62 +167,6 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
       FabricCore::DFGHost dfgHost = client.getDFGHost();
       binding = dfgHost.createBindingFromJSON(json.asChar());
-
-      if ( argParser.isFlagSet("args") )
-      {
-        FabricCore::DFGExec exec = binding.getExec();
-
-        MString args = argParser.flagArgumentString("args", 0);
-
-        FTL::JSONStrWithLoc argsSrcWithLoc( FTL::StrRef( args.asChar(), args.length() ) );
-        FTL::OwnedPtr<FTL::JSONValue const> argsValue( FTL::JSONValue::Decode( argsSrcWithLoc ) );
-        FTL::JSONObject const *argsObject = argsValue->cast<FTL::JSONObject>();
-
-        for ( FTL::JSONObject::const_iterator it = argsObject->begin(); it != argsObject->end(); ++it )
-        {
-          FTL::CStrRef key = it->first;
-          
-          bool found = false;
-          for(unsigned int i=0;i<exec.getExecPortCount();i++)
-          {
-            if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
-              continue;
-
-            FTL::CStrRef name = exec.getExecPortName(i);
-            if(name != key)
-              continue;
-
-            FTL::CStrRef type = exec.getExecPortResolvedType(i);
-            if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(client, type.c_str()))
-            {
-              mayaLogFunc("Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
-              continue;
-            }
-
-            std::string json = it->second->encode();
-            FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
-            binding.setArgValue(name.c_str(), value);
-            found = true;
-            break;
-          }
-
-          if(!found)
-          {
-            mayaLogFunc("Argument "+MString(key.c_str())+" does not exist in import pattern.");
-            return mayaErrorOccured();
-          }
-        }
-      }
-      else
-      {
-        FabricImportPatternDialog * dialog = new FabricImportPatternDialog(MQtUtil().mainWindow(), binding);
-        dialog->setModal(true);
-        dialog->setWindowModality(Qt::ApplicationModal);
-        dialog->exec();
-
-        if(!dialog->wasAccepted())
-          return MS::kFailure;
-      }
 
       std::map< std::string, MObject > geometryObjects;
       if ( argParser.isFlagSet("geometries") )
@@ -365,29 +319,111 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         }
       }
 
-      binding.execute();
+      if ( argParser.isFlagSet("args") )
+      {
+        FabricCore::DFGExec exec = binding.getExec();
+
+        MString args = argParser.flagArgumentString("args", 0);
+
+        FTL::JSONStrWithLoc argsSrcWithLoc( FTL::StrRef( args.asChar(), args.length() ) );
+        FTL::OwnedPtr<FTL::JSONValue const> argsValue( FTL::JSONValue::Decode( argsSrcWithLoc ) );
+        FTL::JSONObject const *argsObject = argsValue->cast<FTL::JSONObject>();
+
+        for ( FTL::JSONObject::const_iterator it = argsObject->begin(); it != argsObject->end(); ++it )
+        {
+          FTL::CStrRef key = it->first;
+          
+          bool found = false;
+          for(unsigned int i=0;i<exec.getExecPortCount();i++)
+          {
+            if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
+              continue;
+
+            FTL::CStrRef name = exec.getExecPortName(i);
+            if(name != key)
+              continue;
+
+            FTL::CStrRef type = exec.getExecPortResolvedType(i);
+            if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(client, type.c_str()))
+            {
+              mayaLogFunc("Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
+              continue;
+            }
+
+            std::string json = it->second->encode();
+            FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
+            binding.setArgValue(name.c_str(), value);
+            found = true;
+            break;
+          }
+
+          if(!found)
+          {
+            mayaLogFunc("Argument "+MString(key.c_str())+" does not exist in import pattern.");
+            return mayaErrorOccured();
+          }
+        }
+
+        return invoke(binding, m_rootPrefix);
+      }
+      else
+      {
+        QWidget * mainWindow = MQtUtil().mainWindow();
+        mainWindow->setFocus(Qt::ActiveWindowFocusReason);
+
+        QEvent event(QEvent::RequestSoftwareInputPanel);
+        QApplication::sendEvent(mainWindow, &event);
+
+        FabricImportPatternDialog * dialog = new FabricImportPatternDialog(mainWindow, binding, m_rootPrefix);
+        dialog->setWindowModality(Qt::ApplicationModal);
+        dialog->setSizeGripEnabled(true);
+        dialog->open();
+
+        if(!dialog->wasAccepted())
+        {
+          return MS::kSuccess;
+        }
+      }
     }
     catch(FabricSplice::Exception e)
     {
       mayaLogErrorFunc(MString(getName()) + ": "+e.what());
-
-      if(binding.isValid())
-      {
-        MString errors = binding.getErrors(true).getCString();
-        mayaLogErrorFunc(errors);
-      }
-      return mayaErrorOccured();
     }
+  }
+
+  return MS::kSuccess;
+}
+
+MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, MString rootPrefix)
+{
+  m_rootPrefix = rootPrefix;
+  FabricCore::Context context;
+  MStringArray result;
+  try
+  {
+    context = binding.getHost().getContext();
+    binding.execute();
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+
+    if(binding.isValid())
+    {
+      MString errors = binding.getErrors(true).getCString();
+      mayaLogErrorFunc(errors);
+    }
+    return mayaErrorOccured();
   }
 
   try
   {
-    m_context = FabricCore::RTVal::Construct(client, "ImporterContext", 0, 0);
+    m_context = FabricCore::RTVal::Construct(context, "ImporterContext", 0, 0);
     FabricCore::RTVal contextHost = m_context.maybeGetMember("host");
     MString mayaVersion;
     mayaVersion.set(MAYA_API_VERSION);
-    contextHost.setMember("name", FabricCore::RTVal::ConstructString(client, "Maya"));
-    contextHost.setMember("version", FabricCore::RTVal::ConstructString(client, mayaVersion.asChar()));
+    contextHost.setMember("name", FabricCore::RTVal::ConstructString(context, "Maya"));
+    contextHost.setMember("version", FabricCore::RTVal::ConstructString(context, mayaVersion.asChar()));
     m_context.setMember("host", contextHost);
 
     FabricCore::DFGExec exec = binding.getExec();
@@ -406,7 +442,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
       for(unsigned j=0;j<value.getArraySize();j++)
       {
         FabricCore::RTVal obj = value.getArrayElement(j);
-        obj = FabricCore::RTVal::Create(client, "ImporterObject", 1, &obj);
+        obj = FabricCore::RTVal::Create(context, "ImporterObject", 1, &obj);
 
         MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
         path = m_rootPrefix + simplifyPath(path);
@@ -468,6 +504,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   mayaLogFunc("import done.");
   return MS::kSuccess;
 }
+
 
 MString FabricImportPatternCommand::parentPath(MString path, MString * name)
 {

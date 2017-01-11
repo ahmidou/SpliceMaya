@@ -24,6 +24,7 @@ public:
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);
   virtual bool isUndoable() const { return false; }
+  MStatus invoke(FabricCore::DFGBinding binding, MString rootPrefix);
 
 private:
   FabricCore::RTVal m_context;

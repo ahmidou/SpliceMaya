@@ -15,17 +15,19 @@ class FabricImportPatternDialog : public QDialog
   Q_OBJECT
   
 public:
-  FabricImportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding);
+  FabricImportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, MString rootPrefix);
   virtual ~FabricImportPatternDialog();
 
   bool wasAccepted() const { return m_wasAccepted; }
 
 public slots:
-  void onAccepted() { m_wasAccepted = true; close(); }
+  void onAccepted();
   void onRejected() { m_wasAccepted = false; close(); }
 
 private:
+  MString m_rootPrefix;
   QUndoStack * m_stack;
+  FabricCore::DFGBinding m_binding;
   FabricUI::DFG::DFGUICmdHandler * m_handler;
   FabricUI::ModelItems::BindingModelItem * m_bindingItem;
   FabricUI::ValueEditor::VEEditorOwner * m_owner;

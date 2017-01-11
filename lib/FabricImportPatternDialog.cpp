@@ -6,10 +6,13 @@
 #include <QDialogButtonBox>
 
 #include "FabricImportPatternDialog.h"
+#include "FabricImportPatternCommand.h"
 
-FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding)
+FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, MString rootPrefix)
 : QDialog(parent)
 , m_wasAccepted(false)
+, m_rootPrefix(rootPrefix)
+, m_binding(binding)
 {
   setWindowTitle("Fabric Import Pattern");
   m_stack = new QUndoStack();
@@ -45,4 +48,11 @@ FabricImportPatternDialog::~FabricImportPatternDialog()
   delete m_bindingItem;
   delete m_handler;
   delete m_stack;
+}
+
+void FabricImportPatternDialog::onAccepted()
+{
+  FabricCore::DFGBinding binding = m_binding;
+  close();
+  FabricImportPatternCommand().invoke(binding, m_rootPrefix);
 }
