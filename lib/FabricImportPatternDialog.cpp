@@ -10,9 +10,9 @@
 
 FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, MString rootPrefix)
 : QDialog(parent)
-, m_wasAccepted(false)
 , m_rootPrefix(rootPrefix)
 , m_binding(binding)
+, m_wasAccepted(false)
 {
   setWindowTitle("Fabric Import Pattern");
   m_stack = new QUndoStack();
