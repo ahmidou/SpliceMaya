@@ -792,14 +792,14 @@ void FabricDFGBaseInterface::invalidateNode()
   // node, let's rely on the eval id attribute
   if(dirtiedInputs == 0)
   {
-    incrementEvalID();
+    incrementEvalID(true /* onIdle */);
   }
 
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
 }
 
-void FabricDFGBaseInterface::incrementEvalID()
+void FabricDFGBaseInterface::incrementEvalID(bool onIdle)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::incrementEvalID");
 
@@ -814,7 +814,10 @@ void FabricDFGBaseInterface::incrementEvalID()
   MString command("setAttr ");
   MString evalIDStr;
   evalIDStr.set(m_evalID);
-  MGlobal::executeCommandOnIdle(command+plugName+" "+evalIDStr);
+  if(onIdle)
+    MGlobal::executeCommandOnIdle(command+plugName+" "+evalIDStr, false /*display*/);
+  else
+    MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false, /*undoable*/);
 }
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
@@ -2302,7 +2305,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     // when we receive this notification we need to 
     // ensure that the DCC reevaluates the node
     if(!_isEvaluating && !_isTransferingInputs)
-      incrementEvalID();
+      incrementEvalID(false /* onIdle */);
   }
   else if( descStr == FTL_STR("argTypeChanged") )
   {
