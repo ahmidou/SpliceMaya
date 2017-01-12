@@ -817,7 +817,7 @@ void FabricDFGBaseInterface::incrementEvalID(bool onIdle)
   if(onIdle)
     MGlobal::executeCommandOnIdle(command+plugName+" "+evalIDStr, false /*display*/);
   else
-    MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false, /*undoable*/);
+    MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false /*undoable*/);
 }
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
