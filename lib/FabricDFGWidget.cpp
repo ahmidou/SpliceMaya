@@ -22,6 +22,10 @@ FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
 
 
 void FabricDFGWidget::OnSelectCanvasNodeInDCC(void *client) {
+
+  if(s_widget == NULL)
+    return;
+
   // When selecting objects in the Outliner, check if there are canvasNodes
   // If so, update the DFGView with the content of the fist node selected.
 
@@ -67,9 +71,9 @@ FabricDFGWidget::~FabricDFGWidget()
   s_widget = NULL;
 }
 
-FabricDFGWidget *FabricDFGWidget::Instance()
+FabricDFGWidget *FabricDFGWidget::Instance(bool createIfNull)
 {
-  if ( !s_widget )
+  if ( !s_widget && createIfNull )
   {
     FabricCore::Client client = GetCoreClient();
     s_manager = new FabricServices::ASTWrapper::KLASTManager( &client );

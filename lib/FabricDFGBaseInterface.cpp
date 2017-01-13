@@ -2361,10 +2361,12 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   else if(   descStr == FTL_STR("varInserted")
           || descStr == FTL_STR("varRemoved") )
   {
-    if (   FabricDFGWidget::Instance()
-        && FabricDFGWidget::Instance()->getDfgWidget()
+    if ( FabricDFGWidget::Instance( false /* createIfNull */ ) )
+    {
+      if(  FabricDFGWidget::Instance()->getDfgWidget()
         && FabricDFGWidget::Instance()->getDfgWidget()->getUIController())
-    FabricDFGWidget::Instance()->getDfgWidget()->getUIController()->emitVarsChanged();
+      FabricDFGWidget::Instance()->getDfgWidget()->getUIController()->emitVarsChanged();
+    }
   }
   // else
   // {

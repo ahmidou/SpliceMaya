@@ -54,7 +54,7 @@ public:
 
   static QWidget * creator(QWidget * parent, const QString & name);
  
-  static FabricDFGWidget *Instance();
+  static FabricDFGWidget *Instance(bool createIfNull=true);
   static void Destroy();
 
   static void SetCurrentUINodeName(const char * node);
@@ -72,6 +72,11 @@ public:
   static FabricDFGBaseInterface *getBaseInterface()
   {
     if (s_widget == NULL)
+      return NULL;
+
+    if (s_widget->getDfgWidget() == NULL)
+      return NULL;
+    if (s_widget->getDfgWidget()->getUIController() == NULL)
       return NULL;
 
     MString interfIdStr = s_widget->getDfgWidget()->getUIController()->getBinding().getMetadata("maya_id");
