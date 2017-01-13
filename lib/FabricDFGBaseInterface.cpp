@@ -746,7 +746,7 @@ void FabricDFGBaseInterface::invalidateNode()
       // if(ports[i]->isManipulatable())
       //   continue;
       std::string portName = exec.getExecPortName(i);
-      MString plugName = getPortName(portName.c_str());
+      MString plugName = getPlugName(portName.c_str());
       MPlug plug = thisNode.findPlug(plugName);
       MObject attrObj = plug.attribute();
       if(attrObj.apiType() == MFn::kTypedAttribute)
@@ -761,7 +761,7 @@ void FabricDFGBaseInterface::invalidateNode()
     // ensure that the node is invalidated
     for(unsigned int i = 0; i < exec.getExecPortCount(); ++i){
       std::string portName = exec.getExecPortName(i);
-      MString plugName = getPortName(portName.c_str());
+      MString plugName = getPlugName(portName.c_str());
       MPlug plug = thisNode.findPlug(plugName);
 
       FabricCore::DFGPortType portType = exec.getExecPortType(i);
@@ -814,10 +814,15 @@ void FabricDFGBaseInterface::incrementEvalID(bool onIdle)
   MString command("setAttr ");
   MString evalIDStr;
   evalIDStr.set(m_evalID);
-  if(onIdle)
+
+  if(onIdle || _dgDirtyQueued)
+  {
     MGlobal::executeCommandOnIdle(command+plugName+" "+evalIDStr, false /*display*/);
+  }
   else
+  {
     MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false /*undoable*/);
+  }
 }
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
@@ -2095,6 +2100,14 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
     setupMayaAttributeAffects(portName, portType, newAttribute);
 
   generateAttributeLookups();
+
+  // FE-7923: if this is an in or io plug ensure to 
+  // invalidate it.
+  if(portType != FabricCore::DFGPortType_Out)
+  {
+    MPlug newAttributePlug(getThisMObject(), newAttribute);
+    invalidatePlug(newAttributePlug);
+  }
 
   _affectedPlugsDirty = true;
   return newAttribute;
