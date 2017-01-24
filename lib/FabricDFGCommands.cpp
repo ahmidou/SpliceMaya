@@ -741,6 +741,57 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddGraphCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGUICmdImportNodeFromJSON
+
+void FabricDFGUICmdImportNodeFromJSON::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-n", "-nodeName", MSyntax::kString);
+  syntax.addFlag("-p", "-filePath", MSyntax::kString);
+}
+
+void FabricDFGUICmdImportNodeFromJSON::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( argParser.isFlagSet( "nodeName" ) )
+    args.nodeName =
+    QString::fromUtf8(
+      argParser.flagArgumentString( "nodeName", 0 ).asChar()
+      );
+
+    if ( argParser.isFlagSet( "filePath" ) )
+    args.filePath =
+    QString::fromUtf8(
+      argParser.flagArgumentString( "filePath", 0 ).asChar()
+      );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGUICmdImportNodeFromJSON::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_ImportNodeFromJSON *cmd =
+    new FabricUI::DFG::DFGUICmd_ImportNodeFromJSON(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.nodeName,
+      args.filePath,
+      args.pos
+      );
+
+  cmd->doit();
+  setResult( cmd->getActualNodeName().toUtf8().constData() );
+  return cmd;
+}
+
 // FabricDFGAddFuncCommand
 
 void FabricDFGAddFuncCommand::AddSyntax( MSyntax &syntax )

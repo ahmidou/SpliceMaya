@@ -49,6 +49,15 @@ protected:
     QPointF pos
     );
 
+  virtual QString dfgDoImportNodeFromJSON(
+    FabricCore::DFGBinding const &binding,
+    QString execPath,
+    FabricCore::DFGExec const &exec,
+    QString nodeName,
+    QString filePath,
+    QPointF pos
+    );
+
   virtual QString dfgDoAddFunc(
     FabricCore::DFGBinding const &binding,
     QString execPath,

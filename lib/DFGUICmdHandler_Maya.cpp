@@ -335,6 +335,33 @@ QString DFGUICmdHandler_Maya::dfgDoAddGraph(
   return QString::fromUtf8( result.asChar() );
 }
 
+QString DFGUICmdHandler_Maya::dfgDoImportNodeFromJSON(
+    FabricCore::DFGBinding const &binding,
+    QString execPath,
+    FabricCore::DFGExec const &exec,
+    QString nodeName,
+    QString filePath,
+    QPointF pos
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_ImportNodeFromJSON::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("n"), nodeName, cmd );
+  encodeStringArg( FTL_STR("p"), filePath, cmd );
+  encodePositionArg( pos, cmd );
+  cmd << ';';
+
+  MString result;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    result,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+  return QString::fromUtf8( result.asChar() );
+}
+
 QString DFGUICmdHandler_Maya::dfgDoAddFunc(
   FabricCore::DFGBinding const &binding,
   QString execPath,

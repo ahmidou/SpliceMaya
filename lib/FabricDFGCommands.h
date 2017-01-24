@@ -343,6 +343,32 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_AddGraph
   > MayaDFGUICmd_AddGraph;
 
+class FabricDFGUICmdImportNodeFromJSON
+  : public FabricDFGAddNodeCommand
+{
+  typedef FabricDFGAddNodeCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString nodeName;
+    QString filePath;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGUICmdImportNodeFromJSON,
+  FabricUI::DFG::DFGUICmd_ImportNodeFromJSON
+  > MayaDFGUICmd_ImportNodeFromJSON;
+
 class FabricDFGAddFuncCommand
   : public FabricDFGAddNodeCommand
 {
