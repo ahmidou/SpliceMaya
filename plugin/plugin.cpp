@@ -297,6 +297,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   plugin.registerCommand("FabricCanvasGetFabricVersion",  FabricDFGGetFabricVersionCommand  ::creator, FabricDFGGetFabricVersionCommand  ::newSyntax);
   plugin.registerCommand("FabricCanvasGetContextID",      FabricDFGGetContextIDCommand      ::creator, FabricDFGGetContextIDCommand      ::newSyntax);
   plugin.registerCommand("FabricCanvasGetBindingID",      FabricDFGGetBindingIDCommand      ::creator, FabricDFGGetBindingIDCommand      ::newSyntax);
+  plugin.registerCommand("FabricCanvasIncrementEvalID",   FabricDFGIncrementEvalIDCommand   ::creator, FabricDFGIncrementEvalIDCommand   ::newSyntax);
   plugin.registerCommand("FabricCanvasDestroyClient",     FabricDFGDestroyClientCommand     ::creator, FabricDFGDestroyClientCommand     ::newSyntax);
   plugin.registerCommand("FabricCanvasPackageExtensions", FabricDFGPackageExtensionsCommand ::creator, FabricDFGPackageExtensionsCommand ::newSyntax);
 
@@ -449,6 +450,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand("FabricCanvasGetFabricVersion");
   plugin.deregisterCommand("FabricCanvasGetContextID");
   plugin.deregisterCommand("FabricCanvasGetBindingID");
+  plugin.deregisterCommand("FabricCanvasIncrementEvalID");
   plugin.deregisterCommand("FabricCanvasDestroyClient");
   plugin.deregisterCommand("FabricCanvasPackageExtensions");
 

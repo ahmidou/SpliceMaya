@@ -792,14 +792,32 @@ void FabricDFGBaseInterface::invalidateNode()
   // node, let's rely on the eval id attribute
   if(dirtiedInputs == 0)
   {
-    incrementEvalID(true /* onIdle */);
+    queueIncrementEvalID(true /* onIdle */);
   }
 
   _affectedPlugsDirty = true;
   _outputsDirtied = false;
 }
 
-void FabricDFGBaseInterface::incrementEvalID(bool onIdle)
+void FabricDFGBaseInterface::queueIncrementEvalID(bool onIdle)
+{
+  FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::queueIncrementEvalID");
+
+  if(_dgDirtyQueued || onIdle)
+  {
+    MString command("FabricCanvasIncrementEvalID -index ");
+    MString indexStr;
+    indexStr.set((int)m_id);
+
+    MGlobal::executeCommandOnIdle(command+indexStr, false /*display*/);
+  }
+  else
+  {
+    incrementEvalID();
+  }
+}
+
+void FabricDFGBaseInterface::incrementEvalID()
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::incrementEvalID");
 
@@ -815,14 +833,7 @@ void FabricDFGBaseInterface::incrementEvalID(bool onIdle)
   MString evalIDStr;
   evalIDStr.set(m_evalID);
 
-  if(onIdle || _dgDirtyQueued)
-  {
-    MGlobal::executeCommandOnIdle(command+plugName+" "+evalIDStr, false /*display*/);
-  }
-  else
-  {
-    MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false /*undoable*/);
-  }
+  MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false /*undoable*/);
 }
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
@@ -983,7 +994,9 @@ void FabricDFGBaseInterface::onNodeAdded(MObject &node, void *clientData)
 
     // [FE-7498] lock the 'saveData' attribute to prevent problems
     // when referencing .ma files that contain Canvas nodes.
-    MGlobal::executeCommandOnIdle("setAttr -lock true " + thisNode.name() + ".saveData");
+    MPlug plug = interf->getSaveDataPlug();
+    if (!plug.isNull())
+      plug.setLocked(true);
   }
 }
 
@@ -2318,7 +2331,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     // when we receive this notification we need to 
     // ensure that the DCC reevaluates the node
     if(!_isEvaluating && !_isTransferingInputs)
-      incrementEvalID(false /* onIdle */);
+      queueIncrementEvalID(false /* onIdle */);
   }
   else if( descStr == FTL_STR("argTypeChanged") )
   {

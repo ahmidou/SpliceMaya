@@ -342,6 +342,44 @@ MStatus FabricDFGGetBindingIDCommand::doIt(const MArgList &args)
   return MS::kSuccess;
 }
 
+MSyntax FabricDFGIncrementEvalIDCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag("-i", "-index", MSyntax::kLong);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+void* FabricDFGIncrementEvalIDCommand::creator()
+{
+  return new FabricDFGIncrementEvalIDCommand;
+}
+
+MStatus FabricDFGIncrementEvalIDCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argData(syntax(), args, &status);
+  if(!argData.isFlagSet("index"))
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Index (-i, -index) not provided.");
+    return mayaErrorOccured();
+  }
+
+  int index = argData.flagArgumentInt("index", 0);
+  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceById(index);
+  if(!interf)
+  {
+    MString indexStr;
+    indexStr.set(index);
+    mayaLogErrorFunc(MString(getName()) + ": Node with index'"+indexStr+"' not found.");
+    return mayaErrorOccured();
+  }
+
+  interf->incrementEvalID();
+  return MS::kSuccess;
+}
+
 // FabricDFGCoreCommand
 
 void FabricDFGCoreCommand::AddSyntax( MSyntax &syntax )

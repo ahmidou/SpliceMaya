@@ -95,7 +95,8 @@ public:
 
   virtual void invalidateNode();
 
-  virtual void incrementEvalID(bool onIdle = true);
+  virtual void queueIncrementEvalID(bool onIdle = true);
+  virtual void incrementEvalID();
 
   DFGUICmdHandler_Maya *getCmdHandler()
     { return &m_cmdHandler; }
