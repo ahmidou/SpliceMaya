@@ -992,11 +992,11 @@ void FabricDFGBaseInterface::onNodeAdded(MObject &node, void *clientData)
     // needs to be re-evaluated since values were flushed
     interf->invalidateNode();
 
-    // [FE-7498] lock the 'saveData' attribute to prevent problems
-    // when referencing .ma files that contain Canvas nodes.
-    MPlug plug = interf->getSaveDataPlug();
-    if (!plug.isNull())
-      plug.setLocked(true);
+    // // [FE-7498] lock the 'saveData' attribute to prevent problems
+    // // when referencing .ma files that contain Canvas nodes.
+    // MPlug plug = interf->getSaveDataPlug();
+    // if (!plug.isNull())
+    //   plug.setLocked(true);
   }
 }
 
