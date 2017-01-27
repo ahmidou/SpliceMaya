@@ -73,6 +73,17 @@ public:
   virtual bool isUndoable() const { return false; }
 };
 
+class FabricDFGIncrementEvalIDCommand: public MPxCommand
+{
+public:
+
+  virtual const char * getName() { return "FabricCanvasIncrementEvalID"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+  virtual bool isUndoable() const { return false; }
+};
+
 template<class MayaDFGUICmdClass, class FabricDFGUICmdClass>
 class MayaDFGUICmdWrapper : public MayaDFGUICmdClass
 {
