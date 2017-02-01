@@ -2189,6 +2189,12 @@ void dfgPlugToPort_PolygonMesh(
           rtVals.push_back(portRTVal);
         }
       }
+
+      if (elements < portRTVal.getArraySize())
+      {
+        FabricCore::RTVal rtVal = FabricSplice::constructUInt32RTVal(elements);
+        portRTVal.callMethod("", "resize", 1, &rtVal);
+      }
     }
     else
     {
@@ -2276,6 +2282,12 @@ void dfgPlugToPort_Lines(
           }
         }
         rtVals.push_back(rtVal);
+      }
+
+      if (elements < portRTVal.getArraySize())
+      {
+        FabricCore::RTVal rtVal = FabricSplice::constructUInt32RTVal(elements);
+        portRTVal.callMethod("", "resize", 1, &rtVal);
       }
     }
     else
