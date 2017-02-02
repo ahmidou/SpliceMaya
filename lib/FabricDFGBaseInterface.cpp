@@ -1376,9 +1376,11 @@ inline bool AddSingleBaseStructAttribute(
   FabricCore::DFGBinding &binding, 
   MString plugName, 
   MFnNumericData::Type numType, 
+  MFnUnitAttribute::Type unitType, 
   MString portName, 
   MString portType, 
   bool &storable,
+  MFnUnitAttribute &uAttr, 
   MFnNumericAttribute &nAttr, 
   MObject &newAttribute) 
 {
@@ -1396,47 +1398,65 @@ inline bool AddSingleBaseStructAttribute(
       FTL::JSONObject const *execObject = execValue->cast<FTL::JSONObject>();
 
       MObject objs[3];
-      uint32_t count = 0;
-      for ( FTL::JSONObject::const_iterator it = execObject->begin(); it != execObject->end(); ++it )
-      {
-        FTL::CStrRef key = it->first;
-        MString mayaPortName = plugName;
-        MString subPortName = key.data();
-        mayaPortName += subPortName.toUpperCase();
+      if(numType != MFnNumericData::kInvalid)
+      {        
+        uint32_t count = 0;
+        for ( FTL::JSONObject::const_iterator it = execObject->begin(); it != execObject->end(); ++it )
+        {
+          FTL::CStrRef key = it->first;
+          MString mayaPortName = plugName;
+          MString subPortName = key.data();
+          mayaPortName += subPortName.toUpperCase();
 
-        if(it->second->isBoolean())
-        {
-          if(count <= 2)
+          if(it->second->isBoolean())
           {
-            objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getBooleanValue());
-            nAttr.setStorable(storable);
-            nAttr.setKeyable(storable);
-            count ++;
+            if(count <= 2)
+            {
+              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getBooleanValue());
+              nAttr.setStorable(storable);
+              nAttr.setKeyable(storable);
+              count ++;
+            }
           }
-        }
-        else if(it->second->isSInt32())
-        {
-          if(count <=  2)
+          else if(it->second->isSInt32())
           {
-            objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getSInt32Value());
-            nAttr.setStorable(storable);
-            nAttr.setKeyable(storable);
-            count ++;
+            if(count <=  2)
+            {
+              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getSInt32Value());
+              nAttr.setStorable(storable);
+              nAttr.setKeyable(storable);
+              count ++;
+            }
           }
-        }
-        else if(it->second->isFloat64())
-        {
-          if(count <= 2)
+          else if(it->second->isFloat64())
           {
-            objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getFloat64Value());
-            nAttr.setStorable(storable);
-            nAttr.setKeyable(storable);
-            count ++;
+            if(count <= 2)
+            {
+              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getFloat64Value());
+              nAttr.setStorable(storable);
+              nAttr.setKeyable(storable);
+              count ++;
+            }
           }
         }
       }
-      newAttribute = nAttr.create(plugName, plugName, objs[0], objs[1], objs[2]);  
+      
+      else if(unitType == MFnUnitAttribute::kAngle)
+      {
+        objs[0] = uAttr.create(plugName+"X", plugName+"X", unitType);
+        uAttr.setStorable(storable);
+        uAttr.setKeyable(storable);
 
+        objs[1] = uAttr.create(plugName+"Y", plugName+"Y", unitType);
+        uAttr.setStorable(storable);
+        uAttr.setKeyable(storable);
+
+        objs[2] = uAttr.create(plugName+"Z", plugName+"Z", unitType);
+        uAttr.setStorable(storable);
+        uAttr.setKeyable(storable);
+      }
+
+      newAttribute = nAttr.create(plugName, plugName, objs[0], objs[1], objs[2]);  
       sucess =  true;
     }
   }
@@ -1458,6 +1478,7 @@ inline bool AddBaseStructAttributes(
   float uiSoftMax,
   float uiHardMin,
   float uiHardMax,
+  MFnUnitAttribute &uAttr, 
   MFnNumericAttribute &nAttr, 
   MFnTypedAttribute &tAttr,
   MObject &newAttribute) 
@@ -1469,26 +1490,27 @@ inline bool AddBaseStructAttributes(
   }
 
   MFnNumericData::Type numType = MFnNumericData::kInvalid;
+  MFnUnitAttribute::Type unitType = MFnUnitAttribute::kInvalid;
 
   bool isColor = false;
   uint32_t nbParameter = 3;
   uint32_t portIndex = binding.getExec().getExecPortIndex(portName.asChar());
   if( binding.getExec().isExecPortResolvedType(portIndex, "Vec3") || 
-      binding.getExec().isExecPortResolvedType(portIndex, "Vec3[]") || 
-      binding.getExec().isExecPortResolvedType(portIndex, "Euler")  || 
-      binding.getExec().isExecPortResolvedType(portIndex, "Euler[]") )
-    numType = MFnNumericData::kFloat;  
+      binding.getExec().isExecPortResolvedType(portIndex, "Vec3[]") ) 
+    numType = MFnNumericData::kFloat; 
 
+  else if(binding.getExec().isExecPortResolvedType(portIndex, "Euler")  || 
+      binding.getExec().isExecPortResolvedType(portIndex, "Euler[]") || 
+      binding.getExec().isExecPortResolvedType(portIndex, "Euler_d") || 
+      binding.getExec().isExecPortResolvedType(portIndex, "Euler_d[]") )
+    unitType = MFnUnitAttribute::kAngle;  
+ 
   else if(binding.getExec().isExecPortResolvedType(portIndex, "Vec3_d") || 
-          binding.getExec().isExecPortResolvedType(portIndex, "Vec3_d[]") || 
-          binding.getExec().isExecPortResolvedType(portIndex, "Euler_d") || 
-          binding.getExec().isExecPortResolvedType(portIndex, "Euler_d[]") )
+          binding.getExec().isExecPortResolvedType(portIndex, "Vec3_d[]")  )
     numType = MFnNumericData::kDouble;
 
   else if(binding.getExec().isExecPortResolvedType(portIndex, "Vec3_i")  || 
-          binding.getExec().isExecPortResolvedType(portIndex, "Vec3_i[]") || 
-          binding.getExec().isExecPortResolvedType(portIndex, "Euler_i")  || 
-          binding.getExec().isExecPortResolvedType(portIndex, "Euler_i[]"))
+          binding.getExec().isExecPortResolvedType(portIndex, "Vec3_i[]") )
     numType = MFnNumericData::kInt;
 
   else if(binding.getExec().isExecPortResolvedType(portIndex, "Color") ||
@@ -1503,49 +1525,67 @@ inline bool AddBaseStructAttributes(
     nbParameter = 2;
     if(binding.getExec().isExecPortResolvedType(portIndex, "Vec2")||
        binding.getExec().isExecPortResolvedType(portIndex, "Vec2[]") )
-
       numType = MFnNumericData::kFloat;  
+
     else if(binding.getExec().isExecPortResolvedType(portIndex, "Vec2_d") ||
             binding.getExec().isExecPortResolvedType(portIndex, "Vec2_d[]") )     
       numType = MFnNumericData::kDouble;
+    
     else if(binding.getExec().isExecPortResolvedType(portIndex, "Vec2_i") ||
             binding.getExec().isExecPortResolvedType(portIndex, "Vec2_i[]") )     
       numType = MFnNumericData::kInt;
   }
 
   
-  if(numType == MFnNumericData::kInvalid )
+  if(numType == MFnNumericData::kInvalid && unitType == MFnUnitAttribute::kInvalid)
     return false;
 
   if(arrayType == "Array (Multi)")
   {
-    MString mayaPortName = plugName;
-    mayaPortName += (!isColor) ? "X" : "R";    
-    MObject x = nAttr.create(mayaPortName, mayaPortName, numType);
-    nAttr.setStorable(storable);
-    nAttr.setKeyable(storable);
-
-    mayaPortName = plugName;
-    mayaPortName += (!isColor) ? "Y" : "G";
-    MObject y = nAttr.create(mayaPortName, mayaPortName, numType);
-    nAttr.setStorable(storable);
-    nAttr.setKeyable(storable);
-
-    if(nbParameter == 2)
-        newAttribute = nAttr.create(plugName, plugName, x, y);      
-    else
-    {
-      mayaPortName = plugName;
-      mayaPortName += (!isColor) ? "Z" : "B";
-      MObject z = nAttr.create(mayaPortName, mayaPortName, numType);
+    
+    if(numType != MFnNumericData::kInvalid)
+    {        
+      MString mayaPortName = plugName;
+      mayaPortName += (!isColor) ? "X" : "R";    
+      MObject x = nAttr.create(mayaPortName, mayaPortName, numType);
       nAttr.setStorable(storable);
       nAttr.setKeyable(storable);
 
-      newAttribute = nAttr.create(plugName, plugName, x, y, z);      
-    }
+      mayaPortName = plugName;
+      mayaPortName += (!isColor) ? "Y" : "G";
+      MObject y = nAttr.create(mayaPortName, mayaPortName, numType);
+      nAttr.setStorable(storable);
+      nAttr.setKeyable(storable);
 
-    nAttr.setArray(true);
-    nAttr.setUsesArrayDataBuilder(true);
+      if(nbParameter == 2)
+          newAttribute = nAttr.create(plugName, plugName, x, y);      
+      else
+      {
+        mayaPortName = plugName;
+        mayaPortName += (!isColor) ? "Z" : "B";
+        MObject z = nAttr.create(mayaPortName, mayaPortName, numType);
+        nAttr.setStorable(storable);
+        nAttr.setKeyable(storable);
+
+        newAttribute = nAttr.create(plugName, plugName, x, y, z);      
+      }
+
+      nAttr.setArray(true);
+      nAttr.setUsesArrayDataBuilder(true);
+    }
+    else if(unitType != MFnUnitAttribute::kInvalid)
+    {
+      MObject x = uAttr.create(plugName+"X", plugName+"X", unitType);
+      uAttr.setStorable(storable);
+      MObject y = uAttr.create(plugName+"Y", plugName+"Y", unitType);
+      uAttr.setStorable(storable);
+      MObject z = uAttr.create(plugName+"Z", plugName+"Z", unitType);
+      uAttr.setStorable(storable);
+
+      newAttribute = nAttr.create(plugName, plugName, x, y, z);   
+      nAttr.setArray(true);
+      nAttr.setUsesArrayDataBuilder(true);
+    }
   }
   else if(arrayType == "Array (Native)")
   {
@@ -1565,9 +1605,11 @@ inline bool AddBaseStructAttributes(
       binding, 
       plugName,
       numType,
+      unitType, 
       portName, 
       dataType, 
       storable,
+      uAttr,
       nAttr,
       newAttribute);
   }
@@ -2023,7 +2065,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
       m_binding, portName, plugName, 
       dataTypeOverride, arrayType, storable,
       uiSoftMin, uiSoftMax, uiHardMin, uiHardMax,
-      nAttr, tAttr, newAttribute);
+      uAttr, nAttr, tAttr, newAttribute);
 
   if(!isAccepted && !isOpaqueData)
     isAccepted = AddMatrixAttributes( 
