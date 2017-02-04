@@ -1860,6 +1860,82 @@ void dfgPlugToPort_euler(
   CORE_CATCH_END;
 }
 
+void dfgPlugToPort_euler_float64(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
+{
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_euler_float64");
+
+  CORE_CATCH_BEGIN;
+
+  if(plug.isArray()){
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
+    MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    pauseBracket.resume();
+
+    unsigned int elements = arrayHandle.elementCount();
+    FabricCore::RTVal arrayVal = FabricSplice::constructVariableArrayRTVal("Euler_d");
+    FabricCore::RTVal euler = FabricSplice::constructRTVal("Euler_d");
+    FabricCore::RTVal arraySizeVal = FabricSplice::constructUInt32RTVal(elements);
+    arrayVal.callMethod("", "resize", 1, &arraySizeVal);
+    for(unsigned int i = 0; i < elements; ++i){
+      arrayHandle.jumpToArrayElement(i);
+      MDataHandle handle = arrayHandle.inputValue();
+
+      if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
+        const float3& mayaVec = handle.asFloat3();
+        euler.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
+        euler.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
+        euler.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
+      } else{
+        const double3& mayaVec = handle.asDouble3();
+        euler.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
+        euler.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
+        euler.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
+      }
+      arrayVal.setArrayElement(i, euler);
+    }
+
+    setCB(getSetUD, arrayVal.getFECRTValRef());
+  }
+  else {
+    FabricCore::RTVal rtVal = getCB(getSetUD);
+    if(rtVal.isArray())
+      return;
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
+    MDataHandle handle = data.inputValue(plug);
+    pauseBracket.resume();
+
+    FabricCore::RTVal euler = FabricSplice::constructRTVal("Euler_d");
+    if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
+      const float3& mayaVec = handle.asFloat3();
+      euler.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
+      euler.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
+      euler.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
+    } else{
+      const double3& mayaVec = handle.asDouble3();
+      euler.setMember("x", FabricSplice::constructFloat64RTVal(mayaVec[0]));
+      euler.setMember("y", FabricSplice::constructFloat64RTVal(mayaVec[1]));
+      euler.setMember("z", FabricSplice::constructFloat64RTVal(mayaVec[2]));
+    }
+
+    setCB(getSetUD, euler.getFECRTValRef());
+  }
+
+  CORE_CATCH_END;
+}
+
+
 void dfgPlugToPort_mat44(
   unsigned argIndex,
   char const *argName,
@@ -4435,13 +4511,13 @@ void dfgPortToPlug_euler(
   MPlug &plug, 
   MDataBlock &data)
 {
-
-  uint64_t elementDataSize = sizeof(float) * 3;
+  // In KL, Euler have 4 attributes : Angles (x, y, z) + rotation orders
+  uint32_t elementSize = 4;
+  uint64_t elementDataSize = sizeof(float) * elementSize;
   uint64_t numElements = argRawDataSize / elementDataSize;
 
   const float * values;
   getRawCB(getSetUD, (const void**)&values);
-  unsigned int offset = 0;
 
   if(plug.isArray()){
     MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
@@ -4449,13 +4525,10 @@ void dfgPortToPlug_euler(
 
     for(unsigned int i = 0; i < numElements; ++i){
       MDataHandle handle = arraybuilder.addElement(i);
-      if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
-        handle.set3Float(values[offset], values[offset+1], values[offset+2]);
-        offset+=3;
-      }else{
-        handle.set3Double(values[offset], values[offset+1], values[offset+2]);
-        offset+=3;
-      }
+      if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat)
+        handle.set3Float(values[i*elementSize+0], values[i*elementSize+1], values[i*elementSize+2]);
+      else
+        handle.set3Double(values[i*elementSize+0], values[i*elementSize+1], values[i*elementSize+2]);
     }
 
     arrayHandle.set(arraybuilder);
@@ -4463,11 +4536,54 @@ void dfgPortToPlug_euler(
   }
   else{
     MDataHandle handle = data.outputValue(plug);
-    if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat){
-      handle.set3Float(values[offset], values[offset+1], values[offset+2]);
-    }else{
-      handle.set3Double(values[offset], values[offset+1], values[offset+2]);
+    if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat)
+      handle.set3Float(values[0], values[1], values[2]);
+    else
+      handle.set3Double(values[0], values[1], values[2]);
+  }
+}
+
+void dfgPortToPlug_euler_float64(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
+{
+  // In KL, Euler have 4 attributes : Angles (x, y, z) + rotation orders
+  uint32_t elementSize = 4;
+  uint64_t elementDataSize = sizeof(double) * elementSize;
+  uint64_t numElements = argRawDataSize / elementDataSize;
+
+  const double * values;
+  getRawCB(getSetUD, (const void**)&values);
+
+  if(plug.isArray()){
+    MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+    MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+    for(unsigned int i = 0; i < numElements; ++i){
+      MDataHandle handle = arraybuilder.addElement(i);
+      if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat)
+        handle.set3Float((float)values[i*elementSize+0], (float)values[i*elementSize+1], (float)values[i*elementSize+2]);
+      else
+        handle.set3Double(values[i*elementSize+0], values[i*elementSize+1], values[i*elementSize+2]);
     }
+
+    arrayHandle.set(arraybuilder);
+    arrayHandle.setAllClean();
+  }
+  else{
+    MDataHandle handle = data.outputValue(plug);
+    if(handle.numericType() == MFnNumericData::k3Float || handle.numericType() == MFnNumericData::kFloat)
+      handle.set3Float((float)values[0], (float)values[1], (float)values[2]);
+    else
+      handle.set3Double(values[0], values[1], values[2]);
   }
 }
 
@@ -5154,9 +5270,8 @@ DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType)
   if (dataType == FTL_STR("Vec3_i"))               return dfgPlugToPort_vec3_sint32;
 
   if (dataType == FTL_STR("Euler"))                return dfgPlugToPort_euler;
-  if (dataType == FTL_STR("Euler_d"))              return dfgPlugToPort_vec4_float64;
-  if (dataType == FTL_STR("Euler_i"))              return dfgPlugToPort_vec4_sint32;
-
+  if (dataType == FTL_STR("Euler_d"))              return dfgPlugToPort_euler_float64;
+ 
   if (dataType == FTL_STR("Mat44"))                return dfgPlugToPort_mat44;
   if (dataType == FTL_STR("Mat44_d"))              return dfgPlugToPort_mat44_float64;
 
@@ -5205,9 +5320,8 @@ DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::StrRef &dataType)
   if (dataType == FTL_STR("Vec3_i"))               return dfgPortToPlug_vec3_sint32;
 
   if (dataType == FTL_STR("Euler"))                return dfgPortToPlug_euler;
-  if (dataType == FTL_STR("Euler_d"))              return dfgPortToPlug_vec4_float64;
-  if (dataType == FTL_STR("Euler_i"))              return dfgPortToPlug_vec4_sint32;
-
+  if (dataType == FTL_STR("Euler_d"))              return dfgPortToPlug_euler_float64;
+ 
   if (dataType == FTL_STR("Mat44"))                return dfgPortToPlug_mat44;
   if (dataType == FTL_STR("Mat44_d"))              return dfgPortToPlug_mat44_float64;
 
