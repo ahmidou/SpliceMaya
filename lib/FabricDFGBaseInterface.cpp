@@ -1278,7 +1278,8 @@ inline bool AddBaseTypeAttributes(
   MFnData::Type strType = MFnData::kInvalid;
 
   uint32_t portIndex = binding.getExec().getExecPortIndex(portName.asChar());
-  if(binding.getExec().isExecPortResolvedType(portIndex, "Boolean"))     
+  if(binding.getExec().isExecPortResolvedType(portIndex, "Boolean") ||
+     binding.getExec().isExecPortResolvedType(portIndex, "Boolean[]"))     
     numType = MFnNumericData::kBoolean;
   
   else if(binding.getExec().isExecPortResolvedType(portIndex, "String") || 
