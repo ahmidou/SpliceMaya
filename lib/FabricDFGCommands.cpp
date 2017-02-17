@@ -3023,6 +3023,12 @@ MStatus FabricCanvasReloadExtensionCommand::doIt(const MArgList &args)
     if ( !argParser.isFlagSet("extension") )
       throw ArgException( MS::kFailure, "-m (-extension) not provided." );
     MString extensionName = argParser.flagArgumentString("extension", 0);
+
+    FabricCore::Client client = FabricSplice::ConstructClient();
+    if (!client.isValid())
+      throw ArgException( MS::kFailure, "failed to get valid Fabric client." );
+
+    client.loadExtension(extensionName.asChar(), "", true /* reload */);
   }
   catch ( ArgException e )
   {
