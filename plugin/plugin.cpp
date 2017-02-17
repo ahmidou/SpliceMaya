@@ -351,17 +351,20 @@ MAYA_EXPORT initializePlugin(MObject obj)
     FabricDFGExportJSONCommand::creator,
     FabricDFGExportJSONCommand::newSyntax
     );
-
   plugin.registerCommand(
     "FabricCanvasGetExecuteShared",
     FabricCanvasGetExecuteSharedCommand::creator,
     FabricCanvasGetExecuteSharedCommand::newSyntax
     );
-
   plugin.registerCommand(
     "FabricCanvasSetExecuteShared",
     FabricCanvasSetExecuteSharedCommand::creator,
     FabricCanvasSetExecuteSharedCommand::newSyntax
+    );
+  plugin.registerCommand(
+    "FabricCanvasReloadExtension",
+    FabricCanvasReloadExtensionCommand::creator,
+    FabricCanvasReloadExtensionCommand::newSyntax
     );
 
   plugin.registerCommand("fabricUpgradeAttrs", FabricUpgradeAttrCommand::creator, FabricUpgradeAttrCommand::newSyntax);
@@ -492,6 +495,9 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   plugin.deregisterCommand( "dfgImportJSON" );
   plugin.deregisterCommand( "dfgReloadJSON" );
   plugin.deregisterCommand( "dfgExportJSON" );
+  plugin.deregisterCommand( "FabricCanvasGetExecuteShared" );
+  plugin.deregisterCommand( "FabricCanvasSetExecuteShared" );
+  plugin.deregisterCommand( "FabricCanvasReloadExtension"  );
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by

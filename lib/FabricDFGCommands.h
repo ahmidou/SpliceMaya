@@ -1251,3 +1251,20 @@ private:
   QString m_oldMetadataValue;
   QString m_newMetadataValue;
 };
+
+class FabricCanvasReloadExtensionCommand
+  : public FabricDFGBaseCommand
+{
+public:
+
+  static void* creator()
+    { return new FabricCanvasReloadExtensionCommand; }
+
+  virtual MString getName()
+    { return "FabricCanvasReloadExtension"; }
+
+  static MSyntax newSyntax();
+  virtual MStatus doIt( const MArgList &args );
+  virtual bool isUndoable() const { return false; }
+};
+

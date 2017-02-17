@@ -2999,3 +2999,41 @@ MStatus FabricCanvasSetExecuteSharedCommand::redoIt()
 
   return MS::kSuccess;
 }
+
+// FabricCanvasReloadExtension
+
+MSyntax FabricCanvasReloadExtensionCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.addFlag("-e", "-extension", MSyntax::kString);
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;
+}
+
+MStatus FabricCanvasReloadExtensionCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argParser( syntax(), args, &status );
+  if ( status != MS::kSuccess )
+    return status;
+
+  try
+  {
+    if ( !argParser.isFlagSet("extension") )
+      throw ArgException( MS::kFailure, "-m (-extension) not provided." );
+    MString extensionName = argParser.flagArgumentString("extension", 0);
+  }
+  catch ( ArgException e )
+  {
+    logError( e.getDesc() );
+    status = e.getStatus();
+  }
+  catch ( FabricCore::Exception e )
+  {
+    logError( e.getDesc_cstr() );
+    status = MS::kFailure;
+  }
+  
+  return status;
+}
