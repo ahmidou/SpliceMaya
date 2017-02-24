@@ -2429,7 +2429,7 @@ bool dfgMFnNurbsCurveToCurves(unsigned int index, MFnNurbsCurve & curve, FabricC
     return false;
 
   FabricCore::RTVal args[ 6 ];
-  args[0] = FabricSplice::constructUInt8RTVal(index);
+  args[0] = FabricSplice::constructUInt32RTVal(index);
   args[1] = FabricSplice::constructUInt8RTVal(uint8_t( curve.degree() ));
 
   uint8_t curveForm = uint8_t(curve.form());
