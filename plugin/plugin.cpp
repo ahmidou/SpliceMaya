@@ -8,6 +8,7 @@
 
 #include "plugin.h"
 #include <maya/MGlobal.h>
+#include <maya/MStatus.h>
 #include <maya/MFnPlugin.h>
 #include <maya/MSceneMessage.h>
 #include <maya/MDGMessage.h>
@@ -394,110 +395,117 @@ MAYA_EXPORT initializePlugin(MObject obj)
   return status;
 }
 
+#define UNINIT_STATE( status, code ) \
+      { \
+        MStatus tmp = ( code ); \
+        if (status != MStatus::kSuccess) \
+          status = tmp; \
+      }
+
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT uninitializePlugin(MObject obj)
 {
   MFnPlugin plugin(obj);
-  MStatus status;
+  MStatus status = MStatus::kSuccess;
 
   unloadMenu();
 
-  plugin.deregisterCommand("fabricSplice");
-  plugin.deregisterCommand("fabricImportPattern");
-  plugin.deregisterCommand("fabricUpgradeAttrs");
-  plugin.deregisterCommand("FabricSpliceEditor");
-  plugin.deregisterCommand("proceedToNextScene");
-  plugin.deregisterNode(FabricSpliceMayaNode::id);
-  plugin.deregisterNode(FabricSpliceMayaDeformer::id);
+  UNINIT_STATE( status, plugin.deregisterCommand("fabricSplice") );
+  UNINIT_STATE( status, plugin.deregisterCommand("fabricImportPattern") );
+  UNINIT_STATE( status, plugin.deregisterCommand("fabricUpgradeAttrs") );
+  UNINIT_STATE( status, plugin.deregisterCommand("FabricSpliceEditor") );
+  UNINIT_STATE( status, plugin.deregisterCommand("proceedToNextScene") );
+  UNINIT_STATE( status, plugin.deregisterNode(FabricSpliceMayaNode::id) );
+  UNINIT_STATE( status, plugin.deregisterNode(FabricSpliceMayaDeformer::id) );
 
-  MSceneMessage::removeCallback(gOnSceneSaveCallbackId);
-  MSceneMessage::removeCallback(gOnSceneLoadCallbackId);
-  MSceneMessage::removeCallback(gOnMayaExitCallbackId);
-  MSceneMessage::removeCallback(gOnBeforeImportCallbackId);
-  MSceneMessage::removeCallback(gOnSceneImportCallbackId);
-  MSceneMessage::removeCallback(gOnSceneExportCallbackId);
-  MSceneMessage::removeCallback(gOnSceneCreateReferenceCallbackId);
-  MSceneMessage::removeCallback(gOnSceneImportReferenceCallbackId);
-  MSceneMessage::removeCallback(gOnSceneLoadReferenceCallbackId);
-  MEventMessage::removeCallback(gOnModelPanelSetFocusCallbackId);
+  UNINIT_STATE( status, MSceneMessage::removeCallback(gOnSceneSaveCallbackId) );
+  UNINIT_STATE( status, MSceneMessage::removeCallback(gOnSceneLoadCallbackId) );
+  UNINIT_STATE( status, MSceneMessage::removeCallback(gOnMayaExitCallbackId) );
+  UNINIT_STATE( status, MSceneMessage::removeCallback(gOnBeforeImportCallbackId) );
+  UNINIT_STATE( status, MSceneMessage::removeCallback(gOnSceneImportCallbackId) );
+  UNINIT_STATE( status, MSceneMessage::removeCallback(gOnSceneExportCallbackId) );
+  UNINIT_STATE( status, MSceneMessage::removeCallback(gOnSceneCreateReferenceCallbackId) );
+  UNINIT_STATE( status, MSceneMessage::removeCallback(gOnSceneImportReferenceCallbackId) );
+  UNINIT_STATE( status, MSceneMessage::removeCallback(gOnSceneLoadReferenceCallbackId) );
+  UNINIT_STATE( status, MEventMessage::removeCallback(gOnModelPanelSetFocusCallbackId) );
 
-  // FE-6558 : Don't plug the render-callback if not interactive.
+  // FE-6558 : Don't unplug the render-callback if not interactive.
   // Otherwise it will crash on linux machine without DISPLAY
   if (MGlobal::mayaState() == MGlobal::kInteractive)
     FabricSpliceRenderCallback::unplug();
 
-  MDGMessage::removeCallback(gOnNodeAddedCallbackId);
-  MDGMessage::removeCallback(gOnNodeRemovedCallbackId);
+  UNINIT_STATE( status, MDGMessage::removeCallback(gOnNodeAddedCallbackId) );
+  UNINIT_STATE( status, MDGMessage::removeCallback(gOnNodeRemovedCallbackId) );
 
-  MDGMessage::removeCallback(gOnNodeAddedDFGCallbackId);
-  MDGMessage::removeCallback(gOnNodeRemovedDFGCallbackId);
-  MDGMessage::removeCallback(gOnAnimCurveEditedCallbackId);
+  UNINIT_STATE( status, MDGMessage::removeCallback(gOnNodeAddedDFGCallbackId) );
+  UNINIT_STATE( status, MDGMessage::removeCallback(gOnNodeRemovedDFGCallbackId) );
+  UNINIT_STATE( status, MDGMessage::removeCallback(gOnAnimCurveEditedCallbackId) );
 
-  plugin.deregisterData(FabricSpliceMayaData::id);
+  UNINIT_STATE( status, plugin.deregisterData(FabricSpliceMayaData::id) );
 
   MQtUtil::deregisterUIType("FabricSpliceEditor");
 
-  plugin.deregisterContextCommand("FabricSpliceToolContext", "FabricSpliceToolCommand");
+  UNINIT_STATE( status, plugin.deregisterContextCommand("FabricSpliceToolContext", "FabricSpliceToolCommand") );
 
-  plugin.deregisterCommand("fabricDFG");
+  UNINIT_STATE( status, plugin.deregisterCommand("fabricDFG") );
   MQtUtil::deregisterUIType("FabricDFGWidget");
-  plugin.deregisterNode(FabricDFGMayaNode_Graph::id);
-  plugin.deregisterNode(FabricDFGMayaDeformer_Graph::id);
-  plugin.deregisterNode(FabricDFGMayaNode_Func::id);
-  plugin.deregisterNode(FabricDFGMayaDeformer_Func::id);
-  plugin.deregisterNode(FabricConstraint::id);
-  plugin.deregisterNode(FabricExtensionPackageNode::id);
+  UNINIT_STATE( status, plugin.deregisterNode(FabricDFGMayaNode_Graph::id) );
+  UNINIT_STATE( status, plugin.deregisterNode(FabricDFGMayaDeformer_Graph::id) );
+  UNINIT_STATE( status, plugin.deregisterNode(FabricDFGMayaNode_Func::id) );
+  UNINIT_STATE( status, plugin.deregisterNode(FabricDFGMayaDeformer_Func::id) );
+  UNINIT_STATE( status, plugin.deregisterNode(FabricConstraint::id) );
+  UNINIT_STATE( status, plugin.deregisterNode(FabricExtensionPackageNode::id) );
 
-  plugin.deregisterCommand("FabricCanvasGetFabricVersion");
-  plugin.deregisterCommand("FabricCanvasGetContextID");
-  plugin.deregisterCommand("FabricCanvasGetBindingID");
-  plugin.deregisterCommand("FabricCanvasIncrementEvalID");
-  plugin.deregisterCommand("FabricCanvasDestroyClient");
-  plugin.deregisterCommand("FabricCanvasPackageExtensions");
+  UNINIT_STATE( status, plugin.deregisterCommand("FabricCanvasGetFabricVersion") );
+  UNINIT_STATE( status, plugin.deregisterCommand("FabricCanvasGetContextID") );
+  UNINIT_STATE( status, plugin.deregisterCommand("FabricCanvasGetBindingID") );
+  UNINIT_STATE( status, plugin.deregisterCommand("FabricCanvasIncrementEvalID") );
+  UNINIT_STATE( status, plugin.deregisterCommand("FabricCanvasDestroyClient") );
+  UNINIT_STATE( status, plugin.deregisterCommand("FabricCanvasPackageExtensions") );
 
-  MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes         );
-  MAYA_DEREGISTER_DFGUICMD( plugin, Connect             );
-  MAYA_DEREGISTER_DFGUICMD( plugin, Disconnect          );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddGraph            );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddFunc             );
-  MAYA_DEREGISTER_DFGUICMD( plugin, InstPreset          );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddVar              );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddGet              );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddSet              );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddPort             );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddInstPort         );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddInstBlockPort    );
-  MAYA_DEREGISTER_DFGUICMD( plugin, CreatePreset        );
-  MAYA_DEREGISTER_DFGUICMD( plugin, EditPort            );
-  MAYA_DEREGISTER_DFGUICMD( plugin, RemovePort          );
-  MAYA_DEREGISTER_DFGUICMD( plugin, MoveNodes           );
-  MAYA_DEREGISTER_DFGUICMD( plugin, ResizeBackDrop      );
-  MAYA_DEREGISTER_DFGUICMD( plugin, ImplodeNodes        );
-  MAYA_DEREGISTER_DFGUICMD( plugin, ExplodeNode         );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddBackDrop         );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeComment      );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetCode             );
-  MAYA_DEREGISTER_DFGUICMD( plugin, EditNode            );
-  MAYA_DEREGISTER_DFGUICMD( plugin, RenamePort          );
-  MAYA_DEREGISTER_DFGUICMD( plugin, Paste               );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetArgValue         );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetPortDefaultValue );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetRefVarPath       );
-  MAYA_DEREGISTER_DFGUICMD( plugin, ReorderPorts        );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SetExtDeps          );
-  MAYA_DEREGISTER_DFGUICMD( plugin, SplitFromPreset     );
-  MAYA_DEREGISTER_DFGUICMD( plugin, DismissLoadDiags    );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddBlock            );
-  MAYA_DEREGISTER_DFGUICMD( plugin, AddBlockPort        );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes         ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, Connect             ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, Disconnect          ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddGraph            ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddFunc             ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, InstPreset          ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddVar              ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddGet              ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddSet              ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddPort             ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddInstPort         ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddInstBlockPort    ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, CreatePreset        ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, EditPort            ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, RemovePort          ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, MoveNodes           ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, ResizeBackDrop      ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, ImplodeNodes        ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, ExplodeNode         ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddBackDrop         ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, SetNodeComment      ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, SetCode             ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, EditNode            ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, RenamePort          ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, Paste               ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, SetArgValue         ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, SetPortDefaultValue ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, SetRefVarPath       ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, ReorderPorts        ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, SetExtDeps          ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, SplitFromPreset     ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, DismissLoadDiags    ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddBlock            ) );
+  UNINIT_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddBlockPort        ) );
 
-  plugin.deregisterCommand( "dfgImportJSON" );
-  plugin.deregisterCommand( "dfgReloadJSON" );
-  plugin.deregisterCommand( "dfgExportJSON" );
-  plugin.deregisterCommand( "FabricCanvasGetExecuteShared" );
-  plugin.deregisterCommand( "FabricCanvasSetExecuteShared" );
-  plugin.deregisterCommand( "FabricCanvasReloadExtension"  );
+  UNINIT_STATE( status, plugin.deregisterCommand( "dfgImportJSON" ) );
+  UNINIT_STATE( status, plugin.deregisterCommand( "dfgReloadJSON" ) );
+  UNINIT_STATE( status, plugin.deregisterCommand( "dfgExportJSON" ) );
+  UNINIT_STATE( status, plugin.deregisterCommand( "FabricCanvasGetExecuteShared" ) );
+  UNINIT_STATE( status, plugin.deregisterCommand( "FabricCanvasSetExecuteShared" ) );
+  UNINIT_STATE( status, plugin.deregisterCommand( "FabricCanvasReloadExtension"  ) );
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by
