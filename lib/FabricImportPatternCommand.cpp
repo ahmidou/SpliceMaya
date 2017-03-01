@@ -672,7 +672,7 @@ bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
     return false;
 
   //const Integer ImporterShape_Mesh = 0;
-  //const Integer ImporterShape_Lines = 1;
+  //const Integer ImporterShape_Curves = 1;
   //const Integer ImporterShape_Points = 2;
   FabricCore::RTVal geoTypeVal = shape.callMethod("SInt32", "getGeometryType", 1, &m_context);
   int geoType = geoTypeVal.getSInt32();
