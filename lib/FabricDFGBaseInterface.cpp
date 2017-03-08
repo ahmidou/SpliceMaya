@@ -44,6 +44,7 @@ std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
 #endif
 unsigned int FabricDFGBaseInterface::s_maxID = 1;
 bool FabricDFGBaseInterface::s_use_evalContext = true; // [FE-6287]
+static MStringArray FabricDFGBaseInterface::s_queuedMelCommands;
 
 FabricDFGBaseInterface::FabricDFGBaseInterface(
   CreateDFGBindingFunc createDFGBinding
@@ -601,7 +602,8 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     if(portType != FabricCore::DFGPortType_Out)
     {
       MString command("dgeval ");
-      MGlobal::executeCommandOnIdle(command+thisNode.name()+"."+plugName);
+      // MGlobal::executeCommandOnIdle(command+thisNode.name()+"."+plugName);
+      queueMelCommand(command+thisNode.name()+"."+plugName);
       break;
     }
   }
@@ -685,7 +687,8 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
   {
     _dgDirtyQueued = true;
     MString command("dgdirty ");
-    MGlobal::executeCommandOnIdle(command+plugName);
+    // MGlobal::executeCommandOnIdle(command+plugName);
+    queueMelCommand(command+plugName);
   }
 
   if(plugName.index('.') > -1)
@@ -718,7 +721,8 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
             cmdPlugName = cmdPlugName.substring(0, cmdPlugName.index('"')-1);
             MString condition = "if(size(`listConnections -d no \"" + node.name() + cmdPlugName +"\"`) == 0)";
             cmds[i] = condition + "{ setAttr \"" + node.name() + cmds[i].substring(9, cmds[i].length()) + " }";
-            MGlobal::executeCommandOnIdle(cmds[i]);
+            // MGlobal::executeCommandOnIdle(cmds[i]);
+            queueMelCommand(cmds[i]);
           }
         }
       }
@@ -834,6 +838,28 @@ void FabricDFGBaseInterface::incrementEvalID()
   evalIDStr.set(m_evalID);
 
   MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false /*undoable*/);
+}
+
+static void FabricDFGBaseInterface::queueMelCommand(MString cmd)
+{
+  // todo: this needs to use a mutex~!
+  s_queuedMelCommands.append(cmd);
+  if(s_queuedMelCommands.length() == 1)
+    MGlobal::executeCommandOnIdle("FabricProcessMelQueue;")
+}
+
+static MStatus FabricDFGBaseInterface::processQueuedMelCommands()
+{
+  // todo: this needs to use a mutex~!
+  MStatus result = MS::kSuccess;
+  for(int i=0;i<s_queuedMelCommands.length();i++)
+  {
+    MStatus st = MGlobal::executeCommand(s_queuedMelCommands[i]);
+    if(st != MS::kSuccess)
+      result = st;
+  }
+  s_queuedMelCommands.clear();
+  return result;
 }
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
@@ -1102,7 +1128,6 @@ void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherP
 
   generateAttributeLookups();
 }
-
 
 // ********************   ********************  //
 inline bool AddSingleBaseTypeAttribute(

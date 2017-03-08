@@ -380,6 +380,36 @@ MStatus FabricDFGIncrementEvalIDCommand::doIt(const MArgList &args)
   return MS::kSuccess;
 }
 
+MSyntax FabricProcessMelQueueCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;  
+}
+
+void* FabricProcessMelQueueCommand::creator()
+{
+  return new FabricProcessMelQueueCommand;
+}
+
+MStatus FabricProcessMelQueueCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argData(syntax(), args, &status);
+  
+  // [ethivierge]: Not sure how to get the interface without an index. Using 0 by default?
+  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceById(0);
+  if(!interf)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": Could not get FabricDFGBaseInterface.");
+    return mayaErrorOccured();
+  }
+
+  interf->processQueuedMelCommands();
+  return MS::kSuccess;
+}
+
 // FabricDFGCoreCommand
 
 void FabricDFGCoreCommand::AddSyntax( MSyntax &syntax )

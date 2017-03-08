@@ -84,6 +84,18 @@ public:
   virtual bool isUndoable() const { return false; }
 };
 
+
+class FabricProcessMelQueueCommand: public MPxCommand
+{
+public:
+
+  virtual const char * getName() { return "FabricProcessMelQueue"; }
+  static void* creator();
+  static MSyntax newSyntax();
+  virtual MStatus doIt(const MArgList &args);
+  virtual bool isUndoable() const { return false; }
+};
+
 template<class MayaDFGUICmdClass, class FabricDFGUICmdClass>
 class MayaDFGUICmdWrapper : public MayaDFGUICmdClass
 {
