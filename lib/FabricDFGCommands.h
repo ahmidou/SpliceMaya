@@ -85,11 +85,11 @@ public:
 };
 
 
-class FabricProcessMelQueueCommand: public MPxCommand
+class FabricCanvasProcessMelQueueCommand: public MPxCommand
 {
 public:
 
-  virtual const char * getName() { return "FabricProcessMelQueue"; }
+  virtual const char * getName() { return "FabricCanvasProcessMelQueue"; }
   static void* creator();
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);

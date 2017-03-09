@@ -846,7 +846,7 @@ void FabricDFGBaseInterface::queueMelCommand(MString cmd)
   // todo: this needs to use a mutex~!
   s_queuedMelCommands.append(cmd);
   if(s_queuedMelCommands.length() == 1)
-    MGlobal::executeCommandOnIdle("FabricProcessMelQueue;");
+    MGlobal::executeCommandOnIdle("FabricCanvasProcessMelQueue;");
 }
 
 MStatus FabricDFGBaseInterface::processQueuedMelCommands()

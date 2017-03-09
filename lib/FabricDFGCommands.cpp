@@ -380,7 +380,7 @@ MStatus FabricDFGIncrementEvalIDCommand::doIt(const MArgList &args)
   return MS::kSuccess;
 }
 
-MSyntax FabricProcessMelQueueCommand::newSyntax()
+MSyntax FabricCanvasProcessMelQueueCommand::newSyntax()
 {
   MSyntax syntax;
   syntax.enableQuery(false);
@@ -388,12 +388,12 @@ MSyntax FabricProcessMelQueueCommand::newSyntax()
   return syntax;  
 }
 
-void* FabricProcessMelQueueCommand::creator()
+void* FabricCanvasProcessMelQueueCommand::creator()
 {
-  return new FabricProcessMelQueueCommand;
+  return new FabricCanvasProcessMelQueueCommand;
 }
 
-MStatus FabricProcessMelQueueCommand::doIt(const MArgList &args)
+MStatus FabricCanvasProcessMelQueueCommand::doIt(const MArgList &args)
 {
   MStatus status;
   MArgParser argData(syntax(), args, &status);
