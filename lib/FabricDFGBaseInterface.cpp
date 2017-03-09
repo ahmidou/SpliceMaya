@@ -853,7 +853,7 @@ MStatus FabricDFGBaseInterface::processQueuedMelCommands()
 {
   // todo: this needs to use a mutex~!
   MStatus result = MS::kSuccess;
-  for(int i=0;i<s_queuedMelCommands.length();i++)
+  for(unsigned int i=0;i<s_queuedMelCommands.length();i++)
   {
     MStatus st = MGlobal::executeCommand(s_queuedMelCommands[i]);
     if(st != MS::kSuccess)
