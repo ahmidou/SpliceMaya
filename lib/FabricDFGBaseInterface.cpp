@@ -813,7 +813,8 @@ void FabricDFGBaseInterface::queueIncrementEvalID(bool onIdle)
     MString indexStr;
     indexStr.set((int)m_id);
 
-    MGlobal::executeCommandOnIdle(command+indexStr, false /*display*/);
+    // MGlobal::executeCommandOnIdle(command+indexStr, false /*display*/);
+    queueMelCommand(command+indexStr);
   }
   else
   {
