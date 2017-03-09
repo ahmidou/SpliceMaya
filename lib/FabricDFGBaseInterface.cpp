@@ -44,7 +44,7 @@ std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
 #endif
 unsigned int FabricDFGBaseInterface::s_maxID = 1;
 bool FabricDFGBaseInterface::s_use_evalContext = true; // [FE-6287]
-static MStringArray FabricDFGBaseInterface::s_queuedMelCommands;
+MStringArray FabricDFGBaseInterface::s_queuedMelCommands;
 
 FabricDFGBaseInterface::FabricDFGBaseInterface(
   CreateDFGBindingFunc createDFGBinding
@@ -840,15 +840,15 @@ void FabricDFGBaseInterface::incrementEvalID()
   MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false /*undoable*/);
 }
 
-static void FabricDFGBaseInterface::queueMelCommand(MString cmd)
+void FabricDFGBaseInterface::queueMelCommand(MString cmd)
 {
   // todo: this needs to use a mutex~!
   s_queuedMelCommands.append(cmd);
   if(s_queuedMelCommands.length() == 1)
-    MGlobal::executeCommandOnIdle("FabricProcessMelQueue;")
+    MGlobal::executeCommandOnIdle("FabricProcessMelQueue;");
 }
 
-static MStatus FabricDFGBaseInterface::processQueuedMelCommands()
+MStatus FabricDFGBaseInterface::processQueuedMelCommands()
 {
   // todo: this needs to use a mutex~!
   MStatus result = MS::kSuccess;

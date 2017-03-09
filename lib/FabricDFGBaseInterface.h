@@ -98,8 +98,8 @@ public:
   virtual void queueIncrementEvalID(bool onIdle = true);
   virtual void incrementEvalID();
 
-  static void FabricDFGBaseInterface::queueMelCommand(MString cmd)
-  static MStatus FabricDFGBaseInterface::processQueuedMelCommands()
+  static void FabricDFGBaseInterface::queueMelCommand(MString cmd);
+  static MStatus FabricDFGBaseInterface::processQueuedMelCommands();
 
   DFGUICmdHandler_Maya *getCmdHandler()
     { return &m_cmdHandler; }

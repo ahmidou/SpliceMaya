@@ -398,7 +398,7 @@ MStatus FabricProcessMelQueueCommand::doIt(const MArgList &args)
   MStatus status;
   MArgParser argData(syntax(), args, &status);
   
-  FabricDFGBaseInterface::processQueuedMelCommands()
+  FabricDFGBaseInterface::processQueuedMelCommands();
   return MS::kSuccess;
 }
 
