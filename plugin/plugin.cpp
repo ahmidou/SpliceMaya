@@ -309,6 +309,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   INITPLUGIN_STATE( status, plugin.registerCommand("FabricCanvasIncrementEvalID",   FabricDFGIncrementEvalIDCommand  ::creator, FabricDFGIncrementEvalIDCommand  ::newSyntax) );
   INITPLUGIN_STATE( status, plugin.registerCommand("FabricCanvasDestroyClient",     FabricDFGDestroyClientCommand    ::creator, FabricDFGDestroyClientCommand    ::newSyntax) );
   INITPLUGIN_STATE( status, plugin.registerCommand("FabricCanvasPackageExtensions", FabricDFGPackageExtensionsCommand::creator, FabricDFGPackageExtensionsCommand::newSyntax) );
+  INITPLUGIN_STATE( status, plugin.registerCommand("FabricProcessMelQueue",         FabricProcessMelQueueCommand     ::creator, FabricProcessMelQueueCommand     ::newSyntax) );
 
   INITPLUGIN_STATE( status, MAYA_REGISTER_DFGUICMD( plugin, RemoveNodes         ) );
   INITPLUGIN_STATE( status, MAYA_REGISTER_DFGUICMD( plugin, Connect             ) );
@@ -472,6 +473,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand("FabricCanvasIncrementEvalID") );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand("FabricCanvasDestroyClient") );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand("FabricCanvasPackageExtensions") );
+  UNINITPLUGIN_STATE( status, plugin.deregisterCommand("FabricProcessMelQueue") );
 
   UNINITPLUGIN_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, RemoveNodes         ) );
   UNINITPLUGIN_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, Connect             ) );
