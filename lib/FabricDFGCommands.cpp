@@ -398,15 +398,7 @@ MStatus FabricProcessMelQueueCommand::doIt(const MArgList &args)
   MStatus status;
   MArgParser argData(syntax(), args, &status);
   
-  // [ethivierge]: Not sure how to get the interface without an index. Using 0 by default?
-  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceById(0);
-  if(!interf)
-  {
-    mayaLogErrorFunc(MString(getName()) + ": Could not get FabricDFGBaseInterface.");
-    return mayaErrorOccured();
-  }
-
-  interf->processQueuedMelCommands();
+  FabricDFGBaseInterface::processQueuedMelCommands()
   return MS::kSuccess;
 }
 
