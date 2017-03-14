@@ -2266,11 +2266,11 @@ void dfgPlugToPort_PolygonMesh(
         }
       }
 
-      if (elements < portRTVal.getArraySize())
-      {
-        FabricCore::RTVal rtVal = FabricSplice::constructUInt32RTVal(elements);
-        portRTVal.callMethod("", "resize", 1, &rtVal);
-      }
+      //if (elements < portRTVal.getArraySize())
+      //{
+      //  FabricCore::RTVal rtVal = FabricSplice::constructUInt32RTVal(elements);
+      //  portRTVal.callMethod("", "resize", 1, &rtVal);
+      //}
     }
     else
     {
