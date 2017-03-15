@@ -98,6 +98,9 @@ public:
   virtual void queueIncrementEvalID(bool onIdle = true);
   virtual void incrementEvalID();
 
+  static void queueMelCommand(MString cmd);
+  static MStatus processQueuedMelCommands();
+
   DFGUICmdHandler_Maya *getCmdHandler()
     { return &m_cmdHandler; }
 
@@ -270,6 +273,9 @@ private:
 // [FE-6287]
 public:
   static bool s_use_evalContext;
+
+public:
+  static MStringArray s_queuedMelCommands;
 
 public:
 
