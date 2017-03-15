@@ -2224,6 +2224,14 @@ void dfgPlugToPort_PolygonMesh(
   std::vector<FabricCore::RTVal> rtVals;
   FabricCore::RTVal portRTVal;
 
+  // [FE-8264]
+  if (   FTL::CStrRef(argName) == FTL_STR("meshes")
+      && plug.partialName()    == "meshes"
+      && plug.node().apiType() == MFn::kPluginDeformerNode )
+  {
+    return;
+  }
+
   try
   {
     if(plug.isArray())
@@ -2266,11 +2274,11 @@ void dfgPlugToPort_PolygonMesh(
         }
       }
 
-      //if (elements < portRTVal.getArraySize())
-      //{
-      //  FabricCore::RTVal rtVal = FabricSplice::constructUInt32RTVal(elements);
-      //  portRTVal.callMethod("", "resize", 1, &rtVal);
-      //}
+      if (elements < portRTVal.getArraySize())
+      {
+        FabricCore::RTVal rtVal = FabricSplice::constructUInt32RTVal(elements);
+        portRTVal.callMethod("", "resize", 1, &rtVal);
+      }
     }
     else
     {
