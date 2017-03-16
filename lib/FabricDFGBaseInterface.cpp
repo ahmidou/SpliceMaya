@@ -288,7 +288,7 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
     FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(attrNameRef);
     if(it != _attributeNameToIndex.end())
     {
-      _isAttributeIndexDirty[it->second] = true;
+      _isAttributeIndexDirty[it->value()] = true;
       return;
     }
   }
@@ -333,7 +333,7 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(nameRef);
   if(it != _attributeNameToIndex.end())
   {
-    unsigned int index = it->second;
+    unsigned int index = it->value();
     while(index >= _isAttributeIndexDirty.size())
     {
       _isAttributeIndexDirty.push_back(true);
@@ -402,7 +402,7 @@ void FabricDFGBaseInterface::generateAttributeLookups()
     FTL::StrRef parentAttributeNameRef = parentAttributeName.asChar();
     FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(parentAttributeNameRef);
     if(it != _attributeNameToIndex.end())
-      _attributeNameToIndex.insert(attrib.name().asChar(), it->second);
+      _attributeNameToIndex.insert(attrib.name().asChar(), it->value());
     else
       _attributeNameToIndex.insert(attrib.name().asChar(), i);
   }
@@ -1443,36 +1443,37 @@ inline bool AddSingleBaseStructAttribute(
         uint32_t count = 0;
         for ( FTL::JSONObject::const_iterator it = execObject->begin(); it != execObject->end(); ++it )
         {
-          FTL::CStrRef key = it->first;
+          FTL::CStrRef key = it->key();
           MString mayaPortName = plugName;
           MString subPortName = key.data();
           mayaPortName += subPortName.toUpperCase();
 
-          if(it->second->isBoolean())
+          FTL::JSONValue const *value = it->value();
+          if(value->isBoolean())
           {
             if(count <= 2)
             {
-              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getBooleanValue());
+              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, value->getBooleanValue());
               nAttr.setStorable(storable);
               nAttr.setKeyable(storable);
               count ++;
             }
           }
-          else if(it->second->isSInt32())
+          else if(value->isSInt32())
           {
             if(count <=  2)
             {
-              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getSInt32Value());
+              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, value->getSInt32Value());
               nAttr.setStorable(storable);
               nAttr.setKeyable(storable);
               count ++;
             }
           }
-          else if(it->second->isFloat64())
+          else if(value->isFloat64())
           {
             if(count <= 2)
             {
-              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getFloat64Value());
+              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, value->getFloat64Value());
               nAttr.setStorable(storable);
               nAttr.setKeyable(storable);
               count ++;
