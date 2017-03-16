@@ -350,7 +350,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
               continue;
             }
 
-            std::string json = it->second->encode();
+            std::string json = it->value()->encode();
             FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
             binding.setArgValue(name.c_str(), value);
             found = true;
