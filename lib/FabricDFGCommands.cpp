@@ -353,7 +353,9 @@ MSyntax FabricDFGIncrementEvalIDCommand::newSyntax()
 
 void* FabricDFGIncrementEvalIDCommand::creator()
 {
-  return new FabricDFGIncrementEvalIDCommand;
+  FabricDFGIncrementEvalIDCommand* cmd = new FabricDFGIncrementEvalIDCommand;
+  cmd->setHistoryOn(false);
+  return cmd;
 }
 
 MStatus FabricDFGIncrementEvalIDCommand::doIt(const MArgList &args)
