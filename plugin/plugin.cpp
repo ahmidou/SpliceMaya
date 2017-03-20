@@ -281,9 +281,6 @@ void initializeCommands(MFnPlugin &plugin)
         "FabricCanvasExecuteCommand", 
         FabricCanvasExecuteCommand::creator) 
       );
-
-    FabricUI::Commands::CppToPythonTestCommand::RegisterCppTestCommands();
-    FabricUI::Commands::CppToPythonTestCommand::CreateCppTestCommands();
   }
   catch(FabricCore::Exception e)
   {
