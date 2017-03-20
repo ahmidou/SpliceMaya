@@ -41,6 +41,13 @@
 #include "FabricUpgradeAttrCommand.h"
 #include "FabricImportPatternCommand.h"
 
+#include "FabricCanvasCommand.h"
+#include "FabricCanvasExecuteCommand.h"
+#include "CommandManagerMayaCallback.h"
+#include <FabricUI/Commands/CommandManager.h>
+#include <FabricUI/Commands/CommandRegistry.h>
+#include <FabricUI/Commands/CppTestCommand.h>
+
 #ifdef _MSC_VER
   #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
 #else
@@ -240,6 +247,50 @@ bool isDestroyingScene()
           status = tmp; \
       }
 
+void initializeCommands(MFnPlugin &plugin) 
+{
+  try
+  {
+    FabricCore::Client client = FabricDFGWidget::GetCoreClient();
+
+    FabricUI::Commands::CommandRegistry *registry = 
+      new FabricUI::Commands::CommandRegistry(
+        client
+        );
+
+    FabricUI::Commands::CommandManager *manager = 
+      new FabricUI::Commands::CommandManager(
+        client
+        );
+
+    CommandManagerMayaCallback * cmdManagerMayaCallback = 
+      CommandManagerMayaCallback::GetCommandManagerMayaCallback();
+
+    MStatus status;
+
+    INITPLUGIN_STATE( 
+      status, 
+      plugin.registerCommand(
+        "FabricCanvasCommand", 
+        FabricCanvasCommand::creator) 
+      );
+
+    INITPLUGIN_STATE( 
+      status, 
+      plugin.registerCommand(
+        "FabricCanvasExecuteCommand", 
+        FabricCanvasExecuteCommand::creator) 
+      );
+
+    FabricUI::Commands::CppToPythonTestCommand::RegisterCppTestCommands();
+    FabricUI::Commands::CppToPythonTestCommand::CreateCppTestCommands();
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+  }
+}
+
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
 #endif
@@ -400,6 +451,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   else
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
 
+  initializeCommands(plugin);
+
   return status;
 }
 
@@ -409,6 +462,25 @@ MAYA_EXPORT initializePlugin(MObject obj)
         if (status != MStatus::kSuccess) \
           status = tmp; \
       }
+
+void uninitializeCommands(MFnPlugin &plugin) 
+{
+  MStatus status = MStatus::kSuccess;
+
+  UNINITPLUGIN_STATE( 
+    status, 
+    plugin.deregisterCommand(
+      "FabricCanvasCommand"
+      ) 
+    );
+
+  UNINITPLUGIN_STATE( 
+    status, 
+    plugin.deregisterCommand(
+      "FabricCanvasExecuteCommand"
+      ) 
+    );
+}
 
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
@@ -514,6 +586,8 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasGetExecuteShared" ) );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasSetExecuteShared" ) );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasReloadExtension"  ) );
+
+  uninitializeCommands(plugin);
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by
