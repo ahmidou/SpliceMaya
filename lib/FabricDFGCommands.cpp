@@ -1352,9 +1352,15 @@ void FabricDFGCreatePresetCommand::GetArgs(
     );
 
   if ( !argParser.isFlagSet( "presetDirPath" ) )
-    throw ArgException( MS::kFailure, "-n (-presetDirPath) not provided." );
+    throw ArgException( MS::kFailure, "-pd (-presetDirPath) not provided." );
   args.presetDirPath = QString::fromUtf8(
     argParser.flagArgumentString( "presetDirPath", 0 ).asChar()
+    );
+
+  if ( !argParser.isFlagSet( "presetName" ) )
+    throw ArgException( MS::kFailure, "-pn (-presetName) not provided." );
+  args.presetName = QString::fromUtf8(
+    argParser.flagArgumentString( "presetName", 0 ).asChar()
     );
 
   if ( argParser.isFlagSet( "updateOrigPreset" ) )
