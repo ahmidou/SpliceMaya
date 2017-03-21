@@ -609,6 +609,7 @@ protected:
     QString nodeName;
     QString presetDirPath;
     QString presetName;
+    bool updateOrigPreset;
   };
 
   static void GetArgs( MArgParser &argParser, Args &args );

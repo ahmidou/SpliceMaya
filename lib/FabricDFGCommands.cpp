@@ -1335,6 +1335,7 @@ void FabricDFGCreatePresetCommand::AddSyntax( MSyntax &syntax )
   syntax.addFlag("-n", "-nodeName", MSyntax::kString);
   syntax.addFlag("-pd", "-presetDirPath", MSyntax::kString);
   syntax.addFlag("-pn", "-presetName", MSyntax::kString);
+  syntax.addFlag("-u", "-updateOrigPreset", MSyntax::kBoolean);
 }
 
 void FabricDFGCreatePresetCommand::GetArgs(
@@ -1356,11 +1357,8 @@ void FabricDFGCreatePresetCommand::GetArgs(
     argParser.flagArgumentString( "presetDirPath", 0 ).asChar()
     );
 
-  if ( !argParser.isFlagSet( "presetName" ) )
-    throw ArgException( MS::kFailure, "-n (-presetName) not provided." );
-  args.presetName = QString::fromUtf8(
-    argParser.flagArgumentString( "presetName", 0 ).asChar()
-    );
+  if ( argParser.isFlagSet( "updateOrigPreset" ) )
+    args.updateOrigPreset = argParser.flagArgumentBool( "updateOrigPreset", 0 );
 }
 
 FabricUI::DFG::DFGUICmd *FabricDFGCreatePresetCommand::executeDFGUICmd(
@@ -1377,7 +1375,8 @@ FabricUI::DFG::DFGUICmd *FabricDFGCreatePresetCommand::executeDFGUICmd(
       args.exec,
       args.nodeName,
       args.presetDirPath,
-      args.presetName
+      args.presetName,
+      args.updateOrigPreset
       );
   cmd->doit();
   setResult( cmd->getPathname().toUtf8().constData() );

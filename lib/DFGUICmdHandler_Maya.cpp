@@ -672,7 +672,8 @@ QString DFGUICmdHandler_Maya::dfgDoCreatePreset(
   FabricCore::DFGExec const &exec,
   QString nodeName,
   QString presetDirPath,
-  QString presetName
+  QString presetName,
+  bool updateOrigPreset
   )
 {
   std::stringstream cmd;
@@ -681,6 +682,7 @@ QString DFGUICmdHandler_Maya::dfgDoCreatePreset(
   encodeStringArg( FTL_STR("n"), nodeName, cmd );
   encodeStringArg( FTL_STR("pd"), presetDirPath, cmd );
   encodeStringArg( FTL_STR("pn"), presetName, cmd );
+  encodeBooleanArg( FTL_STR("u"), updateOrigPreset, cmd );
   cmd << ';';
 
   MString mResult;
