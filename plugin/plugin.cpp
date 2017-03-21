@@ -46,8 +46,9 @@
 #include "CommandManagerMayaCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
 #include <FabricUI/Commands/CommandRegistry.h>
-#include <FabricUI/Commands/CppTestCommand.h>
-
+ // Julien Keep for debugging
+#include <stdlib.h>
+#include <stdio.h>
 #ifdef _MSC_VER
   #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
 #else
@@ -293,6 +294,10 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
+    freopen( "MayaLog.txt", "a", stdout );
+  freopen( "MayaError.txt", "a", stderr );
+std::cout << "initializePlugin " << std::endl;
+
   // [FE-6287]
   char const *disable_evalContext = ::getenv( "FABRIC_MAYA_DISABLE_EVALCONTEXT" );
   FabricDFGBaseInterface::s_use_evalContext = !(!!disable_evalContext && !!disable_evalContext[0]);

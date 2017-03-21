@@ -5,8 +5,54 @@
 #include <QMap>
 #include <string>
 #include <QString>
+#include <iostream>
 #include "FabricCanvasExecuteCommand.h"
 #include <FabricUI/Commands/CommandManager.h>
+
+inline QString encodeMELStringChars(
+  QString str)
+{
+  QString result;
+
+  QByteArray ba = str.toUtf8();
+  for ( int i = 0; i < ba.size(); ++i )
+  {
+    switch ( ba[i] )
+    {
+      case '\"':
+        result += "\\\"";
+        break;
+      
+      case '\\':
+        result += "\\\\";
+        break;
+      
+      case '\t':
+        result += "\\t";
+        break;
+      
+      case '\r':
+        result += "\\r";
+        break;
+      
+      case '\n':
+        result += "\\n";
+        break;
+      
+      default:
+        result += ba[i];
+        break;
+    }
+  }
+
+  return result;
+}
+
+inline QString encodeMELString(
+  QString str)
+{
+  return "\'" + encodeMELStringChars( str ) + "\'";
+}
 
 void* FabricCanvasExecuteCommand::creator()
 {
@@ -29,6 +75,7 @@ MStatus FabricCanvasExecuteCommand::doIt(
 
     // Get the command name.
     MString name = args.asString(0, &status);
+    std::cout << "FabricCanvasExecuteCommand::doIt " << name.asChar() << std::endl;
 
     // Get the command args.
     QMap<QString, QString > cmdArgs;
@@ -36,7 +83,12 @@ MStatus FabricCanvasExecuteCommand::doIt(
     {
       QString key = args.asString(i, &status).asChar();
       QString value = args.asString(++i, &status).asChar();
-      cmdArgs[key] = value;
+
+      std::cout << "key " << key.toUtf8().constData() << std::endl;
+      std::cout << "value " << value.toUtf8().constData() << std::endl;
+      std::cout << "value2 " << encodeMELString(value).toUtf8().constData() << std::endl;
+
+      cmdArgs[key] = encodeMELString(value);
     }
 
     FabricUI::Commands::CommandManager *manager = 

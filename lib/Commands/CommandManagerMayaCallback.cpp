@@ -79,28 +79,28 @@ void CommandManagerMayaCallback::onCommandPushedCallback(
       cmd
       );
 
-  if(scriptCmd)
-  {
-    QMap<QString, QString> args = scriptCmd->getArgs();
-    QMapIterator<QString, QString> argsIt(
-      args
-      );
+  // if(scriptCmd)
+  // {
+  //   QMap<QString, QString> args = scriptCmd->getArgs();
+  //   QMapIterator<QString, QString> argsIt(
+  //     args
+  //     );
 
-    while(argsIt.hasNext()) 
-    {
-      argsIt.next();
+  //   while(argsIt.hasNext()) 
+  //   {
+  //     argsIt.next();
 
-      encodeArg(
-        argsIt.key(),
-        cmdArgs
-        );
+  //     encodeArg(
+  //       argsIt.key(),
+  //       cmdArgs
+  //       );
 
-      encodeArg(
-        argsIt.value(),
-        cmdArgs
-        );
-    }
-  }
+  //     encodeArg(
+  //       argsIt.value(),
+  //       cmdArgs
+  //       );
+  //   }
+  // }
 
   // Create the maya command.
   MGlobal::executeCommandOnIdle(
