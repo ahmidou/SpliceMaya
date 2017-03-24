@@ -4,9 +4,11 @@
 
 #include <sstream>
 #include <maya/MGlobal.h>
+#include "FabricSpliceHelpers.h"
 #include "CommandManagerMayaCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
 #include <FabricUI/Commands/BaseScriptableCommand.h>
+#include <FabricUI/Commands/BaseRTValScriptableCommand.h>
 
 bool CommandManagerMayaCallback::s_instanceFlag = false;
 CommandManagerMayaCallback* CommandManagerMayaCallback::s_cmdManagerMayaCallback = 0;
@@ -28,9 +30,12 @@ CommandManagerMayaCallback::CommandManagerMayaCallback()
   }
   catch (std::string &e) 
   {
-    printf(
-      "CommandManagerMayaCallback::CommandManagerMayaCallback, exception: %s\n", 
-      e.c_str());
+    mayaLogErrorFunc(
+      QString(
+        QString("CommandManagerMayaCallback::CommandManagerMayaCallback, exception: ") + 
+        e.c_str()
+        ).toUtf8().constData()
+      );
   }
 }
 
@@ -48,7 +53,7 @@ CommandManagerMayaCallback *CommandManagerMayaCallback::GetCommandManagerMayaCal
   }
   return s_cmdManagerMayaCallback;
 }
- 
+
 inline void encodeArg(
   const QString &arg,
   std::stringstream &cmdArgs)
@@ -56,21 +61,29 @@ inline void encodeArg(
   cmdArgs << ' ';
   cmdArgs << arg.toUtf8().constData();
 }
+ 
+inline void encodeRTValArg(
+  const QString &arg,
+  std::stringstream &cmdArgs)
+{
+  cmdArgs << ' ';
+  cmdArgs << "\"" << arg.toUtf8().constData() << "\"";
+}
 
 void CommandManagerMayaCallback::onCommandPushedCallback(
   FabricUI::Commands::BaseCommand *cmd)
 {
-  // Construct a 'FabricCanvasCommand'  
+  // Construct a Maya 'FabricCommand'  
   // that represents the Fabric command.
-  std::stringstream cmdArgs;
+  std::stringstream fabricCmd;
 
   // Maya command name.
-  cmdArgs << "FabricCanvasCommand";
+  fabricCmd << "FabricCommand";
 
   // Fabric command name.
   encodeArg(
     cmd->getName(),
-    cmdArgs
+    fabricCmd
     );
    
   // Fabric command args.
@@ -79,32 +92,46 @@ void CommandManagerMayaCallback::onCommandPushedCallback(
       cmd
       );
 
-  // if(scriptCmd)
-  // {
-  //   QMap<QString, QString> args = scriptCmd->getArgs();
-  //   QMapIterator<QString, QString> argsIt(
-  //     args
-  //     );
+  if(scriptCmd)
+  {
+    // Check if it's a BaseRTValScriptableCommand,
+    // to know how to cast the string.
+    FabricUI::Commands::BaseRTValScriptableCommand *rtValScriptCmd = 
+      dynamic_cast<FabricUI::Commands::BaseRTValScriptableCommand *>(
+        cmd
+        );
 
-  //   while(argsIt.hasNext()) 
-  //   {
-  //     argsIt.next();
+    QMap<QString, QString> args = scriptCmd->getArgs();
+    QMapIterator<QString, QString> argsIt(
+      args
+      );
 
-  //     encodeArg(
-  //       argsIt.key(),
-  //       cmdArgs
-  //       );
+    while(argsIt.hasNext()) 
+    {
+      argsIt.next();
 
-  //     encodeArg(
-  //       argsIt.value(),
-  //       cmdArgs
-  //       );
-  //   }
-  // }
+      encodeArg(
+        argsIt.key(),
+        fabricCmd
+        );
+
+      if(rtValScriptCmd)
+        encodeRTValArg(
+          argsIt.value(),
+          fabricCmd
+          );
+
+      else
+        encodeArg(
+          argsIt.value(),
+          fabricCmd
+          );
+    }
+  }
 
   // Create the maya command.
   MGlobal::executeCommandOnIdle(
-    cmdArgs.str().c_str(),
+    fabricCmd.str().c_str(),
     true
     );
 }

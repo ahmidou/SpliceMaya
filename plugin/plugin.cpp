@@ -41,8 +41,8 @@
 #include "FabricUpgradeAttrCommand.h"
 #include "FabricImportPatternCommand.h"
 
-#include "FabricCanvasCommand.h"
-#include "FabricCanvasExecuteCommand.h"
+#include "FabricCommand.h"
+#include "FabricExecuteCommand.h"
 #include "CommandManagerMayaCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
 #include <FabricUI/Commands/CommandRegistry.h>
@@ -272,15 +272,15 @@ void initializeCommands(MFnPlugin &plugin)
     INITPLUGIN_STATE( 
       status, 
       plugin.registerCommand(
-        "FabricCanvasCommand", 
-        FabricCanvasCommand::creator) 
+        "FabricCommand", 
+        FabricCommand::creator) 
       );
 
     INITPLUGIN_STATE( 
       status, 
       plugin.registerCommand(
-        "FabricCanvasExecuteCommand", 
-        FabricCanvasExecuteCommand::creator) 
+        "FabricExecuteCommand", 
+        FabricExecuteCommand::creator) 
       );
   }
   catch(FabricCore::Exception e)
@@ -472,14 +472,14 @@ void uninitializeCommands(MFnPlugin &plugin)
   UNINITPLUGIN_STATE( 
     status, 
     plugin.deregisterCommand(
-      "FabricCanvasCommand"
+      "FabricCommand"
       ) 
     );
 
   UNINITPLUGIN_STATE( 
     status, 
     plugin.deregisterCommand(
-      "FabricCanvasExecuteCommand"
+      "FabricExecuteCommand"
       ) 
     );
 }
