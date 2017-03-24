@@ -7,24 +7,24 @@
 #include <maya/MArgList.h>
 #include <maya/MPxCommand.h>
 
-class FabricCanvasExecuteCommand : public MPxCommand
+class FabricExecuteCommand : public MPxCommand
 {
   /**
-    FabricCanvasExecuteCommand is used to create a Fabric command from maya. 
-    FabricCanvasExecuteCommand are not pushed to the maya stack and are not.
-    logged. When the Fabric command is  created, a FabricCanvasCommand that
+    FabricExecuteCommand is used to create a Fabric command from maya. 
+    FabricExecuteCommand are not pushed to the maya stack and are not.
+    logged. When the Fabric command is  created, a FabricCommand that
     represents the fabric command in maya is automatically constructed.
  
     Usage:    
     - C++:
       #include <maya/MGlobal.h>
       
-      MString cmd = "FabricCanvasExecuteCommand cmdName";
+      MString cmd = "FabricExecuteCommand cmdName";
       cmd += " ";
-      cmd += "arg_1_name arg_1_value";
+      cmd += "arg_1_name \"arg_1_value\"";
       cmd += ...
       cmd += " ";
-      cmd += "arg_n_name arg_n_value";
+      cmd += "arg_n_name \"arg_n_value\"";
 
       MGlobal::executeCommandOnIdle(
         cmd,
@@ -34,17 +34,21 @@ class FabricCanvasExecuteCommand : public MPxCommand
     - Python:
       import maya.OpenMaya as om
 
-      cmd = "FabricCanvasExecuteCommand cmdName"
+      cmd = "FabricExecuteCommand cmdName"
       cmd = cmd + " "
-      cmd = cmd + "arg_1_name arg_1_value"
+      cmd = cmd + "arg_1_name \"arg_1_value\""
       cmd = cmd + ...
       cmd = cmd + " "
-      cmd = cmd + "arg_n_name arg_n_value"
+      cmd = cmd + "arg_n_name \"arg_n_value\""
 
       om.MGlobal_executeCommandOnIdle(cmd)
   */
 
   public:
+    FabricExecuteCommand();
+
+    virtual ~FabricExecuteCommand();
+
     /// Implementation of MPxCommand.
     static void* creator();
     

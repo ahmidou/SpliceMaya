@@ -3,18 +3,21 @@
 //
  
 #include <string>
-#include "FabricCanvasCommand.h"
+#include "FabricCommand.h"
+#include "FabricSpliceHelpers.h"
 #include <FabricUI/Commands/BaseCommand.h>
 #include <FabricUI/Commands/CommandManager.h>
 
-FabricCanvasCommand::FabricCanvasCommand()
+FabricCommand::FabricCommand()
   : m_isUndoable(false)
 {
 }
 
-FabricCanvasCommand::~FabricCanvasCommand()
+FabricCommand::~FabricCommand()
 {
   // Synchronize the maya and fabric stacks.
+  // A command is destructed if it's has been undone
+  // and a new command is created.
   try
   {
     FabricUI::Commands::CommandManager *manager = 
@@ -26,22 +29,22 @@ FabricCanvasCommand::~FabricCanvasCommand()
   catch (std::string &e) 
   {
     printf(
-      "FabricCanvasCommand::~FabricCanvasCommand, exception: %s\n", 
+      "FabricCommand::~FabricCommand, exception: %s\n", 
       e.c_str());
   }
 }
 
-void* FabricCanvasCommand::creator()
+void* FabricCommand::creator()
 {
-  return new FabricCanvasCommand;
+  return new FabricCommand;
 }
 
-bool FabricCanvasCommand::isUndoable() const
+bool FabricCommand::isUndoable() const
 {
   return m_isUndoable;
 }
 
-MStatus FabricCanvasCommand::doIt(
+MStatus FabricCommand::doIt(
   const MArgList &args)
 {
   MStatus status;
@@ -65,15 +68,18 @@ MStatus FabricCanvasCommand::doIt(
 
   catch (std::string &e) 
   {
-    printf(
-      "FabricCanvasCommand::doIt, exception: %s\n", 
-      e.c_str());
+    mayaLogErrorFunc(
+      QString(
+        QString("FabricCommand::doIt, exception: ") + 
+        e.c_str()
+        ).toUtf8().constData()
+      );
   }
 
   return status;
 }
 
-MStatus FabricCanvasCommand::undoIt()
+MStatus FabricCommand::undoIt()
 {
   MStatus status = MS::kFailure;
 
@@ -89,15 +95,18 @@ MStatus FabricCanvasCommand::undoIt()
 
   catch (std::string &e) 
   {
-    printf(
-      "FabricCanvasCommand::undoIt, exception: %s\n", 
-      e.c_str());
+    mayaLogErrorFunc(
+      QString(
+        QString("FabricCommand::undoIt, exception: ") + 
+        e.c_str()
+        ).toUtf8().constData()
+      );
   }
 
   return status;
 }
 
-MStatus FabricCanvasCommand::redoIt()
+MStatus FabricCommand::redoIt()
 {
   MStatus status = MS::kFailure;
 
@@ -113,9 +122,12 @@ MStatus FabricCanvasCommand::redoIt()
 
   catch (std::string &e) 
   {
-    printf(
-      "FabricCanvasCommand::redoIt, exception: %s\n", 
-      e.c_str());
+    mayaLogErrorFunc(
+      QString(
+        QString("FabricCommand::redoIt, exception: ") + 
+        e.c_str()
+        ).toUtf8().constData()
+      );
   }
 
   return status;
