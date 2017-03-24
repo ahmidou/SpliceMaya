@@ -353,7 +353,9 @@ MSyntax FabricDFGIncrementEvalIDCommand::newSyntax()
 
 void* FabricDFGIncrementEvalIDCommand::creator()
 {
-  return new FabricDFGIncrementEvalIDCommand;
+  FabricDFGIncrementEvalIDCommand* cmd = new FabricDFGIncrementEvalIDCommand;
+  cmd->setHistoryOn(false);
+  return cmd;
 }
 
 MStatus FabricDFGIncrementEvalIDCommand::doIt(const MArgList &args)
@@ -377,6 +379,28 @@ MStatus FabricDFGIncrementEvalIDCommand::doIt(const MArgList &args)
   }
 
   interf->incrementEvalID();
+  return MS::kSuccess;
+}
+
+MSyntax FabricCanvasProcessMelQueueCommand::newSyntax()
+{
+  MSyntax syntax;
+  syntax.enableQuery(false);
+  syntax.enableEdit(false);
+  return syntax;  
+}
+
+void* FabricCanvasProcessMelQueueCommand::creator()
+{
+  return new FabricCanvasProcessMelQueueCommand;
+}
+
+MStatus FabricCanvasProcessMelQueueCommand::doIt(const MArgList &args)
+{
+  MStatus status;
+  MArgParser argData(syntax(), args, &status);
+  
+  FabricDFGBaseInterface::processQueuedMelCommands();
   return MS::kSuccess;
 }
 

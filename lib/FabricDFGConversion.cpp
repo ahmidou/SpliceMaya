@@ -2224,6 +2224,14 @@ void dfgPlugToPort_PolygonMesh(
   std::vector<FabricCore::RTVal> rtVals;
   FabricCore::RTVal portRTVal;
 
+  // [FE-8264]
+  if (   FTL::CStrRef(argName) == FTL_STR("meshes")
+      && plug.partialName()    == "meshes"
+      && plug.node().apiType() == MFn::kPluginDeformerNode )
+  {
+    return;
+  }
+
   try
   {
     if(plug.isArray())

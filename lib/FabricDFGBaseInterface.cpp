@@ -44,6 +44,7 @@ std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
 #endif
 unsigned int FabricDFGBaseInterface::s_maxID = 1;
 bool FabricDFGBaseInterface::s_use_evalContext = true; // [FE-6287]
+MStringArray FabricDFGBaseInterface::s_queuedMelCommands;
 
 FabricDFGBaseInterface::FabricDFGBaseInterface(
   CreateDFGBindingFunc createDFGBinding
@@ -287,7 +288,7 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
     FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(attrNameRef);
     if(it != _attributeNameToIndex.end())
     {
-      _isAttributeIndexDirty[it->second] = true;
+      _isAttributeIndexDirty[it->value()] = true;
       return;
     }
   }
@@ -332,7 +333,7 @@ void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
   FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(nameRef);
   if(it != _attributeNameToIndex.end())
   {
-    unsigned int index = it->second;
+    unsigned int index = it->value();
     while(index >= _isAttributeIndexDirty.size())
     {
       _isAttributeIndexDirty.push_back(true);
@@ -401,7 +402,7 @@ void FabricDFGBaseInterface::generateAttributeLookups()
     FTL::StrRef parentAttributeNameRef = parentAttributeName.asChar();
     FTL::OrderedStringMap< unsigned int >::const_iterator it = _attributeNameToIndex.find(parentAttributeNameRef);
     if(it != _attributeNameToIndex.end())
-      _attributeNameToIndex.insert(attrib.name().asChar(), it->second);
+      _attributeNameToIndex.insert(attrib.name().asChar(), it->value());
     else
       _attributeNameToIndex.insert(attrib.name().asChar(), i);
   }
@@ -601,7 +602,8 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
     if(portType != FabricCore::DFGPortType_Out)
     {
       MString command("dgeval ");
-      MGlobal::executeCommandOnIdle(command+thisNode.name()+"."+plugName);
+      // MGlobal::executeCommandOnIdle(command+thisNode.name()+"."+plugName);
+      queueMelCommand(command+thisNode.name()+"."+plugName);
       break;
     }
   }
@@ -685,7 +687,8 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
   {
     _dgDirtyQueued = true;
     MString command("dgdirty ");
-    MGlobal::executeCommandOnIdle(command+plugName);
+    // MGlobal::executeCommandOnIdle(command+plugName);
+    queueMelCommand(command+plugName);
   }
 
   if(plugName.index('.') > -1)
@@ -718,7 +721,8 @@ void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
             cmdPlugName = cmdPlugName.substring(0, cmdPlugName.index('"')-1);
             MString condition = "if(size(`listConnections -d no \"" + node.name() + cmdPlugName +"\"`) == 0)";
             cmds[i] = condition + "{ setAttr \"" + node.name() + cmds[i].substring(9, cmds[i].length()) + " }";
-            MGlobal::executeCommandOnIdle(cmds[i]);
+            // MGlobal::executeCommandOnIdle(cmds[i]);
+            queueMelCommand(cmds[i]);
           }
         }
       }
@@ -809,7 +813,8 @@ void FabricDFGBaseInterface::queueIncrementEvalID(bool onIdle)
     MString indexStr;
     indexStr.set((int)m_id);
 
-    MGlobal::executeCommandOnIdle(command+indexStr, false /*display*/);
+    // MGlobal::executeCommandOnIdle(command+indexStr, false /*display*/);
+    queueMelCommand(command+indexStr);
   }
   else
   {
@@ -834,6 +839,28 @@ void FabricDFGBaseInterface::incrementEvalID()
   evalIDStr.set(m_evalID);
 
   MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false /*undoable*/);
+}
+
+void FabricDFGBaseInterface::queueMelCommand(MString cmd)
+{
+  // todo: this needs to use a mutex~!
+  s_queuedMelCommands.append(cmd);
+  if(s_queuedMelCommands.length() == 1)
+    MGlobal::executeCommandOnIdle("FabricCanvasProcessMelQueue;");
+}
+
+MStatus FabricDFGBaseInterface::processQueuedMelCommands()
+{
+  // todo: this needs to use a mutex~!
+  MStatus result = MS::kSuccess;
+  for(unsigned int i=0;i<s_queuedMelCommands.length();i++)
+  {
+    MStatus st = MGlobal::executeCommand(s_queuedMelCommands[i]);
+    if(st != MS::kSuccess)
+      result = st;
+  }
+  s_queuedMelCommands.clear();
+  return result;
 }
 
 bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
@@ -1102,7 +1129,6 @@ void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherP
 
   generateAttributeLookups();
 }
-
 
 // ********************   ********************  //
 inline bool AddSingleBaseTypeAttribute(
@@ -1417,36 +1443,37 @@ inline bool AddSingleBaseStructAttribute(
         uint32_t count = 0;
         for ( FTL::JSONObject::const_iterator it = execObject->begin(); it != execObject->end(); ++it )
         {
-          FTL::CStrRef key = it->first;
+          FTL::CStrRef key = it->key();
           MString mayaPortName = plugName;
           MString subPortName = key.data();
           mayaPortName += subPortName.toUpperCase();
 
-          if(it->second->isBoolean())
+          FTL::JSONValue const *value = it->value();
+          if(value->isBoolean())
           {
             if(count <= 2)
             {
-              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getBooleanValue());
+              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, value->getBooleanValue());
               nAttr.setStorable(storable);
               nAttr.setKeyable(storable);
               count ++;
             }
           }
-          else if(it->second->isSInt32())
+          else if(value->isSInt32())
           {
             if(count <=  2)
             {
-              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getSInt32Value());
+              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, value->getSInt32Value());
               nAttr.setStorable(storable);
               nAttr.setKeyable(storable);
               count ++;
             }
           }
-          else if(it->second->isFloat64())
+          else if(value->isFloat64())
           {
             if(count <= 2)
             {
-              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, it->second->getFloat64Value());
+              objs[count] = nAttr.create(mayaPortName, mayaPortName, numType, value->getFloat64Value());
               nAttr.setStorable(storable);
               nAttr.setKeyable(storable);
               count ++;

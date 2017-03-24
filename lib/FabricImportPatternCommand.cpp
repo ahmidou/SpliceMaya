@@ -181,9 +181,9 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
         for ( FTL::JSONObject::const_iterator it = geometryObject->begin(); it != geometryObject->end(); ++it )
         {
-          FTL::CStrRef key = it->first;
+          FTL::CStrRef key = it->key();
 
-          if(!it->second->isString())
+          if(!it->value()->isString())
           {
             mayaLogFunc("Warning: Provided geometry "+MString(key.c_str())+" is not a string - needs to be the name of the geometry in the scene.");
             continue;
@@ -206,7 +206,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
               continue;
             }
 
-            MString geometryName = it->second->getStringValue().c_str();
+            MString geometryName = it->value()->getStringValue().c_str();
             MSelectionList sl;
             sl.add(geometryName);
             if(sl.length() == 0)
@@ -331,7 +331,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
         for ( FTL::JSONObject::const_iterator it = argsObject->begin(); it != argsObject->end(); ++it )
         {
-          FTL::CStrRef key = it->first;
+          FTL::CStrRef key = it->key();
           
           bool found = false;
           for(unsigned int i=0;i<exec.getExecPortCount();i++)
@@ -350,7 +350,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
               continue;
             }
 
-            std::string json = it->second->encode();
+            std::string json = it->value()->encode();
             FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
             binding.setArgValue(name.c_str(), value);
             found = true;
