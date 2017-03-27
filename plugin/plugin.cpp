@@ -256,14 +256,15 @@ void initializeCommands(MFnPlugin &plugin)
       new FabricUI::Commands::CommandRegistry(
         client
         );
+    registry->synchronizeKL();
 
     FabricUI::Commands::CommandManager *manager = 
       new FabricUI::Commands::CommandManager(
         client
         );
+    manager->synchronizeKL();
 
-    CommandManagerMayaCallback * cmdManagerMayaCallback = 
-      CommandManagerMayaCallback::GetCommandManagerMayaCallback();
+    CommandManagerMayaCallback::GetCommandManagerMayaCallback();
 
     MStatus status;
 

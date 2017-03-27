@@ -132,5 +132,3 @@ MStatus FabricCommand::redoIt()
 
   return status;
 }
-
- 
