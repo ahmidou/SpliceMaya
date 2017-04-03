@@ -56,7 +56,6 @@ MStatus FabricDFGGetFabricVersionCommand::doIt(const MArgList &args)
       {
         FabricUI::DFG::AboutFabricAction *aboutFabricAction = new FabricUI::DFG::AboutFabricAction(NULL, NULL);
         aboutFabricAction->invokeOnTriggered();
-
       }
     }
   }
