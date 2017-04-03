@@ -118,6 +118,9 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   }
 #endif
 
+  MString version = "Fabric Engine version " + MString(FabricCore::GetVersionWithBuildInfoStr());
+  mayaLogFunc(version);
+
   m_client = FabricDFGWidget::GetCoreClient();
   FabricCore::DFGHost dfgHost = m_client.getDFGHost();
 
