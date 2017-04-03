@@ -42,7 +42,7 @@ MStatus FabricDFGGetFabricVersionCommand::doIt(const MArgList &args)
   MString result;
   try
   {
-    result = FabricCore::GetVersionStr();
+    result = FabricCore::GetVersionWithBuildInfoStr();
   }
   catch(FabricSplice::Exception e)
   {
