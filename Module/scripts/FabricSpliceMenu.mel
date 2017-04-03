@@ -93,7 +93,7 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -ec 1 -c ("fabricSplice \"startProfiling\";") "Start Profiling";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("fabricSplice \"stopProfiling\";") "End Profiling";
   menuItem -p $fabricSpliceMenu -divider true;
-  menuItem -p $fabricSpliceMenu -ec 1 -c ("FabricCanvasAboutFabric;") "About Fabric";
+  menuItem -p $fabricSpliceMenu -ec 1 -c ("FabricCanvasGetFabricVersion -mb true;") "About Fabric";
 }
 
 global proc FabricSpliceUnloadMenu()

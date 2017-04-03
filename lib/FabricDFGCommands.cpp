@@ -11,6 +11,7 @@
 #include "FabricExtensionPackageNode.h"
 
 #include <FabricUI/DFG/DFGUICmdHandler.h>
+#include <FabricUI/DFG/DFGWidget.h>
 
 #include <maya/MStringArray.h>
 #include <maya/MSyntax.h>
@@ -29,6 +30,7 @@ MSyntax FabricDFGGetFabricVersionCommand::newSyntax()
   MSyntax syntax;
   syntax.enableQuery(false);
   syntax.enableEdit(false);
+  syntax.addFlag( "-mb", "-msgBox", MSyntax::kBoolean );
   return syntax;
 }
 
@@ -42,7 +44,21 @@ MStatus FabricDFGGetFabricVersionCommand::doIt(const MArgList &args)
   MString result;
   try
   {
+    MStatus status;
+    MArgParser argData(syntax(), args, &status);
+
     result = FabricCore::GetVersionWithBuildInfoStr();
+
+    if (argData.isFlagSet("msgBox"))
+    {
+      bool mb = argData.flagArgumentBool("msgBox", 0);
+      if (mb)
+      {
+        FabricUI::DFG::AboutFabricAction *aboutFabricAction = new FabricUI::DFG::AboutFabricAction(NULL, NULL);
+        aboutFabricAction->invokeOnTriggered();
+
+      }
+    }
   }
   catch(FabricSplice::Exception e)
   {
