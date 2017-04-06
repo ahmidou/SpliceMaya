@@ -56,6 +56,12 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(
   MStatus stat;
   MAYADFG_CATCH_BEGIN(&stat);
 
+  if (getNumInstances() == 0)
+  {
+    MString version = "Fabric Engine version " + MString(FabricCore::GetVersionWithBuildInfoStr());
+    mayaLogFunc(version);
+  }
+
   _restoredFromPersistenceData = false;
   _isTransferingInputs = false;
   _dgDirtyEnabled = true;
@@ -117,9 +123,6 @@ void FabricDFGBaseInterface::constructBaseInterface(){
     return;
   }
 #endif
-
-  MString version = "Fabric Engine version " + MString(FabricCore::GetVersionWithBuildInfoStr());
-  mayaLogFunc(version);
 
   m_client = FabricDFGWidget::GetCoreClient();
   FabricCore::DFGHost dfgHost = m_client.getDFGHost();
