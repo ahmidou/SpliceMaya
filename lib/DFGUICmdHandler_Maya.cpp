@@ -885,7 +885,7 @@ QStringList DFGUICmdHandler_Maya::dfgDoExplodeNode(
   return result;
 }
 
-void DFGUICmdHandler_Maya::dfgDoAddBackDrop(
+QString DFGUICmdHandler_Maya::dfgDoAddBackDrop(
   FabricCore::DFGBinding const &binding,
   QString execPath,
   FabricCore::DFGExec const &exec,
@@ -900,11 +900,14 @@ void DFGUICmdHandler_Maya::dfgDoAddBackDrop(
   encodePositionArg( pos, cmd );
   cmd << ';';
 
+  MString result;
   MGlobal::executeCommand(
     cmd.str().c_str(),
+    result,
     true, // displayEnabled
     true  // undoEnabled
     );
+  return QString::fromUtf8( result.asChar() );
 }
 
 void DFGUICmdHandler_Maya::dfgDoSetNodeComment(
