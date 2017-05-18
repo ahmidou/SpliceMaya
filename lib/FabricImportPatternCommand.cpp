@@ -486,6 +486,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, MStri
     {
       updateTransformForObject(m_objectList[i]);
       updateShapeForObject(m_objectList[i]);
+      updateEvaluatorForObject(m_objectList[i]);
       // todo: light, cameras etc..
     }
   }
@@ -840,4 +841,41 @@ bool FabricImportPatternCommand::updateMaterialForObject(FabricCore::RTVal obj, 
   shadingEngineSet.addMember(node);
 
   return true;
+}
+
+bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objRef)
+{
+  FabricCore::RTVal obj = FabricCore::RTVal::Create(objRef.getContext(), "ImporterObject", 1, &objRef);
+  if(obj.isNullObject())
+    return false;
+
+  FabricCore::RTVal evaluator = obj.callMethod("Evaluator", "getEvaluator", 0, NULL);
+  if(evaluator.isNullObject())
+    return false;
+
+  FabricCore::RTVal filePathVal = evaluator.callMethod("FilePath", "getFilePath", 0, 0);
+  filePathVal = filePathVal.callMethod("FilePath", "expandEnvVars", 0, 0);
+  MString filePath = filePathVal.callMethod("String", "string", 0, 0);
+
+  if(!FTL::FSExists(filePath.asChar()))
+  {
+    mayaLogErrorFunc("Evaluator filePath \""+filePath+"\" does no exist.");
+    return mayaErrorOccured();
+  }
+
+  
+
+  MGlobal::displayInfo("found evaluator.");
+
+  // // here we access the path as well as the instance path
+  // MString uuid = obj.callMethod("String", "getPath", 0, 0).getStringCString();
+  // uuid = "uuid | " + uuid;
+
+  // MString instancePath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
+  // instancePath = m_rootPrefix + simplifyPath(instancePath);
+
+  // MString name;
+  // instancePath = parentPath(instancePath, &name);
+  // MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", false);
+  return false;
 }

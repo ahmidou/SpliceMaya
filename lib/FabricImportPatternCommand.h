@@ -42,4 +42,5 @@ private:
   bool updateTransformForObject(FabricCore::RTVal obj, MObject node = MObject::kNullObj);
   bool updateShapeForObject(FabricCore::RTVal obj);
   bool updateMaterialForObject(FabricCore::RTVal obj, MObject node);
+  bool updateEvaluatorForObject(FabricCore::RTVal obj);
 };
