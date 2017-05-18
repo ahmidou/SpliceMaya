@@ -37,7 +37,7 @@ private:
 
   MString parentPath(MString path, MString * name = NULL);
   MString simplifyPath(MString path);
-  MObject getOrCreateNodeForPath(MString path, MString type="transform", bool createIfMissing = true);
+  MObject getOrCreateNodeForPath(MString path, MString type="transform", bool createIfMissing = true, bool isDagNode = true);
   MObject getOrCreateNodeForObject(FabricCore::RTVal obj);
   bool updateTransformForObject(FabricCore::RTVal obj, MObject node = MObject::kNullObj);
   bool updateShapeForObject(FabricCore::RTVal obj);

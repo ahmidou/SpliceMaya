@@ -563,7 +563,7 @@ MString FabricImportPatternCommand::simplifyPath(MString path)
   return path;
 }
 
-MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString type, bool createIfMissing)
+MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString type, bool createIfMissing, bool isDagNode)
 {
   if(path.length() == 0)
     return MObject();
@@ -586,12 +586,23 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
     parentNode = getOrCreateNodeForPath(pathForParent, "transform", true);
   }
 
-  MDagModifier modif;
-  MObject node = modif.createNode(type, parentNode);
-  modif.doIt();
-
-  modif.renameNode(node, name);
-  modif.doIt();
+  MObject node;
+  if(isDagNode)
+  {
+    MDagModifier modif;
+    node = modif.createNode(type, parentNode);
+    modif.doIt();
+    modif.renameNode(node, name);
+    modif.doIt();
+  }
+  else
+  {
+    MDGModifier modif;
+    node = modif.createNode(type);
+    modif.doIt();
+    modif.renameNode(node, name);
+    modif.doIt();
+  }
 
   m_nodes.insert(std::pair< std::string, MObject > (path.asChar(), node));
   return node;
@@ -855,27 +866,83 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
 
   FabricCore::RTVal filePathVal = evaluator.callMethod("FilePath", "getFilePath", 0, 0);
   filePathVal = filePathVal.callMethod("FilePath", "expandEnvVars", 0, 0);
-  MString filePath = filePathVal.callMethod("String", "string", 0, 0);
-
-  if(!FTL::FSExists(filePath.asChar()))
+  std::string filePath = filePathVal.callMethod("String", "string", 0, 0).getStringCString();
+  for(unsigned int i=0;i<filePath.length();i++)
   {
-    mayaLogErrorFunc("Evaluator filePath \""+filePath+"\" does no exist.");
+    if(filePath[i] == '\\')
+      filePath[i] = '/';
+  }
+  MString filePathM = filePath.c_str();
+  if(!FTL::FSExists(filePathM.asChar()))
+  {
+    mayaLogErrorFunc("Evaluator filePath \""+filePathM+"\" does no exist.");
     return mayaErrorOccured();
   }
 
-  
+  FabricCore::RTVal propertiesVal = evaluator.callMethod("String[]", "getProperties", 0, 0);
+  if(propertiesVal.getArraySize() == 0)
+    return false;
 
-  MGlobal::displayInfo("found evaluator.");
+  MString objPath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
+  MString evaluatorPath = objPath + "/Evaluator";
 
-  // // here we access the path as well as the instance path
-  // MString uuid = obj.callMethod("String", "getPath", 0, 0).getStringCString();
-  // uuid = "uuid | " + uuid;
+  MObject objNode = getOrCreateNodeForPath(objPath, "transform", false);
+  if(objNode.isNull())
+  {
+    mayaLogErrorFunc("Missing node for '"+objPath+"'.");
+    return false;
+  }
 
-  // MString instancePath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-  // instancePath = m_rootPrefix + simplifyPath(instancePath);
+  // todo: we should catch this as a deformer maybe
+  MObject evaluatorNode = getOrCreateNodeForPath(evaluatorPath, "canvasFuncNode", true, false /* isDag */);
+  if(evaluatorNode.isNull())
+  {
+    mayaLogErrorFunc("Missing node for '"+evaluatorPath+"'.");
+    return false;
+  }
 
-  // MString name;
-  // instancePath = parentPath(instancePath, &name);
-  // MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", false);
-  return false;
+  MFnDependencyNode objDepNode(objNode);
+  MFnDependencyNode evaluatorDepNode(evaluatorNode);
+
+  // setup the evaluator code
+  MStatus st = MGlobal::executeCommand("dfgImportJSON -m "+evaluatorDepNode.name()+" -f \""+filePathM+"\";");
+  if(st != MS::kSuccess)
+  {
+    mayaLogErrorFunc("Failed to load evaluator code '"+filePathM+"'.");
+    return false;
+  }
+
+  bool success = false;
+  for(unsigned int i=0;i<propertiesVal.getArraySize();i++)
+  {
+    MString property = propertiesVal.getArrayElement(i).getStringCString();
+    if(property == L"localTransform")
+    {
+      // we also need a node for matrix conversion
+      MGlobal::executeCommand("loadPlugin -name \"matrixNodes\" -quiet;");
+      MObject decomposeNode = getOrCreateNodeForPath(evaluatorPath+"/Decompose", "decomposeMatrix", true, false /* isDag */);
+      if(decomposeNode.isNull())
+      {
+        mayaLogErrorFunc("Missing node for '"+evaluatorPath+"/Decompose'.");
+        return false;
+      }
+
+      MFnDependencyNode decomposeDepNode(decomposeNode);
+
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("localTransform"), decomposeDepNode.findPlug("inputMatrix"));
+      modif.connect(decomposeDepNode.findPlug("outputTranslate"), objDepNode.findPlug("translate"));
+      modif.connect(decomposeDepNode.findPlug("outputRotate"), objDepNode.findPlug("rotate"));
+      modif.connect(decomposeDepNode.findPlug("outputScale"), objDepNode.findPlug("scale"));
+      modif.doIt();
+
+      success = true;
+    }
+    else
+    {
+      mayaLogErrorFunc("Evaluator uses unsupported property '"+property+"'.");
+      continue;
+    }
+  }
+  return success;
 }
