@@ -912,6 +912,9 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     return false;
   }
 
+  // todo: assign all arg values
+  // for the time property create an expression
+
   bool success = false;
   for(unsigned int i=0;i<propertiesVal.getArraySize();i++)
   {
