@@ -134,6 +134,7 @@ void FabricDFGBaseInterface::constructBaseInterface(){
 
     MString idStr; idStr.set(m_id);
     m_binding.setMetadata("maya_id", idStr.asChar(), false);
+    m_binding.setMetadata("host_app", "Maya", false);
   }
 
   m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
@@ -551,6 +552,7 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
 
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
+  m_binding.setMetadata("host_app", "Maya", false);
 
   // todo: update UI
 
