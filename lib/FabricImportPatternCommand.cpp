@@ -912,8 +912,69 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     return false;
   }
 
-  // todo: assign all arg values
-  // for the time property create an expression
+  // assign all of the arguments
+  unsigned int argCount = evaluator.callMethod("UInt32", "getArgCount", 0, 0);
+  for(unsigned int i=0;i<argCount;i++)
+  {
+    FabricCore::RTVal argIndex = FabricCore::RTVal::ConstructUInt32(obj.getContext(), i);
+    MString argName = evaluator.callMethod("String", "getArgName", 1, &argIndex).getStringCString();
+    MString argType = evaluator.callMethod("String", "getArgType", 1, &argIndex).getStringCString();
+    FabricCore::RTVal argValueVal = evaluator.callMethod("RTVal", "getArgValue", 1, &argIndex);
+    argValueVal = argValueVal.getUnwrappedRTVal();
+
+    MPlug plug = evaluatorDepNode.findPlug(argName);
+    if(plug.isNull())
+    {
+      mayaLogFunc("Warning: Cannot find plug for evaluator argument "+argName+".");
+      continue;
+    }
+
+    // todo: we should probably centralize this code in a function
+    // since we are using it in several places - structurally somewhat different but similar.
+
+    if(argType == L"Boolean")
+    {
+      
+    }
+    else if(argType == L"SInt32")
+    {
+      
+    }
+    else if(argType == L"UInt32")
+    {
+      
+    }
+    else if(argType == L"Scalar" || argType == L"Float32")
+    {
+      
+    }
+    else if(argType == L"Float64")
+    {
+      
+    }
+    else if(argType == L"String")
+    {
+      
+    }
+    else if(argType == L"Vec2")
+    {
+      
+    }
+    else if(argType == L"Vec3")
+    {
+      
+    }
+    else if(argType == L"Mat44" || argType == L"Xfo")
+    {
+      // for xfo convert to mat44
+    }
+    else if(argType == L"Color")
+    {
+      
+    }
+
+
+  }
 
   bool success = false;
   for(unsigned int i=0;i<propertiesVal.getArraySize();i++)
