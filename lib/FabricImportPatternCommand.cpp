@@ -893,7 +893,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     return false;
   }
 
-  // todo: we should catch this as a deformer maybe
+  // todo: we should catch this is a deformer
   MObject evaluatorNode = getOrCreateNodeForPath(evaluatorPath, "canvasFuncNode", true, false /* isDag */);
   if(evaluatorNode.isNull())
   {
@@ -931,7 +931,6 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
 
     // todo: we should probably centralize this code in a function
     // since we are using it in several places - structurally somewhat different but similar.
-
     if(argType == L"Boolean")
     {
       
@@ -946,7 +945,10 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     }
     else if(argType == L"Scalar" || argType == L"Float32")
     {
-      
+      if(argName == L"time" || argName == L"timeline")
+      {
+        // setup an expression to drive the time
+      }
     }
     else if(argType == L"Float64")
     {
@@ -972,8 +974,6 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     {
       
     }
-
-
   }
 
   bool success = false;
