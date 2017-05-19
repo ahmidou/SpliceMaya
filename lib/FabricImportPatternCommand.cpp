@@ -696,13 +696,6 @@ bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
     return false;
   }
 
-  FabricCore::RTVal isConstantVal = shape.callMethod("Boolean", "isConstant", 1, &m_context);
-  if(!isConstantVal.getBoolean())
-  {
-    mayaLogFunc("Deforming shapes are not yet supported.");
-    return false;
-  }
-
   // here we access the path as well as the instance path
   MString uuid = obj.callMethod("String", "getPath", 0, 0).getStringCString();
   uuid = "uuid | " + uuid;
@@ -886,22 +879,49 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   MString objPath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
   MString evaluatorPath = objPath + "/Evaluator";
 
-  MObject objNode = getOrCreateNodeForPath(objPath, "transform", false);
-  if(objNode.isNull())
+  std::map< std::string, MObject >::iterator it = m_nodes.find(simplifyPath(objPath).asChar());
+  if(it == m_nodes.end())
+    it = m_nodes.find(("uuid | "+objPath).asChar());
+  if(it == m_nodes.end())
   {
     mayaLogErrorFunc("Missing node for '"+objPath+"'.");
     return false;
   }
 
-  // todo: we should catch this is a deformer
-  MObject evaluatorNode = getOrCreateNodeForPath(evaluatorPath, "canvasFuncNode", true, false /* isDag */);
-  if(evaluatorNode.isNull())
-  {
-    mayaLogErrorFunc("Missing node for '"+evaluatorPath+"'.");
-    return false;
-  }
-
+  MObject objNode = it->second;
   MFnDependencyNode objDepNode(objNode);
+
+  bool isDeformer = evaluator.callMethod("Boolean", "isDeformer", 0, NULL).getBoolean();
+
+  MObject evaluatorNode;
+  if(isDeformer)
+  {
+    MGlobal::executeCommand("select -r "+objDepNode.name()+";");
+    MStringArray results;
+    MString deformerCmd = "deformer -type \"canvasFuncDeformer\" -name \"Evaluator\";";
+    MGlobal::executeCommand(deformerCmd, results);
+    if(results.length() == 0)
+    {
+      mayaLogErrorFunc("Cannot create deformer for "+objDepNode.name());
+      return false;
+    }
+
+    // we need to remove the meshes port so that we can load the evaluator code
+    MGlobal::executeCommand("FabricCanvasRemovePort -m \""+results[0]+"\" -e \"\" -n \"meshes\";");
+
+    MSelectionList selList;
+    MGlobal::getSelectionListByName(results[0], selList);
+    selList.getDependNode(0, evaluatorNode);
+  }
+  else
+  {
+    evaluatorNode = getOrCreateNodeForPath(evaluatorPath, "canvasFuncNode", true, false /* isDag */);
+    if(evaluatorNode.isNull())
+    {
+      mayaLogErrorFunc("Missing node for '"+evaluatorPath+"'.");
+      return false;
+    }
+  }
   MFnDependencyNode evaluatorDepNode(evaluatorNode);
 
   // setup the evaluator code
@@ -913,14 +933,32 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   }
 
   // assign all of the arguments
-  unsigned int argCount = evaluator.callMethod("UInt32", "getArgCount", 0, 0);
+  unsigned int argCount = evaluator.callMethod("UInt32", "getArgCount", 0, 0).getUInt32();
   for(unsigned int i=0;i<argCount;i++)
   {
     FabricCore::RTVal argIndex = FabricCore::RTVal::ConstructUInt32(obj.getContext(), i);
     MString argName = evaluator.callMethod("String", "getArgName", 1, &argIndex).getStringCString();
     MString argType = evaluator.callMethod("String", "getArgType", 1, &argIndex).getStringCString();
+
+    if(argType == L"Scalar")
+      argType = L"Float32";
+    if(argType == L"Integer")
+      argType = L"SInt32";
+
     FabricCore::RTVal argValueVal = evaluator.callMethod("RTVal", "getArgValue", 1, &argIndex);
     argValueVal = argValueVal.getUnwrappedRTVal();
+
+    MString argValueType = argValueVal.getTypeNameCStr();
+    if(argValueType == L"Scalar")
+      argValueType = L"Float32";
+    if(argValueType == L"Integer")
+      argValueType = L"SInt32";
+
+    if(argValueType != argType)
+    {
+      mayaLogFunc("Warning: Argument value is not a "+argType+".");
+      continue;
+    }
 
     MPlug plug = evaluatorDepNode.findPlug(argName);
     if(plug.isNull())
@@ -933,46 +971,58 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     // since we are using it in several places - structurally somewhat different but similar.
     if(argType == L"Boolean")
     {
-      
+      plug.setValue(argValueVal.getBoolean());
     }
     else if(argType == L"SInt32")
     {
-      
+      plug.setValue(argValueVal.getSInt32());
     }
     else if(argType == L"UInt32")
     {
-      
+      plug.setValue((int)argValueVal.getUInt32());
     }
-    else if(argType == L"Scalar" || argType == L"Float32")
+    else if(argType == L"Float32")
     {
       if(argName == L"time" || argName == L"timeline")
       {
         // setup an expression to drive the time
+        MString exprCmd = "expression -s \""+
+          plug.name()+
+          " = time;\"  -o "+
+          evaluatorDepNode.name()+
+          " -ae 1 -uc all ;";
+        MGlobal::executeCommand(exprCmd);
+      }
+      else
+      {
+        plug.setValue(argValueVal.getFloat32());
       }
     }
     else if(argType == L"Float64")
     {
-      
+      plug.setValue(argValueVal.getFloat64());
     }
     else if(argType == L"String")
     {
-      
+      plug.setValue(MString(argValueVal.getStringCString()));
     }
     else if(argType == L"Vec2")
     {
-      
+      plug.child(0).setValue(argValueVal.maybeGetMember("x").getFloat32());
+      plug.child(1).setValue(argValueVal.maybeGetMember("y").getFloat32());
     }
     else if(argType == L"Vec3")
     {
-      
-    }
-    else if(argType == L"Mat44" || argType == L"Xfo")
-    {
-      // for xfo convert to mat44
+      plug.child(0).setValue(argValueVal.maybeGetMember("x").getFloat32());
+      plug.child(1).setValue(argValueVal.maybeGetMember("y").getFloat32());
+      plug.child(2).setValue(argValueVal.maybeGetMember("z").getFloat32());
     }
     else if(argType == L"Color")
     {
-      
+      plug.child(0).setValue(argValueVal.maybeGetMember("r").getFloat32());
+      plug.child(1).setValue(argValueVal.maybeGetMember("g").getFloat32());
+      plug.child(2).setValue(argValueVal.maybeGetMember("b").getFloat32());
+      plug.child(3).setValue(argValueVal.maybeGetMember("a").getFloat32());
     }
   }
 
@@ -1001,6 +1051,31 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
       modif.doIt();
 
       success = true;
+    }
+    else if(property == L"geometry")
+    {
+      // we are already hooked up since this is a deformer?
+      if(!isDeformer)
+      {
+        FabricCore::RTVal shape = FabricCore::RTVal::Create(obj.getContext(), "ImporterShape", 1, &obj);
+        if(shape.isNullObject())
+          return false;
+
+        //const Integer ImporterShape_Mesh = 0;
+        //const Integer ImporterShape_Curves = 1;
+        //const Integer ImporterShape_Points = 2;
+        FabricCore::RTVal geoTypeVal = shape.callMethod("SInt32", "getGeometryType", 1, &m_context);
+        int geoType = geoTypeVal.getSInt32();
+        if (geoType == 0) // a mesh
+        {
+          MDGModifier modif;
+          modif.connect(evaluatorDepNode.findPlug("geometry"), objDepNode.findPlug("mesh"));
+        }
+        else
+        {
+          // other cases are not yet supported by the shape creation anyway....
+        }
+      }
     }
     else
     {
