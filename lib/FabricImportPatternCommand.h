@@ -15,6 +15,22 @@
 #include <vector>
 #include <map>
 
+struct FabricImportPatternSettings
+{
+  MString rootPrefix;
+  MString nameSpace;
+  double scale;
+  bool enableMaterials;
+
+  FabricImportPatternSettings()
+  {
+    rootPrefix = L"";
+    nameSpace = L"";
+    scale = 1.0;
+    enableMaterials = false;
+  }
+};
+
 class FabricImportPatternCommand: public MPxCommand
 {
 public:
@@ -24,7 +40,7 @@ public:
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);
   virtual bool isUndoable() const { return false; }
-  MStatus invoke(FabricCore::DFGBinding binding, MString rootPrefix);
+  MStatus invoke(FabricCore::DFGBinding binding, const FabricImportPatternSettings & settings);
 
 private:
   FabricCore::RTVal m_context;
@@ -33,7 +49,7 @@ private:
   std::map< std::string, MObject > m_nodes;
   std::map< std::string, MObject > m_materialSets;
 
-  MString m_rootPrefix;
+  FabricImportPatternSettings m_settings;
 
   MString parentPath(MString path, MString * name = NULL);
   MString simplifyPath(MString path);

@@ -3,14 +3,19 @@
 //
 
 #include <QVBoxLayout>
+#include <QGridLayout>
+#include <QLabel>
+#include <QCheckBox>
+#include <QLineEdit>
+#include <QDoubleValidator>
 #include <QDialogButtonBox>
 
 #include "FabricImportPatternDialog.h"
 #include "FabricImportPatternCommand.h"
 
-FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, MString rootPrefix)
+FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, FabricImportPatternSettings * settings)
 : QDialog(parent)
-, m_rootPrefix(rootPrefix)
+, m_settings(settings)
 , m_binding(binding)
 , m_wasAccepted(false)
 {
@@ -35,6 +40,34 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
   setLayout(layout);
   layout->addWidget(widget);
 
+  QWidget * optionsWidget = new QWidget(this);
+  optionsWidget->setContentsMargins(0, 0, 0, 0);
+  QGridLayout * optionsLayout = new QGridLayout();
+  optionsWidget->setLayout(optionsLayout);
+  layout->addWidget(optionsWidget);
+
+  QLabel * enableMaterialsLabel = new QLabel("Enable Materials", optionsWidget);
+  optionsLayout->addWidget(enableMaterialsLabel, 0, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QCheckBox * enableMaterialsCheckbox = new QCheckBox(optionsWidget);
+  enableMaterialsCheckbox->setCheckState(m_settings->enableMaterials ? Qt::Checked : Qt::Unchecked);
+  optionsLayout->addWidget(enableMaterialsCheckbox, 0, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(enableMaterialsCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onEnableMaterialsChanged(int)));
+
+  QLabel * scaleLabel = new QLabel("Scale", optionsWidget);
+  optionsLayout->addWidget(scaleLabel, 1, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QLineEdit * scaleLineEdit = new QLineEdit(optionsWidget);
+  scaleLineEdit->setValidator(new QDoubleValidator());
+  scaleLineEdit->setText(QString::number(m_settings->scale));
+  optionsLayout->addWidget(scaleLineEdit, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(scaleLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onScaleChanged(const QString &)));
+
+  QLabel * nameSpaceLabel = new QLabel("NameSpace", optionsWidget);
+  optionsLayout->addWidget(nameSpaceLabel, 2, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QLineEdit * nameSpaceLineEdit = new QLineEdit(optionsWidget);
+  nameSpaceLineEdit->setText(m_settings->nameSpace.asChar());
+  optionsLayout->addWidget(nameSpaceLineEdit, 2, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(nameSpaceLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onNameSpaceChanged(const QString &)));
+
   QDialogButtonBox * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
   layout->addWidget(buttons);
 
@@ -54,5 +87,20 @@ void FabricImportPatternDialog::onAccepted()
 {
   FabricCore::DFGBinding binding = m_binding;
   close();
-  FabricImportPatternCommand().invoke(binding, m_rootPrefix);
+  FabricImportPatternCommand().invoke(binding, *m_settings);
+}
+
+void FabricImportPatternDialog::onEnableMaterialsChanged(int state)
+{
+  m_settings->enableMaterials = state == Qt::Checked;
+}
+
+void FabricImportPatternDialog::onScaleChanged(const QString & text)
+{
+  m_settings->scale = text.toDouble();
+}
+
+void FabricImportPatternDialog::onNameSpaceChanged(const QString & text)
+{
+  m_settings->nameSpace = text.toUtf8().constData();
 }

@@ -34,6 +34,10 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.enableQuery(false);
   syntax.enableEdit(false);
   syntax.addFlag( "-f", "-filepath", MSyntax::kString );
+  syntax.addFlag( "-q", "-disableDialogs", MSyntax::kBoolean );
+  syntax.addFlag( "-n", "-namespace", MSyntax::kString );
+  syntax.addFlag( "-m", "-enableMaterials", MSyntax::kBoolean );
+  syntax.addFlag( "-s", "-scale", MSyntax::kDouble );
   syntax.addFlag( "-n", "-canvasnode", MSyntax::kString );
   syntax.addFlag( "-r", "-root", MSyntax::kString );
   syntax.addFlag( "-a", "-args", MSyntax::kString );
@@ -50,6 +54,10 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 {
   MStatus status;
   MArgParser argParser(syntax(), args, &status);
+
+  bool quiet = false;
+  if ( argParser.isFlagSet("disableDialogs") )
+    quiet = argParser.flagArgumentBool("disableDialogs", 0);
 
   FabricDFGBaseInterface * interf = NULL;
   MString filepath;
@@ -71,6 +79,11 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     {
       filepath = argParser.flagArgumentString("filepath", 0);
     }
+    else if(quiet)
+    {
+      mayaLogErrorFunc("No filepath (-f) specified.");
+      return mayaErrorOccured();
+    }
     else
     {
       MCommandResult result;
@@ -91,7 +104,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
       if(filepath.length() == 0)
       {
-        mayaLogErrorFunc("No filepath specified.");
+        mayaLogErrorFunc("No filepath (-f) specified.");
         return mayaErrorOccured();
       }
     }
@@ -105,12 +118,31 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
   if ( argParser.isFlagSet("root") )
   {
-    m_rootPrefix = argParser.flagArgumentString("root", 0);
-    if(m_rootPrefix.length() > 0)
+    m_settings.rootPrefix = argParser.flagArgumentString("root", 0);
+    if(m_settings.rootPrefix.length() > 0)
     {
-      if(m_rootPrefix.asChar()[m_rootPrefix.length()-1] != '/')
-        m_rootPrefix += "/";
+      if(m_settings.rootPrefix.asChar()[m_settings.rootPrefix.length()-1] != '/')
+        m_settings.rootPrefix += "/";
     }
+  }
+
+  if( argParser.isFlagSet("namespace") )
+  {
+    m_settings.nameSpace = argParser.flagArgumentString("namespace", 0);
+    if(m_settings.nameSpace.length() > 0)
+    {
+      MString suffix = m_settings.nameSpace.substring(m_settings.nameSpace.length()-2, m_settings.nameSpace.length()-1);
+      if(suffix != L"::")
+        m_settings.nameSpace = m_settings.nameSpace + L"::";
+    }
+  }
+  if( argParser.isFlagSet("scale") )
+  {
+    m_settings.scale = argParser.flagArgumentDouble("scale", 0);
+  }
+  if( argParser.isFlagSet("enableMaterials") )
+  {
+    m_settings.enableMaterials = argParser.flagArgumentBool("enableMaterials", 0);
   }
 
   MStringArray result;
@@ -130,7 +162,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
       mayaLogErrorFunc(MString(getName()) + ": "+e.what());
     }
 
-    return invoke(binding, m_rootPrefix);
+    return invoke(binding, m_settings);
   }
   else
   {
@@ -364,7 +396,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
           }
         }
 
-        return invoke(binding, m_rootPrefix);
+        return invoke(binding, m_settings);
       }
       else
       {
@@ -374,7 +406,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         QEvent event(QEvent::RequestSoftwareInputPanel);
         QApplication::sendEvent(mainWindow, &event);
 
-        FabricImportPatternDialog * dialog = new FabricImportPatternDialog(mainWindow, binding, m_rootPrefix);
+        FabricImportPatternDialog * dialog = new FabricImportPatternDialog(mainWindow, binding, &m_settings);
         dialog->setWindowModality(Qt::ApplicationModal);
         dialog->setSizeGripEnabled(true);
         dialog->open();
@@ -394,9 +426,10 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   return MS::kSuccess;
 }
 
-MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, MString rootPrefix)
+MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, const FabricImportPatternSettings & settings)
 {
-  m_rootPrefix = rootPrefix;
+  m_settings = settings;
+
   FabricCore::Context context;
   MStringArray result;
   try
@@ -445,7 +478,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, MStri
         obj = FabricCore::RTVal::Create(context, "ImporterObject", 1, &obj);
 
         MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-        path = m_rootPrefix + simplifyPath(path);
+        path = m_settings.rootPrefix + simplifyPath(path);
 
         m_objectMap.insert(std::pair< std::string, size_t > (path.asChar(), m_objectList.size()));
         m_objectList.push_back(obj);
@@ -465,7 +498,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, MStri
         continue;
 
       MString path = parent.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-      path = m_rootPrefix + simplifyPath(path);
+      path = m_settings.rootPrefix + simplifyPath(path);
 
       std::map< std::string, size_t >::iterator it = m_objectMap.find(path.asChar());
       if(it != m_objectMap.end())
@@ -592,7 +625,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
     MDagModifier modif;
     node = modif.createNode(type, parentNode);
     modif.doIt();
-    modif.renameNode(node, name);
+    modif.renameNode(node, m_settings.nameSpace + name);
     modif.doIt();
   }
   else
@@ -600,7 +633,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
     MDGModifier modif;
     node = modif.createNode(type);
     modif.doIt();
-    modif.renameNode(node, name);
+    modif.renameNode(node, m_settings.nameSpace + name);
     modif.doIt();
   }
 
@@ -612,7 +645,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForObject(FabricCore::RTVal o
 {
   MString type = obj.callMethod("String", "getType", 0, 0).getStringCString();
   MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-  path = m_rootPrefix + simplifyPath(path);
+  path = m_settings.rootPrefix + simplifyPath(path);
 
   if(type == "Layer" || type == "Group" || type == "Transform" || type == "Instance")
   {
@@ -656,7 +689,7 @@ bool FabricImportPatternCommand::updateTransformForObject(FabricCore::RTVal obj,
   if(node.isNull())
   {
     MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-    path = m_rootPrefix + simplifyPath(path);
+    path = m_settings.rootPrefix + simplifyPath(path);
 
     node = getOrCreateNodeForPath(path, "transform", false);
     if(node.isNull())
@@ -670,8 +703,22 @@ bool FabricImportPatternCommand::updateTransformForObject(FabricCore::RTVal obj,
   float floats[4][4];
   memcpy(floats, data, sizeof(float) * 16);
 
-  MTransformationMatrix tfMatrix = MMatrix(floats).transpose();
-  
+  MMatrix m = MMatrix(floats).transpose();
+
+  // if this is a root object
+  if(transform.callMethod("ImporterObject", "getParent", 0, 0).isNullObject())
+  {
+    double scale3[3];
+    scale3[0] = m_settings.scale;
+    scale3[1] = m_settings.scale;
+    scale3[2] = m_settings.scale;
+    MTransformationMatrix scaleMatrix;
+    scaleMatrix.setScale(scale3, MSpace::kWorld);
+
+    m = m * scaleMatrix.asMatrix();
+  }
+
+  MTransformationMatrix tfMatrix = m;
   transformNode.set(tfMatrix);
 
   return true;
@@ -701,7 +748,7 @@ bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
   uuid = "uuid | " + uuid;
 
   MString instancePath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-  instancePath = m_rootPrefix + simplifyPath(instancePath);
+  instancePath = m_settings.rootPrefix + simplifyPath(instancePath);
 
   MString name;
   instancePath = parentPath(instancePath, &name);
@@ -720,7 +767,7 @@ bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
     m_nodes.insert(std::pair< std::string, MObject > (uuid.asChar(), node));
 
     MDagModifier modif;
-    modif.renameNode(node, name);
+    modif.renameNode(node, m_settings.nameSpace + name);
     modif.doIt();
   
     if(!parentNode.isNull())
@@ -752,6 +799,19 @@ bool FabricImportPatternCommand::updateMaterialForObject(FabricCore::RTVal obj, 
 
   if(node.isNull())
     return false;
+
+  if(!m_settings.enableMaterials)
+  {
+    MObject shadingEngine;
+
+    MSelectionList sl;
+    sl.add(L"initialShadingGroup");
+    sl.getDependNode(0, shadingEngine);
+
+    MFnSet shadingEngineSet(shadingEngine);
+    shadingEngineSet.addMember(node);
+    return true;
+  }
 
   FabricCore::RTVal materials = shape.callMethod("Ref<ImporterObject>[]", "getMaterials", 1, &m_context);
 
