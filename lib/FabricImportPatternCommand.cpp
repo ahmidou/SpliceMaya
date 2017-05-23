@@ -398,7 +398,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
         return invoke(binding, m_settings);
       }
-      else
+      else if(!quiet)
       {
         QWidget * mainWindow = MQtUtil().mainWindow();
         mainWindow->setFocus(Qt::ActiveWindowFocusReason);

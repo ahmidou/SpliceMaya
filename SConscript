@@ -179,6 +179,7 @@ if int(float(str(MAYA_VERSION[:4]))) >= 2016:
   libSources += env.Glob('lib/Render/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 libSources += env.QTMOC(env.File('lib/FabricImportPatternDialog.h'))
+libSources += env.QTMOC(env.File('lib/FabricExportPatternDialog.h'))
 
 pluginSources = env.Glob('plugin/*.cpp')
 
