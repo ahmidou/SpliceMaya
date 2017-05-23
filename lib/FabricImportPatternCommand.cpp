@@ -217,7 +217,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
           if(!it->value()->isString())
           {
-            mayaLogFunc("Warning: Provided geometry "+MString(key.c_str())+" is not a string - needs to be the name of the geometry in the scene.");
+            mayaLogFunc(MString(getName())+": Warning: Provided geometry "+MString(key.c_str())+" is not a string - needs to be the name of the geometry in the scene.");
             continue;
           }
           
@@ -234,7 +234,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
             FTL::CStrRef type = exec.getExecPortResolvedType(i);
             if(type != "PolygonMesh" && type != "Curves")
             {
-              mayaLogFunc("Warning: Geometry "+MString(name.c_str())+" cannot be set since the canvas port is not valid geometry type.");
+              mayaLogFunc(MString(getName())+": Warning: Geometry "+MString(name.c_str())+" cannot be set since the canvas port is not valid geometry type.");
               continue;
             }
 
@@ -258,7 +258,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
           if(!found)
           {
-            mayaLogFunc("Geometry argument "+MString(key.c_str())+" does not exist in import pattern.");
+            mayaLogFunc(MString(getName())+": Geometry argument "+MString(key.c_str())+" does not exist in import pattern.");
             return mayaErrorOccured();
           }
         }
@@ -378,7 +378,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
             FTL::CStrRef type = exec.getExecPortResolvedType(i);
             if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(client, type.c_str()))
             {
-              mayaLogFunc("Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
+              mayaLogFunc(MString(getName())+": Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
               continue;
             }
 
@@ -391,7 +391,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
           if(!found)
           {
-            mayaLogFunc("Argument "+MString(key.c_str())+" does not exist in import pattern.");
+            mayaLogFunc(MString(getName())+": Argument "+MString(key.c_str())+" does not exist in import pattern.");
             return mayaErrorOccured();
           }
         }
@@ -535,7 +535,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, const
   }
 
   setResult(result);
-  mayaLogFunc("import done.");
+  mayaLogFunc(MString(getName())+": import done.");
   return MS::kSuccess;
 }
 
@@ -739,7 +739,7 @@ bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
   {
     MString geoTypeStr;
     geoTypeStr.set(geoType);
-    mayaLogFunc("Shape type " + geoTypeStr + " not yet supported.");
+    mayaLogFunc(MString(getName())+": Shape type " + geoTypeStr + " not yet supported.");
     return false;
   }
 
@@ -1016,14 +1016,14 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
 
     if(argValueType != argType)
     {
-      mayaLogFunc("Warning: Argument value is not a "+argType+".");
+      mayaLogFunc(MString(getName())+": Warning: Argument value is not a "+argType+".");
       continue;
     }
 
     MPlug plug = evaluatorDepNode.findPlug(argName);
     if(plug.isNull())
     {
-      mayaLogFunc("Warning: Cannot find plug for evaluator argument "+argName+".");
+      mayaLogFunc(MString(getName())+": Warning: Cannot find plug for evaluator argument "+argName+".");
       continue;
     }
 

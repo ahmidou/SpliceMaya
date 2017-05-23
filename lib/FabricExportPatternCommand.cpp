@@ -102,7 +102,44 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
     m_settings.scale = argParser.flagArgumentDouble("scale", 0);
   }
 
-  // todo: objects
+
+  MSelectionList sl;
+  if( argParser.isFlagSet("objects") )
+  {
+    MString objectsJoined = argParser.flagArgumentString("objects", 0);
+    MStringArray objectsArray;
+    objectsJoined.split(',', objectsArray);
+    for(unsigned int i=0;i<objectsArray.length();i++)
+    {
+      sl.add(objectsArray[i]);
+
+      MObject node;
+      sl.getDependNode(i, node);
+      if(node.isNull())
+      {
+        mayaLogErrorFunc("Object '"+objectsArray[i]+"' not found in scene.");
+        return mayaErrorOccured();
+      }
+    }
+  }
+  else
+  {
+    MGlobal::getActiveSelectionList( sl );
+  }
+
+  for(unsigned int i=0;i<sl.length();i++)
+  {
+    MObject node;
+    sl.getDependNode(i, node);
+    if(node.isNull())
+    {
+      MStringArray selString;
+      sl.getSelectionStrings(i, selString);
+      mayaLogFunc(MString(getName())+": Warning: Skipping Object: '"+selString[0]+"', not a dependency node.");
+      return mayaErrorOccured();
+    }
+    m_nodes.push_back(node);
+  }
 
   MStringArray result;
   FabricCore::Client client;
@@ -142,6 +179,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
     FabricCore::DFGHost dfgHost = client.getDFGHost();
     binding = dfgHost.createBindingFromJSON(json.asChar());
 
+
     std::map< std::string, MObject > geometryObjects;
 
     if ( argParser.isFlagSet("args") )
@@ -171,7 +209,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
           FTL::CStrRef type = exec.getExecPortResolvedType(i);
           if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(client, type.c_str()))
           {
-            mayaLogFunc("Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
+            mayaLogFunc(MString(getName())+": Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
             continue;
           }
 
@@ -184,7 +222,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
 
         if(!found)
         {
-          mayaLogFunc("Argument "+MString(key.c_str())+" does not exist in import pattern.");
+          mayaLogFunc(MString(getName())+": Argument "+MString(key.c_str())+" does not exist in import pattern.");
           return mayaErrorOccured();
         }
       }
@@ -215,14 +253,18 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
     mayaLogErrorFunc(MString(getName()) + ": "+e.what());
   }
 
-  // todo: loop over time
-
   return MS::kSuccess;
 }
 
 MStatus FabricExportPatternCommand::invoke(FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings)
 {
   m_settings = settings;
+
+  for(size_t i=0;i<m_nodes.size();i++)
+  {
+    FabricCore::RTVal obj = createRTValForNode(m_nodes[i]);
+    m_objects.push_back(obj);
+  }
 
   // FabricCore::Context context;
   // MStringArray result;
@@ -329,6 +371,59 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::DFGBinding binding, const
   // }
 
   // setResult(result);
-  // mayaLogFunc("import done.");
+  // mayaLogFunc(MString(getName())+": import done.");
   return MS::kSuccess;
+}
+
+FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject & node)
+{
+  if(node.isNull())
+    return FabricCore::RTVal();
+
+  MFnDependencyNode depNode(node);
+
+  FabricCore::RTVal val;
+  try
+  {
+    switch(depNode.type())
+    {
+      case MFn::kMesh:
+      {
+        // todo: make sure that we haven't hit this before...!
+        // support for instances
+        mayaLogFunc(MString(getName())+": '"+depNode.name()+"' is a kMesh.");
+
+        break;        
+      }
+      case MFn::kCamera:
+      {
+        mayaLogFunc(MString(getName())+": '"+depNode.name()+"' is a kCamera.");
+        break;        
+      }
+      case MFn::kPointLight:
+      case MFn::kSpotLight:
+      case MFn::kDirectionalLight:
+      {
+        mayaLogFunc(MString(getName())+": '"+depNode.name()+"' is a kCamera.");
+        break;        
+      }
+      case MFn::kTransform:
+      {
+        mayaLogFunc(MString(getName())+": '"+depNode.name()+"' is a kTransform.");
+        break;        
+      }
+      default:
+      {
+        mayaLogFunc(MString(getName())+": Warning: Type of '"+depNode.name()+"' is not supported.");
+        break;        
+      }
+    }
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    return FabricCore::RTVal();
+  }
+
+  return val;
 }

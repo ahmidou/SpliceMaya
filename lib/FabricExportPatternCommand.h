@@ -38,9 +38,12 @@ public:
   MStatus invoke(FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings);
 
 private:
+
+  FabricCore::RTVal createRTValForNode(const MObject & node);
+
   FabricCore::RTVal m_context;
-  std::vector< FabricCore::RTVal > m_objects;
   std::vector< MObject > m_nodes;
+  std::vector< FabricCore::RTVal > m_objects;
 
   FabricExportPatternSettings m_settings;
 };
