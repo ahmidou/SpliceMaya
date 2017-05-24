@@ -49,6 +49,7 @@ public:
 private:
 
   FabricCore::RTVal createRTValForNode(const MObject & node);
+  bool updateRTValForNode(double t, const MObject & node, FabricCore::RTVal & object);
   MString getPathFromDagPath(MDagPath dagPath);
 
   FabricCore::RTVal m_context;

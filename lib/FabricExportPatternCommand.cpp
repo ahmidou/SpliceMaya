@@ -410,6 +410,11 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::DFGBinding binding, const
   {
     MAnimControl::setCurrentTime(MTime(t, MTime::kSeconds));
 
+    for(size_t i=0;i<m_objects.size();i++)
+    {
+      updateRTValForNode(t, m_nodes[i], m_objects[i]);
+    }
+
     try
     {
       binding.setArgValue("context", m_context);
@@ -526,6 +531,58 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
   }
 
   return val;
+}
+
+bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & node, FabricCore::RTVal & object)
+{
+  bool isStart = t <= m_settings.startTime;
+
+  try
+  {
+    FabricCore::Context context = m_context.getContext();
+
+    MString objectType = object.callMethod("String", "getType", 0, 0).getStringCString();
+    MString objectPath = object.callMethod("String", "getPath", 0, 0).getStringCString();
+
+    if(objectType == "Transform")
+    {
+      MFnTransform transformNode(node);
+      MMatrix localMatrix = transformNode.transformation().asMatrix();
+      
+      FabricCore::RTVal matrixVal = FabricCore::RTVal::Construct(context, "Mat44", 0, 0);
+      MMatrixToMat44(localMatrix, matrixVal);
+
+      FabricCore::RTVal transform = FabricCore::RTVal::Create(context, "ImporterTransform", 1, &object);
+      transform.callMethod("", "setLocalTransform", 1, &matrixVal);
+    }
+    else if(objectType == "Camera")
+    {
+      mayaLogFunc(MString(getName())+": Warning: Lights still need to be implemented");
+      return false;
+    }
+    else if(objectType == "Light")
+    {
+      mayaLogFunc(MString(getName())+": Warning: Lights still need to be implemented");
+      return false;
+    }
+    else if(objectType == "Shape")
+    {
+      mayaLogFunc(MString(getName())+": Warning: Shapes still need to be implemented");
+      return false;
+    }
+    else
+    {
+      mayaLogFunc(MString(getName())+": Warning: Object type 'Importer"+objectType+"' is not yet supported.");
+      return false;
+    }
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    return false;
+  }
+
+  return false;
 }
 
 MString FabricExportPatternCommand::getPathFromDagPath(MDagPath dagPath)

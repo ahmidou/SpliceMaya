@@ -205,7 +205,7 @@ inline void MFloatMatrixToMat44_data(MFloatMatrix const &matrix, double *data) {
   data[15] = (double)matrix[3][3];
 }
 
-inline void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
+void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
   double * data = (double*)dataRtVal.getData();
   MMatrixToMat44_data(matrix, data);
