@@ -8,12 +8,13 @@
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QDoubleValidator>
+#include <QIntValidator>
 #include <QDialogButtonBox>
 
 #include "FabricExportPatternDialog.h"
 #include "FabricExportPatternCommand.h"
 
-FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, FabricExportPatternSettings * settings)
+FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings)
 : QDialog(parent)
 , m_settings(settings)
 , m_binding(binding)
@@ -50,9 +51,41 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
   optionsLayout->addWidget(scaleLabel, 1, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * scaleLineEdit = new QLineEdit(optionsWidget);
   scaleLineEdit->setValidator(new QDoubleValidator());
-  scaleLineEdit->setText(QString::number(m_settings->scale));
+  scaleLineEdit->setText(QString::number(m_settings.scale));
   optionsLayout->addWidget(scaleLineEdit, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(scaleLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onScaleChanged(const QString &)));
+
+  QLabel * startTimeLabel = new QLabel("Start Time", optionsWidget);
+  optionsLayout->addWidget(startTimeLabel, 2, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QLineEdit * startTimeLineEdit = new QLineEdit(optionsWidget);
+  startTimeLineEdit->setValidator(new QDoubleValidator());
+  startTimeLineEdit->setText(QString::number(m_settings.startTime));
+  optionsLayout->addWidget(startTimeLineEdit, 2, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(startTimeLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onStartTimeChanged(const QString &)));
+
+  QLabel * endTimeLabel = new QLabel("End Time", optionsWidget);
+  optionsLayout->addWidget(endTimeLabel, 3, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QLineEdit * endTimeLineEdit = new QLineEdit(optionsWidget);
+  endTimeLineEdit->setValidator(new QDoubleValidator());
+  endTimeLineEdit->setText(QString::number(m_settings.endTime));
+  optionsLayout->addWidget(endTimeLineEdit, 3, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(endTimeLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onEndTimeChanged(const QString &)));
+
+  QLabel * fpsLabel = new QLabel("FPS", optionsWidget);
+  optionsLayout->addWidget(fpsLabel, 4, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QLineEdit * fpsLineEdit = new QLineEdit(optionsWidget);
+  fpsLineEdit->setValidator(new QDoubleValidator());
+  fpsLineEdit->setText(QString::number(m_settings.fps));
+  optionsLayout->addWidget(fpsLineEdit, 4, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(fpsLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onFPSChanged(const QString &)));
+
+  QLabel * subStepsLabel = new QLabel("Sub Steps", optionsWidget);
+  optionsLayout->addWidget(subStepsLabel, 5, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QLineEdit * subStepsLineEdit = new QLineEdit(optionsWidget);
+  subStepsLineEdit->setValidator(new QIntValidator(1, 32));
+  subStepsLineEdit->setText(QString::number(1.0 / m_settings.substeps));
+  optionsLayout->addWidget(subStepsLineEdit, 5, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(subStepsLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onSubStepsChanged(const QString &)));
 
   QDialogButtonBox * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
   layout->addWidget(buttons);
@@ -73,10 +106,30 @@ void FabricExportPatternDialog::onAccepted()
 {
   FabricCore::DFGBinding binding = m_binding;
   close();
-  FabricExportPatternCommand().invoke(binding, *m_settings);
+  FabricExportPatternCommand().invoke(binding, m_settings);
 }
 
 void FabricExportPatternDialog::onScaleChanged(const QString & text)
 {
-  m_settings->scale = text.toDouble();
+  m_settings.scale = text.toDouble();
+}
+
+void FabricExportPatternDialog::onStartTimeChanged(const QString & text)
+{
+  m_settings.startTime = text.toDouble();
+}
+
+void FabricExportPatternDialog::onEndTimeChanged(const QString & text)
+{
+  m_settings.endTime = text.toDouble();
+}
+
+void FabricExportPatternDialog::onFPSChanged(const QString & text)
+{
+  m_settings.fps = text.toDouble();
+}
+
+void FabricExportPatternDialog::onSubStepsChanged(const QString & text)
+{
+  m_settings.substeps = text.toDouble();
 }

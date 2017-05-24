@@ -19,12 +19,14 @@
 #include <maya/MQtUtil.h>
 #include <maya/MDGModifier.h>
 #include <maya/MFnDependencyNode.h>
+#include <maya/MFnDagNode.h>
 #include <maya/MDagModifier.h>
 #include <maya/MFnTransform.h>
 #include <maya/MFnMesh.h>
 #include <maya/MFnSet.h>
 #include <maya/MFnLambertShader.h>
 #include <maya/MCommandResult.h>
+#include <maya/MAnimControl.h>
 
 #include <FTL/FS.h>
 
@@ -38,6 +40,10 @@ MSyntax FabricExportPatternCommand::newSyntax()
   syntax.addFlag( "-s", "-scale", MSyntax::kDouble );
   syntax.addFlag( "-a", "-args", MSyntax::kString );
   syntax.addFlag( "-o", "-objects", MSyntax::kString );
+  syntax.addFlag( "-b", "-begin", MSyntax::kDouble );
+  syntax.addFlag( "-e", "-end", MSyntax::kDouble );
+  syntax.addFlag( "-r", "-framerate", MSyntax::kDouble );
+  syntax.addFlag( "-t", "-substeps", MSyntax::kLong );
   return syntax;
 }
 
@@ -97,48 +103,64 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
     return mayaErrorOccured();
   }
 
+  // initialize substeps, framerate + in and out based on playcontrol
+  m_settings.startTime = MAnimControl::minTime().as(MTime::kSeconds);
+  m_settings.endTime = MAnimControl::maxTime().as(MTime::kSeconds);
+
+  MString timeUnitStr;
+  MGlobal::executeCommand("currentUnit -q -time", timeUnitStr);
+  if(timeUnitStr == L"game")
+    m_settings.fps = 15.0;
+  else if(timeUnitStr == L"film")
+    m_settings.fps = 24.0;
+  else if(timeUnitStr == L"pal")
+    m_settings.fps = 25.0;
+  else if(timeUnitStr == L"ntsc")
+    m_settings.fps = 30.0;
+  else if(timeUnitStr == L"show")
+    m_settings.fps = 48.0;
+  else if(timeUnitStr == L"palf")
+    m_settings.fps = 50.0;
+  else if(timeUnitStr == L"ntscf")
+    m_settings.fps = 60.0;
+
   if( argParser.isFlagSet("scale") )
   {
     m_settings.scale = argParser.flagArgumentDouble("scale", 0);
   }
 
-
-  MSelectionList sl;
-  if( argParser.isFlagSet("objects") )
+  if( argParser.isFlagSet("begin") )
   {
-    MString objectsJoined = argParser.flagArgumentString("objects", 0);
-    MStringArray objectsArray;
-    objectsJoined.split(',', objectsArray);
-    for(unsigned int i=0;i<objectsArray.length();i++)
+    if(!argParser.isFlagSet("end"))
     {
-      sl.add(objectsArray[i]);
-
-      MObject node;
-      sl.getDependNode(i, node);
-      if(node.isNull())
-      {
-        mayaLogErrorFunc("Object '"+objectsArray[i]+"' not found in scene.");
-        return mayaErrorOccured();
-      }
-    }
-  }
-  else
-  {
-    MGlobal::getActiveSelectionList( sl );
-  }
-
-  for(unsigned int i=0;i<sl.length();i++)
-  {
-    MObject node;
-    sl.getDependNode(i, node);
-    if(node.isNull())
-    {
-      MStringArray selString;
-      sl.getSelectionStrings(i, selString);
-      mayaLogFunc(MString(getName())+": Warning: Skipping Object: '"+selString[0]+"', not a dependency node.");
+      mayaLogErrorFunc("When specifying -begin you also need to specify -end.");
       return mayaErrorOccured();
     }
-    m_nodes.push_back(node);
+    m_settings.startTime = argParser.flagArgumentDouble("begin", 0);
+  }
+  if( argParser.isFlagSet("end") )
+  {
+    if(!argParser.isFlagSet("end"))
+    {
+      mayaLogErrorFunc("When specifying -end you also need to specify -begin.");
+      return mayaErrorOccured();
+    }
+    m_settings.endTime = argParser.flagArgumentDouble("end", 0);
+  }
+  if( argParser.isFlagSet("framerate") )
+  {
+    m_settings.fps = argParser.flagArgumentDouble("framerate", 0);
+  }
+
+  if( argParser.isFlagSet("substeps") )
+  {
+    m_settings.substeps = argParser.flagArgumentInt("substeps", 0);
+  }
+
+  if( argParser.isFlagSet("objects") )
+  {
+    MString objects = argParser.flagArgumentString("objects", 0);
+    objects.split(',', m_settings.objects);
   }
 
   MStringArray result;
@@ -237,7 +259,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
       QEvent event(QEvent::RequestSoftwareInputPanel);
       QApplication::sendEvent(mainWindow, &event);
 
-      FabricExportPatternDialog * dialog = new FabricExportPatternDialog(mainWindow, binding, &m_settings);
+      FabricExportPatternDialog * dialog = new FabricExportPatternDialog(mainWindow, binding, m_settings);
       dialog->setWindowModality(Qt::ApplicationModal);
       dialog->setSizeGripEnabled(true);
       dialog->open();
@@ -260,118 +282,154 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::DFGBinding binding, const
 {
   m_settings = settings;
 
+  MSelectionList sl;
+  if( m_settings.objects.length() > 0 )
+  {
+    for(unsigned int i=0;i<m_settings.objects.length();i++)
+    {
+      sl.add(m_settings.objects[i]);
+
+      MObject node;
+      sl.getDependNode(i, node);
+      if(node.isNull())
+      {
+        mayaLogErrorFunc("Object '"+m_settings.objects[i]+"' not found in scene.");
+        return mayaErrorOccured();
+      }
+    }
+  }
+  else
+  {
+    MGlobal::getActiveSelectionList( sl );
+  }
+
+  for(unsigned int i=0;i<sl.length();i++)
+  {
+    MObject node;
+    sl.getDependNode(i, node);
+    if(node.isNull())
+    {
+      MStringArray selString;
+      sl.getSelectionStrings(i, selString);
+      mayaLogFunc(MString(getName())+": Warning: Skipping Object: '"+selString[0]+"', not a dependency node.");
+      return mayaErrorOccured();
+    }
+    m_nodes.push_back(node);
+  }
+
+  FabricCore::Context context;
+  try
+  {
+    context = binding.getHost().getContext();
+
+    m_context = FabricCore::RTVal::Construct(context, "ImporterContext", 0, 0);
+    FabricCore::RTVal contextHost = m_context.maybeGetMember("host");
+    MString mayaVersion;
+    mayaVersion.set(MAYA_API_VERSION);
+    contextHost.setMember("name", FabricCore::RTVal::ConstructString(context, "Maya"));
+    contextHost.setMember("version", FabricCore::RTVal::ConstructString(context, mayaVersion.asChar()));
+    m_context.setMember("host", contextHost);
+
+    m_importer = FabricCore::RTVal::Create(context, "BaseImporter", 0, 0);
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    return mayaErrorOccured();
+  }
+
   for(size_t i=0;i<m_nodes.size();i++)
   {
     FabricCore::RTVal obj = createRTValForNode(m_nodes[i]);
     m_objects.push_back(obj);
   }
 
-  // FabricCore::Context context;
-  // MStringArray result;
-  // try
-  // {
-  //   context = binding.getHost().getContext();
-  //   binding.execute();
-  // }
-  // catch(FabricSplice::Exception e)
-  // {
-  //   mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+  {
+    std::vector< MObject > filteredNodes;
+    std::vector< FabricCore::RTVal > filteredObjects;
+    std::map<std::string, size_t> pathMap;
+    try
+    {
+      for(size_t i=0;i<m_nodes.size();i++)
+      {
+        if(!m_objects[i].isValid())
+          continue;
 
-  //   if(binding.isValid())
-  //   {
-  //     MString errors = binding.getErrors(true).getCString();
-  //     mayaLogErrorFunc(errors);
-  //   }
-  //   return mayaErrorOccured();
-  // }
+        // skip double entries
+        std::string path = m_objects[i].callMethod("String", "getPath", 0, NULL).getStringCString();
+        if(pathMap.find(path) != pathMap.end())
+          continue;
+        pathMap.insert(std::pair<std::string, size_t>(path, filteredNodes.size()));
 
-  // try
-  // {
-  //   m_context = FabricCore::RTVal::Construct(context, "ImporterContext", 0, 0);
-  //   FabricCore::RTVal contextHost = m_context.maybeGetMember("host");
-  //   MString mayaVersion;
-  //   mayaVersion.set(MAYA_API_VERSION);
-  //   contextHost.setMember("name", FabricCore::RTVal::ConstructString(context, "Maya"));
-  //   contextHost.setMember("version", FabricCore::RTVal::ConstructString(context, mayaVersion.asChar()));
-  //   m_context.setMember("host", contextHost);
+        filteredNodes.push_back(m_nodes[i]);
+        filteredObjects.push_back(m_objects[i]);
+      }
+    }
+    catch(FabricSplice::Exception e)
+    {
+      mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+      return mayaErrorOccured();
+    }
 
-  //   FabricCore::DFGExec exec = binding.getExec();
+    m_nodes = filteredNodes;
+    m_objects = filteredObjects;
 
-  //   for(unsigned int i=0;i<exec.getExecPortCount();i++)
-  //   {
-  //     if(exec.getExecPortType(i) != FabricCore::DFGPortType_Out)
-  //       continue;
+    if(m_nodes.size() == 0)
+    {
+      mayaLogFunc(MString(getName())+": Warning: nothing to export.");
+      return mayaErrorOccured();
+    }
+  }
 
-  //     MString name = exec.getExecPortName(i);
-  //     FabricCore::RTVal value = binding.getArgValue(name.asChar());
-  //     MString resolvedType = value.getTypeNameCStr();
-  //     if(resolvedType != "Ref<ImporterObject>[]")
-  //       continue;
+  // create a second array of refs
+  FabricCore::RTVal refs;
+  try
+  {
+    refs = FabricCore::RTVal::Construct(context, "Ref<ImporterObject>[]", 0, 0);
+    for(size_t i=0;i<m_objects.size();i++)
+      refs.callMethod("", "push", 1, &m_objects[i]);
+  }
+  catch(FabricSplice::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    return mayaErrorOccured();
+  }
 
-  //     for(unsigned j=0;j<value.getArraySize();j++)
-  //     {
-  //       FabricCore::RTVal obj = value.getArrayElement(j);
-  //       obj = FabricCore::RTVal::Create(context, "ImporterObject", 1, &obj);
+  // compute the time step
+  double tStep = 1.0;
+  if(m_settings.fps > 0.0)
+    tStep = 1.0 / m_settings.fps;
+  if(m_settings.substeps > 0)
+    tStep /= double(m_settings.substeps);
 
-  //       MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-  //       path = m_settings.rootPrefix + simplifyPath(path);
+  // loop over all of the frames required,
+  // convert all of the objects,
+  // set both the objects and the context
+  // and execute the binding
+  for(double t = m_settings.startTime; t <= m_settings.endTime; t += tStep)
+  {
+    MAnimControl::setCurrentTime(MTime(t, MTime::kSeconds));
 
-  //       m_objectMap.insert(std::pair< std::string, size_t > (path.asChar(), m_objectList.size()));
-  //       m_objectList.push_back(obj);
-  //     }
-  //   }
+    try
+    {
+      binding.setArgValue("context", m_context);
+      binding.setArgValue("objects", refs);
+      binding.execute();
+    }
+    catch(FabricSplice::Exception e)
+    {
+      mayaLogErrorFunc(MString(getName()) + ": "+e.what());
 
-  //   // ensure that we have the parents!
-  //   for(size_t i=0;i<m_objectList.size();i++)
-  //   {
-  //     FabricCore::RTVal obj = m_objectList[i];
-  //     FabricCore::RTVal transform = FabricCore::RTVal::Create(obj.getContext(), "ImporterTransform", 1, &obj);
-  //     if(transform.isNullObject())
-  //       continue;
+      if(binding.isValid())
+      {
+        MString errors = binding.getErrors(true).getCString();
+        mayaLogErrorFunc(errors);
+      }
+      return mayaErrorOccured();
+    }
+  }
 
-  //     FabricCore::RTVal parent = transform.callMethod("ImporterObject", "getParent", 0, 0);
-  //     if(parent.isNullObject())
-  //       continue;
-
-  //     MString path = parent.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-  //     path = m_settings.rootPrefix + simplifyPath(path);
-
-  //     std::map< std::string, size_t >::iterator it = m_objectMap.find(path.asChar());
-  //     if(it != m_objectMap.end())
-  //       continue;
-
-  //     m_objectMap.insert(std::pair< std::string, size_t > (path.asChar(), m_objectList.size()));
-  //     m_objectList.push_back(parent);
-  //   }
-
-  //   // create the groups first
-  //   for(size_t i=0;i<m_objectList.size();i++)
-  //   {
-  //     getOrCreateNodeForObject(m_objectList[i]);
-  //   }
-
-  //   // now perform all remaining tasks
-  //   for(size_t i=0;i<m_objectList.size();i++)
-  //   {
-  //     updateTransformForObject(m_objectList[i]);
-  //     updateShapeForObject(m_objectList[i]);
-  //     updateEvaluatorForObject(m_objectList[i]);
-  //     // todo: light, cameras etc..
-  //   }
-  // }
-  // catch(FabricSplice::Exception e)
-  // {
-  //   mayaLogErrorFunc(MString(getName()) + ": "+e.what());
-  // }
-
-  // for(std::map< std::string, MObject >::iterator it = m_nodes.begin(); it != m_nodes.end(); it++)
-  // {
-  //   MFnDagNode node(it->second);
-  //   result.append(node.fullPathName());
-  // }
-
-  // setResult(result);
-  // mayaLogFunc(MString(getName())+": import done.");
+  mayaLogFunc(MString(getName())+": export done.");
   return MS::kSuccess;
 }
 
@@ -380,43 +438,76 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
   if(node.isNull())
     return FabricCore::RTVal();
 
-  MFnDependencyNode depNode(node);
+  MFnDagNode dagNode(node);
+  MString typeName = dagNode.typeName();
+
+  MDagPathArray dagPaths;
+  MDagPath::getAllPathsTo(node, dagPaths);
+  if(dagPaths.length() == 0)
+  {
+    mayaLogFunc(MString(getName())+": Warning: Node '"+dagNode.name()+"' is not part of the dag.");
+    return FabricCore::RTVal();
+  }
+
+  MDagPath dagPath = dagPaths[0];
+  MString path = getPathFromDagPath(dagPath);
+
+  FabricCore::Context context = m_context.getContext();
 
   FabricCore::RTVal val;
   try
   {
-    switch(depNode.type())
+    if(typeName == L"mesh") // or curves or points
     {
-      case MFn::kMesh:
-      {
-        // todo: make sure that we haven't hit this before...!
-        // support for instances
-        mayaLogFunc(MString(getName())+": '"+depNode.name()+"' is a kMesh.");
+      std::vector<FabricCore::RTVal> args(3);
+      args[0] = FabricCore::RTVal::ConstructString(context, "Shape");
+      args[1] = FabricCore::RTVal::ConstructString(context, path.asChar());
+      args[2] = args[1];
+      val = m_importer.callMethod("ImporterShape", "getOrCreateObject", args.size(), &args[0]);
 
-        break;        
-      }
-      case MFn::kCamera:
+      FabricCore::RTVal geometryTypeVal = FabricCore::RTVal::ConstructSInt32(context, 0); //ImporterShape_Mesh = 0
+      val.callMethod("", "setGeometryType", 1, &geometryTypeVal);
+    }
+    else if(typeName == L"camera")
+    {
+      mayaLogFunc(MString(getName())+": Warning: '"+dagNode.name()+"' is a camera - to be implemented.");
+    }
+    else if(typeName == L"pointlight" ||
+      typeName == L"spotlight" ||
+      typeName == L"directionallight")
+    {
+      mayaLogFunc(MString(getName())+": Warning: '"+dagNode.name()+"' is a light - to be implemented.");
+    }
+    else if(typeName == L"transform")
+    {
+      MString objType = "Transform";
+
+      // look at shape
+      MDagPath shapeDagPath = dagPath;
+      if(MS::kSuccess == shapeDagPath.extendToShape())
       {
-        mayaLogFunc(MString(getName())+": '"+depNode.name()+"' is a kCamera.");
-        break;        
+        MFnDagNode shapeDagNode(shapeDagPath.node());
+
+        // rewire to the first dag path
+        // to identify instances
+        MDagPathArray shapeDagPaths;
+        MDagPath::getAllPathsTo(node, shapeDagPaths);
+        if(shapeDagPaths.length() > 1)
+          objType = L"Instance";
+
+        // push the shape so that we will process it
+        m_nodes.push_back(shapeDagNode.object());
       }
-      case MFn::kPointLight:
-      case MFn::kSpotLight:
-      case MFn::kDirectionalLight:
-      {
-        mayaLogFunc(MString(getName())+": '"+depNode.name()+"' is a kCamera.");
-        break;        
-      }
-      case MFn::kTransform:
-      {
-        mayaLogFunc(MString(getName())+": '"+depNode.name()+"' is a kTransform.");
-        break;        
-      }
-      default:
-      {
-        mayaLogFunc(MString(getName())+": Warning: Type of '"+depNode.name()+"' is not supported.");
-        break;        
-      }
+
+      std::vector<FabricCore::RTVal> args(3);
+      args[0] = FabricCore::RTVal::ConstructString(context, objType.asChar());
+      args[1] = FabricCore::RTVal::ConstructString(context, path.asChar());
+      args[2] = args[1];
+      val = m_importer.callMethod("ImporterObject", "getOrCreateObject", args.size(), &args[0]);
+    }
+    else
+    {
+      mayaLogFunc(MString(getName())+": Warning: Type '"+dagNode.typeName()+"' of '"+dagNode.name()+"' is not yet supported.");
     }
   }
   catch(FabricSplice::Exception e)
@@ -425,5 +516,25 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
     return FabricCore::RTVal();
   }
 
+  // visit all children
+  for(unsigned int i=0;i<dagNode.childCount();i++)
+  {
+    MStatus childStatus;
+    MFnDagNode childDagNode(dagNode.child(i), &childStatus);
+    if(childStatus == MS::kSuccess)
+      m_nodes.push_back(childDagNode.object());
+  }
+
   return val;
+}
+
+MString FabricExportPatternCommand::getPathFromDagPath(MDagPath dagPath)
+{
+  std::string path = dagPath.fullPathName().asChar();
+  for(size_t i=0;i<path.size();i++)
+  {
+    if(path[i] == '|')
+      path[i] = '/';
+  }
+  return path.c_str();
 }

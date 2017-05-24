@@ -16,7 +16,7 @@ class FabricExportPatternDialog : public QDialog
   Q_OBJECT
   
 public:
-  FabricExportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, FabricExportPatternSettings * settings);
+  FabricExportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings);
   virtual ~FabricExportPatternDialog();
 
   bool wasAccepted() const { return m_wasAccepted; }
@@ -25,10 +25,14 @@ public slots:
   void onAccepted();
   void onRejected() { m_wasAccepted = false; close(); }
   void onScaleChanged(const QString & text);
+  void onStartTimeChanged(const QString & text);
+  void onEndTimeChanged(const QString & text);
+  void onFPSChanged(const QString & text);
+  void onSubStepsChanged(const QString & text);
 
 private:
 
-  FabricExportPatternSettings * m_settings;
+  FabricExportPatternSettings m_settings;
 
   QUndoStack * m_stack;
   FabricCore::DFGBinding m_binding;

@@ -18,11 +18,20 @@
 struct FabricExportPatternSettings
 {
   double scale;
+  double startTime;
+  double endTime;
+  double fps;
+  unsigned int substeps;
+
   MStringArray objects;
 
   FabricExportPatternSettings()
   {
     scale = 1.0;
+    startTime = 0.0;
+    endTime = 0.0;
+    fps = 24.0;
+    substeps = 1;
   }
 };
 
@@ -40,8 +49,10 @@ public:
 private:
 
   FabricCore::RTVal createRTValForNode(const MObject & node);
+  MString getPathFromDagPath(MDagPath dagPath);
 
   FabricCore::RTVal m_context;
+  FabricCore::RTVal m_importer;
   std::vector< MObject > m_nodes;
   std::vector< FabricCore::RTVal > m_objects;
 
