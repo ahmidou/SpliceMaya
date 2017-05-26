@@ -44,15 +44,16 @@ public:
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);
   virtual bool isUndoable() const { return false; }
-  MStatus invoke(FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings);
+  MStatus invoke(FabricCore::Client client, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings);
 
 private:
 
   FabricCore::RTVal createRTValForNode(const MObject & node);
-  bool updateRTValForNode(double t, const MObject & node, FabricCore::RTVal & object);
+  bool updateRTValForNode(double t, const MObject & node, FabricCore::RTVal object);
   MString getPathFromDagPath(MDagPath dagPath);
 
-  FabricCore::RTVal m_context;
+  FabricCore::Client m_client;
+  FabricCore::RTVal m_importerContext;
   FabricCore::RTVal m_importer;
   std::vector< MObject > m_nodes;
   std::vector< FabricCore::RTVal > m_objects;

@@ -40,9 +40,10 @@ public:
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);
   virtual bool isUndoable() const { return false; }
-  MStatus invoke(FabricCore::DFGBinding binding, const FabricImportPatternSettings & settings);
+  MStatus invoke(FabricCore::Client client, FabricCore::DFGBinding binding, const FabricImportPatternSettings & settings);
 
 private:
+  FabricCore::Client m_client;
   FabricCore::RTVal m_context;
   std::vector< FabricCore::RTVal > m_objectList;
   std::map< std::string, size_t > m_objectMap;

@@ -14,9 +14,10 @@
 #include "FabricExportPatternDialog.h"
 #include "FabricExportPatternCommand.h"
 
-FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings)
+FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings)
 : QDialog(parent)
 , m_settings(settings)
+, m_client(client)
 , m_binding(binding)
 , m_wasAccepted(false)
 {
@@ -104,9 +105,11 @@ FabricExportPatternDialog::~FabricExportPatternDialog()
 
 void FabricExportPatternDialog::onAccepted()
 {
+  FabricCore::Client client = m_client;
   FabricCore::DFGBinding binding = m_binding;
+  FabricExportPatternSettings settings = m_settings;
   close();
-  FabricExportPatternCommand().invoke(binding, m_settings);
+  FabricExportPatternCommand().invoke(client, binding, settings);
 }
 
 void FabricExportPatternDialog::onScaleChanged(const QString & text)

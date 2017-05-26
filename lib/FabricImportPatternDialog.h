@@ -16,7 +16,7 @@ class FabricImportPatternDialog : public QDialog
   Q_OBJECT
   
 public:
-  FabricImportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, FabricImportPatternSettings * settings);
+  FabricImportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, FabricImportPatternSettings settings);
   virtual ~FabricImportPatternDialog();
 
   bool wasAccepted() const { return m_wasAccepted; }
@@ -30,9 +30,10 @@ public slots:
 
 private:
 
-  FabricImportPatternSettings * m_settings;
+  FabricImportPatternSettings m_settings;
 
   QUndoStack * m_stack;
+  FabricCore::Client m_client;
   FabricCore::DFGBinding m_binding;
   FabricUI::DFG::DFGUICmdHandler * m_handler;
   FabricUI::ModelItems::BindingModelItem * m_bindingItem;

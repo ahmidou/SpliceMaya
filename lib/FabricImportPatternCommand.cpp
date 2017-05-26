@@ -146,15 +146,14 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   }
 
   MStringArray result;
-  FabricCore::Client client;
   FabricCore::DFGBinding binding;
 
   if(interf != NULL)
   {
     try
     {
-      client = interf->getCoreClient();
-      client.loadExtension("GenericImporter", "", false);
+      m_client = interf->getCoreClient();
+      m_client.loadExtension("GenericImporter", "", false);
       binding = interf->getDFGBinding();
     }
     catch(FabricSplice::Exception e)
@@ -162,14 +161,14 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
       mayaLogErrorFunc(MString(getName()) + ": "+e.what());
     }
 
-    return invoke(binding, m_settings);
+    return invoke(m_client, binding, m_settings);
   }
   else
   {
     try
     {
-      client = FabricDFGWidget::GetCoreClient();
-      client.loadExtension("GenericImporter", "", false);
+      m_client = FabricDFGWidget::GetCoreClient();
+      m_client.loadExtension("GenericImporter", "", false);
   
       MString json;
       FILE * file = fopen(filepath.asChar(), "rb");
@@ -197,7 +196,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         free(buffer);
       }
 
-      FabricCore::DFGHost dfgHost = client.getDFGHost();
+      FabricCore::DFGHost dfgHost = m_client.getDFGHost();
       binding = dfgHost.createBindingFromJSON(json.asChar());
 
       std::map< std::string, MObject > geometryObjects;
@@ -336,14 +335,14 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         if(node.typeName() == "mesh")
         {
           MFnMesh mesh(obj);
-          FabricCore::RTVal polygonMesh = FabricCore::RTVal::Create(client, "PolygonMesh", 0, 0);
+          FabricCore::RTVal polygonMesh = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
           polygonMesh = dfgMFnMeshToPolygonMesh(mesh, polygonMesh);
           binding.setArgValue(name.asChar(), polygonMesh);
         }
         else if(node.typeName() == "nurbsCurve")
         {
           MFnNurbsCurve nurbsCurve(obj);
-          FabricCore::RTVal curves = FabricCore::RTVal::Create(client, "Curves", 0, 0);
+          FabricCore::RTVal curves = FabricCore::RTVal::Create(m_client, "Curves", 0, 0);
           FabricCore::RTVal curveCountRTVal = FabricSplice::constructUInt32RTVal( 1 );
           curves.callMethod( "", "setCurveCount", 1, &curveCountRTVal );
           dfgMFnNurbsCurveToCurves(0, nurbsCurve, curves);
@@ -376,14 +375,14 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
               continue;
 
             FTL::CStrRef type = exec.getExecPortResolvedType(i);
-            if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(client, type.c_str()))
+            if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(m_client, type.c_str()))
             {
               mayaLogFunc(MString(getName())+": Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
               continue;
             }
 
             std::string json = it->value()->encode();
-            FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
+            FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(m_client, type.c_str(), json.c_str());
             binding.setArgValue(name.c_str(), value);
             found = true;
             break;
@@ -396,7 +395,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
           }
         }
 
-        return invoke(binding, m_settings);
+        return invoke(m_client, binding, m_settings);
       }
       else if(!quiet)
       {
@@ -406,7 +405,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         QEvent event(QEvent::RequestSoftwareInputPanel);
         QApplication::sendEvent(mainWindow, &event);
 
-        FabricImportPatternDialog * dialog = new FabricImportPatternDialog(mainWindow, binding, &m_settings);
+        FabricImportPatternDialog * dialog = new FabricImportPatternDialog(mainWindow, m_client, binding, m_settings);
         dialog->setWindowModality(Qt::ApplicationModal);
         dialog->setSizeGripEnabled(true);
         dialog->open();
@@ -426,15 +425,14 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   return MS::kSuccess;
 }
 
-MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, const FabricImportPatternSettings & settings)
+MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore::DFGBinding binding, const FabricImportPatternSettings & settings)
 {
+  m_client = client;
   m_settings = settings;
 
-  FabricCore::Context context;
   MStringArray result;
   try
   {
-    context = binding.getHost().getContext();
     binding.execute();
   }
   catch(FabricSplice::Exception e)
@@ -451,12 +449,12 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, const
 
   try
   {
-    m_context = FabricCore::RTVal::Construct(context, "ImporterContext", 0, 0);
+    m_context = FabricCore::RTVal::Construct(m_client, "ImporterContext", 0, 0);
     FabricCore::RTVal contextHost = m_context.maybeGetMember("host");
     MString mayaVersion;
     mayaVersion.set(MAYA_API_VERSION);
-    contextHost.setMember("name", FabricCore::RTVal::ConstructString(context, "Maya"));
-    contextHost.setMember("version", FabricCore::RTVal::ConstructString(context, mayaVersion.asChar()));
+    contextHost.setMember("name", FabricCore::RTVal::ConstructString(m_client, "Maya"));
+    contextHost.setMember("version", FabricCore::RTVal::ConstructString(m_client, mayaVersion.asChar()));
     m_context.setMember("host", contextHost);
 
     FabricCore::DFGExec exec = binding.getExec();
@@ -475,7 +473,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, const
       for(unsigned j=0;j<value.getArraySize();j++)
       {
         FabricCore::RTVal obj = value.getArrayElement(j);
-        obj = FabricCore::RTVal::Create(context, "ImporterObject", 1, &obj);
+        obj = FabricCore::RTVal::Create(m_client, "ImporterObject", 1, &obj);
 
         MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
         path = m_settings.rootPrefix + simplifyPath(path);
