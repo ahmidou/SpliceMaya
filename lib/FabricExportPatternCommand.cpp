@@ -168,8 +168,8 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
 
   try
   {
-    m_client = FabricDFGWidget::GetCoreClient();
-    m_client.loadExtension("GenericImporter", "", false);
+    FabricCore::Client client = FabricDFGWidget::GetCoreClient();
+    client.loadExtension("GenericImporter", "", false);
 
     MString json;
     FILE * file = fopen(filepath.asChar(), "rb");
@@ -197,7 +197,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
       free(buffer);
     }
 
-    FabricCore::DFGHost dfgHost = m_client.getDFGHost();
+    FabricCore::DFGHost dfgHost = client.getDFGHost();
     binding = dfgHost.createBindingFromJSON(json.asChar());
 
 
@@ -228,14 +228,14 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
             continue;
 
           FTL::CStrRef type = exec.getExecPortResolvedType(i);
-          if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(m_client, type.c_str()))
+          if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(client, type.c_str()))
           {
             mayaLogFunc(MString(getName())+": Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
             continue;
           }
 
           std::string json = it->value()->encode();
-          FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(m_client, type.c_str(), json.c_str());
+          FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
           binding.setArgValue(name.c_str(), value);
           found = true;
           break;
@@ -248,7 +248,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
         }
       }
 
-      return invoke(m_client, binding, m_settings);
+      return invoke(client, binding, m_settings);
     }
     else if(!quiet)
     {
@@ -258,7 +258,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
       QEvent event(QEvent::RequestSoftwareInputPanel);
       QApplication::sendEvent(mainWindow, &event);
 
-      FabricExportPatternDialog * dialog = new FabricExportPatternDialog(mainWindow, m_client, binding, m_settings);
+      FabricExportPatternDialog * dialog = new FabricExportPatternDialog(mainWindow, client, binding, m_settings);
       dialog->setWindowModality(Qt::ApplicationModal);
       dialog->setSizeGripEnabled(true);
       dialog->open();
@@ -267,6 +267,10 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
       {
         return MS::kSuccess;
       }
+    }
+    else
+    {
+      return invoke(client, binding, m_settings);
     }
   }
   catch(FabricSplice::Exception e)
@@ -455,6 +459,10 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
 
   MDagPath dagPath = dagPaths[0];
   MString path = getPathFromDagPath(dagPath);
+
+  if(m_objectPaths.find(path.asChar()) != m_objectPaths.end())
+    return FabricCore::RTVal();
+  m_objectPaths.insert(std::pair< std::string, size_t >(path.asChar(), m_objects.size()));
 
   FabricCore::Context context = m_importerContext.getContext();
 

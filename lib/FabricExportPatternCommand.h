@@ -57,6 +57,7 @@ private:
   FabricCore::RTVal m_importer;
   std::vector< MObject > m_nodes;
   std::vector< FabricCore::RTVal > m_objects;
+  std::map< std::string, size_t > m_objectPaths;
 
   FabricExportPatternSettings m_settings;
 };

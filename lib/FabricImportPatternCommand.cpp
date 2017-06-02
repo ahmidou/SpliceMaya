@@ -415,6 +415,10 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
           return MS::kSuccess;
         }
       }
+      else
+      {
+        return invoke(m_client, binding, m_settings);
+      }
     }
     catch(FabricSplice::Exception e)
     {
