@@ -553,21 +553,26 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
 
     if(objectType == "Transform")
     {
+      FabricCore::RTVal transform = FabricCore::RTVal::Create(m_client, "ImporterTransform", 1, &object);
+
       MFnTransform transformNode(node);
       MMatrix localMatrix = transformNode.transformation().asMatrix();
       
       FabricCore::RTVal matrixVal = FabricCore::RTVal::Construct(m_client, "Mat44", 0, 0);
       MMatrixToMat44(localMatrix, matrixVal);
 
-      FabricCore::RTVal transform = FabricCore::RTVal::Create(m_client, "ImporterTransform", 1, &object);
-      transform.callMethod("", "setLocalTransform", 1, &matrixVal);
-
       // todo: we could try to figure out if a transform is animated
       std::vector<FabricCore::RTVal> args(2);
       args[0] = FabricCore::RTVal::ConstructString(m_client, "isConstant");
       args[1] = FabricCore::RTVal::ConstructBoolean(m_client, false);
-
       transform.callMethod("", "setProperty", 2, &args[0]);
+
+      // make sure to also mark the property as varying
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "localTransform");
+      transform.callMethod("", "setPropertyVarying", 1, &args[0]);
+
+      // now set the transform
+      transform.callMethod("", "setLocalTransform", 1, &matrixVal);
     }
     else if(objectType == "Camera")
     {
@@ -611,6 +616,13 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             args[0] = FabricCore::RTVal::ConstructString(m_client, "isConstant");
             args[1] = FabricCore::RTVal::ConstructBoolean(m_client, isDeforming);
             shape.callMethod("", "setProperty", 2, &args[0]);
+
+            // also mark the property as varying (constant == false)
+            args[0] = FabricCore::RTVal::ConstructString(m_client, "geometry");
+            if(isDeforming)
+              shape.callMethod("", "setPropertyVarying", 1, &args[0]);
+            else
+              shape.callMethod("", "setPropertyConstant", 1, &args[0]);
           }
           else
           {
