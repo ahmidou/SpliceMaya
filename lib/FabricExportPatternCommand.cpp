@@ -228,14 +228,23 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
             continue;
 
           FTL::CStrRef type = exec.getExecPortResolvedType(i);
-          if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(client, type.c_str()))
+          if(type != "String" && type != "FilePath" && !FabricCore::GetRegisteredTypeIsShallow(client, type.c_str()))
           {
             mayaLogFunc(MString(getName())+": Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
             continue;
           }
 
           std::string json = it->value()->encode();
-          FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
+          FabricCore::RTVal value;
+          if(type == "FilePath")
+          {
+            FabricCore::RTVal jsonVal = FabricCore::RTVal::ConstructString(client, json.c_str());
+            value = FabricCore::RTVal::Construct(client, "FilePath", 1, &jsonVal);
+          }
+          else
+          {
+            value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
+          }
           binding.setArgValue(name.c_str(), value);
           found = true;
           break;
@@ -243,7 +252,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
 
         if(!found)
         {
-          mayaLogFunc(MString(getName())+": Argument "+MString(key.c_str())+" does not exist in import pattern.");
+          mayaLogFunc(MString(getName())+": Argument "+MString(key.c_str())+" does not exist in export pattern.");
           return mayaErrorOccured();
         }
       }
@@ -273,9 +282,13 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
       return invoke(client, binding, m_settings);
     }
   }
-  catch(FabricSplice::Exception e)
+  catch (FabricSplice::Exception e)
   {
-    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    mayaLogErrorFunc(MString(getName()) + ": " + e.what());
+  }
+  catch (FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": " + e.getDesc_cstr());
   }
 
   return MS::kSuccess;
@@ -318,7 +331,13 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
       mayaLogFunc(MString(getName())+": Warning: Skipping Object: '"+selString[0]+"', not a dependency node.");
       return mayaErrorOccured();
     }
-    m_nodes.push_back(node);
+    MFnDagNode dagNode(node);
+    MStatus parentStatus;
+    MFnDagNode parentNode(dagNode.parent(0), &parentStatus);
+    MString prefix;
+    if(parentStatus == MS::kSuccess)
+      prefix = parentNode.dagPath().fullPathName();
+    registerNode(node, prefix.asChar());
   }
 
   try
@@ -335,9 +354,9 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
     m_importer = FabricCore::RTVal::Create(m_client, "BaseImporter", 0, 0);
   }
-  catch(FabricSplice::Exception e)
+  catch(FabricCore::Exception e)
   {
-    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
     return mayaErrorOccured();
   }
 
@@ -368,9 +387,9 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
         filteredObjects.push_back(m_objects[i]);
       }
     }
-    catch(FabricSplice::Exception e)
+    catch(FabricCore::Exception e)
     {
-      mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+      mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
       return mayaErrorOccured();
     }
 
@@ -392,9 +411,9 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
     for(size_t i=0;i<m_objects.size();i++)
       refs.callMethod("", "push", 1, &m_objects[i]);
   }
-  catch(FabricSplice::Exception e)
+  catch(FabricCore::Exception e)
   {
-    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
     return mayaErrorOccured();
   }
 
@@ -424,9 +443,9 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
       binding.setArgValue("objects", refs);
       binding.execute();
     }
-    catch(FabricSplice::Exception e)
+    catch(FabricCore::Exception e)
     {
-      mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+      mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
 
       if(binding.isValid())
       {
@@ -439,6 +458,29 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
   mayaLogFunc(MString(getName())+": export done.");
   return MS::kSuccess;
+}
+
+bool FabricExportPatternCommand::registerNode(const MObject & node, std::string prefix)
+{
+  MStatus status;
+  MFnDagNode dagNode(node, &status);
+  if(status != MS::kSuccess)
+    return false;
+
+  std::string path = dagNode.name().asChar();
+  if(prefix.length() > 0)
+    path = prefix + "|" + path;
+
+  if(m_nodePaths.find(path) != m_nodePaths.end())
+    return false;
+
+  m_nodePaths.insert(std::pair< std::string, size_t >(path, m_nodes.size()));
+  m_nodes.push_back(node);
+
+  for(unsigned int i=0;i<dagNode.childCount();i++)
+    registerNode(dagNode.child(i), path);
+
+  return true;
 }
 
 FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject & node)
@@ -471,11 +513,11 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
   {
     if(typeName == L"mesh") // or curves or points
     {
-      std::vector<FabricCore::RTVal> args(3);
+      FabricCore::RTVal args[3];
       args[0] = FabricCore::RTVal::ConstructString(m_client, "Shape");
       args[1] = FabricCore::RTVal::ConstructString(m_client, path.asChar());
       args[2] = args[1];
-      val = m_importer.callMethod("ImporterShape", "getOrCreateObject", args.size(), &args[0]);
+      val = m_importer.callMethod("ImporterShape", "getOrCreateObject", 3, &args[0]);
 
       FabricCore::RTVal geometryTypeVal = FabricCore::RTVal::ConstructSInt32(m_client, 0); //ImporterShape_Mesh = 0
       val.callMethod("", "setGeometryType", 1, &geometryTypeVal);
@@ -494,58 +536,35 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
     {
       MString objType = "Transform";
 
-      // look at shape
-      MDagPath shapeDagPath = dagPath;
-      if(MS::kSuccess == shapeDagPath.extendToShape())
-      {
-        MFnDagNode shapeDagNode(shapeDagPath.node());
-
-        // rewire to the first dag path
-        // to identify instances
-        MDagPathArray shapeDagPaths;
-        MDagPath::getAllPathsTo(node, shapeDagPaths);
-        if(shapeDagPaths.length() > 1)
-          objType = L"Instance";
-
-        // push the shape so that we will process it
-        m_nodes.push_back(shapeDagNode.object());
-      }
-
-      std::vector<FabricCore::RTVal> args(3);
+      FabricCore::RTVal args[3];
       args[0] = FabricCore::RTVal::ConstructString(m_client, objType.asChar());
       args[1] = FabricCore::RTVal::ConstructString(m_client, path.asChar());
       args[2] = args[1];
-      val = m_importer.callMethod("ImporterObject", "getOrCreateObject", args.size(), &args[0]);
+      val = m_importer.callMethod("ImporterObject", "getOrCreateObject", 3, &args[0]);
     }
     else
     {
       mayaLogFunc(MString(getName())+": Warning: Type '"+dagNode.typeName()+"' of '"+dagNode.name()+"' is not yet supported.");
     }
   }
-  catch(FabricSplice::Exception e)
+  catch(FabricCore::Exception e)
   {
-    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
     return FabricCore::RTVal();
-  }
-
-  // visit all children
-  for(unsigned int i=0;i<dagNode.childCount();i++)
-  {
-    MStatus childStatus;
-    MFnDagNode childDagNode(dagNode.child(i), &childStatus);
-    if(childStatus == MS::kSuccess)
-      m_nodes.push_back(childDagNode.object());
   }
 
   return val;
 }
 
-bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & node, FabricCore::RTVal object)
+bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & node, FabricCore::RTVal & object)
 {
   bool isStart = t <= m_settings.startTime;
 
   try
   {
+    if(!object.isValid())
+      return false;
+
     FabricCore::Context context = m_importerContext.getContext();
 
     MString objectType = object.callMethod("String", "getType", 0, 0).getStringCString();
@@ -554,6 +573,10 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
     if(objectType == "Transform")
     {
       FabricCore::RTVal transform = FabricCore::RTVal::Create(m_client, "ImporterTransform", 1, &object);
+      if(!transform.isValid())
+        return false;
+      if(transform.isNullObject())
+        return false;
 
       MFnTransform transformNode(node);
       MMatrix localMatrix = transformNode.transformation().asMatrix();
@@ -561,15 +584,11 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
       FabricCore::RTVal matrixVal = FabricCore::RTVal::Construct(m_client, "Mat44", 0, 0);
       MMatrixToMat44(localMatrix, matrixVal);
 
-      // todo: we could try to figure out if a transform is animated
-      std::vector<FabricCore::RTVal> args(2);
-      args[0] = FabricCore::RTVal::ConstructString(m_client, "isConstant");
-      args[1] = FabricCore::RTVal::ConstructBoolean(m_client, false);
-      transform.callMethod("", "setProperty", 2, &args[0]);
-
       // make sure to also mark the property as varying
-      args[0] = FabricCore::RTVal::ConstructString(m_client, "localTransform");
-      transform.callMethod("", "setPropertyVarying", 1, &args[0]);
+      // todo: figure out if it is changing over time
+      FabricCore::RTVal arg;
+      arg = FabricCore::RTVal::ConstructString(m_client, "localTransform");
+      transform.callMethod("", "setPropertyVarying", 1, &arg);
 
       // now set the transform
       transform.callMethod("", "setLocalTransform", 1, &matrixVal);
@@ -587,6 +606,11 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
     else if(objectType == "Shape")
     {
       FabricCore::RTVal shape = FabricCore::RTVal::Create(m_client, "ImporterShape", 1, &object);
+      if(!shape.isValid())
+        return false;
+      if(shape.isNullObject())
+        return false;
+
       int geometryType = shape.callMethod("SInt32", "getGeometryType", 1, &m_importerContext).getSInt32();
       switch(geometryType)
       {
@@ -612,17 +636,12 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
               isDeforming = deformHistory.length() > 0;
             }
 
-            std::vector<FabricCore::RTVal> args(2);
-            args[0] = FabricCore::RTVal::ConstructString(m_client, "isConstant");
-            args[1] = FabricCore::RTVal::ConstructBoolean(m_client, isDeforming);
-            shape.callMethod("", "setProperty", 2, &args[0]);
-
-            // also mark the property as varying (constant == false)
-            args[0] = FabricCore::RTVal::ConstructString(m_client, "geometry");
             if(isDeforming)
-              shape.callMethod("", "setPropertyVarying", 1, &args[0]);
-            else
-              shape.callMethod("", "setPropertyConstant", 1, &args[0]);
+            {
+              // also mark the property as varying (constant == false)
+              FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "geometry");
+              shape.callMethod("", "setPropertyVarying", 1, &arg);
+            }
           }
           else
           {
@@ -670,9 +689,9 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
       return false;
     }
   }
-  catch(FabricSplice::Exception e)
+  catch(FabricCore::Exception e)
   {
-    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
     return false;
   }
 

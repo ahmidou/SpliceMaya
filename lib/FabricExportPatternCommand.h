@@ -48,14 +48,16 @@ public:
 
 private:
 
+  bool registerNode(const MObject & node, std::string prefix);
   FabricCore::RTVal createRTValForNode(const MObject & node);
-  bool updateRTValForNode(double t, const MObject & node, FabricCore::RTVal object);
+  bool updateRTValForNode(double t, const MObject & node, FabricCore::RTVal & object);
   MString getPathFromDagPath(MDagPath dagPath);
 
   FabricCore::Client m_client;
   FabricCore::RTVal m_importerContext;
   FabricCore::RTVal m_importer;
   std::vector< MObject > m_nodes;
+  std::map< std::string, size_t > m_nodePaths;
   std::vector< FabricCore::RTVal > m_objects;
   std::map< std::string, size_t > m_objectPaths;
 
