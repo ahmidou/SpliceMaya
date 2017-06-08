@@ -344,13 +344,13 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
   {
     m_client.loadExtension("GenericImporter", "", false);
 
-    m_importerContext = FabricCore::RTVal::Construct(m_client, "ImporterContext", 0, 0);
-    FabricCore::RTVal contextHost = m_importerContext.maybeGetMember("host");
+    m_exporterContext = FabricCore::RTVal::Construct(m_client, "ExporterContext", 0, 0);
+    FabricCore::RTVal contextHost = m_exporterContext.maybeGetMember("host");
     MString mayaVersion;
     mayaVersion.set(MAYA_API_VERSION);
     contextHost.setMember("name", FabricCore::RTVal::ConstructString(m_client, "Maya"));
     contextHost.setMember("version", FabricCore::RTVal::ConstructString(m_client, mayaVersion.asChar()));
-    m_importerContext.setMember("host", contextHost);
+    m_exporterContext.setMember("host", contextHost);
 
     m_importer = FabricCore::RTVal::Create(m_client, "BaseImporter", 0, 0);
   }
@@ -439,7 +439,7 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
     try
     {
-      binding.setArgValue("context", m_importerContext);
+      binding.setArgValue("context", m_exporterContext);
       binding.setArgValue("objects", refs);
       binding.execute();
     }
@@ -506,7 +506,7 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
     return FabricCore::RTVal();
   m_objectPaths.insert(std::pair< std::string, size_t >(path.asChar(), m_objects.size()));
 
-  FabricCore::Context context = m_importerContext.getContext();
+  FabricCore::Context context = m_exporterContext.getContext();
 
   FabricCore::RTVal val;
   try
@@ -565,7 +565,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
     if(!object.isValid())
       return false;
 
-    FabricCore::Context context = m_importerContext.getContext();
+    FabricCore::Context context = m_exporterContext.getContext();
 
     MString objectType = object.callMethod("String", "getType", 0, 0).getStringCString();
     MString objectPath = object.callMethod("String", "getPath", 0, 0).getStringCString();
@@ -611,7 +611,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
       if(shape.isNullObject())
         return false;
 
-      int geometryType = shape.callMethod("SInt32", "getGeometryType", 1, &m_importerContext).getSInt32();
+      int geometryType = shape.callMethod("SInt32", "getGeometryType", 1, &m_exporterContext).getSInt32();
       switch(geometryType)
       {
         case 0: // ImporterShape_Mesh
@@ -645,7 +645,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
           }
           else
           {
-            isDeforming = shape.callMethod("Boolean", "isConstant", 1, &m_importerContext);
+            isDeforming = shape.callMethod("Boolean", "isConstant", 1, &m_exporterContext);
             if(!isDeforming)
               return true;
           }
@@ -668,7 +668,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             return false;
           }
 
-          FabricCore::RTVal mesh = shape.callMethod("PolygonMesh", "getGeometry", 1, &m_importerContext);
+          FabricCore::RTVal mesh = shape.callMethod("PolygonMesh", "getGeometry", 1, &m_exporterContext);
           if(mesh.isNullObject())
             mesh = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
 

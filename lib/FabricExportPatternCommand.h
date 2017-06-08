@@ -54,7 +54,7 @@ private:
   MString getPathFromDagPath(MDagPath dagPath);
 
   FabricCore::Client m_client;
-  FabricCore::RTVal m_importerContext;
+  FabricCore::RTVal m_exporterContext;
   FabricCore::RTVal m_importer;
   std::vector< MObject > m_nodes;
   std::map< std::string, size_t > m_nodePaths;
