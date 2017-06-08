@@ -37,11 +37,11 @@ MSyntax FabricExportPatternCommand::newSyntax()
   syntax.enableEdit(false);
   syntax.addFlag( "-f", "-filepath", MSyntax::kString );
   syntax.addFlag( "-q", "-disableDialogs", MSyntax::kBoolean );
-  syntax.addFlag( "-s", "-scale", MSyntax::kDouble );
+  syntax.addFlag( "-m", "-scale", MSyntax::kDouble );
   syntax.addFlag( "-a", "-args", MSyntax::kString );
   syntax.addFlag( "-o", "-objects", MSyntax::kString );
   syntax.addFlag( "-b", "-begin", MSyntax::kDouble );
-  syntax.addFlag( "-e", "-end", MSyntax::kDouble );
+  syntax.addFlag( "-s", "-stop", MSyntax::kDouble );
   syntax.addFlag( "-r", "-framerate", MSyntax::kDouble );
   syntax.addFlag( "-t", "-substeps", MSyntax::kLong );
   return syntax;
@@ -131,21 +131,21 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
 
   if( argParser.isFlagSet("begin") )
   {
-    if(!argParser.isFlagSet("end"))
+    if(!argParser.isFlagSet("stop"))
     {
-      mayaLogErrorFunc("When specifying -begin you also need to specify -end.");
+      mayaLogErrorFunc("When specifying -begin you also need to specify -stop.");
       return mayaErrorOccured();
     }
     m_settings.startTime = argParser.flagArgumentDouble("begin", 0);
   }
-  if( argParser.isFlagSet("end") )
+  if( argParser.isFlagSet("stop") )
   {
-    if(!argParser.isFlagSet("end"))
+    if(!argParser.isFlagSet("stop"))
     {
-      mayaLogErrorFunc("When specifying -end you also need to specify -begin.");
+      mayaLogErrorFunc("When specifying -stop you also need to specify -begin.");
       return mayaErrorOccured();
     }
-    m_settings.endTime = argParser.flagArgumentDouble("end", 0);
+    m_settings.endTime = argParser.flagArgumentDouble("stop", 0);
   }
   if( argParser.isFlagSet("framerate") )
   {
@@ -238,6 +238,14 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
           FabricCore::RTVal value;
           if(type == "FilePath")
           {
+            if(json.length() > 2)
+            {
+              if(json[0] == '"')
+                json = json.substr(1);
+              if(json[json.length()-1] == '"')
+                json = json.substr(0, json.length()-1);
+            }
+
             FabricCore::RTVal jsonVal = FabricCore::RTVal::ConstructString(client, json.c_str());
             value = FabricCore::RTVal::Construct(client, "FilePath", 1, &jsonVal);
           }
@@ -340,6 +348,16 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
     registerNode(node, prefix.asChar());
   }
 
+  // compute the time step
+  double tStep = 1.0;
+  if(m_settings.fps > 0.0)
+    tStep = 1.0 / m_settings.fps;
+  if(m_settings.substeps > 0)
+    tStep /= double(m_settings.substeps);
+  std::vector<double> timeSamples;
+  for(double t = settings.startTime; t <= settings.endTime; t += tStep)
+    timeSamples.push_back(t);
+
   try
   {
     m_client.loadExtension("GenericImporter", "", false);
@@ -351,6 +369,19 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
     contextHost.setMember("name", FabricCore::RTVal::ConstructString(m_client, "Maya"));
     contextHost.setMember("version", FabricCore::RTVal::ConstructString(m_client, mayaVersion.asChar()));
     m_exporterContext.setMember("host", contextHost);
+
+    FabricCore::RTVal timeSamplesVal = FabricCore::RTVal::ConstructVariableArray(m_client, "Float32");
+    FabricCore::RTVal countVal = FabricCore::RTVal::ConstructUInt32(m_client, (unsigned int)timeSamples.size());
+    timeSamplesVal.callMethod("", "resize", 1, &countVal);
+    FabricCore::RTVal timeSamplesData = timeSamplesVal.callMethod("Data", "data", 0, 0);
+    float * timeSamplesPtr = (float*)timeSamplesData.getData();
+    for(size_t i=0;i<timeSamples.size();i++)
+      timeSamplesPtr[i] = (float)timeSamples[i];
+
+    m_exporterContext.setMember("timeSamples", timeSamplesVal);
+
+    FabricCore::RTVal willCallUpdateForEachTimeSampleVal = FabricCore::RTVal::ConstructBoolean(m_client, true);
+    m_exporterContext.setMember("willCallUpdateForEachTimeSample", willCallUpdateForEachTimeSampleVal);
 
     m_importer = FabricCore::RTVal::Create(m_client, "BaseImporter", 0, 0);
   }
@@ -417,28 +448,24 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
     return mayaErrorOccured();
   }
 
-  // compute the time step
-  double tStep = 1.0;
-  if(m_settings.fps > 0.0)
-    tStep = 1.0 / m_settings.fps;
-  if(m_settings.substeps > 0)
-    tStep /= double(m_settings.substeps);
-
   // loop over all of the frames required,
   // convert all of the objects,
   // set both the objects and the context
   // and execute the binding
-  for(double t = m_settings.startTime; t <= m_settings.endTime; t += tStep)
+  for(size_t t=0;t<timeSamples.size();t++)
   {
-    MAnimControl::setCurrentTime(MTime(t, MTime::kSeconds));
+    MAnimControl::setCurrentTime(MTime(timeSamples[t], MTime::kSeconds));
 
     for(size_t i=0;i<m_objects.size();i++)
     {
-      updateRTValForNode(t, m_nodes[i], m_objects[i]);
+      updateRTValForNode(timeSamples[t], m_nodes[i], m_objects[i]);
     }
 
     try
     {
+      FabricCore::RTVal sampleIndexVal = FabricCore::RTVal::ConstructUInt32(m_client, (unsigned int)t);
+      m_exporterContext.callMethod("", "stepToTimeSample", 1, &sampleIndexVal);
+
       binding.setArgValue("context", m_exporterContext);
       binding.setArgValue("objects", refs);
       binding.execute();
@@ -657,7 +684,6 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             return false;
           }
 
-
           MObject meshObj;
           meshPlug.getValue(meshObj);
           MStatus meshStatus;
@@ -668,11 +694,13 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             return false;
           }
 
-          FabricCore::RTVal mesh = shape.callMethod("PolygonMesh", "getGeometry", 1, &m_exporterContext);
-          if(mesh.isNullObject())
-            mesh = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
-
-          return !dfgMFnMeshToPolygonMesh(meshData, mesh).isNullObject();
+          FabricCore::RTVal meshVal = shape.callMethod("PolygonMesh", "getGeometry", 1, &m_exporterContext);
+          if(meshVal.isNullObject())
+          {
+            meshVal = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
+            shape.callMethod("", "setGeometry", 1, &meshVal);
+          }
+          return !dfgMFnMeshToPolygonMesh(meshData, meshVal).isNullObject();
         }
         default:
         {
