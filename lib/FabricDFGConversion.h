@@ -54,7 +54,8 @@ DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType);
 DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::StrRef &dataType);
 
 // make low level conversion available since it can be useful for other code paths
-void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal, bool useFloats = true);
+void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal);
+void MMatrixToMat44_d(MMatrix const &matrix, FabricCore::RTVal &rtVal);
 FabricCore::RTVal dfgMFnMeshToPolygonMesh(MFnMesh & mesh, FabricCore::RTVal rtMesh);
 bool dfgMFnNurbsCurveToCurves(unsigned int index, MFnNurbsCurve & curve, FabricCore::RTVal & rtCurves);
 MObject dfgPolygonMeshToMFnMesh(FabricCore::RTVal rtMesh, bool insideCompute = true);
