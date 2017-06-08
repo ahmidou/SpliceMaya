@@ -77,56 +77,36 @@ double dfgGetFloat64FromRTVal(FabricCore::RTVal rtVal)
   return DBL_MAX;
 }
 
-inline void Mat44ToMFloatMatrix_data(float const *data, MFloatMatrix &matrix) {
-  float vals[4][4] ={
+template<typename MatrixTy, typename FPTy>
+void FabricMatDataToMayaMatrix_44(FPTy const *data, MatrixTy &matrix) {
+  FPTy vals[4][4] = {
     { data[0], data[4], data[8],  data[12] },
     { data[1], data[5], data[9],  data[13] },
     { data[2], data[6], data[10], data[14] },
     { data[3], data[7], data[11], data[15] }
   };
-  matrix = MFloatMatrix(vals);
+  matrix = MatrixTy(vals);
 }
 
-inline void Mat44ToMFloatMatrix_data(double const *data, MFloatMatrix &matrix) {
-  float vals[4][4] ={
-    { (float)data[0], (float)data[4], (float)data[8],  (float)data[12] },
-    { (float)data[1], (float)data[5], (float)data[9],  (float)data[13] },
-    { (float)data[2], (float)data[6], (float)data[10], (float)data[14] },
-    { (float)data[3], (float)data[7], (float)data[11], (float)data[15] }
-  };
-  matrix = MFloatMatrix(vals);
-}
-
-inline void Mat44ToMMatrix_data(float const *data, MMatrix &matrix) {
-  double vals[4][4] ={
-    { (double)data[0], (double)data[4], (double)data[8],  (double)data[12] },
-    { (double)data[1], (double)data[5], (double)data[9],  (double)data[13] },
-    { (double)data[2], (double)data[6], (double)data[10], (double)data[14] },
-    { (double)data[3], (double)data[7], (double)data[11], (double)data[15] }
-  };
-  matrix = MMatrix(vals);
-}
-
-inline void Mat44ToMMatrix_data(double const *data, MMatrix &matrix) {
-  double vals[4][4] ={
-    { data[0], data[4], data[8],  data[12] },
-    { data[1], data[5], data[9],  data[13] },
-    { data[2], data[6], data[10], data[14] },
-    { data[3], data[7], data[11], data[15] }
-  };
-  matrix = MMatrix(vals);
-}
-
-inline void Mat44ToMMatrix(FabricCore::RTVal &rtVal, MFloatMatrix &matrix) {
+inline void Mat44ToMFloatMatrix(FabricCore::RTVal &rtVal, MFloatMatrix &matrix) {
+  assert( rtVal.hasType( "Mat44" ) );
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
   float * data = (float*)dataRtVal.getData();
-  Mat44ToMFloatMatrix_data(data, matrix);
+  FabricMatDataToMayaMatrix_44(data, matrix);
 }
 
 inline void Mat44ToMMatrix(FabricCore::RTVal &rtVal, MMatrix &matrix) {
+  assert( rtVal.hasType( "Mat44" ) );
+  FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
+  float * data = (float*)dataRtVal.getData();
+  FabricMatDataToMayaMatrix_44(data, matrix);
+}
+
+inline void Mat44_dToMMatrix(FabricCore::RTVal &rtVal, MMatrix &matrix) {
+  assert( rtVal.hasType( "Mat44_d" ) );
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
   double * data = (double*)dataRtVal.getData();
-  Mat44ToMMatrix_data(data, matrix);
+  FabricMatDataToMayaMatrix_44(data, matrix);
 }
 
 template<typename MatrixTy, typename FPTy>
@@ -4582,7 +4562,7 @@ void dfgPortToPlug_mat44(
         MDataHandle handle = arraybuilder.addElement(i);
 
         MFloatMatrix mayaMat;
-        Mat44ToMFloatMatrix_data(&values[offset], mayaMat);
+        FabricMatDataToMayaMatrix_44(&values[offset], mayaMat);
         handle.setMFloatMatrix(mayaMat);
         offset += 16;
       }
@@ -4593,7 +4573,7 @@ void dfgPortToPlug_mat44(
         MDataHandle handle = arraybuilder.addElement(i);
 
         MMatrix mayaMat;
-        Mat44ToMMatrix_data(&values[offset], mayaMat);
+        FabricMatDataToMayaMatrix_44(&values[offset], mayaMat);
         handle.setMMatrix(mayaMat);
         offset += 16;
       }
@@ -4608,13 +4588,13 @@ void dfgPortToPlug_mat44(
     if(isFloatMatrix)
     {
       MFloatMatrix mayaMat;
-      Mat44ToMFloatMatrix_data(values, mayaMat);
+      FabricMatDataToMayaMatrix_44(values, mayaMat);
       handle.setMFloatMatrix(mayaMat);
     }
     else
     {
       MMatrix mayaMat;
-      Mat44ToMMatrix_data(values, mayaMat);
+      FabricMatDataToMayaMatrix_44(values, mayaMat);
       handle.setMMatrix(mayaMat);
     }
   }
@@ -4653,7 +4633,7 @@ void dfgPortToPlug_mat44_float64(
       for(unsigned int i = 0; i < numElements; ++i){
         MDataHandle handle = arraybuilder.addElement(i);
         MFloatMatrix mayaMat;
-        Mat44ToMFloatMatrix_data(&values[offset], mayaMat);
+        FabricMatDataToMayaMatrix_44(&values[offset], mayaMat);
         handle.setMFloatMatrix(mayaMat);
         offset += 16;
       }
@@ -4663,7 +4643,7 @@ void dfgPortToPlug_mat44_float64(
       for(unsigned int i = 0; i < numElements; ++i){
         MDataHandle handle = arraybuilder.addElement(i);
         MMatrix mayaMat;
-        Mat44ToMMatrix_data(&values[offset], mayaMat);
+        FabricMatDataToMayaMatrix_44(&values[offset], mayaMat);
         handle.setMMatrix(mayaMat);
         offset += 16;
       }
@@ -4678,13 +4658,13 @@ void dfgPortToPlug_mat44_float64(
     if(isFloatMatrix)
     {
       MFloatMatrix mayaMat;
-      Mat44ToMFloatMatrix_data(values, mayaMat);
+      FabricMatDataToMayaMatrix_44(values, mayaMat);
       handle.setMFloatMatrix(mayaMat);
     }
     else
     {
       MMatrix mayaMat;
-      Mat44ToMMatrix_data(values, mayaMat);
+      FabricMatDataToMayaMatrix_44(values, mayaMat);
       handle.setMMatrix(mayaMat);
     }
   }
