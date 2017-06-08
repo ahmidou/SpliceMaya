@@ -228,7 +228,7 @@ inline void MMatrixToMat44(MFloatMatrix const &matrix, FabricCore::RTVal &rtVal)
 void dfgPlugToPort_compound_convertMat44(const MMatrix & matrix, FabricCore::RTVal & rtVal) {
   CORE_CATCH_BEGIN;
   rtVal = FabricSplice::constructRTVal("Mat44", 0, 0);
-  MMatrixToMat44(matrix, rtVal);
+  MMatrixToMat44(matrix, rtVal, true /* use floats* /);
   CORE_CATCH_END;
 }
 // *****************            Helpers           ***************** // 
