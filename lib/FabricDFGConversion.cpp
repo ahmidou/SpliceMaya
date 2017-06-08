@@ -205,10 +205,18 @@ inline void MFloatMatrixToMat44_data(MFloatMatrix const &matrix, double *data) {
   data[15] = (double)matrix[3][3];
 }
 
-void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
+void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal, bool useFloats) {
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-  double * data = (double*)dataRtVal.getData();
-  MMatrixToMat44_data(matrix, data);
+  if(useFloats)
+  {
+    float * data = (float*)dataRtVal.getData();
+    MMatrixToMat44_data(matrix, data);
+  }
+  else
+  {
+    double * data = (double*)dataRtVal.getData();
+    MMatrixToMat44_data(matrix, data);
+  }
 }
 
 inline void MMatrixToMat44(MFloatMatrix const &matrix, FabricCore::RTVal &rtVal) {

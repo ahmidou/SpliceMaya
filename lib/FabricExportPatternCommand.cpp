@@ -582,7 +582,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
       MMatrix localMatrix = transformNode.transformation().asMatrix();
       
       FabricCore::RTVal matrixVal = FabricCore::RTVal::Construct(m_client, "Mat44", 0, 0);
-      MMatrixToMat44(localMatrix, matrixVal);
+      MMatrixToMat44(localMatrix, matrixVal, true /* use Floats */);
 
       // make sure to also mark the property as varying
       // todo: figure out if it is changing over time
