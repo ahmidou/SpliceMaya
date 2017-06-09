@@ -35,7 +35,7 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.enableEdit(false);
   syntax.addFlag( "-f", "-filepath", MSyntax::kString );
   syntax.addFlag( "-q", "-disableDialogs", MSyntax::kBoolean );
-  syntax.addFlag( "-n", "-namespace", MSyntax::kString );
+  syntax.addFlag( "-k", "-namespace", MSyntax::kString );
   syntax.addFlag( "-m", "-enableMaterials", MSyntax::kBoolean );
   syntax.addFlag( "-s", "-scale", MSyntax::kDouble );
   syntax.addFlag( "-n", "-canvasnode", MSyntax::kString );
