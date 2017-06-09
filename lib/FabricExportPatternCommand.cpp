@@ -493,6 +493,8 @@ bool FabricExportPatternCommand::registerNode(const MObject & node, std::string 
   MFnDagNode dagNode(node, &status);
   if(status != MS::kSuccess)
     return false;
+  if(dagNode.isIntermediateObject())
+    return false;
 
   std::string path = dagNode.name().asChar();
   if(prefix.length() > 0)
