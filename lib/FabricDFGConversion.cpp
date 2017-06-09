@@ -129,14 +129,14 @@ void MayaMatrixToFabricMatData_44(MatrixTy const &matrix, FPTy *fpArray) {
   fpArray[15] = matrix[3][3];
 }
 
-inline void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
+void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
   assert( rtVal.hasType( "Mat44" ) );
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
   float * fpArray = (float*)dataRtVal.getData();
   MayaMatrixToFabricMatData_44(matrix, fpArray);
 }
 
-inline void MMatrixToMat44_d(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
+void MMatrixToMat44_d(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
   assert( rtVal.hasType( "Mat44_d" ) );
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
   double * fpArray = (double*)dataRtVal.getData();
