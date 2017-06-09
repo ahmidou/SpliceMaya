@@ -134,5 +134,5 @@ void FabricExportPatternDialog::onFPSChanged(const QString & text)
 
 void FabricExportPatternDialog::onSubStepsChanged(const QString & text)
 {
-  m_settings.substeps = text.toDouble();
+  m_settings.substeps = (unsigned int)text.toDouble();
 }
