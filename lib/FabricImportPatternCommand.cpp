@@ -375,14 +375,31 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
               continue;
 
             FTL::CStrRef type = exec.getExecPortResolvedType(i);
-            if(type != "String " && !FabricCore::GetRegisteredTypeIsShallow(m_client, type.c_str()))
+            if(type != "String" && type != "FilePath" && !FabricCore::GetRegisteredTypeIsShallow(m_client, type.c_str()))
             {
               mayaLogFunc(MString(getName())+": Warning: Argument "+MString(name.c_str())+" cannot be set since "+MString(type.c_str())+" is not shallow.");
               continue;
             }
 
             std::string json = it->value()->encode();
-            FabricCore::RTVal value = FabricCore::ConstructRTValFromJSON(m_client, type.c_str(), json.c_str());
+            FabricCore::RTVal value;
+            if(type == "FilePath")
+            {
+              if(json.length() > 2)
+              {
+                if(json[0] == '"')
+                  json = json.substr(1);
+                if(json[json.length()-1] == '"')
+                  json = json.substr(0, json.length()-1);
+              }
+
+              FabricCore::RTVal jsonVal = FabricCore::RTVal::ConstructString(m_client, json.c_str());
+              value = FabricCore::RTVal::Construct(m_client, "FilePath", 1, &jsonVal);
+            }
+            else
+            {
+              value = FabricCore::ConstructRTValFromJSON(m_client, type.c_str(), json.c_str());
+            }
             binding.setArgValue(name.c_str(), value);
             found = true;
             break;
