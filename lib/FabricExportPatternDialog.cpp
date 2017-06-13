@@ -21,7 +21,7 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
 , m_binding(binding)
 , m_wasAccepted(false)
 {
-  setWindowTitle("Fabric Import Pattern");
+  setWindowTitle("Fabric Export Pattern");
   m_stack = new QUndoStack();
   m_handler = new FabricUI::DFG::DFGUICmdHandler_QUndo(m_stack);
   m_bindingItem = new FabricUI::ModelItems::BindingModelItem(m_handler, binding);
