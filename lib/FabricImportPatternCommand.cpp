@@ -36,6 +36,7 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.addFlag( "-f", "-filepath", MSyntax::kString );
   syntax.addFlag( "-q", "-disableDialogs", MSyntax::kBoolean );
   syntax.addFlag( "-k", "-namespace", MSyntax::kString );
+  syntax.addFlag( "-x", "-attachToExisting", MSyntax::kBoolean );
   syntax.addFlag( "-m", "-enableMaterials", MSyntax::kBoolean );
   syntax.addFlag( "-s", "-scale", MSyntax::kDouble );
   syntax.addFlag( "-n", "-canvasnode", MSyntax::kString );
@@ -144,6 +145,10 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   {
     m_settings.enableMaterials = argParser.flagArgumentBool("enableMaterials", 0);
   }
+  if( argParser.isFlagSet("attachToExisting") )
+  {
+    m_settings.attachToExisting = argParser.flagArgumentBool("attachToExisting", 0);
+  }
 
   MStringArray result;
   FabricCore::DFGBinding binding;
@@ -156,9 +161,9 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
       m_client.loadExtension("GenericImporter", "", false);
       binding = interf->getDFGBinding();
     }
-    catch(FabricSplice::Exception e)
+    catch(FabricCore::Exception e)
     {
-      mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+      mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
     }
 
     return invoke(m_client, binding, m_settings);
@@ -343,7 +348,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         {
           MFnNurbsCurve nurbsCurve(obj);
           FabricCore::RTVal curves = FabricCore::RTVal::Create(m_client, "Curves", 0, 0);
-          FabricCore::RTVal curveCountRTVal = FabricSplice::constructUInt32RTVal( 1 );
+          FabricCore::RTVal curveCountRTVal = FabricCore::RTVal::ConstructUInt32(m_client, 1);
           curves.callMethod( "", "setCurveCount", 1, &curveCountRTVal );
           dfgMFnNurbsCurveToCurves(0, nurbsCurve, curves);
           binding.setArgValue(name.asChar(), curves);
@@ -437,9 +442,9 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         return invoke(m_client, binding, m_settings);
       }
     }
-    catch(FabricSplice::Exception e)
+    catch(FabricCore::Exception e)
     {
-      mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+      mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
     }
   }
 
@@ -456,9 +461,9 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
   {
     binding.execute();
   }
-  catch(FabricSplice::Exception e)
+  catch(FabricCore::Exception e)
   {
-    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
 
     if(binding.isValid())
     {
@@ -527,24 +532,25 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
       m_objectList.push_back(parent);
     }
 
-    // create the groups first
-    for(size_t i=0;i<m_objectList.size();i++)
+    // create the nodes first - and go in reverse.
+    // this allows us to create the dag nodes for shapes correctly
+    for(std::map< std::string, size_t >::reverse_iterator rit=m_objectMap.rbegin();rit!=m_objectMap.rend();rit++)
     {
-      getOrCreateNodeForObject(m_objectList[i]);
+      size_t index = rit->second;
+      getOrCreateNodeForObject(m_objectList[index]);
     }
 
     // now perform all remaining tasks
     for(size_t i=0;i<m_objectList.size();i++)
     {
       updateTransformForObject(m_objectList[i]);
-      updateShapeForObject(m_objectList[i]);
       updateEvaluatorForObject(m_objectList[i]);
       // todo: light, cameras etc..
     }
   }
-  catch(FabricSplice::Exception e)
+  catch(FabricCore::Exception e)
   {
-    mayaLogErrorFunc(MString(getName()) + ": "+e.what());
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
   }
 
   for(std::map< std::string, MObject >::iterator it = m_nodes.begin(); it != m_nodes.end(); it++)
@@ -638,6 +644,32 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
     parentNode = getOrCreateNodeForPath(pathForParent, "transform", true);
   }
 
+  // try to find the node in the scene
+  if(m_settings.attachToExisting)
+  {
+    MSelectionList sl;
+    std::string pathStr = path.asChar();
+    for(size_t i=0;i<pathStr.length();i++)
+    {
+      if(pathStr[i] != '/')
+        continue;
+      pathStr[i] = '|';
+    }
+    sl.add(pathStr.c_str());
+    sl.add(name); // also add by name in case the pathStr failed
+
+    if(sl.length() > 0)
+    {
+      MDagPath dagPath;
+      if(sl.getDagPath(0, dagPath) == MS::kSuccess)
+      {
+        MObject node = dagPath.node();
+        m_nodes.insert(std::pair< std::string, MObject > (path.asChar(), node));
+        return node;
+      }
+    }
+  }
+
   MObject node;
   if(isDagNode)
   {
@@ -672,8 +704,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForObject(FabricCore::RTVal o
   }
   else if(type == "Shape")
   {
-    // done by updateShapeForObject
-    return MObject();
+    return getOrCreateShapeForObject(obj);
   }
   else if(type == "Light")
   {
@@ -743,70 +774,108 @@ bool FabricImportPatternCommand::updateTransformForObject(FabricCore::RTVal obj,
   return true;
 }
 
-bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
+MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal obj)
 {
-  FabricCore::RTVal shape = FabricCore::RTVal::Create(obj.getContext(), "ImporterShape", 1, &obj);
-  if(shape.isNullObject())
-    return false;
-
-  //const Integer ImporterShape_Mesh = 0;
-  //const Integer ImporterShape_Curves = 1;
-  //const Integer ImporterShape_Points = 2;
-  FabricCore::RTVal geoTypeVal = shape.callMethod("SInt32", "getGeometryType", 1, &m_context);
-  int geoType = geoTypeVal.getSInt32();
-  if (geoType != 0) // not a mesh
+  try
   {
-    MString geoTypeStr;
-    geoTypeStr.set(geoType);
-    mayaLogFunc(MString(getName())+": Shape type " + geoTypeStr + " not yet supported.");
-    return false;
-  }
+    FabricCore::RTVal shape = FabricCore::RTVal::Create(obj.getContext(), "ImporterShape", 1, &obj);
+    if(shape.isNullObject())
+      return MObject();
 
-  // here we access the path as well as the instance path
-  MString uuid = obj.callMethod("String", "getPath", 0, 0).getStringCString();
-  uuid = "uuid | " + uuid;
-
-  MString instancePath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-  instancePath = m_settings.rootPrefix + simplifyPath(instancePath);
-
-  MString name;
-  instancePath = parentPath(instancePath, &name);
-  MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", false);
-
-  // now check if we have already converted this shape before
-  std::map< std::string, MObject >::iterator it = m_nodes.find(uuid.asChar());
-  MObject node;
-  if(it == m_nodes.end())
-  {
-    FabricCore::RTVal polygonMesh = shape.callMethod("PolygonMesh", "getGeometry", 1, &m_context);
-    if (polygonMesh.isNullObject())
-      return false;
-
-    node = dfgPolygonMeshToMFnMesh(polygonMesh, false /* insideCompute */);
-    m_nodes.insert(std::pair< std::string, MObject > (uuid.asChar(), node));
-
-    MDagModifier modif;
-    modif.renameNode(node, m_settings.nameSpace + name);
-    modif.doIt();
-  
-    if(!parentNode.isNull())
+    //const Integer ImporterShape_Mesh = 0;
+    //const Integer ImporterShape_Curves = 1;
+    //const Integer ImporterShape_Points = 2;
+    FabricCore::RTVal geoTypeVal = shape.callMethod("SInt32", "getGeometryType", 1, &m_context);
+    int geoType = geoTypeVal.getSInt32();
+    if (geoType != 0) // not a mesh
     {
-      modif.reparentNode(node, parentNode);
-      modif.doIt();
+      MString geoTypeStr;
+      geoTypeStr.set(geoType);
+      mayaLogFunc(MString(getName())+": Shape type " + geoTypeStr + " not yet supported.");
+      return MObject();
     }
 
-    updateTransformForObject(obj, node);
-    updateMaterialForObject(obj, node);
+    MString instancePath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
+    MString lookupPath = simplifyPath(instancePath);
+    instancePath = m_settings.rootPrefix + simplifyPath(instancePath);
+
+    MString name;
+    instancePath = parentPath(instancePath, &name);
+
+    // if this shape has no local transform at all - in maya we can save us one 
+    // hierarchy level and go directly to the shape
+    if(!shape.callMethod("Boolean", "hasLocalTransform", 0, 0).getBoolean())
+    {
+      lookupPath = simplifyPath(instancePath);
+      instancePath = parentPath(instancePath, &name);
+    }
+    MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", false);
+
+    // now check if we have already converted this shape before
+    std::map< std::string, MObject >::iterator it = m_nodes.find(lookupPath.asChar());
+    MObject node;
+    if(it == m_nodes.end())
+    {
+      FabricCore::RTVal polygonMesh = shape.callMethod("PolygonMesh", "getGeometry", 1, &m_context);
+      if (polygonMesh.isNullObject())
+        return MObject();
+
+      // try to find the node in the scene
+      if(m_settings.attachToExisting)
+      {
+        MSelectionList sl;
+        std::string pathStr = lookupPath.asChar();
+        for(size_t i=0;i<pathStr.length();i++)
+        {
+          if(pathStr[i] != '/')
+            continue;
+          pathStr[i] = '|';
+        }
+        sl.add(pathStr.c_str());
+        if(sl.length() > 0)
+        {
+          MDagPath dagPath;
+          if(sl.getDagPath(0, dagPath) == MS::kSuccess)
+          {
+            node = dagPath.node();
+          }
+        }
+      }
+
+      if(node.isNull())
+      {
+        node = dfgPolygonMeshToMFnMesh(polygonMesh, false /* insideCompute */);
+      }
+      m_nodes.insert(std::pair< std::string, MObject > (lookupPath.asChar(), node));
+
+      MDagModifier modif;
+      modif.renameNode(node, m_settings.nameSpace + name);
+      modif.doIt();
+    
+      if(!parentNode.isNull())
+      {
+        modif.reparentNode(node, parentNode);
+        modif.doIt();
+      }
+
+      updateTransformForObject(obj, node);
+      updateMaterialForObject(obj, node);
+    }
+    else if(!parentNode.isNull())
+    {
+      node = it->second;
+
+      MFnDagNode parentDag(parentNode);
+      parentDag.addChild(node, MFnDagNode::kNextPos, true /* keepExistingParents */);
+    }
+
+    return node;
   }
-  else if(!parentNode.isNull())
+  catch(FabricCore::Exception e)
   {
-    node = it->second;
-
-    MFnDagNode parentDag(parentNode);
-    parentDag.addChild(node, MFnDagNode::kNextPos, true /* keepExistingParents */);
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
   }
-
-  return true;
+  return MObject();
 }
 
 bool FabricImportPatternCommand::updateMaterialForObject(FabricCore::RTVal obj, MObject node)
@@ -960,7 +1029,18 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
 
   std::map< std::string, MObject >::iterator it = m_nodes.find(simplifyPath(objPath).asChar());
   if(it == m_nodes.end())
-    it = m_nodes.find(("uuid | "+objPath).asChar());
+  {
+    FabricCore::RTVal shape = FabricCore::RTVal::Create(obj.getContext(), "ImporterShape", 1, &obj);
+    if(!shape.isNullObject())
+    {
+      if(!shape.callMethod("Boolean", "hasLocalTransform", 0, 0).getBoolean())
+      {
+        MString name;
+        MString transformPath = parentPath(objPath, &name);
+        it = m_nodes.find(simplifyPath(transformPath).asChar());
+      }
+    }
+  }
   if(it == m_nodes.end())
   {
     mayaLogErrorFunc("Missing node for '"+objPath+"'.");

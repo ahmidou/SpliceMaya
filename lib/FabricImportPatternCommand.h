@@ -21,6 +21,7 @@ struct FabricImportPatternSettings
   MString nameSpace;
   double scale;
   bool enableMaterials;
+  bool attachToExisting;
 
   FabricImportPatternSettings()
   {
@@ -28,6 +29,7 @@ struct FabricImportPatternSettings
     nameSpace = L"";
     scale = 1.0;
     enableMaterials = false;
+    attachToExisting = false;
   }
 };
 
@@ -56,8 +58,8 @@ private:
   MString simplifyPath(MString path);
   MObject getOrCreateNodeForPath(MString path, MString type="transform", bool createIfMissing = true, bool isDagNode = true);
   MObject getOrCreateNodeForObject(FabricCore::RTVal obj);
+  MObject getOrCreateShapeForObject(FabricCore::RTVal obj);
   bool updateTransformForObject(FabricCore::RTVal obj, MObject node = MObject::kNullObj);
-  bool updateShapeForObject(FabricCore::RTVal obj);
   bool updateMaterialForObject(FabricCore::RTVal obj, MObject node);
   bool updateEvaluatorForObject(FabricCore::RTVal obj);
 };
