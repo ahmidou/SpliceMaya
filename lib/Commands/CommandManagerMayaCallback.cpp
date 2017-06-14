@@ -6,12 +6,12 @@
 #include <maya/MGlobal.h>
 #include "FabricSpliceHelpers.h"
 #include "CommandManagerMayaCallback.h"
-#include <FabricUI/Commands/Command.h>
 #include <FabricUI/Commands/CommandManager.h>
-#include <FabricUI/Commands/ScriptableCommand.h>
-#include <FabricUI/Commands/RTValScriptableCommand.h>
+#include <FabricUI/Commands/BaseScriptableCommand.h>
+#include <FabricUI/Commands/BaseRTValScriptableCommand.h>
 
-using namespace FabricUI::Commands;
+using namespace FabricUI;
+using namespace Commands;
 
 bool CommandManagerMayaCallback::s_instanceFlag = false;
 CommandManagerMayaCallback* CommandManagerMayaCallback::s_cmdManagerMayaCallback = 0;
@@ -21,8 +21,7 @@ CommandManagerMayaCallback::CommandManagerMayaCallback()
 {
   try
   {
-    CommandManager *manager = 
-      CommandManager::GetCommandManager();
+    CommandManager *manager =  CommandManager::getCommandManager();
 
     QObject::connect(
       manager,
@@ -74,7 +73,7 @@ inline void encodeRTValArg(
 }
 
 void CommandManagerMayaCallback::onCommandPushed(
-  Command *cmd)
+  BaseCommand *cmd)
 {
   // Construct a Maya 'FabricCommand'  
   // that represents the Fabric command.
@@ -84,46 +83,26 @@ void CommandManagerMayaCallback::onCommandPushed(
   fabricCmd << "FabricCommand";
 
   // Fabric command name.
-  encodeArg(
-    cmd->getName(),
-    fabricCmd
-    );
+  encodeArg(cmd->getName(), fabricCmd);
    
   // Fabric command args.
-  ScriptableCommand *scriptCmd = 
-    dynamic_cast<ScriptableCommand *>(
-      cmd);
+  BaseScriptableCommand *scriptCmd = qobject_cast<BaseScriptableCommand*>(cmd);
 
   if(scriptCmd)
   {
-    // Check if it's a RTValScriptableCommand,
+    // Check if it's a BaseRTValScriptableCommand,
     // to know how to cast the string.
-    RTValScriptableCommand *rtValScriptCmd = 
-      dynamic_cast<RTValScriptableCommand *>(
-        cmd
-        );
-
-    foreach(QString key, scriptCmd->getArgKeys())
+    BaseRTValScriptableCommand *rtValScriptCmd = qobject_cast<BaseRTValScriptableCommand*>(cmd);
+     foreach(QString key, scriptCmd->getArgKeys())
     {
-      encodeArg(
-        key,
-        fabricCmd);
-
+      encodeArg(key, fabricCmd);
       if(rtValScriptCmd)
-        encodeRTValArg(
-          scriptCmd->getArg(key),
-          fabricCmd);
-
+        encodeRTValArg(scriptCmd->getArg(key), fabricCmd);
       else
-        encodeArg(
-          scriptCmd->getArg(key),
-          fabricCmd);
+        encodeArg(scriptCmd->getArg(key), fabricCmd);
     }
   }
 
   // Create the maya command.
-  MGlobal::executeCommandOnIdle(
-    fabricCmd.str().c_str(),
-    true
-    );
+  MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), true);
 }

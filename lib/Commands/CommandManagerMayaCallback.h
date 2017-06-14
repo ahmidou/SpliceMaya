@@ -5,7 +5,7 @@
 #pragma once
 
 #include <QObject>
-#include <FabricUI/Commands/Command.h>
+#include <FabricUI/Commands/BaseCommand.h>
  
 class CommandManagerMayaCallback : public QObject
 {
@@ -30,7 +30,7 @@ class CommandManagerMayaCallback : public QObject
     /// \internal
     /// Called when a command has been pushed to the manager. 
     void onCommandPushed(
-    	FabricUI::Commands::Command *cmd
+    	FabricUI::Commands::BaseCommand *cmd
     	);
 
   private:

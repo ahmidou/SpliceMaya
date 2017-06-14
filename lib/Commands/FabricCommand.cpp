@@ -5,7 +5,7 @@
 #include <string>
 #include "FabricCommand.h"
 #include "FabricSpliceHelpers.h"
-#include <FabricUI/Commands/Command.h>
+#include <FabricUI/Commands/BaseCommand.h>
 #include <FabricUI/Commands/CommandManager.h>
 
 FabricCommand::FabricCommand()
@@ -21,9 +21,9 @@ FabricCommand::~FabricCommand()
   try
   {
     FabricUI::Commands::CommandManager *manager = 
-      FabricUI::Commands::CommandManager::GetCommandManager();
+      FabricUI::Commands::CommandManager::getCommandManager();
 
-    manager->clearRedoStack();
+    //manager->clearRedoStack();
   }
 
   catch (std::string &e) 
@@ -52,15 +52,14 @@ MStatus FabricCommand::doIt(
   try
   {
     FabricUI::Commands::CommandManager *manager = 
-      FabricUI::Commands::CommandManager::GetCommandManager();
+      FabricUI::Commands::CommandManager::getCommandManager();
 
     // Gets the last command pushed.
-    FabricUI::Commands::Command *cmd = manager->getCommandAtIndex(
+    FabricUI::Commands::BaseCommand *cmd = manager->getCommandAtIndex(
       manager->getStackIndex()
       );
 
     m_isUndoable = cmd->canUndo();
-
     setHistoryOn(true); 
   
     status = MS::kSuccess;
@@ -86,10 +85,9 @@ MStatus FabricCommand::undoIt()
   try
   {
     FabricUI::Commands::CommandManager *manager = 
-      FabricUI::Commands::CommandManager::GetCommandManager();
+      FabricUI::Commands::CommandManager::getCommandManager();
 
     manager->undoCommand();
-
     status = MS::kSuccess;
   }
 
@@ -113,10 +111,9 @@ MStatus FabricCommand::redoIt()
   try
   {
     FabricUI::Commands::CommandManager *manager = 
-      FabricUI::Commands::CommandManager::GetCommandManager();
+      FabricUI::Commands::CommandManager::getCommandManager();
 
     manager->redoCommand();
-
     status = MS::kSuccess;
   }
 

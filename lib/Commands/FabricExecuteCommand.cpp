@@ -45,19 +45,14 @@ MStatus FabricExecuteCommand::doIt(
     {
       QString key = args.asString(i, &status).asChar();
       QString value = args.asString(++i, &status).asChar();
-
       cmdArgs[key] = value;
     }
 
     FabricUI::Commands::CommandManager *manager = 
-      FabricUI::Commands::CommandManager::GetCommandManager();
+      FabricUI::Commands::CommandManager::getCommandManager();
 
     // Create the fabric command.
-    manager->createCommand(
-      name.asChar(),
-      cmdArgs
-    );
-   
+    manager->createCommand(name.asChar(), cmdArgs);
     status = MS::kSuccess;
   }
 

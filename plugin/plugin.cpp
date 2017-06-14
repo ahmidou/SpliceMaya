@@ -46,6 +46,7 @@
 #include "CommandManagerMayaCallback.h"
 #include <FabricUI/Commands/KLCommandManager.h>
 #include <FabricUI/Commands/KLCommandRegistry.h>
+#include <FabricUI/Application/FabricApplicationStates.h>
 
 #ifdef _MSC_VER
   #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
@@ -252,15 +253,17 @@ void initializeCommands(MFnPlugin &plugin)
   {
     FabricCore::Client client = FabricDFGWidget::GetCoreClient();
 
+    new FabricUI::Application::FabricApplicationStates(client);
+    
     FabricUI::Commands::KLCommandRegistry *registry = 
       new FabricUI::Commands::KLCommandRegistry(
-        client
+        //client
         );
     registry->synchronizeKL();
 
     FabricUI::Commands::KLCommandManager *manager = 
       new FabricUI::Commands::KLCommandManager(
-        client
+        //client
         );
     manager->synchronizeKL();
 
