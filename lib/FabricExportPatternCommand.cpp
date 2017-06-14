@@ -180,7 +180,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
   try
   {
     FabricCore::Client client = FabricDFGWidget::GetCoreClient();
-    client.loadExtension("GenericImporter", "", false);
+    client.loadExtension("AssetPatterns", "", false);
 
     MString json;
     FILE * file = fopen(filepath.asChar(), "rb");
@@ -371,7 +371,7 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
   try
   {
-    m_client.loadExtension("GenericImporter", "", false);
+    m_client.loadExtension("AssetPatterns", "", false);
 
     m_exporterContext = FabricCore::RTVal::Construct(m_client, "ExporterContext", 0, 0);
     FabricCore::RTVal contextHost = m_exporterContext.maybeGetMember("host");

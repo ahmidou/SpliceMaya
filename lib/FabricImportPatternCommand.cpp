@@ -168,7 +168,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     try
     {
       m_client = interf->getCoreClient();
-      m_client.loadExtension("GenericImporter", "", false);
+      m_client.loadExtension("AssetPatterns", "", false);
       binding = interf->getDFGBinding();
     }
     catch(FabricCore::Exception e)
@@ -183,7 +183,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     try
     {
       m_client = FabricDFGWidget::GetCoreClient();
-      m_client.loadExtension("GenericImporter", "", false);
+      m_client.loadExtension("AssetPatterns", "", false);
   
       MString json;
       FILE * file = fopen(filepath.asChar(), "rb");
