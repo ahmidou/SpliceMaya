@@ -17,6 +17,8 @@
 
 struct FabricImportPatternSettings
 {
+  MString filePath;
+  bool quiet;
   MString rootPrefix;
   MString nameSpace;
   double scale;
@@ -25,6 +27,7 @@ struct FabricImportPatternSettings
 
   FabricImportPatternSettings()
   {
+    quiet = false;
     rootPrefix = L"";
     nameSpace = L"";
     scale = 1.0;

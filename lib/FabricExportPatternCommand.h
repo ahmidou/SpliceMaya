@@ -17,6 +17,8 @@
 
 struct FabricExportPatternSettings
 {
+  MString filePath;
+  bool quiet;
   double scale;
   double startTime;
   double endTime;
@@ -27,6 +29,7 @@ struct FabricExportPatternSettings
 
   FabricExportPatternSettings()
   {
+    quiet = false;
     scale = 1.0;
     startTime = 0.0;
     endTime = 0.0;

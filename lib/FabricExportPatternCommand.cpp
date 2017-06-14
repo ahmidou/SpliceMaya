@@ -12,6 +12,7 @@
 #include "FabricDFGWidget.h"
 #include "FabricDFGConversion.h"
 #include "FabricExportPatternDialog.h"
+#include "FabricProgressbarDialog.h"
 
 #include <maya/MStringArray.h>
 #include <maya/MSyntax.h>
@@ -27,6 +28,7 @@
 #include <maya/MFnLambertShader.h>
 #include <maya/MCommandResult.h>
 #include <maya/MAnimControl.h>
+#include <maya/MFileObject.h>
 
 #include <FTL/FS.h>
 
@@ -60,6 +62,12 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
   bool quiet = false;
   if ( argParser.isFlagSet("disableDialogs") )
     quiet = argParser.flagArgumentBool("disableDialogs", 0);
+
+  if(!quiet)
+  {
+    if(MGlobal::mayaState() != MGlobal::MMayaState::kInteractive)
+      quiet = true;
+  }
 
   MString filepath;
 
@@ -102,6 +110,9 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
     mayaLogErrorFunc("FilePath \""+filepath+"\" does no exist.");
     return mayaErrorOccured();
   }
+
+  m_settings.quiet = quiet;
+  m_settings.filePath = filepath;
 
   // initialize substeps, framerate + in and out based on playcontrol
   m_settings.startTime = MAnimControl::minTime().as(MTime::kSeconds);
@@ -448,6 +459,22 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
     return mayaErrorOccured();
   }
 
+  FabricProgressbarDialog * prog = NULL;
+  if(!m_settings.quiet)
+  {
+    QWidget * mainWindow = MQtUtil().mainWindow();
+    mainWindow->setFocus(Qt::ActiveWindowFocusReason);
+
+    QEvent event(QEvent::RequestSoftwareInputPanel);
+    QApplication::sendEvent(mainWindow, &event);
+
+    MString title = "Exporting...";
+    prog = new FabricProgressbarDialog(mainWindow, title.asChar(), (int)timeSamples.size());
+    prog->setWindowModality(Qt::ApplicationModal);
+    prog->setSizeGripEnabled(true);
+    prog->open();
+  }
+
   // loop over all of the frames required,
   // convert all of the objects,
   // set both the objects and the context
@@ -479,9 +506,33 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
         MString errors = binding.getErrors(true).getCString();
         mayaLogErrorFunc(errors);
       }
+      if(prog)
+        prog->close();
       return mayaErrorOccured();
     }
+
+    if(prog)
+    {
+      if(prog->wasCancelPressed())
+      {
+        prog->close();
+        mayaLogFunc(MString(getName())+": aborted by user.");
+        return MS::kFailure;
+      }
+      prog->increment();
+      QApplication::processEvents();
+    }
+    else
+    {
+      MString index, total;
+      index.set((int)t+1);
+      total.set((int)timeSamples.size());
+      mayaLogFunc("Exported timesample "+index+" of "+total);
+    }
   }
+
+  if(prog)
+    prog->close();
 
   mayaLogFunc(MString(getName())+": export done.");
   return MS::kSuccess;

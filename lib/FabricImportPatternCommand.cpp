@@ -12,6 +12,7 @@
 #include "FabricDFGWidget.h"
 #include "FabricDFGConversion.h"
 #include "FabricImportPatternDialog.h"
+#include "FabricProgressbarDialog.h"
 
 #include <maya/MStringArray.h>
 #include <maya/MSyntax.h>
@@ -59,6 +60,12 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   bool quiet = false;
   if ( argParser.isFlagSet("disableDialogs") )
     quiet = argParser.flagArgumentBool("disableDialogs", 0);
+
+  if(!quiet)
+  {
+    if(MGlobal::mayaState() != MGlobal::MMayaState::kInteractive)
+      quiet = true;
+  }
 
   FabricDFGBaseInterface * interf = NULL;
   MString filepath;
@@ -116,6 +123,9 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
       return mayaErrorOccured();
     }
   }
+
+  m_settings.quiet = quiet;
+  m_settings.filePath = filepath;
 
   if ( argParser.isFlagSet("root") )
   {
@@ -473,6 +483,22 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
     return mayaErrorOccured();
   }
 
+  FabricProgressbarDialog * prog = NULL;
+  if(!m_settings.quiet)
+  {
+    QWidget * mainWindow = MQtUtil().mainWindow();
+    mainWindow->setFocus(Qt::ActiveWindowFocusReason);
+
+    QEvent event(QEvent::RequestSoftwareInputPanel);
+    QApplication::sendEvent(mainWindow, &event);
+
+    MString title = "Importing...";
+    prog = new FabricProgressbarDialog(mainWindow, title.asChar(), (int)10); // count will be changed later
+    prog->setWindowModality(Qt::ApplicationModal);
+    prog->setSizeGripEnabled(true);
+    prog->open();
+  }
+
   try
   {
     m_context = FabricCore::RTVal::Construct(m_client, "ImporterContext", 0, 0);
@@ -532,12 +558,27 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
       m_objectList.push_back(parent);
     }
 
+    if(prog)
+      prog->setCount((int)m_objectList.size() * 2);
+
     // create the nodes first - and go in reverse.
     // this allows us to create the dag nodes for shapes correctly
     for(std::map< std::string, size_t >::reverse_iterator rit=m_objectMap.rbegin();rit!=m_objectMap.rend();rit++)
     {
       size_t index = rit->second;
       getOrCreateNodeForObject(m_objectList[index]);
+
+      if(prog)
+      {
+        if(prog->wasCancelPressed())
+        {
+          prog->close();
+          mayaLogFunc(MString(getName())+": aborted by user.");
+          return MS::kFailure;
+        }
+        prog->increment();
+        QApplication::processEvents();
+      }
     }
 
     // now perform all remaining tasks
@@ -546,12 +587,27 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
       updateTransformForObject(m_objectList[i]);
       updateEvaluatorForObject(m_objectList[i]);
       // todo: light, cameras etc..
+
+      if(prog)
+      {
+        if(prog->wasCancelPressed())
+        {
+          prog->close();
+          mayaLogFunc(MString(getName())+": aborted by user.");
+          return MS::kFailure;
+        }
+        prog->increment();
+        QApplication::processEvents();
+      }
     }
   }
   catch(FabricCore::Exception e)
   {
     mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
   }
+
+  if(prog)
+    prog->close();
 
   for(std::map< std::string, MObject >::iterator it = m_nodes.begin(); it != m_nodes.end(); it++)
   {
