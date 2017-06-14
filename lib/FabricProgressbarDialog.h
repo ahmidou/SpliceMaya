@@ -16,7 +16,6 @@ public:
   FabricProgressbarDialog(QWidget * parent, QString title, int count);
   virtual ~FabricProgressbarDialog();
 
-public slots:
   void increment();
   void setCount(int count);
   bool wasCancelPressed() const;
