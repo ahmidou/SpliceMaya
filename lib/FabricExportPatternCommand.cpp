@@ -65,7 +65,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
 
   if(!quiet)
   {
-    if(MGlobal::mayaState() != MGlobal::MMayaState::kInteractive)
+    if(MGlobal::mayaState() != MGlobal::kInteractive)
       quiet = true;
   }
 
