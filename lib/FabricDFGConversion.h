@@ -4,14 +4,13 @@
 
 #pragma once
 
+#include <FabricCore.h>
+#include <FTL/StrRef.h>
 #include <maya/MPlug.h>
+#include <FabricSplice.h>
 #include <maya/MFnMesh.h>
 #include <maya/MDataBlock.h>
 #include <maya/MFnNurbsCurve.h>
-
-#include <FabricCore.h>
-#include <FTL/StrRef.h>
-#include <FabricSplice.h>
 
 typedef void(*DFGPlugToArgFunc)(
   unsigned argIndex,

@@ -2,19 +2,14 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#include <ostream>
-
-#include "FabricConstraint.h"
-
 #include <maya/MGlobal.h>
-#include <maya/MFnDependencyNode.h>
-#include <maya/MFnTypedAttribute.h>
-#include <maya/MFnNumericAttribute.h>
-#include <maya/MFnEnumAttribute.h>
-#include <maya/MFnMatrixAttribute.h>
-#include <maya/MFnUnitAttribute.h>
 #include <maya/MVector.h>
 #include <maya/MMatrix.h>
+#include "FabricConstraint.h"
+#include <maya/MFnEnumAttribute.h>
+#include <maya/MFnUnitAttribute.h>
+#include <maya/MFnMatrixAttribute.h>
+#include <maya/MFnNumericAttribute.h>
 #include <maya/MTransformationMatrix.h>
 
 MTypeId FabricConstraint::id(0x0011AE49);
@@ -34,12 +29,13 @@ FabricConstraint::~FabricConstraint()
 {
 }
 
-void* FabricConstraint::creator(){
+void* FabricConstraint::creator()
+{
 	return new FabricConstraint();
 }
 
-MStatus FabricConstraint::initialize(){
-
+MStatus FabricConstraint::initialize()
+{
   MFnNumericAttribute nAttr;
   MFnEnumAttribute eAttr;
   MFnMatrixAttribute mAttr;
@@ -141,8 +137,10 @@ MStatus FabricConstraint::initialize(){
   return MS::kSuccess;
 }
 
-MStatus FabricConstraint::compute(const MPlug& plug, MDataBlock& data){
-
+MStatus FabricConstraint::compute(
+  const MPlug& plug, 
+  MDataBlock& data)
+{
   MMatrix parentValue = data.inputValue(parent).asMatrix().inverse();
   MMatrix inputValue = data.inputValue(input).asMatrix();
   MMatrix offsetValue = data.inputValue(offset).asMatrix();

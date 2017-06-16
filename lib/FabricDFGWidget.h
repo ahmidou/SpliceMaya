@@ -6,15 +6,12 @@
 
 #include <QWidget>
 #include "Foundation.h"
-
 #include <FabricSplice.h>
 #include <maya/MString.h>
 #include <maya/MDGMessage.h>
 #include <maya/MDagMessage.h>
 #include <maya/MModelMessage.h>
-
 #include "DFGUICmdHandler_Maya.h"
-
 #include <DFG/Dialogs/DFGBaseDialog.h>
 #include <SceneHub/DFG/SHDFGCombinedWidget.h>
 

@@ -4,18 +4,16 @@
 
 #pragma once
 
-#include <DFG/DFGUI.h>
 #include <vector>
-
+#include <DFG/DFGUI.h>
 #include <maya/MPlug.h> 
 #include <maya/MPxNode.h> 
 #include <maya/MPlugArray.h>
 #include <maya/MStringArray.h>
-#include <maya/MFnDependencyNode.h> 
-
 #include "FabricDFGConversion.h"
 #include "DFGUICmdHandler_Maya.h"
 #include <FTL/OrderedStringMap.h>
+#include <maya/MFnDependencyNode.h> 
 
 using namespace FabricServices;
 using namespace FabricUI;
@@ -41,69 +39,149 @@ public:
 
   typedef FabricCore::DFGBinding (*CreateDFGBindingFunc)( FabricCore::DFGHost &dfgHost );
 
-  FabricDFGBaseInterface( CreateDFGBindingFunc createDFGBinding );
+  FabricDFGBaseInterface( 
+    CreateDFGBindingFunc createDFGBinding 
+    );
+  
   virtual ~FabricDFGBaseInterface();
+  
   void constructBaseInterface();
 
-  static FabricDFGBaseInterface * getInstanceByName(const std::string & name);
-  static FabricDFGBaseInterface * getInstanceById(unsigned int id);
-  static FabricDFGBaseInterface * getInstanceByIndex(unsigned int index);
+  static FabricDFGBaseInterface * getInstanceByName(
+    const std::string & name
+    );
+
+  static FabricDFGBaseInterface * getInstanceById(
+    unsigned int id
+    );
+
+  static FabricDFGBaseInterface * getInstanceByIndex(
+    unsigned int index
+    );
+
   static unsigned int getNumInstances();
 
   virtual MObject getThisMObject() = 0;
+
   virtual MPlug getSaveDataPlug() = 0;
+
   virtual MPlug getRefFilePathPlug() = 0;
+
   virtual MPlug getEnableEvalContextPlug() = 0;
 
   unsigned int getId() const;
+  
   FabricCore::Client getCoreClient();
+  
   ASTWrapper::KLASTManager * getASTManager();
+  
   FabricCore::DFGHost getDFGHost();
+  
   FabricCore::DFGBinding getDFGBinding();
+  
   FabricCore::DFGExec getDFGExec();
 
-  void storePersistenceData(MString file, MStatus *stat = 0);
-  void restoreFromPersistenceData(MString file, MStatus *stat = 0);
-  void restoreFromJSON(MString json, MStatus *stat = 0);
-  void setReferencedFilePath(MString filePath);
+  void storePersistenceData(
+    MString file, 
+    MStatus *stat = 0
+    );
+  
+  void restoreFromPersistenceData(
+    MString file, 
+    MStatus *stat = 0
+    );
+  
+  void restoreFromJSON(
+    MString json, 
+    MStatus *stat = 0
+    );
+  
+  void setReferencedFilePath(
+    MString filePath
+    );
+  
   void reloadFromReferencedFilePath();
 
   // FabricSplice::DGGraph & getSpliceGraph() { return _spliceGraph; }
-  void setDgDirtyEnabled(bool enabled) { _dgDirtyEnabled = enabled; }
+  void setDgDirtyEnabled(
+    bool enabled
+    ) { _dgDirtyEnabled = enabled; }
 
-  static void onNodeAdded(MObject &node, void *clientData);
-  static void onNodeRemoved(MObject &node, void *clientData);
-  static void onAnimCurveEdited(MObjectArray &editedCurves, void *clientData);
+  static void onNodeAdded(
+    MObject &node, 
+    void *clientData
+    );
+  
+  static void onNodeRemoved(
+    MObject &node, 
+    void *clientData
+    );
+  
+  static void onAnimCurveEdited(
+    MObjectArray &editedCurves, 
+    void *clientData
+    );
 
-  void managePortObjectValues(bool destroy);
+  void managePortObjectValues(
+    bool destroy
+    );
 
-  static void allStorePersistenceData(MString file, MStatus *stat = 0);
-  static void allRestoreFromPersistenceData(MString file, MStatus *stat = 0);
+  static void allStorePersistenceData(
+    MString file, 
+    MStatus *stat = 0
+    );
+
+  static void allRestoreFromPersistenceData(
+    MString file, 
+    MStatus *stat = 0
+    );
+  
   static void allResetInternalData();
-  static void setAllRestoredFromPersistenceData(bool value);
+
+  static void setAllRestoredFromPersistenceData(
+    bool value
+    );
 
   virtual void invalidateNode();
 
-  virtual void queueIncrementEvalID(bool onIdle = true);
+  virtual void queueIncrementEvalID(
+    bool onIdle = true
+    );
+  
   virtual void incrementEvalID();
 
-  static void queueMelCommand(MString cmd);
+  static void queueMelCommand(
+    MString cmd
+    );
+
   static MStatus processQueuedMelCommands();
 
-  DFGUICmdHandler_Maya *getCmdHandler()
-    { return &m_cmdHandler; }
+  DFGUICmdHandler_Maya *getCmdHandler() { return &m_cmdHandler; }
 
   bool getExecuteShared();
-  void setExecuteSharedDirty()
-    { m_executeSharedDirty = true; }
 
-  virtual MString getPlugName(const MString &portName);
-  virtual MString getPortName(const MString &plugName);
+  void setExecuteSharedDirty() { m_executeSharedDirty = true; }
+
+  virtual MString getPlugName(
+    const MString &portName
+    );
+  
+  virtual MString getPortName(
+    const MString &plugName
+    );
 
 protected:
+  void invalidatePlug(
+    MPlug & plug
+    );
 
-  void invalidatePlug(MPlug & plug);
-  virtual void setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat = 0);
+  virtual void setupMayaAttributeAffects(
+    MString portName, 
+    FabricCore::DFGPortType portType, 
+    MObject newAttribute, 
+    MStatus *stat = 0
+    );
+  
   virtual bool useEvalContext();
 
   // private members and helper methods
@@ -122,17 +200,56 @@ protected:
   bool _portObjectsDestroyed;
   std::vector<std::string> mSpliceMayaDataOverride;
 
-  virtual bool transferInputValuesToDFG(MDataBlock& data);
+  virtual bool transferInputValuesToDFG(
+    MDataBlock& data
+    );
+  
   void evaluate();
-  virtual void transferOutputValuesToMaya(MDataBlock& data, bool isDeformer = false);
-  virtual void collectDirtyPlug(MPlug const &inPlug);
+  
+  virtual void transferOutputValuesToMaya(
+    MDataBlock& data, 
+    bool isDeformer = false
+    );
+  
+  virtual void collectDirtyPlug(
+    MPlug const &inPlug
+    );
+  
   virtual void generateAttributeLookups();
-  void affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs);
-  void copyInternalData(MPxNode *node);
-  bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);
-  bool setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx);
-  void onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made);
-  MStatus setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs);
+  
+  void affectChildPlugs(
+    MPlug &plug, 
+    MPlugArray &affectedPlugs
+    );
+  
+  void copyInternalData(
+    MPxNode *node
+    );
+  
+  bool getInternalValueInContext(
+    const MPlug &plug, 
+    MDataHandle &dataHandle, 
+    MDGContext &ctx
+    );
+  
+  bool setInternalValueInContext(
+    const MPlug &plug, 
+    const MDataHandle &dataHandle, 
+    MDGContext &ctx
+    );
+  
+  void onConnection(
+    const MPlug &plug, 
+    const MPlug &otherPlug, 
+    bool asSrc, 
+    bool made
+    );
+  
+  MStatus setDependentsDirty(
+    MObject thisMObject,
+    MPlug const &inPlug, 
+    MPlugArray &affectedPlugs
+    );
 
 #if MAYA_API_VERSION >= 201600
   MStatus doPreEvaluation(
@@ -140,6 +257,7 @@ protected:
     const MDGContext& context,
     const MEvaluationNode& evaluationNode
     );
+
   MStatus doPostEvaluation(
     MObject thisMObject,
     const MDGContext& context,
@@ -147,10 +265,20 @@ protected:
     MPxNode::PostEvaluationType evalType
     );
 #endif
-
  
-  MObject addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType = "", bool compoundChild = false, MStatus * stat = NULL);
-  void removeMayaAttribute(MString portName, MStatus * stat = NULL);
+  MObject addMayaAttribute(
+    MString portName, 
+    MString dataType, 
+    FabricCore::DFGPortType portType, 
+    MString arrayType = "", 
+    bool compoundChild = false, 
+    MStatus * stat = NULL
+    );
+  
+  void removeMayaAttribute(
+    MString portName, 
+    MStatus * stat = NULL
+    );
 
   virtual FabricCore::LockType getLockType()
   {
@@ -183,11 +311,14 @@ protected:
   DFGUICmdHandler_Maya m_cmdHandler;
 
 private:
+  void bindingNotificationCallback( 
+    FTL::CStrRef jsonStr 
+    );
 
-  void bindingNotificationCallback( FTL::CStrRef jsonStr );
   static void BindingNotificationCallback(
-    void * userData, char const *jsonCString, uint32_t jsonLength
-    )
+    void * userData, 
+    char const *jsonCString, 
+    uint32_t jsonLength)
   {
     FabricDFGBaseInterface * interf =
       static_cast<FabricDFGBaseInterface *>( userData );
@@ -197,13 +328,12 @@ private:
   }
 
 protected:
-
   struct VisitCallbackUserData
   {
     VisitCallbackUserData(MObject inNode, MDataBlock & inData)
-    : node(inNode)
-    , data(inData)
-    , returnValue(0)
+      : node(inNode)
+      , data(inData)
+      , returnValue(0)
     {
     }
 
@@ -216,7 +346,6 @@ protected:
   };
 
 private:
-
   static void VisitInputArgsCallback(
     void *userdata,
     unsigned argIndex,
@@ -247,9 +376,20 @@ private:
     void *getSetUD
     );  
 
-  bool plugInArray(const MPlug &plug, const MPlugArray &array);
-  void renamePlug(const MPlug &plug, MString oldName, MString newName);
-  static MString resolveEnvironmentVariables(const MString & filePath);
+  bool plugInArray(
+    const MPlug &plug, 
+    const MPlugArray &array
+    );
+
+  void renamePlug(
+    const MPlug &plug, 
+    MString oldName, 
+    MString newName
+    );
+
+  static MString resolveEnvironmentVariables(
+    const MString & filePath
+    );
 
   unsigned int m_id;
   static unsigned int s_maxID;
@@ -262,18 +402,22 @@ private:
 // [FE-6287]
 public:
   static bool s_use_evalContext;
-
-public:
   static MStringArray s_queuedMelCommands;
-
-public:
 
   // returns true if the binding's executable has a port called portName that matches the port type (input/output).
   // params:  in_portName     name of the port.
   //          testForInput    true: look for input port, else for output port.
-  bool HasPort(const char *in_portName, const bool testForInput);
+  bool HasPort(
+    const char *in_portName, 
+    const bool testForInput
+    );
 
   // returns true if the binding's executable has an input port called portName.
-  bool HasInputPort(const char *portName);
-  bool HasInputPort(const std::string &portName);
+  bool HasInputPort(
+    const char *portName
+    );
+
+  bool HasInputPort(
+    const std::string &portName
+    );
 };

@@ -7,15 +7,12 @@
 #include <QtCore>
 #include <QtGui/qevent.h>
 
+#include <sstream>
+#include <maya/MGlobal.h>
 #include "DFGUICmdHandler_Maya.h"
 #include "FabricDFGBaseInterface.h"
-
-#include <FabricUI/DFG/DFGUICmd/DFGUICmds.h>
 #include <FabricUI/DFG/DFGController.h>
-
-#include <maya/MGlobal.h>
-
-#include <sstream>
+#include <FabricUI/DFG/DFGUICmd/DFGUICmds.h>
 
 /*
     helpers
@@ -1307,7 +1304,8 @@ QString DFGUICmdHandler_Maya::dfgDoAddBlockPort(
     misc
 */
 
-FabricDFGBaseInterface * DFGUICmdHandler_Maya::getInterfFromBinding( FabricCore::DFGBinding const &binding )
+FabricDFGBaseInterface * DFGUICmdHandler_Maya::getInterfFromBinding( 
+  FabricCore::DFGBinding const &binding )
 {
   MString interfIdStr = binding.getMetadata("maya_id");
   if(interfIdStr.length() == 0)

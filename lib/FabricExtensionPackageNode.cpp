@@ -3,8 +3,8 @@
 //
 
 #include "Foundation.h"
-#include "FabricExtensionPackageNode.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricExtensionPackageNode.h"
 
 #include <maya/MGlobal.h>
 #include <maya/MSelectionList.h>
@@ -35,11 +35,13 @@ FabricExtensionPackageNode::~FabricExtensionPackageNode()
   }
 }
 
-void* FabricExtensionPackageNode::creator(){
+void* FabricExtensionPackageNode::creator()
+{
 	return new FabricExtensionPackageNode();
 }
 
-MStatus FabricExtensionPackageNode::initialize(){
+MStatus FabricExtensionPackageNode::initialize()
+{
 
   MFnTypedAttribute typedAttr;
   extensionNames = typedAttr.create("extensionNames", "extensionNames", MFnData::kString);
@@ -60,7 +62,9 @@ MStatus FabricExtensionPackageNode::initialize(){
   return MS::kSuccess;
 }
 
-FabricExtensionPackageNode * FabricExtensionPackageNode::getInstanceByMObject(const MObject & obj) {
+FabricExtensionPackageNode * FabricExtensionPackageNode::getInstanceByMObject(
+  const MObject & obj) 
+{
 
   for(size_t i=0;i<_instances.size();i++)
   {
@@ -72,7 +76,8 @@ FabricExtensionPackageNode * FabricExtensionPackageNode::getInstanceByMObject(co
   return NULL;
 }
 
-FabricExtensionPackageNode * FabricExtensionPackageNode::getInstanceByIndex(unsigned int index)
+FabricExtensionPackageNode * FabricExtensionPackageNode::getInstanceByIndex(
+  unsigned int index)
 {
   if (index < _instances.size())
     return _instances[index];
@@ -92,7 +97,8 @@ MStringArray FabricExtensionPackageNode::getExtensionNames() const
   return result;
 }
 
-void FabricExtensionPackageNode::setExtensionNames(MStringArray values) const
+void FabricExtensionPackageNode::setExtensionNames(
+  MStringArray values) const
 {
   MString joined;
   for(unsigned int i=0;i<values.length();i++)
@@ -104,7 +110,8 @@ void FabricExtensionPackageNode::setExtensionNames(MStringArray values) const
   MPlug(thisMObject(), extensionNames).setString(joined);
 }
 
-MStatus FabricExtensionPackageNode::loadPackage(FabricCore::Client client)
+MStatus FabricExtensionPackageNode::loadPackage(
+  FabricCore::Client client)
 {
   if(_loaded)
     return MStatus::kSuccess;

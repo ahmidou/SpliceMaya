@@ -2,42 +2,29 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
+#include "FabricDFGWidget.h"
+#include "FabricDFGProfiling.h"
+#include "FabricSpliceHelpers.h"
+#include "FabricSpliceMayaData.h"
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceBaseInterface.h"
-#include "FabricSpliceMayaData.h"
-#include "FabricDFGWidget.h"
-#include "FabricExtensionPackageNode.h"
-#include "FabricSpliceHelpers.h"
-#include "FabricMayaAttrs.h"
-#include "FabricDFGProfiling.h"
 #include <Persistence/RTValToJSONEncoder.hpp>
 
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-
 #include <FTL/AutoSet.h>
 #include <FTL/JSONValue.h>
 
 #include <maya/MGlobal.h>
-#include <maya/MFnDependencyNode.h>
-#include <maya/MFnCompoundAttribute.h>
-#include <maya/MFnMessageAttribute.h>
-#include <maya/MFnStringData.h>
-#include <maya/MCommandResult.h>
-//#include <maya/MFileObject.h>
-//#include <maya/MFnPluginData.h>
-#include <maya/MAnimControl.h>
 #include <maya/MQtUtil.h>
 #include <maya/MFileIO.h>
-
-// #include <maya/MTypeId.h> 
-// #include <maya/MNodeMessage.h>
-#include <maya/MFnNumericAttribute.h>
+#include <maya/MAnimControl.h>
+#include <maya/MFnStringData.h>
+#include <maya/MFnDependencyNode.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnMatrixAttribute.h>
-
+#include <maya/MFnMessageAttribute.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MFnCompoundAttribute.h>
 
 #if MAYA_API_VERSION >= 201600
 # include <maya/MEvaluationNode.h>
@@ -108,8 +95,8 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface()
   }
 }
 
-void FabricDFGBaseInterface::constructBaseInterface(){
-
+void FabricDFGBaseInterface::constructBaseInterface()
+{
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::constructBaseInterface");
 
   MStatus stat;
@@ -150,7 +137,9 @@ void FabricDFGBaseInterface::constructBaseInterface(){
   MAYADFG_CATCH_END(&stat);
 }
 
-FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByName(const std::string & name) {
+FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByName(
+  const std::string & name) 
+{
 
   MSelectionList selList;
   MGlobal::getSelectionListByName(name.c_str(), selList);
@@ -167,7 +156,8 @@ FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByName(const std::st
   return NULL;
 }
 
-FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceById(unsigned int id)
+FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceById(
+  unsigned int id)
 {
   for(size_t i=0;i<_instances.size();i++)
   {
@@ -179,7 +169,8 @@ FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceById(unsigned int id
   return NULL;
 }
 
-FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByIndex(unsigned int index)
+FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByIndex(
+  unsigned int index)
 {
   if (index < _instances.size())
     return _instances[index];
@@ -220,7 +211,9 @@ FabricCore::DFGExec FabricDFGBaseInterface::getDFGExec()
   return FabricCore::DFGExec();
 }
 
-bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
+bool FabricDFGBaseInterface::transferInputValuesToDFG(
+  MDataBlock& data)
+{
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::transferInputValuesToDFG");
 
   if(_isTransferingInputs)
@@ -238,7 +231,8 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(MDataBlock& data){
   return true;
 }
 
-void FabricDFGBaseInterface::evaluate(){
+void FabricDFGBaseInterface::evaluate()
+{
 
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::evaluate");
 
@@ -274,7 +268,10 @@ void FabricDFGBaseInterface::evaluate(){
   }
 }
 
-void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool isDeformer){
+void FabricDFGBaseInterface::transferOutputValuesToMaya(
+  MDataBlock& data, 
+  bool isDeformer)
+{
   if(_isTransferingInputs)
     return;
 
@@ -289,7 +286,9 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(MDataBlock& data, bool i
   getDFGBinding().visitArgs(getLockType(), &FabricDFGBaseInterface::VisitOutputArgsCallback, &ud);
 }
 
-void FabricDFGBaseInterface::collectDirtyPlug(MPlug const &inPlug){
+void FabricDFGBaseInterface::collectDirtyPlug(
+  MPlug const &inPlug)
+{
 
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::collectDirtyPlug");
 
@@ -446,7 +445,10 @@ void FabricDFGBaseInterface::generateAttributeLookups()
   }
 }
 
-void FabricDFGBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affectedPlugs){
+void FabricDFGBaseInterface::affectChildPlugs(
+  MPlug &plug, 
+  MPlugArray &affectedPlugs)
+{
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::affectChildPlugs");
   if(plug.isNull()){
     return;
@@ -469,7 +471,10 @@ void FabricDFGBaseInterface::affectChildPlugs(MPlug &plug, MPlugArray &affectedP
   }
 }
 
-void FabricDFGBaseInterface::storePersistenceData(MString file, MStatus *stat){
+void FabricDFGBaseInterface::storePersistenceData(
+  MString file, 
+  MStatus *stat)
+{
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::storePersistenceData");
 
   MAYADFG_CATCH_BEGIN(stat);
@@ -483,7 +488,10 @@ void FabricDFGBaseInterface::storePersistenceData(MString file, MStatus *stat){
   MAYADFG_CATCH_END(stat);
 }
 
-void FabricDFGBaseInterface::restoreFromPersistenceData(MString file, MStatus *stat){
+void FabricDFGBaseInterface::restoreFromPersistenceData(
+  MString file, 
+  MStatus *stat)
+{
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::restoreFromPersistenceData");
   if(_restoredFromPersistenceData)
     return;
@@ -531,7 +539,10 @@ void FabricDFGBaseInterface::restoreFromPersistenceData(MString file, MStatus *s
   restoreFromJSON(json, stat);
 }
 
-void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
+void FabricDFGBaseInterface::restoreFromJSON(
+  MString json, 
+  MStatus *stat)
+{
   if(_restoredFromPersistenceData)
     return;
 
@@ -629,7 +640,8 @@ void FabricDFGBaseInterface::restoreFromJSON(MString json, MStatus *stat){
   MAYADFG_CATCH_END(stat);
 }
 
-void FabricDFGBaseInterface::setReferencedFilePath(MString filePath)
+void FabricDFGBaseInterface::setReferencedFilePath(
+  MString filePath)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::setReferencedFilePath");
 
@@ -656,7 +668,8 @@ void FabricDFGBaseInterface::reloadFromReferencedFilePath()
   restoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
-MString FabricDFGBaseInterface::getPlugName(const MString &portName)
+MString FabricDFGBaseInterface::getPlugName(
+  const MString &portName)
 {
   if      (portName == "message")            return "dfg_message";
   else if (portName == "saveData")           return "dfg_saveData";
@@ -665,7 +678,8 @@ MString FabricDFGBaseInterface::getPlugName(const MString &portName)
   else                                       return portName;
 }
 
-MString FabricDFGBaseInterface::getPortName(const MString &plugName)
+MString FabricDFGBaseInterface::getPortName(
+  const MString &plugName)
 {
   if      (plugName == "dfg_message")           return "message";
   else if (plugName == "dfg_saveData")          return "saveData";
@@ -674,7 +688,8 @@ MString FabricDFGBaseInterface::getPortName(const MString &plugName)
   else                                          return plugName;
 }
 
-void FabricDFGBaseInterface::invalidatePlug(MPlug & plug)
+void FabricDFGBaseInterface::invalidatePlug(
+  MPlug & plug)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::invalidatePlug");
 
@@ -817,7 +832,8 @@ void FabricDFGBaseInterface::invalidateNode()
   _outputsDirtied = false;
 }
 
-void FabricDFGBaseInterface::queueIncrementEvalID(bool onIdle)
+void FabricDFGBaseInterface::queueIncrementEvalID(
+  bool onIdle)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::queueIncrementEvalID");
 
@@ -855,7 +871,8 @@ void FabricDFGBaseInterface::incrementEvalID()
   MGlobal::executeCommand(command+plugName+" "+evalIDStr, false /*display*/, false /*undoable*/);
 }
 
-void FabricDFGBaseInterface::queueMelCommand(MString cmd)
+void FabricDFGBaseInterface::queueMelCommand(
+  MString cmd)
 {
   // todo: this needs to use a mutex~!
   s_queuedMelCommands.append(cmd);
@@ -877,7 +894,10 @@ MStatus FabricDFGBaseInterface::processQueuedMelCommands()
   return result;
 }
 
-bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &array){
+bool FabricDFGBaseInterface::plugInArray(
+  const MPlug &plug, 
+  const MPlugArray &array)
+{
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::plugInArray");
 
   bool found = false;
@@ -890,7 +910,11 @@ bool FabricDFGBaseInterface::plugInArray(const MPlug &plug, const MPlugArray &ar
   return found;
 }
 
-MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug const &inPlug, MPlugArray &affectedPlugs){
+MStatus FabricDFGBaseInterface::setDependentsDirty(
+  MObject thisMObject, 
+  MPlug const &inPlug, 
+  MPlugArray &affectedPlugs)
+{
 
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::setDependentsDirty");
 
@@ -966,7 +990,9 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(MObject thisMObject, MPlug co
   return MS::kSuccess;
 }
 
-void FabricDFGBaseInterface::copyInternalData(MPxNode *node){
+void FabricDFGBaseInterface::copyInternalData(
+  MPxNode *node)
+{
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::copyInternalData");
 
   if (node)
@@ -982,7 +1008,11 @@ void FabricDFGBaseInterface::copyInternalData(MPxNode *node){
   }
 }
 
-bool FabricDFGBaseInterface::getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx){
+bool FabricDFGBaseInterface::getInternalValueInContext(
+  const MPlug &plug, 
+  MDataHandle &dataHandle, 
+  MDGContext &ctx)
+{
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::getInternalValueInContext");
 
   if(plug.partialName() == "saveData" || plug.partialName() == "svd"){
@@ -996,7 +1026,11 @@ bool FabricDFGBaseInterface::getInternalValueInContext(const MPlug &plug, MDataH
   return false;
 }
 
-bool FabricDFGBaseInterface::setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx){
+bool FabricDFGBaseInterface::setInternalValueInContext(
+  const MPlug &plug, 
+  const MDataHandle &dataHandle, 
+  MDGContext &ctx)
+{
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::setInternalValueInContext");
 
   if(plug.partialName() == "saveData" || plug.partialName() == "svd"){
@@ -1018,7 +1052,9 @@ bool FabricDFGBaseInterface::setInternalValueInContext(const MPlug &plug, const 
   return false;
 }
 
-void FabricDFGBaseInterface::onNodeAdded(MObject &node, void *clientData)
+void FabricDFGBaseInterface::onNodeAdded(
+  MObject &node, 
+  void *clientData)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::onNodeAdded");
 
@@ -1041,7 +1077,9 @@ void FabricDFGBaseInterface::onNodeAdded(MObject &node, void *clientData)
   }
 }
 
-void FabricDFGBaseInterface::onNodeRemoved(MObject &node, void *clientData)
+void FabricDFGBaseInterface::onNodeRemoved(
+  MObject &node, 
+  void *clientData)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::onNodeRemoved");
 
@@ -1069,7 +1107,9 @@ void FabricDFGBaseInterface::onNodeRemoved(MObject &node, void *clientData)
   }
 }
 
-void FabricDFGBaseInterface::onAnimCurveEdited(MObjectArray &editedCurves, void *clientData)
+void FabricDFGBaseInterface::onAnimCurveEdited(
+  MObjectArray &editedCurves, 
+  void *clientData)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::onAnimCurveEdited");
 
@@ -1109,7 +1149,11 @@ void FabricDFGBaseInterface::onAnimCurveEdited(MObjectArray &editedCurves, void 
   }
 }
 
-void FabricDFGBaseInterface::onConnection(const MPlug &plug, const MPlug &otherPlug, bool asSrc, bool made)
+void FabricDFGBaseInterface::onConnection(
+  const MPlug &plug, 
+  const MPlug &otherPlug, 
+  bool asSrc, 
+  bool made)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::onConnection");
 
@@ -1996,7 +2040,13 @@ inline bool AddCompoundAttributes(
 // ********************   ********************  //
 
 
-MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType, bool compoundChild, MStatus * stat)
+MObject FabricDFGBaseInterface::addMayaAttribute(
+  MString portName, 
+  MString dataType, 
+  FabricCore::DFGPortType portType, 
+  MString arrayType, 
+  bool compoundChild, 
+  MStatus * stat)
 {
   std::cout 
     << "FabricDFGBaseInterface::addMayaAttribute " 
@@ -2219,7 +2269,9 @@ MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataT
   return MObject();
 }
 
-void FabricDFGBaseInterface::removeMayaAttribute(MString portName, MStatus * stat)
+void FabricDFGBaseInterface::removeMayaAttribute(
+  MString portName, 
+  MStatus * stat)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::removeMayaAttribute");
 
@@ -2238,7 +2290,11 @@ void FabricDFGBaseInterface::removeMayaAttribute(MString portName, MStatus * sta
   MAYASPLICE_CATCH_END(stat);
 }
 
-void FabricDFGBaseInterface::setupMayaAttributeAffects(MString portName, FabricCore::DFGPortType portType, MObject newAttribute, MStatus *stat)
+void FabricDFGBaseInterface::setupMayaAttributeAffects(
+  MString portName, 
+  FabricCore::DFGPortType portType, 
+  MObject newAttribute, 
+  MStatus *stat)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::setupMayaAttributeAffects");
 
@@ -2295,7 +2351,8 @@ bool FabricDFGBaseInterface::useEvalContext()
   return s_use_evalContext;
 }
 
-void FabricDFGBaseInterface::managePortObjectValues(bool destroy)
+void FabricDFGBaseInterface::managePortObjectValues(
+  bool destroy)
 {
   if(_portObjectsDestroyed == destroy)
     return;
@@ -2348,7 +2405,9 @@ void FabricDFGBaseInterface::managePortObjectValues(bool destroy)
   _portObjectsDestroyed = destroy;
 }
 
-void FabricDFGBaseInterface::allStorePersistenceData(MString file, MStatus *stat)
+void FabricDFGBaseInterface::allStorePersistenceData(
+  MString file, 
+  MStatus *stat)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::allStorePersistenceData");
 
@@ -2356,7 +2415,9 @@ void FabricDFGBaseInterface::allStorePersistenceData(MString file, MStatus *stat
     _instances[i]->storePersistenceData(file, stat);
 }
 
-void FabricDFGBaseInterface::allRestoreFromPersistenceData(MString file, MStatus *stat)
+void FabricDFGBaseInterface::allRestoreFromPersistenceData(
+  MString file, 
+  MStatus *stat)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::allRestoreFromPersistenceData");
 
@@ -2381,7 +2442,8 @@ void FabricDFGBaseInterface::allResetInternalData()
   }
 }
 
-void FabricDFGBaseInterface::setAllRestoredFromPersistenceData(bool value)
+void FabricDFGBaseInterface::setAllRestoredFromPersistenceData(
+  bool value)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::setAllRestoredFromPersistenceData");
 
@@ -2586,8 +2648,7 @@ void FabricDFGBaseInterface::VisitOutputArgsCallback(
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
   FEC_DFGBindingVisitArgs_SetCB setCB,
   FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
-  void *getSetUD
-)
+  void *getSetUD)
 {
   if(argOutsidePortType == FabricCore::DFGPortType_In)
     return;
@@ -2650,7 +2711,10 @@ void FabricDFGBaseInterface::VisitOutputArgsCallback(
   }
 }
 
-void FabricDFGBaseInterface::renamePlug(const MPlug &plug, MString oldName, MString newName)
+void FabricDFGBaseInterface::renamePlug(
+  const MPlug &plug, 
+  MString oldName, 
+  MString newName)
 {
   if(plug.isNull())
     return;
@@ -2669,7 +2733,8 @@ void FabricDFGBaseInterface::renamePlug(const MPlug &plug, MString oldName, MStr
     renamePlug( plug.child(i), oldName, newName );
 }
 
-MString FabricDFGBaseInterface::resolveEnvironmentVariables(const MString & filePath)
+MString FabricDFGBaseInterface::resolveEnvironmentVariables(
+  const MString & filePath)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::resolveEnvironmentVariables");
   std::string text = filePath.asChar();
@@ -2766,7 +2831,9 @@ MStatus FabricDFGBaseInterface::doPostEvaluation(
 }
 #endif
 
-bool FabricDFGBaseInterface::HasPort(const char *in_portName, const bool testForInput)
+bool FabricDFGBaseInterface::HasPort(
+  const char *in_portName, 
+  const bool testForInput)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::HasPort");
 
@@ -2794,7 +2861,8 @@ bool FabricDFGBaseInterface::HasPort(const char *in_portName, const bool testFor
   }
 }
 
-bool FabricDFGBaseInterface::HasInputPort(const char *portName)
+bool FabricDFGBaseInterface::HasInputPort(
+  const char *portName)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::HasInputPort");
   return HasPort(portName, true);

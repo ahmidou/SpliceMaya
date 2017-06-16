@@ -4,16 +4,11 @@
 
 #pragma once
 
-#include <iostream>
-
-#include <maya/MArgList.h>
-#include <maya/MArgParser.h>
-#include <maya/MPxCommand.h>
-
-#include <FabricCore.h>
-
-#include <vector>
 #include <map>
+#include <vector>
+#include <FabricCore.h>
+#include <maya/MArgList.h>
+#include <maya/MPxCommand.h>
 
 class FabricImportPatternCommand: public MPxCommand
 {

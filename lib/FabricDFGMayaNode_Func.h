@@ -8,17 +8,15 @@
 
 class FabricDFGMayaNode_Func : public FabricDFGMayaNode
 {
-	public:
+  public:
+    static void* creator();
 
-	  static void* creator();
+    FabricDFGMayaNode_Func();
 
-	  FabricDFGMayaNode_Func();
+    static MTypeId id;
 
-	  static MTypeId id;
-
-	protected:
-
-	  static FabricCore::DFGBinding CreateDFGBinding(
-	    FabricCore::DFGHost &dfgHost
-	    );
+  protected:
+    static FabricCore::DFGBinding CreateDFGBinding(
+      FabricCore::DFGHost &dfgHost
+      );
 };

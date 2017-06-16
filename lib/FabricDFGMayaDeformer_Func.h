@@ -9,7 +9,6 @@
 class FabricDFGMayaDeformer_Func : public FabricDFGMayaDeformer
 {
   public:
-
     static void* creator();
 
     FabricDFGMayaDeformer_Func();
@@ -17,7 +16,6 @@ class FabricDFGMayaDeformer_Func : public FabricDFGMayaDeformer
     static MTypeId id;
 
   protected:
-
     static FabricCore::DFGBinding CreateDFGBinding(
       FabricCore::DFGHost &dfgHost
       );

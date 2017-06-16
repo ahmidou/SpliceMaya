@@ -9,23 +9,28 @@
 
 class FabricConstraint: public MPxNode {
 
-public:
-  static void* creator();
-  static MStatus initialize();
+  public:
+    static void* creator();
+    
+    static MStatus initialize();
 
-  FabricConstraint();
-  ~FabricConstraint();
+    FabricConstraint();
 
-  MStatus compute(const MPlug& plug, MDataBlock& data);
+    ~FabricConstraint();
 
-  // node attributes
-  static MTypeId id;
-  static MObject mode;
-  static MObject parent;
-  static MObject input;
-  static MObject rotateOrder;
-  static MObject offset;
-  static MObject translate;
-  static MObject rotate;
-  static MObject scale;
+    MStatus compute(
+      const MPlug& plug, 
+      MDataBlock& data
+      );
+
+    // node attributes
+    static MTypeId id;
+    static MObject mode;
+    static MObject parent;
+    static MObject input;
+    static MObject rotateOrder;
+    static MObject offset;
+    static MObject translate;
+    static MObject rotate;
+    static MObject scale;
 };

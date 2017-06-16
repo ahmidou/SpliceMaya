@@ -1,32 +1,26 @@
 //
 // Copyright (c) 2010-2016, Fabric Software Inc. All rights reserved.
 //
-
-#include <QFileDialog>
-#include <QDialog>
-
+ 
 #include "Foundation.h"
-#include "FabricImportPatternCommand.h"
-#include "FabricDFGBaseInterface.h"
-#include "FabricSpliceHelpers.h"
 #include "FabricDFGWidget.h"
+#include "FabricSpliceHelpers.h"
 #include "FabricDFGConversion.h"
+#include "FabricDFGBaseInterface.h"
 #include "FabricImportPatternDialog.h"
-
-#include <maya/MStringArray.h>
-#include <maya/MSyntax.h>
-#include <maya/MArgDatabase.h>
-#include <maya/MQtUtil.h>
-#include <maya/MDGModifier.h>
-#include <maya/MFnDependencyNode.h>
-#include <maya/MDagModifier.h>
-#include <maya/MFnTransform.h>
-#include <maya/MFnMesh.h>
-#include <maya/MFnSet.h>
-#include <maya/MFnLambertShader.h>
-#include <maya/MCommandResult.h>
+#include "FabricImportPatternCommand.h"
 
 #include <FTL/FS.h>
+#include <maya/MFnSet.h>
+#include <maya/MSyntax.h>
+#include <maya/MQtUtil.h>
+#include <maya/MFnMesh.h>
+#include <maya/MArgParser.h>
+#include <maya/MStringArray.h>
+#include <maya/MDagModifier.h>
+#include <maya/MFnTransform.h>
+#include <maya/MCommandResult.h>
+#include <maya/MFnDependencyNode.h>
 
 MSyntax FabricImportPatternCommand::newSyntax()
 {
@@ -46,7 +40,8 @@ void* FabricImportPatternCommand::creator()
   return new FabricImportPatternCommand;
 }
 
-MStatus FabricImportPatternCommand::doIt(const MArgList &args)
+MStatus FabricImportPatternCommand::doIt(
+  const MArgList &args)
 {
   MStatus status;
   MArgParser argParser(syntax(), args, &status);
@@ -394,7 +389,9 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   return MS::kSuccess;
 }
 
-MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, MString rootPrefix)
+MStatus FabricImportPatternCommand::invoke(
+  FabricCore::DFGBinding binding, 
+  MString rootPrefix)
 {
   m_rootPrefix = rootPrefix;
   FabricCore::Context context;
@@ -505,8 +502,9 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::DFGBinding binding, MStri
   return MS::kSuccess;
 }
 
-
-MString FabricImportPatternCommand::parentPath(MString path, MString * name)
+MString FabricImportPatternCommand::parentPath(
+  MString path, 
+  MString * name)
 {
   if(name)
     *name = path;  
@@ -521,7 +519,8 @@ MString FabricImportPatternCommand::parentPath(MString path, MString * name)
   return "";
 }
 
-MString FabricImportPatternCommand::simplifyPath(MString path)
+MString FabricImportPatternCommand::simplifyPath(
+  MString path)
 {
   if(path.length() == 0)
     return path;
@@ -562,7 +561,10 @@ MString FabricImportPatternCommand::simplifyPath(MString path)
   return path;
 }
 
-MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString type, bool createIfMissing)
+MObject FabricImportPatternCommand::getOrCreateNodeForPath(
+  MString path, 
+  MString type, 
+  bool createIfMissing)
 {
   if(path.length() == 0)
     return MObject();
@@ -596,7 +598,8 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
   return node;
 }
 
-MObject FabricImportPatternCommand::getOrCreateNodeForObject(FabricCore::RTVal obj)
+MObject FabricImportPatternCommand::getOrCreateNodeForObject(
+  FabricCore::RTVal obj)
 {
   MString type = obj.callMethod("String", "getType", 0, 0).getStringCString();
   MString path = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
@@ -635,7 +638,9 @@ MObject FabricImportPatternCommand::getOrCreateNodeForObject(FabricCore::RTVal o
   return MObject();
 }
 
-bool FabricImportPatternCommand::updateTransformForObject(FabricCore::RTVal obj, MObject node)
+bool FabricImportPatternCommand::updateTransformForObject(
+  FabricCore::RTVal obj, 
+  MObject node)
 {
   FabricCore::RTVal transform = FabricCore::RTVal::Create(obj.getContext(), "ImporterTransform", 1, &obj);
   if(transform.isNullObject())
@@ -665,7 +670,8 @@ bool FabricImportPatternCommand::updateTransformForObject(FabricCore::RTVal obj,
   return true;
 }
 
-bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
+bool FabricImportPatternCommand::updateShapeForObject(
+  FabricCore::RTVal obj)
 {
   FabricCore::RTVal shape = FabricCore::RTVal::Create(obj.getContext(), "ImporterShape", 1, &obj);
   if(shape.isNullObject())
@@ -738,7 +744,9 @@ bool FabricImportPatternCommand::updateShapeForObject(FabricCore::RTVal obj)
   return true;
 }
 
-bool FabricImportPatternCommand::updateMaterialForObject(FabricCore::RTVal obj, MObject node)
+bool FabricImportPatternCommand::updateMaterialForObject(
+  FabricCore::RTVal obj, 
+  MObject node)
 {
   MStatus status;
   FabricCore::RTVal shape = FabricCore::RTVal::Create(obj.getContext(), "ImporterShape", 1, &obj);

@@ -2,12 +2,11 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
+#include <maya/MGlobal.h>
+#include <maya/MFileIO.h>
 #include "FabricDFGProfiling.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGMayaDeformer.h"
-
-#include <maya/MGlobal.h>
-#include <maya/MFileIO.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>

@@ -10,12 +10,14 @@ class FabricMayaProfilingEvent : public FTL::AutoProfilingEvent
 {
 public:
 
-  FabricMayaProfilingEvent(char const * label)
-  : FTL::AutoProfilingEvent(label, s_stack)
+  FabricMayaProfilingEvent(
+  	char const * label)
+   	: FTL::AutoProfilingEvent(label, s_stack)
   {
   }
 
   static void startProfiling();
+
   static void stopProfiling();
 
 private:

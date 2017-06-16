@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <FabricUI/DFG/DFGUICmdHandler.h>
-#include <maya/MString.h>
 #include <FTL/StrRef.h>
+#include <maya/MString.h>
+#include <FabricUI/DFG/DFGUICmdHandler.h>
 
 class FabricDFGBaseInterface;
 
@@ -406,6 +406,11 @@ protected:
     std::stringstream &cmd
     );
 
-  static FabricDFGBaseInterface * getInterfFromBinding( FabricCore::DFGBinding const &binding );
-  static MString getNodeNameFromBinding( FabricCore::DFGBinding const &binding );
+  static FabricDFGBaseInterface * getInterfFromBinding( 
+    FabricCore::DFGBinding const &binding 
+    );
+
+  static MString getNodeNameFromBinding( 
+    FabricCore::DFGBinding const &binding 
+    );
 };

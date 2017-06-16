@@ -4,15 +4,17 @@
 
 #include <QVBoxLayout>
 #include <QDialogButtonBox>
-
 #include "FabricImportPatternDialog.h"
 #include "FabricImportPatternCommand.h"
 
-FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::DFGBinding binding, MString rootPrefix)
-: QDialog(parent)
-, m_rootPrefix(rootPrefix)
-, m_binding(binding)
-, m_wasAccepted(false)
+FabricImportPatternDialog::FabricImportPatternDialog(
+  QWidget * parent, 
+  FabricCore::DFGBinding binding, 
+  MString rootPrefix)
+  : QDialog(parent)
+  , m_rootPrefix(rootPrefix)
+  , m_binding(binding)
+  , m_wasAccepted(false)
 {
   setWindowTitle("Fabric Import Pattern");
   m_stack = new QUndoStack();

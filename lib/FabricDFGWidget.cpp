@@ -4,15 +4,12 @@
 
 
 #include <QCheckBox>
-
 #include <maya/MStatus.h>
 #include <maya/MGlobal.h>
-#include <maya/MEventMessage.h>
-
 #include "FabricDFGWidget.h"
+#include <maya/MEventMessage.h>
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGBaseInterface.h"
-
 #include <DFG/Dialogs/DFGEditPortDialog.h>
 #include <FabricUI/Util/LoadFabricStyleSheet.h>
 #include <FabricUI/DFG/Commands/DFGCommandRegistration.h>

@@ -10,6 +10,7 @@
 class FabricDFGWidgetCommand: public MPxCommand{
   public:
     static void* creator();
+    
     static MSyntax newSyntax();
 
     MStatus doIt(

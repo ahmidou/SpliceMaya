@@ -4,11 +4,10 @@
 
 #pragma once
 
-#include <maya/MPxNode.h> 
-#include <maya/MTypeId.h> 
-
 #include <vector>
 #include <FabricCore.h>
+#include <maya/MPxNode.h> 
+#include <maya/MTypeId.h> 
 
 class FabricExtensionPackageNode: public MPxNode {
 
