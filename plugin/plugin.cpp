@@ -54,6 +54,10 @@
   #define MAYA_EXPORT extern "C" MStatus
 #endif
 
+// Julien Keep for debugging
+#include <stdlib.h>
+#include <stdio.h>
+
 // FE Owned IDs 0x0011AE40 - 0x0011AF3F
 const MTypeId gFirstValidNodeID(0x0011AE40);
 // FabricSpliceMayaNode       0x0011AE41
@@ -106,6 +110,7 @@ void onSceneSave(void *userData){
 }
 
 void onSceneNew(void *userData){
+  std::cout << "plugin.onSceneNew" << std::endl;
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
 
@@ -136,6 +141,7 @@ void onSceneNew(void *userData){
 }
 
 void onSceneLoad(void *userData){
+  std::cout << "plugin.onSceneLoad" << std::endl;
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
 
@@ -251,40 +257,17 @@ void initializeCommands(MFnPlugin &plugin)
 {
   try
   {
-    FabricCore::Client client = FabricDFGWidget::GetCoreClient();
-
-    new FabricUI::Application::FabricApplicationStates(client);
-    
-    FabricUI::Commands::KLCommandRegistry *registry = 
-      new FabricUI::Commands::KLCommandRegistry(
-        //client
-        );
+    new FabricUI::Application::FabricApplicationStates(FabricDFGWidget::GetCoreClient());
+    FabricUI::Commands::KLCommandRegistry *registry = new FabricUI::Commands::KLCommandRegistry();
     registry->synchronizeKL();
-
-    FabricUI::Commands::KLCommandManager *manager = 
-      new FabricUI::Commands::KLCommandManager(
-        //client
-        );
-    manager->synchronizeKL();
-
+    new FabricUI::Commands::KLCommandManager();
     CommandManagerMayaCallback::GetCommandManagerMayaCallback();
 
     MStatus status;
-
-    INITPLUGIN_STATE( 
-      status, 
-      plugin.registerCommand(
-        "FabricCommand", 
-        FabricCommand::creator) 
-      );
-
-    INITPLUGIN_STATE( 
-      status, 
-      plugin.registerCommand(
-        "FabricExecuteCommand", 
-        FabricExecuteCommand::creator) 
-      );
+    INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricCommand::creator));
+    INITPLUGIN_STATE(status, plugin.registerCommand("FabricExecuteCommand", FabricExecuteCommand::creator));
   }
+
   catch(FabricCore::Exception e)
   {
     mayaLogErrorFunc(e.getDesc_cstr());
@@ -296,6 +279,10 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
+  freopen( "MayaLog.txt", "a", stdout );
+  freopen( "MayaError.txt", "a", stderr );
+  std::cout << "\n\n----- initializePlugin -----\n\n" << std::endl;
+
   // [FE-6287]
   char const *disable_evalContext = ::getenv( "FABRIC_MAYA_DISABLE_EVALCONTEXT" );
   FabricDFGBaseInterface::s_use_evalContext = !(!!disable_evalContext && !!disable_evalContext[0]);
@@ -467,20 +454,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
 void uninitializeCommands(MFnPlugin &plugin) 
 {
   MStatus status = MStatus::kSuccess;
-
-  UNINITPLUGIN_STATE( 
-    status, 
-    plugin.deregisterCommand(
-      "FabricCommand"
-      ) 
-    );
-
-  UNINITPLUGIN_STATE( 
-    status, 
-    plugin.deregisterCommand(
-      "FabricExecuteCommand"
-      ) 
-    );
+  UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricCommand"));
+  UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricExecuteCommand"));
 }
 
 #if defined(OSMac_)

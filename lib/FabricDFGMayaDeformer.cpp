@@ -2,31 +2,30 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#include "FabricDFGConversion.h"
-#include "FabricDFGMayaDeformer.h"
 #include "FabricDFGProfiling.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricDFGMayaDeformer.h"
 
 #include <maya/MGlobal.h>
+#include <maya/MFileIO.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
-#include <maya/MFileIO.h>
 
-MObject FabricDFGMayaDeformer::saveData;
 MObject FabricDFGMayaDeformer::evalID;
+MObject FabricDFGMayaDeformer::saveData;
 MObject FabricDFGMayaDeformer::refFilePath;
 MObject FabricDFGMayaDeformer::enableEvalContext;
 
 FabricDFGMayaDeformer::FabricDFGMayaDeformer(
-  FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding
-  )
+  FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding)
   : FabricDFGBaseInterface( createDFGBinding )
 {
   mGeometryInitialized = 0;
 }
 
-void FabricDFGMayaDeformer::postConstructor(){
+void FabricDFGMayaDeformer::postConstructor()
+{
   if(!MFileIO::isOpeningFile())
     FabricDFGBaseInterface::constructBaseInterface();
   setExistWithoutInConnections(true);
@@ -37,7 +36,8 @@ FabricDFGMayaDeformer::~FabricDFGMayaDeformer()
 {
 }
 
-MStatus FabricDFGMayaDeformer::initialize(){
+MStatus FabricDFGMayaDeformer::initialize()
+{
   MFnTypedAttribute typedAttr;
   MFnNumericAttribute nAttr;
 
@@ -62,7 +62,11 @@ MStatus FabricDFGMayaDeformer::initialize(){
   return MS::kSuccess;
 }
 
-MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, const MMatrix&, unsigned int multiIndex)
+MStatus FabricDFGMayaDeformer::deform(
+  MDataBlock& block, 
+  MItGeometry& iter, 
+  const MMatrix&, 
+  unsigned int multiIndex)
 {
   FabricMayaProfilingEvent bracket("FabricDFGMayaDeformer::deform");
 
@@ -174,7 +178,10 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
   return stat;
 }
 
-MStatus FabricDFGMayaDeformer::setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs){
+MStatus FabricDFGMayaDeformer::setDependentsDirty(
+  MPlug const &inPlug, 
+  MPlugArray &affectedPlugs)
+{
   MStatus stat = FabricDFGBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
 
   MFnDependencyNode thisNode(thisMObject());
@@ -204,17 +211,24 @@ void FabricDFGMayaDeformer::invalidateNode()
   mGeometryInitialized = false;
 }
 
-MStatus FabricDFGMayaDeformer::shouldSave(const MPlug &plug, bool &isSaving){
+MStatus FabricDFGMayaDeformer::shouldSave(
+  const MPlug &plug, 
+  bool &isSaving)
+{
   // guarantee dynamically added attributes are saved
   isSaving = true;
   return MS::kSuccess;
 }
 
-void FabricDFGMayaDeformer::copyInternalData(MPxNode *node){
+void FabricDFGMayaDeformer::copyInternalData(
+  MPxNode *node)
+{
   FabricDFGBaseInterface::copyInternalData(node);
 }
 
-int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBlock &data)
+int FabricDFGMayaDeformer::initializePolygonMeshPorts(
+  MPlug &meshPlug, 
+  MDataBlock &data)
 {
   FabricMayaProfilingEvent bracket("FabricDFGMayaDeformer::initializePolygonMeshPorts");
 
@@ -247,21 +261,35 @@ int FabricDFGMayaDeformer::initializePolygonMeshPorts(MPlug &meshPlug, MDataBloc
   return 1;
 }
 
-bool FabricDFGMayaDeformer::getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx){
+bool FabricDFGMayaDeformer::getInternalValueInContext(
+  const MPlug &plug, 
+  MDataHandle &dataHandle, 
+  MDGContext &ctx)
+{
   return FabricDFGBaseInterface::getInternalValueInContext(plug, dataHandle, ctx);
 }
 
-bool FabricDFGMayaDeformer::setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx){
+bool FabricDFGMayaDeformer::setInternalValueInContext(
+  const MPlug &plug, 
+  const MDataHandle &dataHandle, 
+  MDGContext &ctx)
+{
   return FabricDFGBaseInterface::setInternalValueInContext(plug, dataHandle, ctx);
 }
 
-MStatus FabricDFGMayaDeformer::connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
+MStatus FabricDFGMayaDeformer::connectionMade(
+  const MPlug &plug, 
+  const MPlug &otherPlug, 
+  bool asSrc)
 {
   FabricDFGBaseInterface::onConnection(plug, otherPlug, asSrc, true);
   return MS::kUnknownParameter;
 }
 
-MStatus FabricDFGMayaDeformer::connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
+MStatus FabricDFGMayaDeformer::connectionBroken(
+  const MPlug &plug, 
+  const MPlug &otherPlug, 
+  bool asSrc)
 {
   FabricDFGBaseInterface::onConnection(plug, otherPlug, asSrc, false);
   return MS::kUnknownParameter;
@@ -270,21 +298,18 @@ MStatus FabricDFGMayaDeformer::connectionBroken(const MPlug &plug, const MPlug &
 #if MAYA_API_VERSION >= 201600
 MStatus FabricDFGMayaDeformer::preEvaluation(
   const MDGContext& context,
-  const MEvaluationNode& evaluationNode
-  )
+  const MEvaluationNode& evaluationNode)
 {
   return FabricDFGBaseInterface::doPreEvaluation(
     thisMObject(),
     context,
-    evaluationNode
-    );
+    evaluationNode);
 }
 
 MStatus FabricDFGMayaDeformer::postEvaluation(
   const MDGContext& context,
   const MEvaluationNode& evaluationNode,
-  PostEvaluationType evalType
-  )
+  PostEvaluationType evalType)
 {
   return FabricDFGBaseInterface::doPostEvaluation(
     thisMObject(),
@@ -307,9 +332,8 @@ void FabricDFGMayaDeformer::VisitMeshCallback(
   FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
   FEC_DFGBindingVisitArgs_SetCB setCB,
   FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
-  void *getSetUD
-  ) {
-
+  void *getSetUD) 
+{
   if(argOutsidePortType != FabricCore::DFGPortType_IO)
     return;
 

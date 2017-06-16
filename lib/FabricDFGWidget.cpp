@@ -2,27 +2,30 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QLabel>
+
 #include <QCheckBox>
 
-#include <DFG/Dialogs/DFGEditPortDialog.h>
+#include <maya/MStatus.h>
+#include <maya/MGlobal.h>
+#include <maya/MEventMessage.h>
 
 #include "FabricDFGWidget.h"
-#include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricDFGBaseInterface.h"
 
+#include <DFG/Dialogs/DFGEditPortDialog.h>
 #include <FabricUI/Util/LoadFabricStyleSheet.h>
-#include <maya/MEventMessage.h>
-#include <maya/MGlobal.h>
+#include <FabricUI/DFG/Commands/DFGCommandRegistration.h>
 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
 
+using namespace FabricUI;
+using namespace DFG;
 
-void FabricDFGWidget::OnSelectCanvasNodeInDCC(void *client) {
-
+void FabricDFGWidget::OnSelectCanvasNodeInDCC(
+  void *client) 
+{
   if(s_widget == NULL)
     return;
 
@@ -46,7 +49,8 @@ void FabricDFGWidget::OnSelectCanvasNodeInDCC(void *client) {
   } 
 }
 
-FabricDFGWidget::FabricDFGWidget(QWidget * parent)
+FabricDFGWidget::FabricDFGWidget(
+  QWidget * parent)
   : FabricDFGWidgetBaseClass(parent)
   , m_initialized( false )
 {
@@ -71,7 +75,8 @@ FabricDFGWidget::~FabricDFGWidget()
   s_widget = NULL;
 }
 
-FabricDFGWidget *FabricDFGWidget::Instance(bool createIfNull)
+FabricDFGWidget *FabricDFGWidget::Instance(
+  bool createIfNull)
 {
   if ( !s_widget && createIfNull )
   {
@@ -90,24 +95,55 @@ void FabricDFGWidget::Destroy()
   s_manager = NULL;
 }
 
-QWidget * FabricDFGWidget::creator(QWidget * parent, const QString & name)
+QWidget * FabricDFGWidget::creator(
+  QWidget * parent, 
+  const QString & name)
 {
   return Instance();
 }
 
-void FabricDFGWidget::SetCurrentUINodeName(const char * node)
+void FabricDFGWidget::SetCurrentUINodeName(
+  const char * node)
 {
   if ( node )
     Instance()->setCurrentUINodeName( node );
 }
 
-void FabricDFGWidget::refreshScene() {
+FabricCore::Client FabricDFGWidget::GetCoreClient()
+{
+  return FabricSplice::ConstructClient();
+}
+
+FabricCore::DFGHost &FabricDFGWidget::getDFGHost()
+{
+  return m_dfgHost;
+}
+
+FabricDFGBaseInterface *FabricDFGWidget::getBaseInterface()
+{
+  if (s_widget == NULL)
+    return NULL;
+
+  if (s_widget->getDfgWidget() == NULL)
+    return NULL;
+  if (s_widget->getDfgWidget()->getUIController() == NULL)
+    return NULL;
+
+  MString interfIdStr = s_widget->getDfgWidget()->getUIController()->getBinding().getMetadata("maya_id");
+  if (interfIdStr.length() == 0)
+    return NULL;
+  return FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
+}
+
+void FabricDFGWidget::refreshScene() 
+{
   MStatus status;
   M3dView view = M3dView::active3dView(&status);
   view.refresh(true, true);
 }
 
-void FabricDFGWidget::setCurrentUINodeName(const char * node)
+void FabricDFGWidget::setCurrentUINodeName(
+  const char * node)
 {
   std::string currentUINodeName = node;
 
@@ -144,8 +180,10 @@ void FabricDFGWidget::setCurrentUINodeName(const char * node)
           &m_cmdHandler,
           false, 
           config);
-#endif
 
+    DFGCommandRegistration::RegisterCommands(getDfgWidget()->getDFGController());
+
+#endif
     m_initialized = true;
   }
   else
@@ -203,7 +241,8 @@ void FabricDFGWidget::onExportGraphInDCC()
   }
 }
 
-void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
+void FabricDFGWidget::onPortEditDialogCreated(
+  DFG::DFGBaseDialog * dialog)
 {
   DFG::DFGController * controller = dialog->getDFGController();
   if(!controller->isViewingRootGraph())
@@ -215,7 +254,7 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
   // FE-6747/FE-7369 : Don't edit the port if it's been set already.
   if(!editPortDialog->dataType().isEmpty())
   {
-    editPortDialog->setDataTypeReadOnly(true);
+    //editPortDialog->setDataTypeReadOnly(true);
     editPortDialog->setSoftRangeReadOnly(true);
     editPortDialog->setHardRangeReadOnly(true);
     editPortDialog->setComboReadOnly(true);
@@ -257,7 +296,9 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
   dialog->addInput(opaqueCheckBox, "opaque in DCC", "maya specific");
 }
 
-void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog, FTL::JSONObjectEnc<> * additionalMetaData)
+void FabricDFGWidget::onPortEditDialogInvoked(
+  DFG::DFGBaseDialog * dialog, 
+  FTL::JSONObjectEnc<> * additionalMetaData)
 {
   DFG::DFGController * controller = dialog->getDFGController();
   if(!controller->isViewingRootGraph())
@@ -288,7 +329,8 @@ void FabricDFGWidget::onPortEditDialogInvoked(DFG::DFGBaseDialog * dialog, FTL::
   }
 }
 
-void FabricDFGWidget::keyPressEvent(QKeyEvent * event)
+void FabricDFGWidget::keyPressEvent(
+  QKeyEvent * event)
 {
   if(event->modifiers() == Qt::NoModifier)
   {

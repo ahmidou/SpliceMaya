@@ -1,13 +1,11 @@
-#include "FabricDFGWidgetCommand.h"
+//
+// Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
+//
+
+#include <maya/MSyntax.h>
 #include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
-
-#include <maya/MStringArray.h>
-#include <maya/MSyntax.h>
-#include <maya/MArgDatabase.h>
-#include <maya/MQtUtil.h>
-
-#include <QToolBox>
+#include "FabricDFGWidgetCommand.h"
 
 #define kActionFlag "-a"
 #define kActionFlagLong "-action"
@@ -32,7 +30,8 @@ void* FabricDFGWidgetCommand::creator()
   return new FabricDFGWidgetCommand;
 }
 
-MStatus FabricDFGWidgetCommand::doIt(const MArgList &args)
+MStatus FabricDFGWidgetCommand::doIt(
+  const MArgList &args)
 {
   MStatus status = MS::kSuccess;
   mayaClearError();

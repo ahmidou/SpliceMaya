@@ -8,17 +8,17 @@
 
 class FabricDFGMayaDeformer_Func : public FabricDFGMayaDeformer
 {
-public:
+  public:
 
-  static void* creator();
+    static void* creator();
 
-  FabricDFGMayaDeformer_Func();
+    FabricDFGMayaDeformer_Func();
 
-  static MTypeId id;
+    static MTypeId id;
 
-protected:
+  protected:
 
-  static FabricCore::DFGBinding CreateDFGBinding(
-    FabricCore::DFGHost &dfgHost
-    );
+    static FabricCore::DFGBinding CreateDFGBinding(
+      FabricCore::DFGHost &dfgHost
+      );
 };

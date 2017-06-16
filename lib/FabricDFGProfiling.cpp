@@ -2,8 +2,8 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#include "FabricDFGProfiling.h"
 #include <maya/MGlobal.h>
+#include "FabricDFGProfiling.h"
 
 FTL::ProfilingStack FabricMayaProfilingEvent::s_stack(false);
 

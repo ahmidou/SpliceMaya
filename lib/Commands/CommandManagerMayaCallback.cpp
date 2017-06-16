@@ -2,6 +2,7 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
 
+#include <iostream>
 #include <sstream>
 #include <maya/MGlobal.h>
 #include "FabricSpliceHelpers.h"
@@ -19,16 +20,23 @@ CommandManagerMayaCallback* CommandManagerMayaCallback::s_cmdManagerMayaCallback
 CommandManagerMayaCallback::CommandManagerMayaCallback()
   : QObject()
 {
+  // std::cout 
+  //   << "CommandManagerMayaCallback::CommandManagerMayaCallback "
+  //   << std::endl;
+
   try
   {
-    CommandManager *manager =  CommandManager::getCommandManager();
+    CommandManager *manager = CommandManager::getCommandManager();
 
-    QObject::connect(
-      manager,
-      SIGNAL(commandPushed(Command *)),
-      this,
-      SLOT(onCommandPushed(Command *))
-      );
+    std::cout 
+      << "CommandManagerMayaCallback::CommandManagerMayaCallback "
+      << QObject::connect(
+        manager,
+        SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, bool)),
+        this,
+        SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, bool))
+        )
+        << std::endl;
   }
   catch (std::string &e) 
   {
@@ -72,9 +80,15 @@ inline void encodeRTValArg(
   cmdArgs << "\"" << arg.toUtf8().constData() << "\"";
 }
 
-void CommandManagerMayaCallback::onCommandPushed(
-  BaseCommand *cmd)
+void CommandManagerMayaCallback::onCommandDone(
+  BaseCommand *cmd,
+  bool addToStack,
+  bool replaceLog)
 {
+  // std::cout 
+  //   << "CommandManagerMayaCallback::onCommandDone "
+  //   << cmd->getName().toUtf8().constData() 
+  //   << std::endl;
   // Construct a Maya 'FabricCommand'  
   // that represents the Fabric command.
   std::stringstream fabricCmd;
@@ -93,16 +107,33 @@ void CommandManagerMayaCallback::onCommandPushed(
     // Check if it's a BaseRTValScriptableCommand,
     // to know how to cast the string.
     BaseRTValScriptableCommand *rtValScriptCmd = qobject_cast<BaseRTValScriptableCommand*>(cmd);
-     foreach(QString key, scriptCmd->getArgKeys())
+    foreach(QString key, scriptCmd->getArgKeys())
     {
+      std::cout 
+        << "CommandManagerMayaCallback::key "
+        << key.toUtf8().constData() 
+        << std::endl;
+
       encodeArg(key, fabricCmd);
       if(rtValScriptCmd)
-        encodeRTValArg(scriptCmd->getArg(key), fabricCmd);
-      else
-        encodeArg(scriptCmd->getArg(key), fabricCmd);
+      {
+        std::cout 
+          << "CommandManagerMayaCallback::path "
+          << rtValScriptCmd->getRTValArgPath(key).toUtf8().constData() 
+          << std::endl;
+      }
+      //   encodeRTValArg(scriptCmd->getArg(key), fabricCmd);
+      // else
+      //   encodeArg(scriptCmd->getArg(key), fabricCmd);
     }
   }
 
+  std::cout 
+    << "CommandManagerMayaCallback::onCommandDone "
+    << fabricCmd.str().c_str() 
+    << std::endl;
+
   // Create the maya command.
-  MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), true);
+  if(addToStack)
+    MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), true);
 }

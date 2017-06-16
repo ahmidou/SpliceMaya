@@ -11,13 +11,13 @@ FabricDFGMayaDeformer_Func::FabricDFGMayaDeformer_Func()
 {
 }
 
-void* FabricDFGMayaDeformer_Func::creator(){
+void* FabricDFGMayaDeformer_Func::creator()
+{
   return new FabricDFGMayaDeformer_Func();
 }
 
 FabricCore::DFGBinding FabricDFGMayaDeformer_Func::CreateDFGBinding(
-  FabricCore::DFGHost &dfgHost
-  )
+  FabricCore::DFGHost &dfgHost)
 {
   FabricCore::DFGBinding dfgBinding = dfgHost.createBindingToNewFunc();
   FabricCore::DFGExec dfgExec = dfgBinding.getExec();

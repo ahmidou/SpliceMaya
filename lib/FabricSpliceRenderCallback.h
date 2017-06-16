@@ -5,31 +5,9 @@
 #ifndef __FABRIC_SPLICE_RENDER_CALLBACK_H__
 #define __FABRIC_SPLICE_RENDER_CALLBACK_H__
 
-#include "FabricSpliceHelpers.h"
-#include "FabricDFGBaseInterface.h"
-#include "FabricSpliceBaseInterface.h"
- 
-#include <cmath> 
-#include <iostream>
-
-#include "Foundation.h"
 #include <FabricCore.h>
-#include <FabricSplice.h>
-
-#include <maya/MColor.h>
 #include <maya/MString.h>
-#include <maya/M3dView.h>
-#include <maya/MGlobal.h>
-#include <maya/M3dView.h>
-#include <maya/MMatrix.h>
-#include <maya/MDagPath.h>
-#include <maya/MFnCamera.h>
-#include <maya/MUiMessage.h>
-#include <maya/MFnDagNode.h>
-#include <maya/MAnimControl.h>
 #include <maya/MDrawContext.h>
-#include <maya/MFrameContext.h>
-#include <maya/MViewport2Renderer.h>
 #include <FabricUI/SceneHub/SHGLRenderer.h>
 
 bool isRTRPassEnabled();

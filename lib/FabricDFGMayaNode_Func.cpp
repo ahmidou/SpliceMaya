@@ -11,13 +11,13 @@ FabricDFGMayaNode_Func::FabricDFGMayaNode_Func()
 {
 }
 
-void* FabricDFGMayaNode_Func::creator(){
+void* FabricDFGMayaNode_Func::creator()
+{
   return new FabricDFGMayaNode_Func();
 }
 
 FabricCore::DFGBinding FabricDFGMayaNode_Func::CreateDFGBinding(
-  FabricCore::DFGHost &dfgHost
-  )
+  FabricCore::DFGHost &dfgHost)
 {
   FabricCore::DFGBinding dfgBinding = dfgHost.createBindingToNewFunc();
   FabricCore::DFGExec dfgExec = dfgBinding.getExec();

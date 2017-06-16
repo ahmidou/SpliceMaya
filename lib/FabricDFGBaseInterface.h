@@ -5,27 +5,16 @@
 #pragma once
 
 #include <DFG/DFGUI.h>
-
-#include "FabricSpliceConversion.h"
-#include "DFGUICmdHandler_Maya.h"
-#include "FabricDFGConversion.h"
-
 #include <vector>
 
-#include <maya/MFnDependencyNode.h> 
 #include <maya/MPlug.h> 
 #include <maya/MPxNode.h> 
-#include <maya/MTypeId.h> 
-#include <maya/MNodeMessage.h>
+#include <maya/MPlugArray.h>
 #include <maya/MStringArray.h>
-#include <maya/MFnCompoundAttribute.h>
-#include <maya/MFnNumericAttribute.h>
-#include <maya/MFnTypedAttribute.h>
-#include <maya/MFnMatrixAttribute.h>
+#include <maya/MFnDependencyNode.h> 
 
-#include <FabricSplice.h>
-#include <Commands/CommandStack.h>
-
+#include "FabricDFGConversion.h"
+#include "DFGUICmdHandler_Maya.h"
 #include <FTL/OrderedStringMap.h>
 
 using namespace FabricServices;

@@ -20,11 +20,20 @@ class FabricImportPatternCommand: public MPxCommand
 public:
 
   virtual const char * getName() { return "FabricImportPattern"; }
+  
   static void* creator();
+  
   static MSyntax newSyntax();
-  virtual MStatus doIt(const MArgList &args);
+  
+  virtual MStatus doIt(
+    const MArgList &args
+    );
+  
   virtual bool isUndoable() const { return false; }
-  MStatus invoke(FabricCore::DFGBinding binding, MString rootPrefix);
+  
+  MStatus invoke(
+    FabricCore::DFGBinding binding, MString rootPrefix
+    );
 
 private:
   FabricCore::RTVal m_context;
@@ -35,11 +44,36 @@ private:
 
   MString m_rootPrefix;
 
-  MString parentPath(MString path, MString * name = NULL);
-  MString simplifyPath(MString path);
-  MObject getOrCreateNodeForPath(MString path, MString type="transform", bool createIfMissing = true);
-  MObject getOrCreateNodeForObject(FabricCore::RTVal obj);
-  bool updateTransformForObject(FabricCore::RTVal obj, MObject node = MObject::kNullObj);
-  bool updateShapeForObject(FabricCore::RTVal obj);
-  bool updateMaterialForObject(FabricCore::RTVal obj, MObject node);
+  MString parentPath(
+    MString path, 
+    MString * name = NULL
+    );
+  
+  MString simplifyPath(
+    MString path
+    );
+  
+  MObject getOrCreateNodeForPath(
+    MString path, 
+    MString type="transform", 
+    bool createIfMissing = true
+    );
+  
+  MObject getOrCreateNodeForObject(
+    FabricCore::RTVal obj
+    );
+  
+  bool updateTransformForObject(
+    FabricCore::RTVal obj, 
+    MObject node = MObject::kNullObj
+    );
+  
+  bool updateShapeForObject(
+    FabricCore::RTVal obj
+    );
+  
+  bool updateMaterialForObject(
+    FabricCore::RTVal obj, 
+    MObject node
+    );
 };

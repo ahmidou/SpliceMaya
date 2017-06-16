@@ -11,13 +11,13 @@ FabricDFGMayaDeformer_Graph::FabricDFGMayaDeformer_Graph()
 {
 }
 
-void* FabricDFGMayaDeformer_Graph::creator(){
+void* FabricDFGMayaDeformer_Graph::creator()
+{
   return new FabricDFGMayaDeformer_Graph();
 }
 
 FabricCore::DFGBinding FabricDFGMayaDeformer_Graph::CreateDFGBinding(
-  FabricCore::DFGHost &dfgHost
-  )
+  FabricCore::DFGHost &dfgHost)
 {
   return dfgHost.createBindingToNewGraph();
 }

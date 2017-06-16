@@ -26,12 +26,18 @@
 #include <maya/MFnMessageAttribute.h>
 #include <maya/MFnStringData.h>
 #include <maya/MCommandResult.h>
-#include <maya/MPlugArray.h>
-#include <maya/MFileObject.h>
-#include <maya/MFnPluginData.h>
+//#include <maya/MFileObject.h>
+//#include <maya/MFnPluginData.h>
 #include <maya/MAnimControl.h>
 #include <maya/MQtUtil.h>
 #include <maya/MFileIO.h>
+
+// #include <maya/MTypeId.h> 
+// #include <maya/MNodeMessage.h>
+#include <maya/MFnNumericAttribute.h>
+#include <maya/MFnTypedAttribute.h>
+#include <maya/MFnMatrixAttribute.h>
+
 
 #if MAYA_API_VERSION >= 201600
 # include <maya/MEvaluationNode.h>
@@ -1992,6 +1998,11 @@ inline bool AddCompoundAttributes(
 
 MObject FabricDFGBaseInterface::addMayaAttribute(MString portName, MString dataType, FabricCore::DFGPortType portType, MString arrayType, bool compoundChild, MStatus * stat)
 {
+  std::cout 
+    << "FabricDFGBaseInterface::addMayaAttribute " 
+    << portName.asChar() 
+    << std::endl;
+
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::addMayaAttribute ");
 
   MAYADFG_CATCH_BEGIN(stat);
@@ -2403,7 +2414,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     );
 
   FTL::CStrRef descStr = jsonObject->getString( FTL_STR("desc") );
-
+ 
   if ( descStr == FTL_STR("dirty") )
   {
     // when we receive this notification we need to 
@@ -2422,11 +2433,8 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     // remove existing attributes if types don't match
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
-    {
-      return;
-      // removeMayaAttribute(nameStr.c_str());
-    }
-
+      removeMayaAttribute(nameStr.c_str());
+ 
     FabricCore::DFGExec exec = getDFGExec();
     FabricCore::DFGPortType portType = exec.getExecPortType(nameStr.c_str());
     addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
@@ -2459,7 +2467,17 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     generateAttributeLookups();
   }
   else if( descStr == FTL_STR("argInserted") )
-  {
+  { 
+    std::string nameStr = jsonObject->getString( FTL_STR("name") );
+    MString plugName = getPlugName(nameStr.c_str());
+    std::string typeStr = jsonObject->getString( FTL_STR("type") );
+
+    MFnDependencyNode thisNode(getThisMObject());
+
+    FabricCore::DFGExec exec = getDFGExec();
+    FabricCore::DFGPortType portType = exec.getExecPortType(nameStr.c_str());
+    addMayaAttribute(nameStr.c_str(), typeStr.c_str(), portType);
+
     generateAttributeLookups();
   }
   else if(   descStr == FTL_STR("varInserted")

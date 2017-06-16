@@ -2,31 +2,29 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#include <QWidget>
-#include <QKeyEvent>
+ 
 #include <QMouseEvent>
-#include <QWheelEvent>
-
-#include "FabricSpliceToolContext.h"
-#include "FabricSpliceBaseInterface.h"
-#include "FabricSpliceRenderCallback.h"
+#include <FTL/StrRef.h>
+#include <maya/MCursor.h>
+ 
+#include <FabricSplice.h>
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGBaseInterface.h"
-#include "FabricUI/Viewports/QtToKLEvent.h"
-#include <FabricSplice.h>
-#include <maya/MCursor.h>
-#include <maya/MDagPath.h>
-#include <maya/MFnCamera.h>
-#include <maya/MAnimControl.h>
-#include <maya/MTime.h>
-#include <FTL/StrRef.h>
-
-#include <map>
-
+#include "FabricSpliceToolContext.h"
+#include "FabricSpliceRenderCallback.h"
+ 
+#include <FabricUI/Viewports/QtToKLEvent.h>
+#include <FabricUI/Commands/KLCommandManager.h>
+#include <FabricUI/Application/FabricException.h>
+ 
+using namespace FabricUI;
+using namespace FabricUI::Commands;
+using namespace FabricCore;
+using namespace Application;
 
 /////////////////////////////////////////////////////
 // FabricSpliceManipulationCmd
-FabricCore::RTVal FabricSpliceManipulationCmd::s_rtval_commands;
+RTVal FabricSpliceManipulationCmd::s_rtval_commands;
 
 FabricSpliceManipulationCmd::FabricSpliceManipulationCmd() {
   m_rtval_commands = s_rtval_commands;
@@ -55,7 +53,7 @@ MStatus FabricSpliceManipulationCmd::redoIt() {
     view.refresh(true, true);
     return MStatus::kSuccess;
   }
-  catch (FabricCore::Exception e)
+  catch (Exception e)
   {
     mayaLogErrorFunc(e.getDesc_cstr());
     return MStatus::kFailure;
@@ -74,7 +72,7 @@ MStatus FabricSpliceManipulationCmd::undoIt() {
     view.refresh(true, true);
     return MStatus::kSuccess;
   }
-  catch (FabricCore::Exception e)
+  catch (Exception e)
   {
     mayaLogErrorFunc(e.getDesc_cstr());
     return MStatus::kFailure;
@@ -149,7 +147,7 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
   setImage(imagePath, kImage2);
   setImage(imagePath, kImage3);
 
-  const FabricCore::Client *client = 0;
+  const Client *client = 0;
   FECS_DGGraph_getClient(&client);
 
   if(!client)
@@ -160,22 +158,25 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
 
   try
   {
-    FabricCore::RTVal eventDispatcherHandle = FabricSplice::constructObjectRTVal("EventDispatcherHandle");
-    if(eventDispatcherHandle.isValid()){
+    RTVal eventDispatcherHandle = FabricSplice::constructObjectRTVal("EventDispatcherHandle");
+    if(eventDispatcherHandle.isValid())
+    {
       mEventDispatcher = eventDispatcherHandle.callMethod("EventDispatcher", "getEventDispatcher", 0, 0);
 
-      if(mEventDispatcher.isValid()){
+      if(mEventDispatcher.isValid())
+      {
         mEventDispatcher.callMethod("", "activateManipulation", 0, 0);
         view.refresh(true, true);
       }
     }
   } 
 
-  catch(FabricCore::Exception e) 
+  catch(Exception e) 
   {
     mayaLogErrorFunc(e.getDesc_cstr());
     return;
   }
+
   catch(FabricSplice::Exception e)
   {
     mayaLogErrorFunc(e.what());
@@ -185,8 +186,6 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
   sEventFilterObject.tool = this;
   view.widget()->installEventFilter(&sEventFilterObject);
   view.widget()->setFocus();
-
-  
 
   view.refresh(true, true);
 }
@@ -211,7 +210,7 @@ void FabricSpliceToolContext::toolOffCleanup() {
 
     view.refresh(true, true);
   }
-  catch (FabricCore::Exception e)
+  catch (Exception e)
   {
     mayaLogErrorFunc(e.getDesc_cstr());
   }
@@ -247,7 +246,7 @@ bool EventFilterObject::eventFilter(QObject *object, QEvent *event) {
  
 bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
   
-  const FabricCore::Client *client = 0;
+  const Client *client = 0;
   FECS_DGGraph_getClient(&client);
 
   if(!client)
@@ -262,8 +261,8 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     return false;
   }
 
-  FabricCore::RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
-  FabricCore::RTVal klevent = QtToKLEvent(event, viewport, "Maya" );
+  RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
+  RTVal klevent = QtToKLEvent(event, viewport, "Maya" );
    
   if(klevent.isValid() && !klevent.isNullObject())
   {
@@ -275,7 +274,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
 
     // The manipulation system has requested that a node is dirtified.
     // here we use the maya command to dirtify the specified dg node.
-    FabricCore::RTVal host = klevent.maybeGetMember("host");
+    RTVal host = klevent.maybeGetMember("host");
     MString dirtifyDCCNode(host.maybeGetMember("dirtifyNode").getStringCString());
     if(dirtifyDCCNode.length() > 0){
       MGlobal::executeCommand(MString("dgdirty \"") + dirtifyDCCNode + MString("\""));
@@ -285,17 +284,17 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     // Invoke the custom command passing the speficied args.
     MString customCommand(host.maybeGetMember("customCommand").getStringCString());
     if(customCommand.length() > 0){
-      FabricCore::RTVal customCommandParams = host.maybeGetMember("customCommandParams");
+      RTVal customCommandParams = host.maybeGetMember("customCommandParams");
       if(customCommandParams.callMethod("Size", "size", 0, 0).getUInt32() > 0)
       {
         if(customCommand == "setAttr")
         {
-          FabricCore::RTVal attributeVal = FabricSplice::constructStringRTVal("attribute");
-          FabricCore::RTVal valueVal = FabricSplice::constructStringRTVal("value");
+          RTVal attributeVal = FabricSplice::constructStringRTVal("attribute");
+          RTVal valueVal = FabricSplice::constructStringRTVal("value");
 
           MString attribute = customCommandParams.callMethod("String", "getString", 1, &attributeVal).getStringCString();
           MString valueType = customCommandParams.callMethod("String", "getValueType", 1, &valueVal).getStringCString();
-          FabricCore::RTVal value;
+          RTVal value;
 
           if(attribute.length() > 0)
           {
@@ -306,8 +305,8 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
               FabricDFGBaseInterface * dfgInterf = FabricDFGBaseInterface::getInstanceByName(parts[0].asChar());
               if(dfgInterf)
               {
-                FabricCore::DFGBinding binding = dfgInterf->getDFGBinding();
-                FabricCore::DFGExec exec = binding.getExec();
+                DFGBinding binding = dfgInterf->getDFGBinding();
+                DFGExec exec = binding.getExec();
                 FTL::StrRef portResolvedType = exec.getExecPortResolvedType(parts[1].asChar());
 
                 if(portResolvedType == "Mat44")
@@ -392,7 +391,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
       }
       else
       {
-        FabricCore::RTVal customCommandArgs = host.maybeGetMember("customCommandArgs");
+        RTVal customCommandArgs = host.maybeGetMember("customCommandArgs");
         MString args;
         for(uint32_t i=0; i<customCommandArgs.getArraySize(); i++){
           if(i>0)
@@ -476,6 +475,26 @@ bool FabricSpliceToolContext::onEvent(QEvent *event) {
       if(onIDEvent(event, view))
       {
         event->accept();
+
+        KLCommandManager *manager = qobject_cast<KLCommandManager*>(
+          CommandManager::getCommandManager());
+
+        // Check the command execution and print the exception, 
+        // we don't want to crash the app if the command fails.
+        try
+        {
+          manager->synchronizeKL();
+        }
+
+        catch(FabricException &e)
+        {
+          FabricException::Throw(
+            "GLViewportWidget::onEvent",
+            "",
+            e.what(),
+            PRINT);
+        }
+
         return true;
       }
       return false;
@@ -484,7 +503,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event) {
     else onRTR2Event(event, view);
   }
 
-  catch(FabricCore::Exception e) 
+  catch(Exception e) 
   {
     mayaLogErrorFunc(e.getDesc_cstr());
     return false;

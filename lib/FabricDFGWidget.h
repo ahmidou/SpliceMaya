@@ -4,25 +4,22 @@
 
 #pragma once
 
-#include "Foundation.h"
-#include "DFGUICmdHandler_Maya.h"
 #include <QWidget>
-#include <QSplitter>
-
-#include <map>
-
-#include <maya/MStatus.h>
-#include <maya/MString.h>
-
-#include <SceneHub/DFG/SHDFGCombinedWidget.h>
-#include <DFG/Dialogs/DFGBaseDialog.h>
-
-#include "FabricSpliceRenderCallback.h"
+#include "Foundation.h"
 
 #include <FabricSplice.h>
+#include <maya/MString.h>
+#include <maya/MDGMessage.h>
+#include <maya/MDagMessage.h>
+#include <maya/MModelMessage.h>
 
-using namespace FabricServices;
+#include "DFGUICmdHandler_Maya.h"
+
+#include <DFG/Dialogs/DFGBaseDialog.h>
+#include <SceneHub/DFG/SHDFGCombinedWidget.h>
+
 using namespace FabricUI;
+using namespace FabricServices;
 
 class FabricDFGBaseInterface;
 
@@ -43,73 +40,80 @@ typedef DFG::SHDFGCombinedWidget FabricDFGWidgetBaseClass;
 typedef DFG::DFGCombinedWidget FabricDFGWidgetBaseClass; 
 #endif
  
-class FabricDFGWidget : public FabricDFGWidgetBaseClass {
- 
-
+class FabricDFGWidget : public FabricDFGWidgetBaseClass 
+{
   Q_OBJECT
   
-public:
-  FabricDFGWidget(QWidget * parent);
-  virtual ~FabricDFGWidget();
+  public:
+    FabricDFGWidget(
+      QWidget * parent
+      );
+    
+    virtual ~FabricDFGWidget();
 
-  static QWidget * creator(QWidget * parent, const QString & name);
- 
-  static FabricDFGWidget *Instance(bool createIfNull=true);
-  static void Destroy();
+    static QWidget * creator(
+      QWidget * parent, 
+      const QString & name
+      );
+   
+    static FabricDFGWidget *Instance(
+      bool createIfNull=true
+      );
 
-  static void SetCurrentUINodeName(const char * node);
+    static void Destroy();
 
-  static FabricCore::Client GetCoreClient()
-  {
-    return FabricSplice::ConstructClient();
-  }
+    static void SetCurrentUINodeName(
+      const char * node
+      );
 
-  FabricCore::DFGHost &getDFGHost()
-  {
-    return m_dfgHost;
-  }
+    static FabricCore::Client GetCoreClient();
+    
+    static FabricDFGBaseInterface *getBaseInterface();
 
-  static FabricDFGBaseInterface *getBaseInterface()
-  {
-    if (s_widget == NULL)
-      return NULL;
+    static void OnSelectCanvasNodeInDCC(
+      void *client
+      );
 
-    if (s_widget->getDfgWidget() == NULL)
-      return NULL;
-    if (s_widget->getDfgWidget()->getUIController() == NULL)
-      return NULL;
+    FabricCore::DFGHost &getDFGHost();
 
-    MString interfIdStr = s_widget->getDfgWidget()->getUIController()->getBinding().getMetadata("maya_id");
-    if (interfIdStr.length() == 0)
-      return NULL;
-    return FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
-  }
+    virtual void keyPressEvent(
+      QKeyEvent * event
+      );
 
-  static void OnSelectCanvasNodeInDCC(void *client);
+  public slots:
+    virtual void onUndo();
+    
+    virtual void onRedo();
+    
+    virtual void onSelectCanvasNodeInDCC();
+    
+    virtual void onImportGraphInDCC();
+    
+    virtual void onExportGraphInDCC();
 
-  virtual void keyPressEvent(QKeyEvent * event);
+  private slots:
+    void onPortEditDialogCreated(
+      FabricUI::DFG::DFGBaseDialog * dialog
+      );
+    
+    void onPortEditDialogInvoked(
+      FabricUI::DFG::DFGBaseDialog * dialog, 
+      FTL::JSONObjectEnc<> * additionalMetaData
+      );
 
-public slots:
-  virtual void onUndo();
-  virtual void onRedo();
-  virtual void onSelectCanvasNodeInDCC();
-  virtual void onImportGraphInDCC();
-  virtual void onExportGraphInDCC();
+  protected:
+    virtual void refreshScene();
 
-private slots:
-  void onPortEditDialogCreated(FabricUI::DFG::DFGBaseDialog * dialog);
-  void onPortEditDialogInvoked(FabricUI::DFG::DFGBaseDialog * dialog, FTL::JSONObjectEnc<> * additionalMetaData);
+    void setCurrentUINodeName(
+      const char * node
+      );
 
-protected:
-  virtual void refreshScene();
-  void setCurrentUINodeName(const char * node);
+  private:
+    MCallbackId m_onSelectionChangedCallbackId;
 
-private:
-  MCallbackId m_onSelectionChangedCallbackId;
+    DFGUICmdHandler_Maya m_cmdHandler;
+    FabricCore::DFGHost m_dfgHost;
+    bool m_initialized;
 
-  DFGUICmdHandler_Maya m_cmdHandler;
-  FabricCore::DFGHost m_dfgHost;
-  bool m_initialized;
-
-  static FabricDFGWidget *s_widget;
+    static FabricDFGWidget *s_widget;
 };

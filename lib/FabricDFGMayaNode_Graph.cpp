@@ -11,13 +11,13 @@ FabricDFGMayaNode_Graph::FabricDFGMayaNode_Graph()
 {
 }
 
-void* FabricDFGMayaNode_Graph::creator(){
+void* FabricDFGMayaNode_Graph::creator()
+{
   return new FabricDFGMayaNode_Graph();
 }
 
 FabricCore::DFGBinding FabricDFGMayaNode_Graph::CreateDFGBinding(
-  FabricCore::DFGHost &dfgHost
-  )
+  FabricCore::DFGHost &dfgHost)
 {
   return dfgHost.createBindingToNewGraph();
 }

@@ -4,85 +4,123 @@
 
 #pragma once
 
-#include "FabricDFGBaseInterface.h"
-
-#include <maya/MPxDeformerNode.h>
-#include <maya/MTypeId.h>
 #include <maya/MItGeometry.h>
-#include <maya/MNodeMessage.h>
-#include <maya/MStringArray.h>
-
-#include <FTL/Config.h>
+#include <maya/MPxDeformerNode.h>
+#include "FabricDFGBaseInterface.h"
 
 class FabricDFGMayaDeformer: public MPxDeformerNode, public FabricDFGBaseInterface{
 
-public:
+  public:
 
-  static MStatus initialize();
+    static MStatus initialize();
 
-  FabricDFGMayaDeformer(
-    FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding
-    );
-  void postConstructor();
-  ~FabricDFGMayaDeformer();
+    FabricDFGMayaDeformer(
+      FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding
+      );
 
-  // implement pure virtual functions
-  virtual MObject getThisMObject() { return thisMObject(); }
-  virtual MPlug getSaveDataPlug() { return MPlug(thisMObject(), saveData); }
-  virtual MPlug getRefFilePathPlug() { return MPlug(thisMObject(), refFilePath); }
-  virtual MPlug getEnableEvalContextPlug() { return MPlug(thisMObject(), enableEvalContext); }
+    void postConstructor();
 
-  MStatus deform(MDataBlock& block, MItGeometry& iter, const MMatrix&, unsigned int multiIndex);
-  MStatus setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs);
-  MStatus shouldSave(const MPlug &plug, bool &isSaving);
-  void copyInternalData(MPxNode *node);
-  bool getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx);
-  bool setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx);
+    ~FabricDFGMayaDeformer();
 
-  virtual MStatus connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
-  virtual MStatus connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc);
+    // implement pure virtual functions
+    virtual MObject getThisMObject() { return thisMObject(); }
+    
+    virtual MPlug getSaveDataPlug() { return MPlug(thisMObject(), saveData); }
+    
+    virtual MPlug getRefFilePathPlug() { return MPlug(thisMObject(), refFilePath); }
+    
+    virtual MPlug getEnableEvalContextPlug() { return MPlug(thisMObject(), enableEvalContext); }
 
-#if MAYA_API_VERSION >= 201600
-  SchedulingType schedulingType() const
-    { return kParallel; }
-  virtual MStatus preEvaluation(
-    const MDGContext& context,
-    const MEvaluationNode& evaluationNode
-    ) FTL_OVERRIDE;
-  virtual MStatus postEvaluation(
-    const MDGContext& context,
-    const MEvaluationNode& evaluationNode,
-    PostEvaluationType evalType
-    ) FTL_OVERRIDE;
-#endif
+    MStatus deform(
+      MDataBlock& block, 
+      MItGeometry& iter, 
+      const MMatrix&, 
+      unsigned int multiIndex
+      );
+    
+    MStatus setDependentsDirty(
+      MPlug const &inPlug, 
+      MPlugArray &affectedPlugs
+      );
+    
+    MStatus shouldSave(
+      const MPlug &plug,
+      bool &isSaving
+      );
+    
+    void copyInternalData(
+      MPxNode *node
+      );
+    
+    bool getInternalValueInContext(
+      const MPlug &plug, 
+      MDataHandle &dataHandle, 
+      MDGContext &ctx
+      );
+    
+    bool setInternalValueInContext(
+      const MPlug &plug, 
+      const MDataHandle &dataHandle, 
+      MDGContext &ctx
+      );
 
-  static void VisitMeshCallback(
-    void *userdata,
-    unsigned argIndex,
-    char const *argName,
-    char const *argTypeName,
-    char const *argTypeCanonicalName,
-    FEC_DFGPortType argOutsidePortType,
-    uint64_t argRawDataSize,
-    FEC_DFGBindingVisitArgs_GetCB getCB,
-    FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
-    FEC_DFGBindingVisitArgs_SetCB setCB,
-    FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
-    void *getSetUD
-    );    
+    virtual MStatus connectionMade(
+      const MPlug &plug, 
+      const MPlug &otherPlug, 
+      bool asSrc
+      );
+    
+    virtual MStatus connectionBroken(
+      const MPlug &plug, 
+      const MPlug &otherPlug, 
+      bool asSrc
+      );
 
-  // node attributes
-  static MObject saveData;
-  static MObject evalID;
-  static MObject refFilePath;
-  static MObject enableEvalContext;
+  #if MAYA_API_VERSION >= 201600
+    SchedulingType schedulingType() const { return kParallel; }
 
-protected:
-  virtual void invalidateNode();
+    virtual MStatus preEvaluation(
+      const MDGContext& context,
+      const MEvaluationNode& evaluationNode
+      ) FTL_OVERRIDE;
 
-private:
+    virtual MStatus postEvaluation(
+      const MDGContext& context,
+      const MEvaluationNode& evaluationNode,
+      PostEvaluationType evalType
+      ) FTL_OVERRIDE;
+  #endif
 
-  int initializePolygonMeshPorts(MPlug &meshPlug, MDataBlock &data);
-  // void initializeGeometry(MObject &meshObj);
-  int mGeometryInitialized;
+    static void VisitMeshCallback(
+      void *userdata,
+      unsigned argIndex,
+      char const *argName,
+      char const *argTypeName,
+      char const *argTypeCanonicalName,
+      FEC_DFGPortType argOutsidePortType,
+      uint64_t argRawDataSize,
+      FEC_DFGBindingVisitArgs_GetCB getCB,
+      FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+      FEC_DFGBindingVisitArgs_SetCB setCB,
+      FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+      void *getSetUD
+      );    
+
+    // node attributes
+    static MObject saveData;
+    static MObject evalID;
+    static MObject refFilePath;
+    static MObject enableEvalContext;
+
+  protected:
+    virtual void invalidateNode();
+
+  private:
+    int initializePolygonMeshPorts(
+      MPlug &meshPlug, 
+      MDataBlock &data
+      );
+
+    // void initializeGeometry(MObject &meshObj);
+    int mGeometryInitialized;
 };

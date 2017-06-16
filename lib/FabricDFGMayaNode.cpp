@@ -6,25 +6,23 @@
 #include "FabricDFGProfiling.h"
 #include "FabricSpliceHelpers.h"
 
-#include <maya/MGlobal.h>
-#include <maya/MFnDependencyNode.h>
+#include <maya/MFileIO.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnNumericAttribute.h>
-#include <maya/MFileIO.h>
 
-MObject FabricDFGMayaNode::saveData;
 MObject FabricDFGMayaNode::evalID;
+MObject FabricDFGMayaNode::saveData;
 MObject FabricDFGMayaNode::refFilePath;
 MObject FabricDFGMayaNode::enableEvalContext;
 
 FabricDFGMayaNode::FabricDFGMayaNode(
-  FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding
-  )
+  FabricDFGBaseInterface::CreateDFGBindingFunc createDFGBinding)
   : FabricDFGBaseInterface( createDFGBinding )
 {
 }
 
-void FabricDFGMayaNode::postConstructor(){
+void FabricDFGMayaNode::postConstructor()
+{
   if(!MFileIO::isOpeningFile())
     FabricDFGBaseInterface::constructBaseInterface();
   setExistWithoutInConnections(true);
@@ -35,7 +33,8 @@ FabricDFGMayaNode::~FabricDFGMayaNode()
 {
 }
 
-MStatus FabricDFGMayaNode::initialize(){
+MStatus FabricDFGMayaNode::initialize()
+{
   FabricMayaProfilingEvent bracket("FabricDFGMayaNode::initialize");
 
   MFnTypedAttribute typedAttr;
@@ -62,7 +61,10 @@ MStatus FabricDFGMayaNode::initialize(){
   return MS::kSuccess;
 }
 
-MStatus FabricDFGMayaNode::compute(const MPlug& plug, MDataBlock& data){
+MStatus FabricDFGMayaNode::compute(
+  const MPlug& plug, 
+  MDataBlock& data)
+{
 
   if(!_outputsDirtied)
     return MS::kSuccess;
@@ -105,35 +107,57 @@ MStatus FabricDFGMayaNode::compute(const MPlug& plug, MDataBlock& data){
   return stat;
 }
 
-MStatus FabricDFGMayaNode::setDependentsDirty(MPlug const &inPlug, MPlugArray &affectedPlugs){
+MStatus FabricDFGMayaNode::setDependentsDirty(
+  MPlug const &inPlug, 
+  MPlugArray &affectedPlugs)
+{
   return FabricDFGBaseInterface::setDependentsDirty(thisMObject(), inPlug, affectedPlugs);
 }
 
-MStatus FabricDFGMayaNode::shouldSave(const MPlug &plug, bool &isSaving){
+MStatus FabricDFGMayaNode::shouldSave(
+  const MPlug &plug, 
+  bool &isSaving)
+{
   // guarantee dynamically added attributes are saved
   isSaving = true;
   return MS::kSuccess;
 }
 
-void FabricDFGMayaNode::copyInternalData(MPxNode *node){
+void FabricDFGMayaNode::copyInternalData(
+  MPxNode *node)
+{
   FabricDFGBaseInterface::copyInternalData(node);
 }
 
-bool FabricDFGMayaNode::getInternalValueInContext(const MPlug &plug, MDataHandle &dataHandle, MDGContext &ctx){
+bool FabricDFGMayaNode::getInternalValueInContext(
+  const MPlug &plug, 
+  MDataHandle &dataHandle, 
+  MDGContext &ctx)
+{
   return FabricDFGBaseInterface::getInternalValueInContext(plug, dataHandle, ctx);
 }
 
-bool FabricDFGMayaNode::setInternalValueInContext(const MPlug &plug, const MDataHandle &dataHandle, MDGContext &ctx){
+bool FabricDFGMayaNode::setInternalValueInContext(
+  const MPlug &plug, 
+  const MDataHandle &dataHandle, 
+  MDGContext &ctx)
+{
   return FabricDFGBaseInterface::setInternalValueInContext(plug, dataHandle, ctx);
 }
 
-MStatus FabricDFGMayaNode::connectionMade(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
+MStatus FabricDFGMayaNode::connectionMade(
+  const MPlug &plug, 
+  const MPlug &otherPlug, 
+  bool asSrc)
 {
   FabricDFGBaseInterface::onConnection(plug, otherPlug, asSrc, true);
   return MS::kUnknownParameter;
 }
 
-MStatus FabricDFGMayaNode::connectionBroken(const MPlug &plug, const MPlug &otherPlug, bool asSrc)
+MStatus FabricDFGMayaNode::connectionBroken(
+  const MPlug &plug, 
+  const MPlug &otherPlug, 
+  bool asSrc)
 {
   FabricDFGBaseInterface::onConnection(plug, otherPlug, asSrc, false);
   return MS::kUnknownParameter;
@@ -142,27 +166,23 @@ MStatus FabricDFGMayaNode::connectionBroken(const MPlug &plug, const MPlug &othe
 #if MAYA_API_VERSION >= 201600
 MStatus FabricDFGMayaNode::preEvaluation(
   const MDGContext& context,
-  const MEvaluationNode& evaluationNode
-  )
+  const MEvaluationNode& evaluationNode)
 {
   return FabricDFGBaseInterface::doPreEvaluation(
     thisMObject(),
     context,
-    evaluationNode
-    );
+    evaluationNode);
 }
 
 MStatus FabricDFGMayaNode::postEvaluation(
   const MDGContext& context,
   const MEvaluationNode& evaluationNode,
-  PostEvaluationType evalType
-  )
+  PostEvaluationType evalType)
 {
   return FabricDFGBaseInterface::doPostEvaluation(
     thisMObject(),
     context,
     evaluationNode,
-    evalType
-    );
+    evalType);
 }
 #endif

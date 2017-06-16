@@ -4,21 +4,34 @@
 
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGBaseInterface.h"
-#include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
+
+#include <maya/M3dView.h>
+#include <maya/MGlobal.h>
+#include <maya/MMatrix.h>
+#include <maya/MDagPath.h>
+#include <maya/MFnCamera.h>
+#include <maya/MUiMessage.h>
+#include <maya/MAnimControl.h>
 #include <maya/MFrameContext.h>
-#include <maya/MDrawContext.h>
 #include <maya/MEventMessage.h>
 #include <maya/MViewport2Renderer.h>
 #if MAYA_API_VERSION >= 201600
 #include "Viewport2Override.h"
 #endif
 
+#include <FabricUI/Commands/KLCommandRegistry.h>
+#include <FabricUI/Application/FabricApplicationStates.h>
+
+using namespace FabricUI;
+using namespace FabricUI::Commands;
+using namespace FabricCore;
+
 uint32_t FabricSpliceRenderCallback::gPanelId = 0;
 bool gRTRPassEnabled = true;
 bool FabricSpliceRenderCallback::gCallbackEnabled = true;
-FabricCore::RTVal FabricSpliceRenderCallback::sDrawContext;
-FabricUI::SceneHub::SHGLRenderer FabricSpliceRenderCallback::shHostGLRenderer;
+RTVal FabricSpliceRenderCallback::sDrawContext;
+SceneHub::SHGLRenderer FabricSpliceRenderCallback::shHostGLRenderer;
 
 bool isRTRPassEnabled() {
   return gRTRPassEnabled;
@@ -67,16 +80,35 @@ inline MString getActiveRenderName(const M3dView &view) {
   return name;
 }
 
-inline void initID() {
+inline void initID(const MString &panelName) {
  
   if(!FabricSpliceRenderCallback::sDrawContext.isValid()) {
+ 
+    KLCommandRegistry *registry = qobject_cast<KLCommandRegistry*>(
+      CommandRegistry::getCommandRegistry());
+    registry->synchronizeKL();
+ 
     FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
     FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+    RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
+
+    RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
+    RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
+ 
+    RTVal args[2] = {
+      RTVal::ConstructString(FabricSpliceRenderCallback::sDrawContext.getContext(), "default"),
+      viewport
+    };
+
+    RTVal drawing = FabricSplice::constructObjectRTVal("InlineDrawingScope");
+    drawing = drawing.callMethod("InlineDrawing", "getDrawing", 0, 0);
+    drawing.callMethod("", "registerViewport", 2, args);
   }
-  else if(FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject()) {
-    FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
-    FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
-  }
+  // else if(FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject()) {
+  //   FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+  //   FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+  //   //RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
+  // }
 }
 
 bool FabricSpliceRenderCallback::isRTR2Enable() {
@@ -89,15 +121,15 @@ bool FabricSpliceRenderCallback::isRTR2Enable() {
   
   if(!shHostGLRenderer.getSHGLRenderer().isValid())
   {
-    const FabricCore::Client *client = 0;
+    const Client *client = 0;
     FECS_DGGraph_getClient(&client);
     if(!client) 
       return false;
     else
       shHostGLRenderer.setClient(*client);
    
-    FabricCore::RTVal host = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
-    FabricCore::RTVal isValidVal = FabricSplice::constructBooleanRTVal(false);
+    RTVal host = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
+    RTVal isValidVal = FabricSplice::constructBooleanRTVal(false);
     host = host.callMethod("SHGLHostRenderer", "get", 1, &isValidVal);
     if(!isValidVal.getBoolean()) 
       return false;
@@ -119,21 +151,21 @@ inline void setMatrixTranspose(const MMatrix &mMatrix, float *buffer) {
   buffer[14] = (float)mMatrix[2][3];  buffer[15] = (float)mMatrix[3][3];
 }
 
-inline void setCamera(bool id, double width, double height, const MFnCamera &mCamera, FabricCore::RTVal &camera) {
+inline void setCamera(bool id, double width, double height, const MFnCamera &mCamera, RTVal &camera) {
   MDagPath mCameraDag;
   MStatus status = mCamera.getPath(mCameraDag);
   (void)status;
   MMatrix mMatrix = mCameraDag.inclusiveMatrix();
 
-  FabricCore::RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
-  FabricCore::RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
+  RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
+  RTVal cameraMatData = cameraMat.callMethod("Data", "data", 0, 0);
   float *buffer = (float*)cameraMatData.getData();
   setMatrixTranspose(mMatrix, buffer);
   if(!id) camera.callMethod("", "setTransform", 1, &cameraMat);
   else camera.callMethod("", "setFromMat44", 1, &cameraMat);
 
   bool isOrthographic = mCamera.isOrtho();
-  FabricCore::RTVal param = FabricSplice::constructBooleanRTVal(isOrthographic);
+  RTVal param = FabricSplice::constructBooleanRTVal(isOrthographic);
   camera.callMethod("", "setOrthographic", 1, &param);
 
   if(isOrthographic) 
@@ -155,7 +187,7 @@ inline void setCamera(bool id, double width, double height, const MFnCamera &mCa
     camera.callMethod("", "setFovY", 1, &param);
   }
 
-  FabricCore::RTVal args[2] = {
+  RTVal args[2] = {
     FabricSplice::constructFloat32RTVal(mCamera.nearClippingPlane()),
     FabricSplice::constructFloat32RTVal(mCamera.farClippingPlane())
   };
@@ -167,9 +199,9 @@ inline void setCamera(bool id, double width, double height, const MFnCamera &mCa
   }
 }
 
-inline void setProjection(bool id, const MMatrix &projection, FabricCore::RTVal &camera) {
-  FabricCore::RTVal projectionMat = FabricSplice::constructRTVal("Mat44");
-  FabricCore::RTVal projectionData = projectionMat.callMethod("Data", "data", 0, 0);
+inline void setProjection(bool id, const MMatrix &projection, RTVal &camera) {
+  RTVal projectionMat = FabricSplice::constructRTVal("Mat44");
+  RTVal projectionData = projectionMat.callMethod("Data", "data", 0, 0);
   float *buffer = (float*)projectionData.getData();
   setMatrixTranspose(projection, buffer);
   if(!id) camera.callMethod("", "setProjMatrix", 1, &projectionMat);
@@ -185,21 +217,21 @@ inline void setupIDViewport(
 {
   if(!FabricSpliceRenderCallback::canDraw()) return;
 
-  initID();
+  initID(panelName);
 
   FabricSpliceRenderCallback::sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
 
-  FabricCore::RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
-  FabricCore::RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
+  RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
+  RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
   viewport.callMethod("", "setName", 1, &panelNameVal);
-  FabricCore::RTVal args[3] = {
+  RTVal args[3] = {
     FabricSpliceRenderCallback::sDrawContext,
     FabricSplice::constructFloat64RTVal(width),
     FabricSplice::constructFloat64RTVal(height)
   };
-  viewport.callMethod("", "resize", 3, &args[0]);
+  viewport.callMethod("", "resize", 3, args);
  
-  FabricCore::RTVal camera = viewport.callMethod("InlineCamera", "getCamera", 0, 0);
+  RTVal camera = viewport.callMethod("InlineCamera", "getCamera", 0, 0);
   setCamera(true, width, height, mCamera, camera);
   setProjection(true, projection, camera);
 }
@@ -224,8 +256,8 @@ inline void setupRTR2Viewport(
     FabricSpliceRenderCallback::shHostGLRenderer.removeViewport(FabricSpliceRenderCallback::gPanelId);
   }
 
-  FabricCore::RTVal viewport = FabricSpliceRenderCallback::shHostGLRenderer.getOrAddViewport(FabricSpliceRenderCallback::gPanelId);
-  FabricCore::RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
+  RTVal viewport = FabricSpliceRenderCallback::shHostGLRenderer.getOrAddViewport(FabricSpliceRenderCallback::gPanelId);
+  RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
   setCamera(false, width, height, mCamera, camera);
   setProjection(false, projection, camera);
 }
@@ -243,7 +275,7 @@ void FabricSpliceRenderCallback::drawID() {
   MGlobal::executeCommandOnIdle("refresh;", false);
 #endif
   }
-  catch(FabricCore::Exception e)
+  catch(Exception e)
   {
     MString str("FabricSpliceRenderCallback::drawID: ");
     str += e.getDesc_cstr();

@@ -29,8 +29,10 @@ class CommandManagerMayaCallback : public QObject
   private slots:
     /// \internal
     /// Called when a command has been pushed to the manager. 
-    void onCommandPushed(
-    	FabricUI::Commands::BaseCommand *cmd
+    void onCommandDone(
+    	FabricUI::Commands::BaseCommand *cmd,
+      bool addToStack,
+      bool replaceLog
     	);
 
   private:
