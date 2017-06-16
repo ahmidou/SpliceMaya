@@ -9,29 +9,30 @@
 #include <DFG/DFGUICmdHandler_QUndo.h>
 #include <ModelItems/BindingModelItem.h>
 #include <ValueEditor/VEEditorOwner.h>
-#include "FabricImportPatternCommand.h"
+#include "FabricExportPatternCommand.h"
 
-class FabricImportPatternDialog : public QDialog
+class FabricExportPatternDialog : public QDialog
 {
   Q_OBJECT
   
 public:
-  FabricImportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, FabricImportPatternSettings settings);
-  virtual ~FabricImportPatternDialog();
+  FabricExportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings);
+  virtual ~FabricExportPatternDialog();
 
   bool wasAccepted() const { return m_wasAccepted; }
 
 public slots:
   void onAccepted();
   void onRejected() { m_wasAccepted = false; close(); }
-  void onAttachToExistingChanged(int state);
-  void onEnableMaterialsChanged(int state);
   void onScaleChanged(const QString & text);
-  void onNameSpaceChanged(const QString & text);
+  void onStartFrameChanged(const QString & text);
+  void onEndFrameChanged(const QString & text);
+  void onFPSChanged(const QString & text);
+  void onSubStepsChanged(const QString & text);
 
 private:
 
-  FabricImportPatternSettings m_settings;
+  FabricExportPatternSettings m_settings;
 
   QUndoStack * m_stack;
   FabricCore::Client m_client;
