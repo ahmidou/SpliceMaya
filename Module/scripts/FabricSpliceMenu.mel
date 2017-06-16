@@ -85,6 +85,7 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   $assetPatternsMenu = `menuItem -parent $fabricSpliceMenu -subMenu true -tearOff true -label "Asset Patterns"`;
   menuItem -p $assetPatternsMenu -ec 1 -c ("fabricImportPattern();") "Import Pattern";
   menuItem -p $assetPatternsMenu -ec 1 -c ("fabricExportPattern();") "Export Pattern";
+  menuItem -p $assetPatternsMenu -divider true;
   menuItem -p $assetPatternsMenu -ec 1 -c ("fabricImportPattern -f (getenv(\"FABRIC_DIR\") + \"/Presets/Patterns/AlembicImporter.canvas\");") "Import Alembic";
   menuItem -p $assetPatternsMenu -ec 1 -c ("fabricExportPattern -f (getenv(\"FABRIC_DIR\") + \"/Presets/Patterns/AlembicExporter.canvas\");") "Export Alembic";
   menuItem -p $fabricSpliceMenu -divider true;

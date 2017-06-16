@@ -900,7 +900,10 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
 
       if(node.isNull())
       {
-        node = dfgPolygonMeshToMFnMesh(polygonMesh, false /* insideCompute */);
+        // node = dfgPolygonMeshToMFnMesh(polygonMesh, false /* insideCompute */);
+        MDagModifier modif;
+        node = modif.createNode("mesh", parentNode);
+        modif.doIt();
       }
       m_nodes.insert(std::pair< std::string, MObject > (lookupPath.asChar(), node));
 
@@ -908,12 +911,6 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       modif.renameNode(node, m_settings.nameSpace + name);
       modif.doIt();
     
-      if(!parentNode.isNull())
-      {
-        modif.reparentNode(node, parentNode);
-        modif.doIt();
-      }
-
       updateTransformForObject(obj, node);
       updateMaterialForObject(obj, node);
     }
@@ -1094,6 +1091,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
         MString name;
         MString transformPath = parentPath(objPath, &name);
         it = m_nodes.find(simplifyPath(transformPath).asChar());
+        evaluatorPath = transformPath + "/GeometryEvaluator";
       }
     }
   }
@@ -1276,6 +1274,22 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
         if(shape.isNullObject())
           return false;
 
+        // extend the dep node to the shape
+        MStatus extendToShapeStatus;
+        MFnDagNode shapeDagNode(objDepNode.object(), &extendToShapeStatus);
+        if(extendToShapeStatus == MS::kSuccess)
+        {
+          MDagPath shapeDagPath;
+          extendToShapeStatus = shapeDagNode.getPath(shapeDagPath);
+          if(extendToShapeStatus == MS::kSuccess)
+          {
+            if(shapeDagPath.extendToShape() == MS::kSuccess)
+            {
+              shapeDagNode.setObject(shapeDagPath.node());
+            }
+          }
+        }
+
         //const Integer ImporterShape_Mesh = 0;
         //const Integer ImporterShape_Curves = 1;
         //const Integer ImporterShape_Points = 2;
@@ -1284,7 +1298,8 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
         if (geoType == 0) // a mesh
         {
           MDGModifier modif;
-          modif.connect(evaluatorDepNode.findPlug("geometry"), objDepNode.findPlug("mesh"));
+          modif.connect(evaluatorDepNode.findPlug("geometry"), shapeDagNode.findPlug("inMesh"));
+          modif.doIt();
         }
         else
         {
