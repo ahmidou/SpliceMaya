@@ -114,10 +114,6 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
   m_settings.quiet = quiet;
   m_settings.filePath = filepath;
 
-  // initialize substeps, framerate + in and out based on playcontrol
-  m_settings.startTime = MAnimControl::minTime().as(MTime::kSeconds);
-  m_settings.endTime = MAnimControl::maxTime().as(MTime::kSeconds);
-
   MString timeUnitStr;
   MGlobal::executeCommand("currentUnit -q -time", timeUnitStr);
   if(timeUnitStr == L"game")
@@ -134,6 +130,12 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
     m_settings.fps = 50.0;
   else if(timeUnitStr == L"ntscf")
     m_settings.fps = 60.0;
+  else
+    m_settings.fps = 24.0;
+
+  // initialize substeps, framerate + in and out based on playcontrol
+  m_settings.startFrame = MAnimControl::minTime().as(MTime::kSeconds) * m_settings.fps;
+  m_settings.endFrame = MAnimControl::maxTime().as(MTime::kSeconds) * m_settings.fps;
 
   if( argParser.isFlagSet("scale") )
   {
@@ -147,7 +149,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
       mayaLogErrorFunc("When specifying -begin you also need to specify -stop.");
       return mayaErrorOccured();
     }
-    m_settings.startTime = argParser.flagArgumentDouble("begin", 0);
+    m_settings.startFrame = argParser.flagArgumentDouble("begin", 0);
   }
   if( argParser.isFlagSet("stop") )
   {
@@ -156,11 +158,13 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
       mayaLogErrorFunc("When specifying -stop you also need to specify -begin.");
       return mayaErrorOccured();
     }
-    m_settings.endTime = argParser.flagArgumentDouble("stop", 0);
+    m_settings.endFrame = argParser.flagArgumentDouble("stop", 0);
   }
   if( argParser.isFlagSet("framerate") )
   {
     m_settings.fps = argParser.flagArgumentDouble("framerate", 0);
+    if(m_settings.fps <= 0.0)
+      m_settings.fps = 24.0;
   }
 
   if( argParser.isFlagSet("substeps") )
@@ -361,13 +365,11 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
   // compute the time step
   double tStep = 1.0;
-  if(m_settings.fps > 0.0)
-    tStep = 1.0 / m_settings.fps;
   if(m_settings.substeps > 0)
     tStep /= double(m_settings.substeps);
   std::vector<double> timeSamples;
-  for(double t = settings.startTime; t <= settings.endTime; t += tStep)
-    timeSamples.push_back(t);
+  for(double t = settings.startFrame; t <= settings.endFrame; t += tStep)
+    timeSamples.push_back(t / m_settings.fps); // store as seconds always
 
   try
   {
@@ -638,7 +640,7 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
 
 bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & node, FabricCore::RTVal & object)
 {
-  bool isStart = t <= m_settings.startTime;
+  bool isStart = t <= (m_settings.startFrame / m_settings.fps);
 
   try
   {

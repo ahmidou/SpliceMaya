@@ -25,8 +25,8 @@ public slots:
   void onAccepted();
   void onRejected() { m_wasAccepted = false; close(); }
   void onScaleChanged(const QString & text);
-  void onStartTimeChanged(const QString & text);
-  void onEndTimeChanged(const QString & text);
+  void onStartFrameChanged(const QString & text);
+  void onEndFrameChanged(const QString & text);
   void onFPSChanged(const QString & text);
   void onSubStepsChanged(const QString & text);
 

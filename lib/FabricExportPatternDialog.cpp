@@ -56,21 +56,21 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
   optionsLayout->addWidget(scaleLineEdit, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(scaleLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onScaleChanged(const QString &)));
 
-  QLabel * startTimeLabel = new QLabel("Start Time", optionsWidget);
-  optionsLayout->addWidget(startTimeLabel, 2, 0, Qt::AlignLeft | Qt::AlignVCenter);
-  QLineEdit * startTimeLineEdit = new QLineEdit(optionsWidget);
-  startTimeLineEdit->setValidator(new QDoubleValidator());
-  startTimeLineEdit->setText(QString::number(m_settings.startTime));
-  optionsLayout->addWidget(startTimeLineEdit, 2, 1, Qt::AlignLeft | Qt::AlignVCenter);
-  QObject::connect(startTimeLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onStartTimeChanged(const QString &)));
+  QLabel * startFrameLabel = new QLabel("Start Frame", optionsWidget);
+  optionsLayout->addWidget(startFrameLabel, 2, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QLineEdit * startFrameLineEdit = new QLineEdit(optionsWidget);
+  startFrameLineEdit->setValidator(new QDoubleValidator());
+  startFrameLineEdit->setText(QString::number(m_settings.startFrame));
+  optionsLayout->addWidget(startFrameLineEdit, 2, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(startFrameLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onStartFrameChanged(const QString &)));
 
-  QLabel * endTimeLabel = new QLabel("End Time", optionsWidget);
-  optionsLayout->addWidget(endTimeLabel, 3, 0, Qt::AlignLeft | Qt::AlignVCenter);
-  QLineEdit * endTimeLineEdit = new QLineEdit(optionsWidget);
-  endTimeLineEdit->setValidator(new QDoubleValidator());
-  endTimeLineEdit->setText(QString::number(m_settings.endTime));
-  optionsLayout->addWidget(endTimeLineEdit, 3, 1, Qt::AlignLeft | Qt::AlignVCenter);
-  QObject::connect(endTimeLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onEndTimeChanged(const QString &)));
+  QLabel * endFrameLabel = new QLabel("End Frame", optionsWidget);
+  optionsLayout->addWidget(endFrameLabel, 3, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QLineEdit * endFrameLineEdit = new QLineEdit(optionsWidget);
+  endFrameLineEdit->setValidator(new QDoubleValidator());
+  endFrameLineEdit->setText(QString::number(m_settings.endFrame));
+  optionsLayout->addWidget(endFrameLineEdit, 3, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(endFrameLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onEndFrameChanged(const QString &)));
 
   QLabel * fpsLabel = new QLabel("FPS", optionsWidget);
   optionsLayout->addWidget(fpsLabel, 4, 0, Qt::AlignLeft | Qt::AlignVCenter);
@@ -117,14 +117,14 @@ void FabricExportPatternDialog::onScaleChanged(const QString & text)
   m_settings.scale = text.toDouble();
 }
 
-void FabricExportPatternDialog::onStartTimeChanged(const QString & text)
+void FabricExportPatternDialog::onStartFrameChanged(const QString & text)
 {
-  m_settings.startTime = text.toDouble();
+  m_settings.startFrame = text.toDouble();
 }
 
-void FabricExportPatternDialog::onEndTimeChanged(const QString & text)
+void FabricExportPatternDialog::onEndFrameChanged(const QString & text)
 {
-  m_settings.endTime = text.toDouble();
+  m_settings.endFrame = text.toDouble();
 }
 
 void FabricExportPatternDialog::onFPSChanged(const QString & text)

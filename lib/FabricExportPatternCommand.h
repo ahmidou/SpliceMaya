@@ -20,8 +20,8 @@ struct FabricExportPatternSettings
   MString filePath;
   bool quiet;
   double scale;
-  double startTime;
-  double endTime;
+  double startFrame;
+  double endFrame;
   double fps;
   unsigned int substeps;
 
@@ -31,8 +31,8 @@ struct FabricExportPatternSettings
   {
     quiet = false;
     scale = 1.0;
-    startTime = 0.0;
-    endTime = 0.0;
+    startFrame = 1;
+    endFrame = 1;
     fps = 24.0;
     substeps = 1;
   }
