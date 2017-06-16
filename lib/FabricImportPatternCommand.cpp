@@ -900,16 +900,22 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
 
       if(node.isNull())
       {
-        // node = dfgPolygonMeshToMFnMesh(polygonMesh, false /* insideCompute */);
-        MDagModifier modif;
-        node = modif.createNode("mesh", parentNode);
-        modif.doIt();
+        node = dfgPolygonMeshToMFnMesh(polygonMesh, false /* insideCompute */);
+        // MDagModifier modif;
+        // node = modif.createNode("mesh", parentNode);
+        // modif.doIt();
       }
       m_nodes.insert(std::pair< std::string, MObject > (lookupPath.asChar(), node));
-
+      
       MDagModifier modif;
       modif.renameNode(node, m_settings.nameSpace + name);
       modif.doIt();
+
+      if(!parentNode.isNull())
+      {
+        modif.reparentNode(node, parentNode);
+        modif.doIt();
+      }
     
       updateTransformForObject(obj, node);
       updateMaterialForObject(obj, node);
