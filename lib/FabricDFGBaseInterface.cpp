@@ -31,6 +31,15 @@
 # include <maya/MEvaluationManager.h>
 #endif
 
+#include <FabricUI/Commands/CommandRegistry.h>
+#include <FabricUI/DFG/Commands/DFGPathValueResolver.h>
+#include <FabricUI/Commands/PathValueResolverRegistry.h>
+
+using namespace FabricUI;
+using namespace DFG;
+using namespace FabricCore;
+using namespace FabricUI::Commands;
+
 std::vector<FabricDFGBaseInterface*> FabricDFGBaseInterface::_instances;
 #if MAYA_API_VERSION < 201300
   std::map<std::string, int> FabricDFGBaseInterface::_nodeCreatorCounts;
@@ -40,18 +49,16 @@ bool FabricDFGBaseInterface::s_use_evalContext = true; // [FE-6287]
 MStringArray FabricDFGBaseInterface::s_queuedMelCommands;
 
 FabricDFGBaseInterface::FabricDFGBaseInterface(
-  CreateDFGBindingFunc createDFGBinding
-  )
+  CreateDFGBindingFunc createDFGBinding)
   : m_executeSharedDirty( true )
   , m_createDFGBinding( createDFGBinding )
 {
-
   MStatus stat;
   MAYADFG_CATCH_BEGIN(&stat);
 
   if (getNumInstances() == 0)
   {
-    MString version = "Fabric Engine version " + MString(FabricCore::GetVersionWithBuildInfoStr());
+    MString version = "Fabric Engine version " + MString(GetVersionWithBuildInfoStr());
     mayaLogFunc(version);
   }
 
@@ -69,7 +76,7 @@ FabricDFGBaseInterface::FabricDFGBaseInterface(
   _instances.push_back(this);
 
   m_id = s_maxID++;
-
+ 
   MAYADFG_CATCH_END(&stat);
 }
 
@@ -83,8 +90,8 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface()
     m_binding.deallocValues();
   }
 
-  m_evalContext = FabricCore::RTVal();
-  m_binding = FabricCore::DFGBinding();
+  m_evalContext = RTVal();
+  m_binding = DFGBinding();
 
   for(size_t i=0;i<_instances.size();i++){
     if(_instances[i] == this){
@@ -93,6 +100,21 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface()
       break;
     }
   }
+}
+
+void FabricDFGBaseInterface::bindingChanged() 
+{
+  m_binding.setNotificationCallback( BindingNotificationCallback, this );
+  MString idStr; idStr.set(m_id);
+  m_binding.setMetadata("maya_id", idStr.asChar(), false);
+  m_binding.setMetadata("host_app", "Maya", false);
+
+  QString resolverID = "DFGPathValueResolver_" + QString::number(m_id);
+  PathValueResolverFactory<DFGPathValueResolver>::Register(resolverID);
+  DFGPathValueResolver *resolver = qobject_cast<DFGPathValueResolver *>(
+    PathValueResolverRegistry::GetRegistry()->getOrCreateResolver(resolverID)
+    );
+  resolver->onBindingChanged(m_binding); 
 }
 
 void FabricDFGBaseInterface::constructBaseInterface()
@@ -118,21 +140,17 @@ void FabricDFGBaseInterface::constructBaseInterface()
 #endif
 
   m_client = FabricDFGWidget::GetCoreClient();
-  FabricCore::DFGHost dfgHost = m_client.getDFGHost();
+  DFGHost dfgHost = m_client.getDFGHost();
 
   if(!MFileIO::isOpeningFile())
   {
     m_binding = m_createDFGBinding( dfgHost );
-    m_binding.setNotificationCallback( BindingNotificationCallback, this );
-
-    MString idStr; idStr.set(m_id);
-    m_binding.setMetadata("maya_id", idStr.asChar(), false);
-    m_binding.setMetadata("host_app", "Maya", false);
+    bindingChanged();
   }
 
-  m_evalContext = FabricCore::RTVal::Create(m_client, "EvalContext", 0, 0);
+  m_evalContext = RTVal::Create(m_client, "EvalContext", 0, 0);
   m_evalContext = m_evalContext.callMethod("EvalContext", "getInstance", 0, 0);
-  m_evalContext.setMember("host", FabricCore::RTVal::ConstructString(m_client, "Maya"));
+  m_evalContext.setMember("host", RTVal::ConstructString(m_client, "Maya"));
 
   MAYADFG_CATCH_END(&stat);
 }
@@ -140,7 +158,6 @@ void FabricDFGBaseInterface::constructBaseInterface()
 FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByName(
   const std::string & name) 
 {
-
   MSelectionList selList;
   MGlobal::getSelectionListByName(name.c_str(), selList);
   MObject spliceMayaNodeObj;
@@ -187,28 +204,28 @@ unsigned int FabricDFGBaseInterface::getId() const
   return m_id;
 }
 
-FabricCore::Client FabricDFGBaseInterface::getCoreClient()
+Client FabricDFGBaseInterface::getCoreClient()
 {
   return m_client;
 }
 
-FabricCore::DFGHost FabricDFGBaseInterface::getDFGHost()
+DFGHost FabricDFGBaseInterface::getDFGHost()
 {
   if(m_binding.isValid())
     return m_binding.getHost();
-  return FabricCore::DFGHost();
+  return DFGHost();
 }
 
-FabricCore::DFGBinding FabricDFGBaseInterface::getDFGBinding()
+DFGBinding FabricDFGBaseInterface::getDFGBinding()
 {
   return m_binding;
 }
 
-FabricCore::DFGExec FabricDFGBaseInterface::getDFGExec()
+DFGExec FabricDFGBaseInterface::getDFGExec()
 {
   if(m_binding.isValid())
     return m_binding.getExec();
-  return FabricCore::DFGExec();
+  return DFGExec();
 }
 
 bool FabricDFGBaseInterface::transferInputValuesToDFG(
@@ -233,7 +250,6 @@ bool FabricDFGBaseInterface::transferInputValuesToDFG(
 
 void FabricDFGBaseInterface::evaluate()
 {
-
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::evaluate");
 
   FTL::AutoSet<bool> transfersInputs(_isEvaluating, true);
@@ -251,9 +267,11 @@ void FabricDFGBaseInterface::evaluate()
     {
       try
       {
-        m_evalContext.setMember("time", FabricCore::RTVal::ConstructFloat32(m_client, MAnimControl::currentTime().as(MTime::kSeconds)));
+        m_evalContext.setMember("time", RTVal::ConstructFloat32(m_client, MAnimControl::currentTime().as(MTime::kSeconds)));
+        MString idStr; idStr.set(m_id);
+        m_evalContext.setMember("evalContextID", RTVal::ConstructString(m_client, idStr.asChar()));
       }
-      catch(FabricCore::Exception e)
+      catch(Exception e)
       {
         mayaLogErrorFunc(e.getDesc_cstr());
       }
@@ -289,7 +307,6 @@ void FabricDFGBaseInterface::transferOutputValuesToMaya(
 void FabricDFGBaseInterface::collectDirtyPlug(
   MPlug const &inPlug)
 {
-
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::collectDirtyPlug");
 
   // [hmathee 20161110] take a short cut - if we find the attribute index
@@ -363,7 +380,7 @@ void FabricDFGBaseInterface::generateAttributeLookups()
   _argToPlugFuncs.resize(0);
 
   MFnDependencyNode thisNode(getThisMObject());
-  FabricCore::DFGExec exec = getDFGBinding().getExec();
+  DFGExec exec = getDFGBinding().getExec();
 
   // FE-7682 Reducing the length of the plugArray makes Maya crash
   // because it invokes the destruction of the plug  the plug has already been deleted.   
@@ -560,16 +577,9 @@ void FabricDFGBaseInterface::restoreFromJSON(
   if ( m_binding )
     m_binding.setNotificationCallback( NULL, NULL );
 
-  FabricCore::DFGHost dfgHost = m_client.getDFGHost();
+  DFGHost dfgHost = m_client.getDFGHost();
   m_binding = dfgHost.createBindingFromJSON(json.asChar());
-  m_binding.setNotificationCallback( BindingNotificationCallback, this );
-
-  FTL::StrRef execPath;
-  FabricCore::DFGExec exec = m_binding.getExec();
-
-  MString idStr; idStr.set(m_id);
-  m_binding.setMetadata("maya_id", idStr.asChar(), false);
-  m_binding.setMetadata("host_app", "Maya", false);
+  bindingChanged();
 
   // todo: update UI
 
@@ -578,6 +588,8 @@ void FabricDFGBaseInterface::restoreFromJSON(
   invalidateNode();
 
   MFnDependencyNode thisNode(getThisMObject());
+  FTL::StrRef execPath;
+  DFGExec exec = m_binding.getExec();
 
   for(unsigned i = 0; i < exec.getExecPortCount(); ++i){
     std::string portName = exec.getExecPortName(i);
@@ -586,7 +598,7 @@ void FabricDFGBaseInterface::restoreFromJSON(
     if(!plug.isNull())
       continue;
 
-    FabricCore::DFGPortType portType = exec.getExecPortType(i);
+    DFGPortType portType = exec.getExecPortType(i);
     if (!exec.getExecPortResolvedType(i)) continue; // [FE-5538]
     std::string dataType = exec.getExecPortResolvedType(i);
 
@@ -623,8 +635,8 @@ void FabricDFGBaseInterface::restoreFromJSON(
       continue;
 
     // force an execution of the node    
-    FabricCore::DFGPortType portType = exec.getExecPortType(i);
-    if(portType != FabricCore::DFGPortType_Out)
+    DFGPortType portType = exec.getExecPortType(i);
+    if(portType != DFGPortType_Out)
     {
       MString command("dgeval ");
       // MGlobal::executeCommandOnIdle(command+thisNode.name()+"."+plugName);
@@ -666,6 +678,12 @@ void FabricDFGBaseInterface::reloadFromReferencedFilePath()
   _restoredFromPersistenceData = false;
   MStatus status;
   restoreFromPersistenceData(mayaGetLastLoadedScene(), &status);
+}
+
+void FabricDFGBaseInterface::setDgDirtyEnabled(
+  bool enabled) 
+{ 
+  _dgDirtyEnabled = enabled; 
 }
 
 MString FabricDFGBaseInterface::getPlugName(
@@ -770,7 +788,7 @@ void FabricDFGBaseInterface::invalidateNode()
 
   unsigned int dirtiedInputs = 0;
 
-  FabricCore::DFGExec exec = getDFGExec();
+  DFGExec exec = getDFGExec();
   if(exec.isValid())
   {
     // ensure we setup the mayaSpliceData overrides first
@@ -797,9 +815,9 @@ void FabricDFGBaseInterface::invalidateNode()
       MString plugName = getPlugName(portName.c_str());
       MPlug plug = thisNode.findPlug(plugName);
 
-      FabricCore::DFGPortType portType = exec.getExecPortType(i);
+      DFGPortType portType = exec.getExecPortType(i);
       if(!plug.isNull()){
-        if(portType == FabricCore::DFGPortType_In)
+        if(portType == DFGPortType_In)
         {
           collectDirtyPlug(plug);
           MPlugArray plugs;
@@ -894,6 +912,16 @@ MStatus FabricDFGBaseInterface::processQueuedMelCommands()
   return result;
 }
 
+DFGUICmdHandler_Maya *FabricDFGBaseInterface::getCmdHandler() 
+{ 
+  return &m_cmdHandler; 
+}
+
+void FabricDFGBaseInterface::setExecuteSharedDirty() 
+{ 
+  m_executeSharedDirty = true; 
+}
+
 bool FabricDFGBaseInterface::plugInArray(
   const MPlug &plug, 
   const MPlugArray &array)
@@ -915,7 +943,6 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(
   MPlug const &inPlug, 
   MPlugArray &affectedPlugs)
 {
-
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::setDependentsDirty");
 
   MFnDependencyNode thisNode(thisMObject);
@@ -958,12 +985,12 @@ MStatus FabricDFGBaseInterface::setDependentsDirty(
       // otherwise continue
       try
       {
-        FabricCore::DFGExec exec = getDFGExec();
-        FabricCore::DFGPortType portType = exec.getExecPortType(attrib.name().asChar());
-        if(portType == FabricCore::DFGPortType_In)
+        DFGExec exec = getDFGExec();
+        DFGPortType portType = exec.getExecPortType(attrib.name().asChar());
+        if(portType == DFGPortType_In)
           continue;
       }
-      catch(FabricCore::Exception e)
+      catch(Exception e)
       {
         continue;
       }
@@ -1190,7 +1217,7 @@ void FabricDFGBaseInterface::onConnection(
 
 // ********************   ********************  //
 inline bool AddSingleBaseTypeAttribute(
-  FabricCore::DFGBinding &binding, 
+  DFGBinding &binding, 
   MString plugName, 
   MFnNumericData::Type numType, 
   MString portName,
@@ -1206,7 +1233,7 @@ inline bool AddSingleBaseTypeAttribute(
   bool res = false;
   try
   { 
-    FabricCore::RTVal rtval = binding.getArgValue(portName.asChar());
+    RTVal rtval = binding.getArgValue(portName.asChar());
     uint32_t portIndex = binding.getExec().getExecPortIndex(portName.asChar());
 
     if(binding.getExec().isExecPortResolvedType(portIndex, "String"))
@@ -1343,7 +1370,7 @@ inline bool AddSingleBaseTypeAttribute(
       }
     }
   }
-  catch (FabricCore::Exception e)
+  catch (Exception e)
   {
     mayaLogErrorFunc(e.getDesc_cstr());
   }
@@ -1351,7 +1378,7 @@ inline bool AddSingleBaseTypeAttribute(
 }
 
 inline bool AddBaseTypeAttributes( 
-  FabricCore::DFGBinding &binding, 
+  DFGBinding &binding, 
   MString portName, 
   MString plugName, 
   MString dataType, 
@@ -1471,7 +1498,7 @@ inline bool AddBaseTypeAttributes(
 }
 
 inline bool AddSingleBaseStructAttribute(
-  FabricCore::DFGBinding &binding, 
+  DFGBinding &binding, 
   MString plugName, 
   MFnNumericData::Type numType, 
   MFnUnitAttribute::Type unitType, 
@@ -1488,7 +1515,7 @@ inline bool AddSingleBaseStructAttribute(
     uint32_t portIndex = binding.getExec().getExecPortIndex(portName.asChar());
     if(binding.getExec().isExecPortResolvedType(portIndex, portType.asChar()))     
     {
-      FabricCore::RTVal rtval = binding.getArgValue(portName.asChar());
+      RTVal rtval = binding.getArgValue(portName.asChar());
       std::string str = rtval.getJSON().getStringCString();
 
       FTL::JSONStrWithLoc jsonSrcWithLoc( FTL::StrRef( str.c_str(), str.length() ) );
@@ -1559,7 +1586,7 @@ inline bool AddSingleBaseStructAttribute(
       sucess =  true;
     }
   }
-  catch (FabricCore::Exception e)
+  catch (Exception e)
   {
     mayaLogErrorFunc(e.getDesc_cstr());
   }
@@ -1567,7 +1594,7 @@ inline bool AddSingleBaseStructAttribute(
 }
 
 inline bool AddBaseStructAttributes( 
-  FabricCore::DFGBinding &binding, 
+  DFGBinding &binding, 
   MString portName, 
   MString plugName, 
   MString dataType, 
@@ -1717,14 +1744,14 @@ inline bool AddBaseStructAttributes(
 }
 
 inline bool AddSingleMat44Attributes(
-  FabricCore::DFGBinding &binding, 
+  DFGBinding &binding, 
   MString plugName, 
   MString portName, 
   MFnMatrixAttribute &mAttr, 
   MObject &newAttribute)
 {
   uint32_t portIndex = binding.getExec().getExecPortIndex(portName.asChar());
-  FabricCore::RTVal rtval = binding.getArgValue(portName.asChar());
+  RTVal rtval = binding.getArgValue(portName.asChar());
 
   if( binding.getExec().isExecPortResolvedType(portIndex, "Mat44") ||
       binding.getExec().isExecPortResolvedType(portIndex, "Xfo") )
@@ -1732,7 +1759,7 @@ inline bool AddSingleMat44Attributes(
     if(binding.getExec().isExecPortResolvedType(portIndex, "Xfo"))
       rtval= rtval.callMethod("Mat44", "toMat44", 0, NULL);
 
-    FabricCore::RTVal rtvalData = rtval.callMethod("Data", "data", 0, 0);  
+    RTVal rtvalData = rtval.callMethod("Data", "data", 0, 0);  
     uint64_t dataSize = rtval.callMethod("UInt64", "dataSize", 0, 0).getUInt64();   
     newAttribute = mAttr.create(plugName, plugName, MFnMatrixAttribute::kFloat);
     float vals[4][4];
@@ -1743,7 +1770,7 @@ inline bool AddSingleMat44Attributes(
 
   else if(binding.getExec().isExecPortResolvedType(portIndex, "Mat44_d"))
   {     
-    FabricCore::RTVal rtvalData = rtval.callMethod("Data", "data", 0, 0);  
+    RTVal rtvalData = rtval.callMethod("Data", "data", 0, 0);  
     uint64_t dataSize = rtval.callMethod("UInt64", "dataSize", 0, 0).getUInt64();   
     newAttribute = mAttr.create(plugName, plugName, MFnMatrixAttribute::kDouble);
     double vals[4][4];
@@ -1757,7 +1784,7 @@ inline bool AddSingleMat44Attributes(
 }
 
 inline bool AddMatrixAttributes( 
-  FabricCore::DFGBinding &binding, 
+  DFGBinding &binding, 
   MString portName, 
   MString plugName, 
   MString dataType, 
@@ -1811,7 +1838,7 @@ inline bool AddMatrixAttributes(
 }
 
 inline bool AddGeometryAttributes( 
-  FabricCore::DFGBinding &binding, 
+  DFGBinding &binding, 
   MString portName, 
   MString plugName, 
   MString dataType, 
@@ -1875,7 +1902,7 @@ inline bool AddGeometryAttributes(
 }
 
 inline bool AddOtherAttributes(
-  FabricCore::DFGBinding &binding, 
+  DFGBinding &binding, 
   MString portName, 
   MString plugName, 
   MString dataType, 
@@ -1946,7 +1973,7 @@ inline bool AddOtherAttributes(
 
 // To-do, was commented
 inline bool AddCompoundAttributes(
-  FabricCore::DFGBinding &binding, 
+  DFGBinding &binding, 
   MString portName, 
   MString plugName, 
   MString dataType, 
@@ -1976,16 +2003,16 @@ inline bool AddCompoundAttributes(
       if(arrayType == "Single Value" || arrayType == "Array (Multi)")
       {
         MObjectArray children;
-        for(FabricCore::Variant::DictIter childIter(compoundStructure); !childIter.isDone(); childIter.next())
+        for(Variant::DictIter childIter(compoundStructure); !childIter.isDone(); childIter.next())
         {
           MString childNameStr = childIter.getKey()->getStringData();
-          const FabricCore::Variant * value = childIter.getValue();
+          const Variant * value = childIter.getValue();
           if(!value)
             continue;
           if(value->isNull())
             continue;
           if(value->isDict()) {
-            const FabricCore::Variant * childDataType = value->getDictValue("dataType");
+            const Variant * childDataType = value->getDictValue("dataType");
             if(childDataType)
             {
               if(childDataType->isString())
@@ -2043,7 +2070,7 @@ inline bool AddCompoundAttributes(
 MObject FabricDFGBaseInterface::addMayaAttribute(
   MString portName, 
   MString dataType, 
-  FabricCore::DFGPortType portType, 
+  DFGPortType portType, 
   MString arrayType, 
   bool compoundChild, 
   MStatus * stat)
@@ -2059,7 +2086,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(
 
   MObject newAttribute;
 
-  FabricCore::DFGExec exec = m_binding.getExec();
+  DFGExec exec = m_binding.getExec();
 
   // skip if disabled by used in the EditPortDialog
   FTL::StrRef addAttributeMD = exec.getExecPortMetadata(portName.asChar(), "addAttribute");
@@ -2161,7 +2188,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(
   MFnCompoundAttribute cAttr;
 
   bool isAccepted = false;
-  bool storable = portType != FabricCore::DFGPortType_Out;
+  bool storable = portType != DFGPortType_Out;
 
   if(!isAccepted && !isOpaqueData)
     isAccepted = AddBaseTypeAttributes( 
@@ -2216,19 +2243,19 @@ MObject FabricDFGBaseInterface::addMayaAttribute(
   // set the mode
   if(!newAttribute.isNull())
   {
-    nAttr.setReadable(portType != FabricCore::DFGPortType_In);
-    tAttr.setReadable(portType != FabricCore::DFGPortType_In);
-    mAttr.setReadable(portType != FabricCore::DFGPortType_In);
-    uAttr.setReadable(portType != FabricCore::DFGPortType_In);
-    cAttr.setReadable(portType != FabricCore::DFGPortType_In);
-    pAttr.setReadable(portType != FabricCore::DFGPortType_In);
+    nAttr.setReadable(portType != DFGPortType_In);
+    tAttr.setReadable(portType != DFGPortType_In);
+    mAttr.setReadable(portType != DFGPortType_In);
+    uAttr.setReadable(portType != DFGPortType_In);
+    cAttr.setReadable(portType != DFGPortType_In);
+    pAttr.setReadable(portType != DFGPortType_In);
 
-    nAttr.setWritable(portType != FabricCore::DFGPortType_Out);
-    tAttr.setWritable(portType != FabricCore::DFGPortType_Out);
-    mAttr.setWritable(portType != FabricCore::DFGPortType_Out);
-    uAttr.setWritable(portType != FabricCore::DFGPortType_Out);
-    cAttr.setWritable(portType != FabricCore::DFGPortType_Out);
-    pAttr.setWritable(portType != FabricCore::DFGPortType_Out);
+    nAttr.setWritable(portType != DFGPortType_Out);
+    tAttr.setWritable(portType != DFGPortType_Out);
+    mAttr.setWritable(portType != DFGPortType_Out);
+    uAttr.setWritable(portType != DFGPortType_Out);
+    cAttr.setWritable(portType != DFGPortType_Out);
+    pAttr.setWritable(portType != DFGPortType_Out);
 
     nAttr.setKeyable(storable);
     tAttr.setKeyable(storable);
@@ -2255,7 +2282,7 @@ MObject FabricDFGBaseInterface::addMayaAttribute(
 
   // FE-7923: if this is an in or io plug ensure to 
   // invalidate it.
-  if(portType != FabricCore::DFGPortType_Out)
+  if(portType != DFGPortType_Out)
   {
     MPlug newAttributePlug(getThisMObject(), newAttribute);
     invalidatePlug(newAttributePlug);
@@ -2290,9 +2317,16 @@ void FabricDFGBaseInterface::removeMayaAttribute(
   MAYASPLICE_CATCH_END(stat);
 }
 
+FabricCore::LockType FabricDFGBaseInterface::getLockType()
+{
+  return getExecuteShared()?
+    FabricCore::LockType_Shared:
+    FabricCore::LockType_Exclusive;
+}
+
 void FabricDFGBaseInterface::setupMayaAttributeAffects(
   MString portName, 
-  FabricCore::DFGPortType portType, 
+  DFGPortType portType, 
   MObject newAttribute, 
   MStatus *stat)
 {
@@ -2305,15 +2339,15 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(
 
   if(userNode != NULL)
   {
-    FabricCore::DFGExec exec = getDFGExec();
+    DFGExec exec = getDFGExec();
   
-    if(portType != FabricCore::DFGPortType_In)
+    if(portType != DFGPortType_In)
     {
       for(unsigned i = 0; i < exec.getExecPortCount(); ++i) {
         std::string otherPortName = exec.getExecPortName(i);
-        if(otherPortName == portName.asChar() && portType != FabricCore::DFGPortType_IO)
+        if(otherPortName == portName.asChar() && portType != DFGPortType_IO)
           continue;
-        if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
+        if(exec.getExecPortType(i) != DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -2323,13 +2357,13 @@ void FabricDFGBaseInterface::setupMayaAttributeAffects(
       }
     }
 
-    if(portType != FabricCore::DFGPortType_Out)
+    if(portType != DFGPortType_Out)
     {
       for(unsigned i = 0; i < exec.getExecPortCount(); ++i) {
         std::string otherPortName = exec.getExecPortName(i);
-        if(otherPortName == portName.asChar() && portType != FabricCore::DFGPortType_IO)
+        if(otherPortName == portName.asChar() && portType != DFGPortType_IO)
           continue;
-        if(exec.getExecPortType(i) == FabricCore::DFGPortType_In)
+        if(exec.getExecPortType(i) == DFGPortType_In)
           continue;
         MString otherPlugName = getPlugName(otherPortName.c_str());
         MPlug plug = thisNode.findPlug(otherPlugName);
@@ -2366,7 +2400,7 @@ void FabricDFGBaseInterface::managePortObjectValues(
    for(unsigned int i = 0; i < getDFGExec().getExecPortCount(); ++i) {
      try
      {
-      FabricCore::RTVal value  = getDFGBinding().getArgValue(i);
+      RTVal value  = getDFGBinding().getArgValue(i);
        if(!value.isValid())
          continue;
        if(!value.isObject())
@@ -2374,11 +2408,11 @@ void FabricDFGBaseInterface::managePortObjectValues(
        if(value.isNullObject())
          continue;
 
-       FabricCore::RTVal objectRtVal = FabricSplice::constructRTVal("Object", 1, &value);
+       RTVal objectRtVal = FabricSplice::constructRTVal("Object", 1, &value);
        if(!objectRtVal.isValid())
          continue;
 
-       FabricCore::RTVal detachable = FabricSplice::constructInterfaceRTVal("Detachable", objectRtVal);
+       RTVal detachable = FabricSplice::constructInterfaceRTVal("Detachable", objectRtVal);
        if(detachable.isNullObject())
          continue;
 
@@ -2387,7 +2421,7 @@ void FabricDFGBaseInterface::managePortObjectValues(
        else
          detachable.callMethod("", "attach", 0, 0);
      }
-     catch(FabricCore::Exception e)
+     catch(Exception e)
      {
        // ignore errors, probably an object which does not implement deattach and attach
      }
@@ -2452,8 +2486,7 @@ void FabricDFGBaseInterface::setAllRestoredFromPersistenceData(
 }
 
 void FabricDFGBaseInterface::bindingNotificationCallback(
-  FTL::CStrRef jsonStr
-  )
+  FTL::CStrRef jsonStr)
 {
   // [hm 20161108] None of the cases below apply during playback 
   // so we should avoid the json decoding alltogether.
@@ -2466,7 +2499,7 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
 
   // [pz 20160818] We need a bracket here because some the options below
   // can cause further notifications to be fired
-  FabricCore::DFGNotifBracket notifBracket( getDFGHost() );
+  DFGNotifBracket notifBracket( getDFGHost() );
 
   // MGlobal::displayInfo(jsonStr.data());
 
@@ -2497,8 +2530,8 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     if(!plug.isNull())
       removeMayaAttribute(nameStr.c_str());
  
-    FabricCore::DFGExec exec = getDFGExec();
-    FabricCore::DFGPortType portType = exec.getExecPortType(nameStr.c_str());
+    DFGExec exec = getDFGExec();
+    DFGPortType portType = exec.getExecPortType(nameStr.c_str());
     addMayaAttribute(nameStr.c_str(), newTypeStr.c_str(), portType);
   }
   else if( descStr == FTL_STR("argRemoved") )
@@ -2536,8 +2569,8 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
 
     MFnDependencyNode thisNode(getThisMObject());
 
-    FabricCore::DFGExec exec = getDFGExec();
-    FabricCore::DFGPortType portType = exec.getExecPortType(nameStr.c_str());
+    DFGExec exec = getDFGExec();
+    DFGPortType portType = exec.getExecPortType(nameStr.c_str());
     addMayaAttribute(nameStr.c_str(), typeStr.c_str(), portType);
 
     generateAttributeLookups();
@@ -2558,6 +2591,18 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   // }
 }
 
+void FabricDFGBaseInterface::BindingNotificationCallback(
+  void * userData, 
+  char const *jsonCString, 
+  uint32_t jsonLength)
+{
+  FabricDFGBaseInterface * interf =
+    static_cast<FabricDFGBaseInterface *>( userData );
+  interf->bindingNotificationCallback(
+    FTL::CStrRef( jsonCString, jsonLength )
+    );
+}
+
 void FabricDFGBaseInterface::VisitInputArgsCallback(
   void *userdata,
   unsigned argIndex,
@@ -2572,7 +2617,7 @@ void FabricDFGBaseInterface::VisitInputArgsCallback(
   FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
   void *getSetUD)
 {
-  if(argOutsidePortType == FabricCore::DFGPortType_Out)
+  if(argOutsidePortType == DFGPortType_Out)
     return;
 
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::VisitInputArgsCallback");
@@ -2650,7 +2695,7 @@ void FabricDFGBaseInterface::VisitOutputArgsCallback(
   FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
   void *getSetUD)
 {
-  if(argOutsidePortType == FabricCore::DFGPortType_In)
+  if(argOutsidePortType == DFGPortType_In)
     return;
 
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::VisitOutputArgsCallback");
@@ -2800,8 +2845,7 @@ bool FabricDFGBaseInterface::getExecuteShared()
 MStatus FabricDFGBaseInterface::doPreEvaluation(
   MObject thisMObject,
   const MDGContext& context,
-  const MEvaluationNode& evaluationNode
-  )
+  const MEvaluationNode& evaluationNode)
 {
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::doPreEvaluation");
 
@@ -2824,8 +2868,7 @@ MStatus FabricDFGBaseInterface::doPostEvaluation(
   MObject thisMObject,
   const MDGContext& context,
   const MEvaluationNode& evaluationNode,
-  MPxNode::PostEvaluationType evalType
-  )
+  MPxNode::PostEvaluationType evalType)
 {
   return MStatus::kSuccess;
 }
@@ -2841,10 +2884,10 @@ bool FabricDFGBaseInterface::HasPort(
   {
     // check/init.
     if (!in_portName || in_portName[0] == '\0')  return false;
-    const FabricCore::DFGPortType portType = (testForInput ? FabricCore::DFGPortType_In : FabricCore::DFGPortType_Out);
+    const DFGPortType portType = (testForInput ? DFGPortType_In : DFGPortType_Out);
 
     // get the graph.
-    FabricCore::DFGExec graph = m_binding.getExec();
+    DFGExec graph = m_binding.getExec();
     if (!graph.isValid())
     {
       std::string s = "BaseInterface::HasPort(): failed to get graph!";
@@ -2855,7 +2898,7 @@ bool FabricDFGBaseInterface::HasPort(
     // return result.
     return (graph.haveExecPort(in_portName) && graph.getExecPortType(in_portName) == portType);
   }
-  catch (FabricCore::Exception e)
+  catch (Exception e)
   {
     return false;
   }

@@ -2,7 +2,6 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-
 #include <QCheckBox>
 #include <maya/MStatus.h>
 #include <maya/MGlobal.h>
@@ -12,8 +11,7 @@
 #include "FabricDFGBaseInterface.h"
 #include <DFG/Dialogs/DFGEditPortDialog.h>
 #include <FabricUI/Util/LoadFabricStyleSheet.h>
-#include <FabricUI/DFG/Commands/DFGCommandRegistration.h>
-
+ 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
 
@@ -177,9 +175,6 @@ void FabricDFGWidget::setCurrentUINodeName(
           &m_cmdHandler,
           false, 
           config);
-
-    DFGCommandRegistration::RegisterCommands(getDfgWidget()->getDFGController());
-
 #endif
     m_initialized = true;
   }

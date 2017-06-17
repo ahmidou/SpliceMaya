@@ -36,7 +36,6 @@ class FabricDFGWidget;
 class FabricDFGBaseInterface {
 
 public:
-
   typedef FabricCore::DFGBinding (*CreateDFGBindingFunc)( FabricCore::DFGHost &dfgHost );
 
   FabricDFGBaseInterface( 
@@ -105,7 +104,7 @@ public:
   // FabricSplice::DGGraph & getSpliceGraph() { return _spliceGraph; }
   void setDgDirtyEnabled(
     bool enabled
-    ) { _dgDirtyEnabled = enabled; }
+    );
 
   static void onNodeAdded(
     MObject &node, 
@@ -156,11 +155,11 @@ public:
 
   static MStatus processQueuedMelCommands();
 
-  DFGUICmdHandler_Maya *getCmdHandler() { return &m_cmdHandler; }
+  DFGUICmdHandler_Maya *getCmdHandler();
 
   bool getExecuteShared();
 
-  void setExecuteSharedDirty() { m_executeSharedDirty = true; }
+  void setExecuteSharedDirty();
 
   virtual MString getPlugName(
     const MString &portName
@@ -280,12 +279,7 @@ protected:
     MStatus * stat = NULL
     );
 
-  virtual FabricCore::LockType getLockType()
-  {
-    return getExecuteShared()?
-      FabricCore::LockType_Shared:
-      FabricCore::LockType_Exclusive;
-  }
+  virtual FabricCore::LockType getLockType();
 
   // static MString sManipulationCommand;
   // MString _manipulationCommand;
@@ -310,24 +304,6 @@ protected:
   std::map<std::string, std::string> _argTypes;
   DFGUICmdHandler_Maya m_cmdHandler;
 
-private:
-  void bindingNotificationCallback( 
-    FTL::CStrRef jsonStr 
-    );
-
-  static void BindingNotificationCallback(
-    void * userData, 
-    char const *jsonCString, 
-    uint32_t jsonLength)
-  {
-    FabricDFGBaseInterface * interf =
-      static_cast<FabricDFGBaseInterface *>( userData );
-    interf->bindingNotificationCallback(
-      FTL::CStrRef( jsonCString, jsonLength )
-      );
-  }
-
-protected:
   struct VisitCallbackUserData
   {
     VisitCallbackUserData(MObject inNode, MDataBlock & inData)
@@ -346,6 +322,16 @@ protected:
   };
 
 private:
+  void bindingNotificationCallback( 
+    FTL::CStrRef jsonStr 
+    );
+
+  static void BindingNotificationCallback(
+    void * userData, 
+    char const *jsonCString, 
+    uint32_t jsonLength
+    );
+
   static void VisitInputArgsCallback(
     void *userdata,
     unsigned argIndex,
@@ -386,6 +372,8 @@ private:
     MString oldName, 
     MString newName
     );
+  
+  void bindingChanged();
 
   static MString resolveEnvironmentVariables(
     const MString & filePath
