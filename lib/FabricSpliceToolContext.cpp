@@ -2,7 +2,7 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
- 
+#include <iostream>
 #include <QMouseEvent>
 #include <FTL/StrRef.h>
 #include <maya/MCursor.h>
@@ -50,7 +50,7 @@ MStatus FabricSpliceManipulationCmd::redoIt() {
       }
     }
     M3dView view = M3dView::active3dView();
-    view.refresh(true, true);
+    view.refresh(true);
     return MStatus::kSuccess;
   }
   catch (Exception e)
@@ -69,7 +69,7 @@ MStatus FabricSpliceManipulationCmd::undoIt() {
       }
     }
     M3dView view = M3dView::active3dView();
-    view.refresh(true, true);
+    view.refresh(true);
     return MStatus::kSuccess;
   }
   catch (Exception e)
@@ -166,7 +166,7 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
       if(mEventDispatcher.isValid())
       {
         mEventDispatcher.callMethod("", "activateManipulation", 0, 0);
-        view.refresh(true, true);
+        view.refresh(true);
       }
     }
   } 
@@ -187,7 +187,7 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
   view.widget()->installEventFilter(&sEventFilterObject);
   view.widget()->setFocus();
 
-  view.refresh(true, true);
+  view.refresh(true);
 }
 
 void FabricSpliceToolContext::toolOffCleanup() {
@@ -203,12 +203,12 @@ void FabricSpliceToolContext::toolOffCleanup() {
       // By deactivating the manipulation, we enable the manipulators to perform
       // cleanup, such as hiding paint brushes/gizmos. 
       mEventDispatcher.callMethod("", "deactivateManipulation", 0, 0);
-      view.refresh(true, true);
+      view.refresh(true);
 
       mEventDispatcher.invalidate();
     }
 
-    view.refresh(true, true);
+    view.refresh(true);
   }
   catch (Exception e)
   {
@@ -403,8 +403,30 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
       }
     }
 
+    if(result)
+    {
+      KLCommandManager *manager = qobject_cast<KLCommandManager*>(
+        CommandManager::getCommandManager());
+
+      // Check the command execution and print the exception, 
+      // we don't want to crash the app if the command fails.
+      try
+      {
+        manager->synchronizeKL();
+      }
+
+      catch(FabricException &e)
+      {
+        FabricException::Throw(
+          "GLViewportWidget::onEvent",
+          "",
+          e.what(),
+          PRINT);
+      }
+    }
+
     if(host.maybeGetMember("redrawRequested").getBoolean())
-      view.refresh(true, true);
+      view.refresh(true);
 
     if(host.callMethod("Boolean", "undoRedoCommandsAdded", 0, 0).getBoolean()){
       // Cache the rtvals in a static variable that the command will then stor in the undo stack.
@@ -449,7 +471,7 @@ bool FabricSpliceToolContext::onRTR2Event(QEvent *event, M3dView &view) {
     }
   }
 
-  if(res) view.refresh(true, true);      
+  if(res) view.refresh(true);      
   return res;
 }
 
@@ -476,25 +498,7 @@ bool FabricSpliceToolContext::onEvent(QEvent *event) {
       {
         event->accept();
 
-        KLCommandManager *manager = qobject_cast<KLCommandManager*>(
-          CommandManager::getCommandManager());
-
-        // Check the command execution and print the exception, 
-        // we don't want to crash the app if the command fails.
-        try
-        {
-          manager->synchronizeKL();
-        }
-
-        catch(FabricException &e)
-        {
-          FabricException::Throw(
-            "GLViewportWidget::onEvent",
-            "",
-            e.what(),
-            PRINT);
-        }
-
+       
         return true;
       }
       return false;
