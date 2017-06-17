@@ -80,8 +80,14 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("createReferencedDFGNode();") "Create referenced Graph";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("reloadReferencedDFGNode();") "Reload referenced Graph";
-  // menuItem -p $fabricSpliceMenu -divider true;
-  // menuItem -p $fabricSpliceMenu -ec 1 -c ("fabricImportPattern();") "Run Import Pattern";
+  menuItem -p $fabricSpliceMenu -divider true;
+  string $assetPatternsMenu;
+  $assetPatternsMenu = `menuItem -parent $fabricSpliceMenu -subMenu true -tearOff true -label "Asset Patterns"`;
+  menuItem -p $assetPatternsMenu -ec 1 -c ("fabricImportPattern();") "Import Pattern";
+  menuItem -p $assetPatternsMenu -ec 1 -c ("fabricExportPattern();") "Export Pattern";
+  menuItem -p $assetPatternsMenu -divider true;
+  menuItem -p $assetPatternsMenu -ec 1 -c ("fabricImportPattern -f (getenv(\"FABRIC_DIR\") + \"/Presets/Patterns/AlembicImporter.canvas\");") "Import Alembic";
+  menuItem -p $assetPatternsMenu -ec 1 -c ("fabricExportPattern -f (getenv(\"FABRIC_DIR\") + \"/Presets/Patterns/AlembicExporter.canvas\");") "Export Alembic";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c $toolCmd "Toggle Tool";
   menuItem -p $fabricSpliceMenu -divider true;

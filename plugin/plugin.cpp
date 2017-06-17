@@ -40,6 +40,7 @@
 #include "FabricSpliceHelpers.h"
 #include "FabricUpgradeAttrCommand.h"
 #include "FabricImportPatternCommand.h"
+#include "FabricExportPatternCommand.h"
 
 #include "FabricCommand.h"
 #include "FabricExecuteCommand.h"
@@ -417,6 +418,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   INITPLUGIN_STATE( status, plugin.registerCommand("fabricUpgradeAttrs",  FabricUpgradeAttrCommand  ::creator, FabricUpgradeAttrCommand  ::newSyntax) );
   INITPLUGIN_STATE( status, plugin.registerCommand("fabricImportPattern", FabricImportPatternCommand::creator, FabricImportPatternCommand::newSyntax) );
+  INITPLUGIN_STATE( status, plugin.registerCommand("fabricExportPattern", FabricExportPatternCommand::creator, FabricExportPatternCommand::newSyntax) );
 
   MString pluginPath = plugin.loadPath();
   MString lastFolder("plug-ins");
@@ -470,6 +472,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand("fabricSplice") );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand("fabricImportPattern") );
+  UNINITPLUGIN_STATE( status, plugin.deregisterCommand("fabricExportPattern") );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand("fabricUpgradeAttrs") );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand("FabricSpliceEditor") );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand("proceedToNextScene") );

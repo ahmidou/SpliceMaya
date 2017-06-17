@@ -20,8 +20,8 @@ FabricCommand::~FabricCommand()
   // and a new command is created.
   try
   {
-    FabricUI::Commands::CommandManager *manager = 
-      FabricUI::Commands::CommandManager::getCommandManager();
+    //FabricUI::Commands::CommandManager *manager = 
+    //  FabricUI::Commands::CommandManager::getCommandManager();
 
     //manager->clearRedoStack();
   }
