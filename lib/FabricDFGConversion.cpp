@@ -1868,7 +1868,6 @@ void dfgPlugToPort_euler_float64(
   CORE_CATCH_END;
 }
 
-
 void dfgPlugToPort_mat44(
   unsigned argIndex,
   char const *argName,
@@ -1944,93 +1943,6 @@ void dfgPlugToPort_mat44(
   }
 }
 
-void dfgPlugToPort_xfo(
-  unsigned argIndex,
-  char const *argName,
-  char const *argTypeName,
-  FEC_DFGPortType argOutsidePortType,
-  uint64_t argRawDataSize,
-  FEC_DFGBindingVisitArgs_GetCB getCB,
-  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
-  FEC_DFGBindingVisitArgs_SetCB setCB,
-  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
-  void *getSetUD,
-  MPlug &plug, 
-  MDataBlock &data)
-{
-  FabricMayaProfilingEvent bracket("dfgPlugToPort_xfo");
-
-  uint64_t elementDataSize = sizeof(float) * 16;
- 
-  bool isFloatMatrix = plug.attribute().hasFn(MFn::kFloatMatrixAttribute);
-
-  if(plug.isArray()){
-    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
-    MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
-    pauseBracket.resume();
-
-    unsigned int numElements = arrayHandle.elementCount();
-  
-    FabricCore::RTVal xfoArrayVal = FabricSplice::constructVariableArrayRTVal("Xfo");
-    xfoArrayVal.setArraySize(numElements);
-
-    float values[16];
-    FabricCore::RTVal mat44Val = FabricSplice::constructRTVal("Mat44");
-    FabricCore::RTVal rtvalData = mat44Val.callMethod("Data", "data", 0, 0);  
-
-    if(isFloatMatrix)
-    {
-     for(unsigned int i = 0; i < numElements; ++i){
-        arrayHandle.jumpToArrayElement(i);
-        MDataHandle handle = arrayHandle.inputValue();
-        const MFloatMatrix& mayaMat = handle.asFloatMatrix();
-        MayaMatrixToFabricMatData_44(mayaMat, values);
-
-        memcpy(rtvalData.getData(), values, elementDataSize);
-        xfoArrayVal.setArrayElement(i, FabricSplice::constructRTVal("Xfo", 1, &mat44Val));
-      }
-    }
-    else // double
-    {
-      for(unsigned int i = 0; i < numElements; ++i){
-        arrayHandle.jumpToArrayElement(i);
-        MDataHandle handle = arrayHandle.inputValue();
-        const MMatrix& mayaMat = handle.asMatrix();
-        MayaMatrixToFabricMatData_44(mayaMat, values);
-
-        memcpy(rtvalData.getData(), values, elementDataSize);
-        xfoArrayVal.setArrayElement(i, FabricSplice::constructRTVal("Xfo", 1, &mat44Val));
-      }
-    }
-
-    setCB(getSetUD, xfoArrayVal.getFECRTValRef());
-  }
-  else{
-    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
-    MDataHandle handle = data.inputValue(plug);
-    pauseBracket.resume();
-
-    float values[16];
-
-    if(isFloatMatrix)
-    {
-      const MFloatMatrix& mayaMat = handle.asFloatMatrix();
-      MayaMatrixToFabricMatData_44(mayaMat, values);
-    }
-    else
-    {
-      const MMatrix& mayaMat = handle.asMatrix();
-      MayaMatrixToFabricMatData_44(mayaMat, values);
-    }
-    FabricCore::RTVal mat44Val = FabricSplice::constructRTVal("Mat44");
-    FabricCore::RTVal rtvalData = mat44Val.callMethod("Data", "data", 0, 0);  
-    memcpy(rtvalData.getData(), values, elementDataSize);
-
-    FabricCore::RTVal xfoVal = FabricSplice::constructRTVal("Xfo", 1, &mat44Val);
-    setCB(getSetUD, xfoVal.getFECRTValRef());
-  }
-}
-
 void dfgPlugToPort_mat44_float64(
   unsigned argIndex,
   char const *argName,
@@ -2101,6 +2013,104 @@ void dfgPlugToPort_mat44_float64(
       MayaMatrixToFabricMatData_44(mayaMat, values);
     }
     setRawCB(getSetUD, values, elementDataSize);
+  }
+}
+
+void dfgPlugToPort_xfo(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  FEC_DFGBindingVisitArgs_SetCB setCB,
+  FEC_DFGBindingVisitArgs_SetRawCB setRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
+{
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_xfo");
+
+  uint64_t elementDataSize = sizeof(float) * 16;
+ 
+  bool isFloatMatrix = plug.attribute().hasFn(MFn::kFloatMatrixAttribute);
+
+  if(plug.isArray()){
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
+    MArrayDataHandle arrayHandle = data.inputArrayValue(plug);
+    pauseBracket.resume();
+
+    unsigned int numElements = arrayHandle.elementCount();
+    FabricCore::RTVal xfoArrayVal = FabricSplice::constructVariableArrayRTVal("Xfo");
+    xfoArrayVal.setArraySize(numElements);
+
+    if(isFloatMatrix)
+    {
+     for(unsigned int i = 0; i < numElements; ++i){
+        arrayHandle.jumpToArrayElement(i);
+        MDataHandle handle = arrayHandle.inputValue();
+        float values[16];
+        if(isFloatMatrix)
+        {
+          const MFloatMatrix& mayaMat = handle.asFloatMatrix();
+          MayaMatrixToFabricMatData_44(mayaMat, values);
+        }
+        else// double
+        {
+          const MMatrix& mayaMat = handle.asMatrix();
+          MayaMatrixToFabricMatData_44(mayaMat, values);
+        }
+
+        FabricCore::RTVal mat44Val = FabricSplice::constructRTVal("Mat44");
+        FabricCore::RTVal rtvalData = mat44Val.callMethod("Data", "data", 0, 0);  
+        uint64_t dataSize = mat44Val.callMethod("UInt64", "dataSize", 0, 0).getUInt64();   
+        memcpy(rtvalData.getData(), values, dataSize);
+        xfoArrayVal.setArrayElement(i, FabricSplice::constructRTVal("Xfo", 1, &mat44Val));
+      }
+    }
+    // else // double
+    // {
+    //   for(unsigned int i = 0; i < numElements; ++i){
+    //     arrayHandle.jumpToArrayElement(i);
+    //     MDataHandle handle = arrayHandle.inputValue();
+    //     const MMatrix& mayaMat = handle.asMatrix();
+    //     float values[16];
+    //     MayaMatrixToFabricMatData_44(mayaMat, values);
+
+    //     FabricCore::RTVal mat44Val = FabricSplice::constructRTVal("Mat44");
+    //     FabricCore::RTVal rtvalData = mat44Val.callMethod("Data", "data", 0, 0);  
+    //     uint64_t dataSize = mat44Val.callMethod("UInt64", "dataSize", 0, 0).getUInt64();   
+    //     memcpy(rtvalData.getData(), values, dataSize);
+    //     xfoArrayVal.setArrayElement(i, FabricSplice::constructRTVal("Xfo", 1, &mat44Val));
+    //   }
+    // }
+
+    setCB(getSetUD, xfoArrayVal.getFECRTValRef());
+  }
+  else{
+    FTL::AutoProfilingPauseEvent pauseBracket(bracket);
+    MDataHandle handle = data.inputValue(plug);
+    pauseBracket.resume();
+
+    float values[16];
+
+    if(isFloatMatrix)
+    {
+      const MFloatMatrix& mayaMat = handle.asFloatMatrix();
+      MayaMatrixToFabricMatData_44(mayaMat, values);
+    }
+    else
+    {
+      const MMatrix& mayaMat = handle.asMatrix();
+      MayaMatrixToFabricMatData_44(mayaMat, values);
+    }
+    FabricCore::RTVal mat44Val = FabricSplice::constructRTVal("Mat44");
+    FabricCore::RTVal rtvalData = mat44Val.callMethod("Data", "data", 0, 0);  
+    memcpy(rtvalData.getData(), values, elementDataSize);
+
+    FabricCore::RTVal xfoVal = FabricSplice::constructRTVal("Xfo", 1, &mat44Val);
+    setCB(getSetUD, xfoVal.getFECRTValRef());
   }
 }
 
@@ -4687,86 +4697,6 @@ void dfgPortToPlug_mat44(
   }
 }
 
-void dfgPortToPlug_xfo(
-  unsigned argIndex,
-  char const *argName,
-  char const *argTypeName,
-  FEC_DFGPortType argOutsidePortType,
-  uint64_t argRawDataSize,
-  FEC_DFGBindingVisitArgs_GetCB getCB,
-  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
-  void *getSetUD,
-  MPlug &plug, 
-  MDataBlock &data)
-{
-  FabricMayaProfilingEvent bracket("dfgPortToPlug_xfo");
-
-  FabricCore::RTVal rtval( getCB( getSetUD ) );
- 
-  uint64_t elementDataSize = sizeof(float) * 16;
-  uint64_t numElements = argRawDataSize / elementDataSize;
-
-  float values[16];
-  bool isFloatMatrix = plug.attribute().hasFn(MFn::kFloatMatrixAttribute);
-
-  if(plug.isArray()){
- 
-    MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
-    MArrayDataBuilder arraybuilder = arrayHandle.builder();
-
-    if(isFloatMatrix)
-    {
-      for(unsigned int i = 0; i < numElements; ++i){
-        MDataHandle handle = arraybuilder.addElement(i);
-
-        FabricCore::RTVal rtvalData = rtval.getArrayElementRef(i).callMethod("Data", "data", 0, 0);  
-        memcpy(values, rtvalData.getData(), elementDataSize);
- 
-        MFloatMatrix mayaMat;
-        FabricMatDataToMayaMatrix_44(values, mayaMat);
-        handle.setMFloatMatrix(mayaMat);
-      }
-    } // double
-    else
-    {
-      for(unsigned int i = 0; i < numElements; ++i){
-        MDataHandle handle = arraybuilder.addElement(i);
-
-        FabricCore::RTVal rtvalData = rtval.getArrayElementRef(i).callMethod("Data", "data", 0, 0);  
-        memcpy(values, rtvalData.getData(), elementDataSize);
-
-        MMatrix mayaMat;
-        FabricMatDataToMayaMatrix_44(values, mayaMat);
-        handle.setMMatrix(mayaMat);
-      }
-    }
-
-    arrayHandle.set(arraybuilder);
-    arrayHandle.setAllClean();
-  }
-  else{
-    MDataHandle handle = data.outputValue(plug);
-    FabricCore::RTVal mat44Val = rtval.callMethod("Mat44", "toMat44", 0, 0);
-    uint64_t dataSize = mat44Val.callMethod("UInt64", "dataSize", 0, 0).getUInt64();   
-
-    FabricCore::RTVal rtvalData = mat44Val.callMethod("Data", "data", 0, 0);  
-    memcpy(values, rtvalData.getData(), dataSize);
-
-    if(isFloatMatrix)
-    {
-      MFloatMatrix mayaMat;
-      FabricMatDataToMayaMatrix_44(values, mayaMat);
-      handle.setMFloatMatrix(mayaMat);
-    }
-    else
-    {
-      MMatrix mayaMat;
-      FabricMatDataToMayaMatrix_44(values, mayaMat);
-      handle.setMMatrix(mayaMat);
-    }
-  }
-}
-
 void dfgPortToPlug_mat44_float64(
   unsigned argIndex,
   char const *argName,
@@ -4821,6 +4751,81 @@ void dfgPortToPlug_mat44_float64(
   }
   else{
     MDataHandle handle = data.outputValue(plug);
+
+    if(isFloatMatrix)
+    {
+      MFloatMatrix mayaMat;
+      FabricMatDataToMayaMatrix_44(values, mayaMat);
+      handle.setMFloatMatrix(mayaMat);
+    }
+    else
+    {
+      MMatrix mayaMat;
+      FabricMatDataToMayaMatrix_44(values, mayaMat);
+      handle.setMMatrix(mayaMat);
+    }
+  }
+}
+
+void dfgPortToPlug_xfo(
+  unsigned argIndex,
+  char const *argName,
+  char const *argTypeName,
+  FEC_DFGPortType argOutsidePortType,
+  uint64_t argRawDataSize,
+  FEC_DFGBindingVisitArgs_GetCB getCB,
+  FEC_DFGBindingVisitArgs_GetRawCB getRawCB,
+  void *getSetUD,
+  MPlug &plug, 
+  MDataBlock &data)
+{
+  FabricMayaProfilingEvent bracket("dfgPortToPlug_xfo");
+
+  FabricCore::RTVal rtval( getCB( getSetUD ) );
+ 
+  uint64_t elementDataSize = sizeof(float) * 10; // orientation:quat(4), scale:vec(3), tr:vec(3)
+  uint64_t numElements = argRawDataSize / elementDataSize;
+
+  float values[16];
+  bool isFloatMatrix = plug.attribute().hasFn(MFn::kFloatMatrixAttribute);
+
+  if(plug.isArray())
+  {
+    MArrayDataHandle arrayHandle = data.outputArrayValue(plug);
+    MArrayDataBuilder arraybuilder = arrayHandle.builder();
+
+    for(unsigned int i = 0; i < numElements; ++i)
+    {
+      FabricCore::RTVal mat44Val = rtval.getArrayElement(i).callMethod("Mat44", "toMat44", 0, 0);
+      FabricCore::RTVal rtvalData = mat44Val.callMethod("Data", "data", 0, 0);  
+      uint64_t dataSize = mat44Val.callMethod("UInt64", "dataSize", 0, 0).getUInt64();   
+      memcpy(values, rtvalData.getData(), dataSize);
+ 
+      MDataHandle handle = arraybuilder.addElement(i);
+      if(isFloatMatrix)
+      {
+        MFloatMatrix mayaMat;
+        FabricMatDataToMayaMatrix_44(values, mayaMat);
+        handle.setMFloatMatrix(mayaMat);
+      }
+
+      else // double
+      {
+        MMatrix mayaMat;
+        FabricMatDataToMayaMatrix_44(values, mayaMat);
+        handle.setMMatrix(mayaMat);
+      }
+    }
+
+    arrayHandle.set(arraybuilder);
+    arrayHandle.setAllClean();
+  }
+  else{
+    MDataHandle handle = data.outputValue(plug);
+    FabricCore::RTVal mat44Val = rtval.callMethod("Mat44", "toMat44", 0, 0);
+    uint64_t dataSize = mat44Val.callMethod("UInt64", "dataSize", 0, 0).getUInt64();   
+    FabricCore::RTVal rtvalData = mat44Val.callMethod("Data", "data", 0, 0);  
+    memcpy(values, rtvalData.getData(), dataSize);
 
     if(isFloatMatrix)
     {
@@ -5380,9 +5385,9 @@ DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType)
   if (dataType == FTL_STR("Euler"))                return dfgPlugToPort_euler;
   if (dataType == FTL_STR("Euler_d"))              return dfgPlugToPort_euler_float64;
  
-  if (dataType == FTL_STR("Xfo"))                  return dfgPlugToPort_xfo;
   if (dataType == FTL_STR("Mat44"))                return dfgPlugToPort_mat44;
   if (dataType == FTL_STR("Mat44_d"))              return dfgPlugToPort_mat44_float64;
+  if (dataType == FTL_STR("Xfo"))                  return dfgPlugToPort_xfo;
 
   if (dataType == FTL_STR("Color"))                return dfgPlugToPort_color;
 
@@ -5431,9 +5436,9 @@ DFGArgToPlugFunc getDFGArgToPlugFunc(const FTL::StrRef &dataType)
   if (dataType == FTL_STR("Euler"))                return dfgPortToPlug_euler;
   if (dataType == FTL_STR("Euler_d"))              return dfgPortToPlug_euler_float64;
  
-  if (dataType == FTL_STR("Xfo"))                  return dfgPortToPlug_xfo;
   if (dataType == FTL_STR("Mat44"))                return dfgPortToPlug_mat44;
   if (dataType == FTL_STR("Mat44_d"))              return dfgPortToPlug_mat44_float64;
+  if (dataType == FTL_STR("Xfo"))                  return dfgPortToPlug_xfo;
 
   if (dataType == FTL_STR("Color"))                return dfgPortToPlug_color;
  
