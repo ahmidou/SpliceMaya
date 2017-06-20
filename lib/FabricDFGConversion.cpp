@@ -2047,7 +2047,8 @@ void dfgPlugToPort_xfo(
 
     if(isFloatMatrix)
     {
-     for(unsigned int i = 0; i < numElements; ++i){
+      for(unsigned int i = 0; i < numElements; ++i)
+      {
         arrayHandle.jumpToArrayElement(i);
         MDataHandle handle = arrayHandle.inputValue();
         float values[16];
@@ -2069,22 +2070,6 @@ void dfgPlugToPort_xfo(
         xfoArrayVal.setArrayElement(i, FabricSplice::constructRTVal("Xfo", 1, &mat44Val));
       }
     }
-    // else // double
-    // {
-    //   for(unsigned int i = 0; i < numElements; ++i){
-    //     arrayHandle.jumpToArrayElement(i);
-    //     MDataHandle handle = arrayHandle.inputValue();
-    //     const MMatrix& mayaMat = handle.asMatrix();
-    //     float values[16];
-    //     MayaMatrixToFabricMatData_44(mayaMat, values);
-
-    //     FabricCore::RTVal mat44Val = FabricSplice::constructRTVal("Mat44");
-    //     FabricCore::RTVal rtvalData = mat44Val.callMethod("Data", "data", 0, 0);  
-    //     uint64_t dataSize = mat44Val.callMethod("UInt64", "dataSize", 0, 0).getUInt64();   
-    //     memcpy(rtvalData.getData(), values, dataSize);
-    //     xfoArrayVal.setArrayElement(i, FabricSplice::constructRTVal("Xfo", 1, &mat44Val));
-    //   }
-    // }
 
     setCB(getSetUD, xfoArrayVal.getFECRTValRef());
   }
