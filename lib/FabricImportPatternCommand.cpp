@@ -877,6 +877,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
         return MObject();
 
       // try to find the node in the scene
+      bool existed = false;
       if(m_settings.attachToExisting)
       {
         MSelectionList sl;
@@ -894,6 +895,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
           if(sl.getDagPath(0, dagPath) == MS::kSuccess)
           {
             node = dagPath.node();
+            existed = true;
           }
         }
       }
@@ -915,6 +917,43 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       {
         modif.reparentNode(node, parentNode);
         modif.doIt();
+      }
+
+      // check if this mesh contains a texture reference
+      if(!existed)
+      {
+        if(polygonMesh.callMethod("Boolean", "hasTextureReference", 0, 0).getBoolean())
+        {
+          FabricCore::RTVal refPolygonMesh = polygonMesh.callMethod("PolygonMesh", "createTextureReferenceMesh", 0, 0);
+          MObject refNode = dfgPolygonMeshToMFnMesh(refPolygonMesh, false /* insideCompute */);
+
+          if(!refNode.isNull())
+          {
+            MDagModifier dagModif;
+            dagModif.renameNode(refNode, m_settings.nameSpace + name + "_reference");
+            dagModif.doIt();
+
+            if(!parentNode.isNull())
+            {
+              dagModif.reparentNode(refNode, parentNode);
+              dagModif.doIt();
+            }
+          }
+
+          MFnDagNode refDagNode(getShapeForNode(refNode));
+          MFnDagNode meshDagNode(getShapeForNode(node));
+          MPlug messagePlug = refDagNode.findPlug("message");
+          MPlug refObjPlug = meshDagNode.findPlug("referenceObject");
+
+          MDGModifier dgModif;
+          dgModif.connect(messagePlug, refObjPlug);
+          dgModif.doIt();
+
+          MPlug overrideEnabledPlug = MFnDagNode(refNode).findPlug("overrideEnabled");
+          overrideEnabledPlug.setValue((int)1); // enable overrides
+          MPlug overrideDisplayTypePlug = MFnDagNode(refNode).findPlug("overrideDisplayType");
+          overrideDisplayTypePlug.setValue((int)1); // template display mode
+        }
       }
     
       updateTransformForObject(obj, node);
@@ -1320,4 +1359,13 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     }
   }
   return success;
+}
+
+MObject FabricImportPatternCommand::getShapeForNode(MObject node)
+{
+  MFnDagNode dagNode(node);
+  MDagPath dagPath;
+  dagNode.getPath(dagPath);
+  dagPath.extendToShape();
+  return dagPath.node();
 }
