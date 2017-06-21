@@ -215,7 +215,10 @@ void FabricDFGWidget::onPortEditDialogCreated(DFG::DFGBaseDialog * dialog)
   // FE-6747/FE-7369 : Don't edit the port if it's been set already.
   if(!editPortDialog->dataType().isEmpty())
   {
-    editPortDialog->setDataTypeReadOnly(true);
+    // FE-7722 -> Only work for maya > 2017 update 4
+    if(MGlobal::apiVersion() < 201760)
+      editPortDialog->setDataTypeReadOnly(true);
+    
     editPortDialog->setSoftRangeReadOnly(true);
     editPortDialog->setHardRangeReadOnly(true);
     editPortDialog->setComboReadOnly(true);
