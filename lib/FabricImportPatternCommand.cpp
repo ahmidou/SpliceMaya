@@ -29,6 +29,8 @@
 
 #include <FTL/FS.h>
 
+bool FabricImportPatternCommand::s_loadedMatrixPlugin = false;
+
 MSyntax FabricImportPatternCommand::newSyntax()
 {
   MSyntax syntax;
@@ -611,8 +613,10 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
   for(std::map< std::string, MObject >::iterator it = m_nodes.begin(); it != m_nodes.end(); it++)
   {
-    MFnDagNode node(it->second);
-    result.append(node.fullPathName());
+    MStatus nodeStatus;
+    MFnDagNode node(it->second, &nodeStatus);
+    if(nodeStatus == MS::kSuccess)
+      result.append(node.fullPathName());
   }
 
   setResult(result);
@@ -870,7 +874,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       lookupPath = simplifyPath(instancePath);
       instancePath = parentPath(instancePath, &name);
     }
-    MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", false);
+    MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", true /*createIfMissing*/);
 
     // now check if we have already converted this shape before
     std::map< std::string, MObject >::iterator it = m_nodes.find(lookupPath.asChar());
@@ -1296,7 +1300,11 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     if(property == L"localTransform")
     {
       // we also need a node for matrix conversion
-      MGlobal::executeCommand("loadPlugin -name \"matrixNodes\" -quiet;");
+      if(!s_loadedMatrixPlugin)
+      {
+        MGlobal::executeCommand("loadPlugin -quiet \"matrixNodes\";");
+        s_loadedMatrixPlugin = true;
+      }
       MObject decomposeNode = getOrCreateNodeForPath(evaluatorPath+"/Decompose", "decomposeMatrix", true, false /* isDag */);
       if(decomposeNode.isNull())
       {

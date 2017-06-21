@@ -54,6 +54,7 @@ private:
   std::map< std::string, size_t > m_objectMap;
   std::map< std::string, MObject > m_nodes;
   std::map< std::string, MObject > m_materialSets;
+  static bool s_loadedMatrixPlugin;
 
   FabricImportPatternSettings m_settings;
 
