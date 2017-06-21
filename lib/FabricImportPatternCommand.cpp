@@ -697,6 +697,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
 
   MString name = path;
   MObject parentNode;
+
   int rindex = path.rindex('/');
   if(rindex > 0)
   {
@@ -773,8 +774,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForObject(FabricCore::RTVal o
   }
   else if(type == "Camera")
   {
-    // todo
-    return MObject();
+    return getOrCreateNodeForPath(path, "camera");
   }
   else if(type == "Material" || type == "Texture")
   {
@@ -1333,20 +1333,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
           return false;
 
         // extend the dep node to the shape
-        MStatus extendToShapeStatus;
-        MFnDagNode shapeDagNode(objDepNode.object(), &extendToShapeStatus);
-        if(extendToShapeStatus == MS::kSuccess)
-        {
-          MDagPath shapeDagPath;
-          extendToShapeStatus = shapeDagNode.getPath(shapeDagPath);
-          if(extendToShapeStatus == MS::kSuccess)
-          {
-            if(shapeDagPath.extendToShape() == MS::kSuccess)
-            {
-              shapeDagNode.setObject(shapeDagPath.node());
-            }
-          }
-        }
+        MFnDagNode shapeDagNode(getShapeForNode(objDepNode.object()));
 
         //const Integer ImporterShape_Mesh = 0;
         //const Integer ImporterShape_Curves = 1;
@@ -1364,6 +1351,54 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
           // other cases are not yet supported by the shape creation anyway....
         }
       }
+    }
+    else if(property == L"focalLength")
+    {
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+      if(camera.isNullObject())
+        return false;
+
+      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("focalLength"), cameraDagNode.findPlug("focalLength"));
+      modif.doIt();
+    }
+    else if(property == L"focusDistance")
+    {
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+      if(camera.isNullObject())
+        return false;
+
+      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("focusDistance"), cameraDagNode.findPlug("focusDistance"));
+      modif.doIt();
+    }
+    else if(property == L"near")
+    {
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+      if(camera.isNullObject())
+        return false;
+
+      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("near"), cameraDagNode.findPlug("nearClipPlane"));
+      modif.doIt();
+    }
+    else if(property == L"far")
+    {
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+      if(camera.isNullObject())
+        return false;
+
+      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("far"), cameraDagNode.findPlug("farClipPlane"));
+      modif.doIt();
     }
     else
     {

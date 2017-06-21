@@ -631,7 +631,11 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
     }
     else if(typeName == L"camera")
     {
-      mayaLogFunc(MString(getName())+": Warning: '"+dagNode.name()+"' is a camera - to be implemented.");
+      FabricCore::RTVal args[3];
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "Camera");
+      args[1] = FabricCore::RTVal::ConstructString(m_client, path.asChar());
+      args[2] = args[1];
+      val = m_importer.callMethod("ImporterCamera", "getOrCreateObject", 3, &args[0]);
     }
     else if(typeName == L"pointlight" ||
       typeName == L"spotlight" ||
@@ -702,7 +706,36 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
     }
     else if(objectType == "Camera")
     {
-      mayaLogFunc(MString(getName())+": Warning: Lights still need to be implemented");
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(m_client, "ImporterCamera", 1, &object);
+      if(!camera.isValid())
+        return false;
+      if(camera.isNullObject())
+        return false;
+
+      MFnCamera cameraNode(node);
+
+      FabricCore::RTVal args[2];
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "fovY");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.verticalFieldOfView());
+      camera.callMethod("", "setProperty", 2, args);
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "focalLength");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.focalLength());
+      camera.callMethod("", "setProperty", 2, args);
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "focusDistance");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.focusDistance());
+      camera.callMethod("", "setProperty", 2, args);
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "near");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.nearClippingPlane());
+      camera.callMethod("", "setProperty", 2, args);
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "far");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.farClippingPlane());
+      camera.callMethod("", "setProperty", 2, args);
+
       return false;
     }
     else if(objectType == "Light")
