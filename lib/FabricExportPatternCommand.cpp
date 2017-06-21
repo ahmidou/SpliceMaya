@@ -825,6 +825,11 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
         }
       }
     }
+    else if(objectType == "FaceSet")
+    {
+      mayaLogFunc(MString(getName())+": Warning: FaceSets still need to be implemented");
+      return false;
+    }
     else
     {
       mayaLogFunc(MString(getName())+": Warning: Object type 'Importer"+objectType+"' is not yet supported.");

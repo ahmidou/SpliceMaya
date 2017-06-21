@@ -777,6 +777,11 @@ MObject FabricImportPatternCommand::getOrCreateNodeForObject(FabricCore::RTVal o
     // this is expected - no groups for you!
     return MObject();
   }
+  else if(type == "FaceSet")
+  {
+    // todo
+    return MObject();
+  }
   else
   {
     mayaLogErrorFunc("Unsupported ImporterObject type "+type+" for "+path);
