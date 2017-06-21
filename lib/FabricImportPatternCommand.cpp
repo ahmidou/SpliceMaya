@@ -29,6 +29,8 @@
 
 #include <FTL/FS.h>
 
+bool FabricImportPatternCommand::s_loadedMatrixPlugin = false;
+
 MSyntax FabricImportPatternCommand::newSyntax()
 {
   MSyntax syntax;
@@ -611,8 +613,10 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
   for(std::map< std::string, MObject >::iterator it = m_nodes.begin(); it != m_nodes.end(); it++)
   {
-    MFnDagNode node(it->second);
-    result.append(node.fullPathName());
+    MStatus nodeStatus;
+    MFnDagNode node(it->second, &nodeStatus);
+    if(nodeStatus == MS::kSuccess)
+      result.append(node.fullPathName());
   }
 
   setResult(result);
@@ -777,6 +781,11 @@ MObject FabricImportPatternCommand::getOrCreateNodeForObject(FabricCore::RTVal o
     // this is expected - no groups for you!
     return MObject();
   }
+  else if(type == "FaceSet")
+  {
+    // todo
+    return MObject();
+  }
   else
   {
     mayaLogErrorFunc("Unsupported ImporterObject type "+type+" for "+path);
@@ -865,7 +874,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       lookupPath = simplifyPath(instancePath);
       instancePath = parentPath(instancePath, &name);
     }
-    MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", false);
+    MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", true /*createIfMissing*/);
 
     // now check if we have already converted this shape before
     std::map< std::string, MObject >::iterator it = m_nodes.find(lookupPath.asChar());
@@ -877,6 +886,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
         return MObject();
 
       // try to find the node in the scene
+      bool existed = false;
       if(m_settings.attachToExisting)
       {
         MSelectionList sl;
@@ -894,6 +904,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
           if(sl.getDagPath(0, dagPath) == MS::kSuccess)
           {
             node = dagPath.node();
+            existed = true;
           }
         }
       }
@@ -915,6 +926,43 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       {
         modif.reparentNode(node, parentNode);
         modif.doIt();
+      }
+
+      // check if this mesh contains a texture reference
+      if(!existed)
+      {
+        if(polygonMesh.callMethod("Boolean", "hasTextureReference", 0, 0).getBoolean())
+        {
+          FabricCore::RTVal refPolygonMesh = polygonMesh.callMethod("PolygonMesh", "createTextureReferenceMesh", 0, 0);
+          MObject refNode = dfgPolygonMeshToMFnMesh(refPolygonMesh, false /* insideCompute */);
+
+          if(!refNode.isNull())
+          {
+            MDagModifier dagModif;
+            dagModif.renameNode(refNode, m_settings.nameSpace + name + "_reference");
+            dagModif.doIt();
+
+            if(!parentNode.isNull())
+            {
+              dagModif.reparentNode(refNode, parentNode);
+              dagModif.doIt();
+            }
+          }
+
+          MFnDagNode refDagNode(getShapeForNode(refNode));
+          MFnDagNode meshDagNode(getShapeForNode(node));
+          MPlug messagePlug = refDagNode.findPlug("message");
+          MPlug refObjPlug = meshDagNode.findPlug("referenceObject");
+
+          MDGModifier dgModif;
+          dgModif.connect(messagePlug, refObjPlug);
+          dgModif.doIt();
+
+          MPlug overrideEnabledPlug = MFnDagNode(refNode).findPlug("overrideEnabled");
+          overrideEnabledPlug.setValue((int)1); // enable overrides
+          MPlug overrideDisplayTypePlug = MFnDagNode(refNode).findPlug("overrideDisplayType");
+          overrideDisplayTypePlug.setValue((int)1); // template display mode
+        }
       }
     
       updateTransformForObject(obj, node);
@@ -1252,7 +1300,11 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     if(property == L"localTransform")
     {
       // we also need a node for matrix conversion
-      MGlobal::executeCommand("loadPlugin -name \"matrixNodes\" -quiet;");
+      if(!s_loadedMatrixPlugin)
+      {
+        MGlobal::executeCommand("loadPlugin -quiet \"matrixNodes\";");
+        s_loadedMatrixPlugin = true;
+      }
       MObject decomposeNode = getOrCreateNodeForPath(evaluatorPath+"/Decompose", "decomposeMatrix", true, false /* isDag */);
       if(decomposeNode.isNull())
       {
@@ -1320,4 +1372,13 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     }
   }
   return success;
+}
+
+MObject FabricImportPatternCommand::getShapeForNode(MObject node)
+{
+  MFnDagNode dagNode(node);
+  MDagPath dagPath;
+  dagNode.getPath(dagPath);
+  dagPath.extendToShape();
+  return dagPath.node();
 }

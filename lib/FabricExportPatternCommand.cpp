@@ -536,7 +536,8 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
   if(prog)
     prog->close();
 
-  mayaLogFunc(MString(getName())+": export done.");
+
+  mayaLogFunc(MString(getName())+": export finished.");
   return MS::kSuccess;
 }
 
@@ -548,6 +549,30 @@ bool FabricExportPatternCommand::registerNode(const MObject & node, std::string 
     return false;
   if(dagNode.isIntermediateObject())
     return false;
+
+  // filter out texture reference objects
+  MDagPath dagPath;
+  dagNode.getPath(dagPath);
+  dagPath.extendToShape();
+  MFnDependencyNode shapeNode(dagPath.node());
+  MPlug messagePlug = shapeNode.findPlug("message");
+  if(!messagePlug.isNull())
+  {
+    MPlugArray connections;
+    messagePlug.connectedTo(connections, false, true);
+    for(unsigned int i=0;i<connections.length();i++)
+    {
+      MPlug connection = connections[i];
+      if(connection.partialName(false /*includeNodeName*/) == "rob") // referenceObject
+      {
+        MFnDependencyNode connectedNode(connection.node());
+        if(connectedNode.typeName() == shapeNode.typeName())
+        {
+          return false;
+        }
+      }
+    }
+  }
 
   std::string path = dagNode.name().asChar();
   if(prefix.length() > 0)
@@ -755,7 +780,41 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             meshVal = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
             shape.callMethod("", "setGeometry", 1, &meshVal);
           }
-          return !dfgMFnMeshToPolygonMesh(meshData, meshVal).isNullObject();
+          
+          if(dfgMFnMeshToPolygonMesh(meshData, meshVal).isNullObject())
+            return false;
+
+          // look for texture references
+          if(isStart)
+          {
+            MPlug refObjectPlug = shapeNode.findPlug("referenceObject");
+            if(!refObjectPlug.isNull())
+            {
+              MPlugArray connections;
+              refObjectPlug.connectedTo(connections, true, false);
+              for(unsigned int i=0;i<connections.length();i++)
+              {
+                MPlug connection = connections[i];
+                MFnDependencyNode connectedNode(connection.node());
+
+                if(connectedNode.typeName() == shapeNode.typeName())
+                {
+                  FabricCore::RTVal refObjectMeshVal = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
+                  MPlug refObjectMeshPlug = shapeNode.findPlug("outMesh");
+                  MObject refObjectMeshObj;
+                  refObjectMeshPlug.getValue(refObjectMeshObj);
+                  MFnMesh refObjectMeshData(refObjectMeshObj);
+
+                  if(!dfgMFnMeshToPolygonMesh(refObjectMeshData, refObjectMeshVal).isNullObject())
+                  {
+                    meshVal.callMethod("", "setTextureReference", 1, &refObjectMeshVal);
+                  }
+                }
+              }
+            }
+          }
+
+          return true;
         }
         default:
         {
@@ -765,6 +824,11 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
           return false;
         }
       }
+    }
+    else if(objectType == "FaceSet")
+    {
+      mayaLogFunc(MString(getName())+": Warning: FaceSets still need to be implemented");
+      return false;
     }
     else
     {
