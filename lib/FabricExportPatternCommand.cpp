@@ -618,7 +618,8 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
   FabricCore::RTVal val;
   try
   {
-    if(typeName == L"mesh") // or curves or points
+    if(typeName == L"mesh" ||
+      typeName == L"nurbsCurve") // or points
     {
       FabricCore::RTVal args[3];
       args[0] = FabricCore::RTVal::ConstructString(m_client, "Shape");
@@ -626,7 +627,11 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
       args[2] = args[1];
       val = m_importer.callMethod("ImporterShape", "getOrCreateObject", 3, &args[0]);
 
-      FabricCore::RTVal geometryTypeVal = FabricCore::RTVal::ConstructSInt32(m_client, 0); //ImporterShape_Mesh = 0
+      FabricCore::RTVal geometryTypeVal;
+      if(typeName == L"mesh")
+        geometryTypeVal = FabricCore::RTVal::ConstructSInt32(m_client, 0); //ImporterShape_Mesh = 0
+      else if(typeName == L"nurbsCurve")
+        geometryTypeVal = FabricCore::RTVal::ConstructSInt32(m_client, 1); //ImporterShape_Curves = 1
       val.callMethod("", "setGeometryType", 1, &geometryTypeVal);
     }
     else if(typeName == L"camera")
@@ -760,35 +765,9 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
 
           // check if the mesh has a deformer
           // if not let's exit if this is not the first frame...!
-          bool isDeforming = false;
-          if(isStart)
-          {
-            MStringArray history;
-            MGlobal::executeCommand("listHistory "+shapeNode.fullPathName(), history);
-            if(history.length() > 0)
-            {
-              MString deformHistoryCmd = "ls -type \"geometryFilter\" -long";
-              for(unsigned int i=0;i<history.length();i++)
-                deformHistoryCmd += " \""+history[i]+"\"";
-
-              MStringArray deformHistory;
-              MGlobal::executeCommand(deformHistoryCmd, deformHistory);
-              isDeforming = deformHistory.length() > 0;
-            }
-
-            if(isDeforming)
-            {
-              // also mark the property as varying (constant == false)
-              FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "geometry");
-              shape.callMethod("", "setPropertyVarying", 1, &arg);
-            }
-          }
-          else
-          {
-            isDeforming = shape.callMethod("Boolean", "isConstant", 1, &m_exporterContext);
-            if(!isDeforming)
-              return true;
-          }
+          bool isDeforming = isShapeDeforming(shape, node, isStart);
+          if((!isStart) && (!isDeforming))
+            return true;
 
           MPlug meshPlug = shapeNode.findPlug("outMesh");
           if(meshPlug.isNull())
@@ -849,6 +828,49 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
 
           return true;
         }
+        case 1: // ImporterShape_Curves
+        {
+          MFnDagNode shapeNode(node);
+
+          // check if the curves has a deformer
+          // if not let's exit if this is not the first frame...!
+          bool isDeforming = isShapeDeforming(shape, node, isStart);
+          if((!isStart) && (!isDeforming))
+            return true;
+
+          MPlug localPlug = shapeNode.findPlug("local");
+          if(localPlug.isNull())
+          {
+            mayaLogFunc(MString(getName())+": Warning: Node "+MString(shapeNode.fullPathName())+") does not have a 'local' plug.");
+            return false;
+          }
+
+          MObject curveObj;
+          localPlug.getValue(curveObj);
+          MStatus curveStatus;
+          MFnNurbsCurve curveData(curveObj, &curveStatus);
+          if(curveStatus != MS::kSuccess)
+          {
+            mayaLogFunc(MString(getName())+": Warning: Node "+MString(shapeNode.fullPathName())+" does not have a valid 'local' plug.");
+            return false;
+          }
+
+          FabricCore::RTVal curvesVal = shape.callMethod("Curves", "getGeometry", 1, &m_exporterContext);
+          if(curvesVal.isNullObject())
+          {
+            curvesVal = FabricCore::RTVal::Create(m_client, "Curves", 0, 0);
+
+            FabricCore::RTVal curveCountVal = FabricCore::RTVal::ConstructUInt32(m_client, 1);
+            curvesVal.callMethod( "", "setCurveCount", 1, &curveCountVal );
+
+            shape.callMethod("", "setGeometry", 1, &curvesVal);
+          }
+
+          if(!dfgMFnNurbsCurveToCurves(0, curveData, curvesVal))
+            return false;
+
+          return true;
+        }
         default:
         {
           MString geometryTypeStr;
@@ -887,4 +909,37 @@ MString FabricExportPatternCommand::getPathFromDagPath(MDagPath dagPath)
       path[i] = '/';
   }
   return path.c_str();
+}
+
+bool FabricExportPatternCommand::isShapeDeforming(FabricCore::RTVal shapeVal, MObject node, bool isStart)
+{
+  MFnDagNode shapeNode(node);
+  bool isDeforming = false;
+  if(isStart)
+  {
+    MStringArray history;
+    MGlobal::executeCommand("listHistory "+shapeNode.fullPathName(), history);
+    if(history.length() > 0)
+    {
+      MString deformHistoryCmd = "ls -type \"geometryFilter\" -long";
+      for(unsigned int i=0;i<history.length();i++)
+        deformHistoryCmd += " \""+history[i]+"\"";
+
+      MStringArray deformHistory;
+      MGlobal::executeCommand(deformHistoryCmd, deformHistory);
+      isDeforming = deformHistory.length() > 0;
+    }
+
+    if(isDeforming)
+    {
+      // also mark the property as varying (constant == false)
+      FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "geometry");
+      shapeVal.callMethod("", "setPropertyVarying", 1, &arg);
+    }
+  }
+  else
+  {
+    isDeforming = !shapeVal.callMethod("Boolean", "isConstant", 1, &m_exporterContext).getBoolean();
+  }
+  return isDeforming;
 }

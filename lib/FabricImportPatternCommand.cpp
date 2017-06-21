@@ -852,7 +852,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
     //const Integer ImporterShape_Points = 2;
     FabricCore::RTVal geoTypeVal = shape.callMethod("SInt32", "getGeometryType", 1, &m_context);
     int geoType = geoTypeVal.getSInt32();
-    if (geoType != 0) // not a mesh
+    if ((geoType != 0) && (geoType != 1)) // not a mesh nor a curves
     {
       MString geoTypeStr;
       geoTypeStr.set(geoType);
@@ -881,8 +881,14 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
     MObject node;
     if(it == m_nodes.end())
     {
-      FabricCore::RTVal polygonMesh = shape.callMethod("PolygonMesh", "getGeometry", 1, &m_context);
-      if (polygonMesh.isNullObject())
+      std::string geoTypeStr;
+      if(geoType == 0)
+        geoTypeStr = "PolygonMesh";
+      else if(geoType == 1)
+        geoTypeStr = "Curves";
+
+      FabricCore::RTVal geometryVal = shape.callMethod(geoTypeStr.c_str(), "getGeometry", 1, &m_context);
+      if (geometryVal.isNullObject())
         return MObject();
 
       // try to find the node in the scene
@@ -911,10 +917,16 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
 
       if(node.isNull())
       {
-        node = dfgPolygonMeshToMFnMesh(polygonMesh, false /* insideCompute */);
-        // MDagModifier modif;
-        // node = modif.createNode("mesh", parentNode);
-        // modif.doIt();
+        if(geoType == 0)
+        {
+          node = dfgPolygonMeshToMFnMesh(geometryVal, false /* insideCompute */);
+        }
+        else if(geoType == 1)
+        {
+          MDagModifier modif;
+          node = modif.createNode("nurbsCurve");
+          modif.doIt();
+        }
       }
       m_nodes.insert(std::pair< std::string, MObject > (lookupPath.asChar(), node));
       
@@ -929,11 +941,11 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       }
 
       // check if this mesh contains a texture reference
-      if(!existed)
+      if((!existed) && (geoType == 0))
       {
-        if(polygonMesh.callMethod("Boolean", "hasTextureReference", 0, 0).getBoolean())
+        if(geometryVal.callMethod("Boolean", "hasTextureReference", 0, 0).getBoolean())
         {
-          FabricCore::RTVal refPolygonMesh = polygonMesh.callMethod("PolygonMesh", "createTextureReferenceMesh", 0, 0);
+          FabricCore::RTVal refPolygonMesh = geometryVal.callMethod("PolygonMesh", "createTextureReferenceMesh", 0, 0);
           MObject refNode = dfgPolygonMeshToMFnMesh(refPolygonMesh, false /* insideCompute */);
 
           if(!refNode.isNull())
@@ -966,7 +978,8 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       }
     
       updateTransformForObject(obj, node);
-      updateMaterialForObject(obj, node);
+      if(geoType == 0)
+        updateMaterialForObject(obj, node);
     }
     else if(!parentNode.isNull())
     {
@@ -1346,9 +1359,14 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
           modif.connect(evaluatorDepNode.findPlug("geometry"), shapeDagNode.findPlug("inMesh"));
           modif.doIt();
         }
-        else
+        else if(geoType == 1) // a curves
         {
-          // other cases are not yet supported by the shape creation anyway....
+          MDGModifier modif;
+          MPlug geometryPlug = evaluatorDepNode.findPlug("geometry");
+          MObject curveValue;
+          geometryPlug.getValue(curveValue);
+          modif.connect(geometryPlug.elementByLogicalIndex(0), shapeDagNode.findPlug("create"));
+          modif.doIt();
         }
       }
     }
