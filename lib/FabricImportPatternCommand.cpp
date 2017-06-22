@@ -1138,12 +1138,23 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     return mayaErrorOccured();
   }
 
+  MStringArray evaluatorParts;
+  filePathM.split('/', evaluatorParts);
+  MString evaluatorName = evaluatorParts[evaluatorParts.length()-1];
+  evaluatorParts.clear();
+  evaluatorName.split('.', evaluatorParts);
+  evaluatorName = evaluatorParts[0];
+  if(evaluatorName.substring(evaluatorName.length()-9, evaluatorName.length()-1) == "Evaluator")
+    evaluatorName = evaluatorName.substring(0, evaluatorName.length()-10);
+  if(evaluatorName.substring(evaluatorName.length()-8, evaluatorName.length()-1) == "Deformer")
+    evaluatorName = evaluatorName.substring(0, evaluatorName.length()-9);
+
   FabricCore::RTVal propertiesVal = evaluator.callMethod("String[]", "getProperties", 0, 0);
   if(propertiesVal.getArraySize() == 0)
     return false;
 
   MString objPath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-  MString evaluatorPath = objPath + "/Evaluator";
+  MString evaluatorPath = objPath + "/" + evaluatorName;
 
   std::map< std::string, MObject >::iterator it = m_nodes.find(simplifyPath(objPath).asChar());
   if(it == m_nodes.end())
