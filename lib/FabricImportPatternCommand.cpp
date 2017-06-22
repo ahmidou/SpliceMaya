@@ -952,13 +952,11 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
           {
             MDagModifier dagModif;
             dagModif.renameNode(refNode, m_settings.nameSpace + name + "_reference");
+            dagModif.reparentNode(refNode, node);
             dagModif.doIt();
 
-            if(!parentNode.isNull())
-            {
-              dagModif.reparentNode(refNode, parentNode);
-              dagModif.doIt();
-            }
+            MFnTransform refTransform(refNode);
+            refTransform.set(MTransformationMatrix::identity);
           }
 
           MFnDagNode refDagNode(getShapeForNode(refNode));
@@ -1202,7 +1200,11 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
       return false;
     }
   }
+  
+  // disable eval context for performance
   MFnDependencyNode evaluatorDepNode(evaluatorNode);
+  MPlug enableEvalContextPlug = evaluatorDepNode.findPlug("enableEvalContext");
+  enableEvalContextPlug.setValue(false);
 
   // setup the evaluator code
   MStatus st = MGlobal::executeCommand("dfgImportJSON -m "+evaluatorDepNode.name()+" -f \""+filePathM+"\";");
@@ -1334,6 +1336,27 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
       modif.connect(decomposeDepNode.findPlug("outputScale"), objDepNode.findPlug("scale"));
       modif.doIt();
 
+      success = true;
+    }
+    else if(property == L"translate")
+    {
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("translate"), objDepNode.findPlug("translate"));
+      modif.doIt();
+      success = true;
+    }
+    else if(property == L"rotate")
+    {
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("rotate"), objDepNode.findPlug("rotate"));
+      modif.doIt();
+      success = true;
+    }
+    else if(property == L"scale")
+    {
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("scale"), objDepNode.findPlug("scale"));
+      modif.doIt();
       success = true;
     }
     else if(property == L"geometry")
