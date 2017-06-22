@@ -22,6 +22,7 @@
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnDagNode.h>
 #include <maya/MDagModifier.h>
+#include <maya/MItDag.h>
 #include <maya/MFnTransform.h>
 #include <maya/MFnMesh.h>
 #include <maya/MFnSet.h>
@@ -341,6 +342,21 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
   else
   {
     MGlobal::getActiveSelectionList( sl );
+
+    // if there's nothing selected - export everything
+    if(sl.length() == 0)
+    {
+      MObject rootObj = MItDag().root();
+      MFnDagNode rootNode(rootObj);
+      for(unsigned int i=0;i<rootNode.childCount();i++)
+      {
+        MStatus dagStatus;
+        MFnDagNode dagNode(rootNode.child(i), &dagStatus);
+        if(dagStatus != MS::kSuccess)
+          continue;
+        sl.add(dagNode.object());
+      }
+    }
   }
 
   for(unsigned int i=0;i<sl.length();i++)
