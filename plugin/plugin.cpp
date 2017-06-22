@@ -252,23 +252,23 @@ void initializeCommands(MFnPlugin &plugin)
 {
   try
   {
-    FabricCore::Client client = FabricDFGWidget::GetCoreClient();
+    // FabricCore::Client client = FabricDFGWidget::GetCoreClient();
 
-    new FabricUI::Application::FabricApplicationStates(client);
+    // new FabricUI::Application::FabricApplicationStates(client);
     
-    FabricUI::Commands::KLCommandRegistry *registry = 
-      new FabricUI::Commands::KLCommandRegistry(
-        //client
-        );
-    registry->synchronizeKL();
+    // FabricUI::Commands::KLCommandRegistry *registry = 
+    //   new FabricUI::Commands::KLCommandRegistry(
+    //     //client
+    //     );
+    // registry->synchronizeKL();
 
-    FabricUI::Commands::KLCommandManager *manager = 
-      new FabricUI::Commands::KLCommandManager(
-        //client
-        );
-    manager->synchronizeKL();
+    // FabricUI::Commands::KLCommandManager *manager = 
+    //   new FabricUI::Commands::KLCommandManager(
+    //     //client
+    //     );
+    // manager->synchronizeKL();
 
-    CommandManagerMayaCallback::GetCommandManagerMayaCallback();
+    // CommandManagerMayaCallback::GetCommandManagerMayaCallback();
 
     MStatus status;
 
