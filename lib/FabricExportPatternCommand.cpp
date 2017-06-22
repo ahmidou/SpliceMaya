@@ -29,6 +29,7 @@
 #include <maya/MCommandResult.h>
 #include <maya/MAnimControl.h>
 #include <maya/MFileObject.h>
+#include <maya/MFnCamera.h>
 
 #include <FTL/FS.h>
 
