@@ -54,6 +54,7 @@ private:
   std::map< std::string, size_t > m_objectMap;
   std::map< std::string, MObject > m_nodes;
   std::map< std::string, MObject > m_materialSets;
+  static bool s_loadedMatrixPlugin;
 
   FabricImportPatternSettings m_settings;
 
@@ -62,6 +63,7 @@ private:
   MObject getOrCreateNodeForPath(MString path, MString type="transform", bool createIfMissing = true, bool isDagNode = true);
   MObject getOrCreateNodeForObject(FabricCore::RTVal obj);
   MObject getOrCreateShapeForObject(FabricCore::RTVal obj);
+  MObject getShapeForNode(MObject node);
   bool updateTransformForObject(FabricCore::RTVal obj, MObject node = MObject::kNullObj);
   bool updateMaterialForObject(FabricCore::RTVal obj, MObject node);
   bool updateEvaluatorForObject(FabricCore::RTVal obj);

@@ -1680,7 +1680,7 @@ inline bool AddSingleMat44Attributes(
       binding.getExec().isExecPortResolvedType(portIndex, "Xfo") )
   {     
     if(binding.getExec().isExecPortResolvedType(portIndex, "Xfo"))
-      rtval= rtval.callMethod("Mat44", "toMat44", 0, NULL);
+      rtval = rtval.callMethod("Mat44", "toMat44", 0, NULL);
 
     FabricCore::RTVal rtvalData = rtval.callMethod("Data", "data", 0, 0);  
     uint64_t dataSize = rtval.callMethod("UInt64", "dataSize", 0, 0).getUInt64();   

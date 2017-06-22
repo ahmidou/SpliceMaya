@@ -29,6 +29,8 @@
 
 #include <FTL/FS.h>
 
+bool FabricImportPatternCommand::s_loadedMatrixPlugin = false;
+
 MSyntax FabricImportPatternCommand::newSyntax()
 {
   MSyntax syntax;
@@ -611,8 +613,10 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
   for(std::map< std::string, MObject >::iterator it = m_nodes.begin(); it != m_nodes.end(); it++)
   {
-    MFnDagNode node(it->second);
-    result.append(node.fullPathName());
+    MStatus nodeStatus;
+    MFnDagNode node(it->second, &nodeStatus);
+    if(nodeStatus == MS::kSuccess)
+      result.append(node.fullPathName());
   }
 
   setResult(result);
@@ -693,6 +697,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
 
   MString name = path;
   MObject parentNode;
+
   int rindex = path.rindex('/');
   if(rindex > 0)
   {
@@ -769,12 +774,16 @@ MObject FabricImportPatternCommand::getOrCreateNodeForObject(FabricCore::RTVal o
   }
   else if(type == "Camera")
   {
-    // todo
-    return MObject();
+    return getOrCreateNodeForPath(path, "camera");
   }
   else if(type == "Material" || type == "Texture")
   {
     // this is expected - no groups for you!
+    return MObject();
+  }
+  else if(type == "FaceSet")
+  {
+    // todo
     return MObject();
   }
   else
@@ -843,7 +852,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
     //const Integer ImporterShape_Points = 2;
     FabricCore::RTVal geoTypeVal = shape.callMethod("SInt32", "getGeometryType", 1, &m_context);
     int geoType = geoTypeVal.getSInt32();
-    if (geoType != 0) // not a mesh
+    if ((geoType != 0) && (geoType != 1)) // not a mesh nor a curves
     {
       MString geoTypeStr;
       geoTypeStr.set(geoType);
@@ -865,18 +874,25 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       lookupPath = simplifyPath(instancePath);
       instancePath = parentPath(instancePath, &name);
     }
-    MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", false);
+    MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", true /*createIfMissing*/);
 
     // now check if we have already converted this shape before
     std::map< std::string, MObject >::iterator it = m_nodes.find(lookupPath.asChar());
     MObject node;
     if(it == m_nodes.end())
     {
-      FabricCore::RTVal polygonMesh = shape.callMethod("PolygonMesh", "getGeometry", 1, &m_context);
-      if (polygonMesh.isNullObject())
+      std::string geoTypeStr;
+      if(geoType == 0)
+        geoTypeStr = "PolygonMesh";
+      else if(geoType == 1)
+        geoTypeStr = "Curves";
+
+      FabricCore::RTVal geometryVal = shape.callMethod(geoTypeStr.c_str(), "getGeometry", 1, &m_context);
+      if (geometryVal.isNullObject())
         return MObject();
 
       // try to find the node in the scene
+      bool existed = false;
       if(m_settings.attachToExisting)
       {
         MSelectionList sl;
@@ -894,16 +910,23 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
           if(sl.getDagPath(0, dagPath) == MS::kSuccess)
           {
             node = dagPath.node();
+            existed = true;
           }
         }
       }
 
       if(node.isNull())
       {
-        node = dfgPolygonMeshToMFnMesh(polygonMesh, false /* insideCompute */);
-        // MDagModifier modif;
-        // node = modif.createNode("mesh", parentNode);
-        // modif.doIt();
+        if(geoType == 0)
+        {
+          node = dfgPolygonMeshToMFnMesh(geometryVal, false /* insideCompute */);
+        }
+        else if(geoType == 1)
+        {
+          MDagModifier modif;
+          node = modif.createNode("nurbsCurve");
+          modif.doIt();
+        }
       }
       m_nodes.insert(std::pair< std::string, MObject > (lookupPath.asChar(), node));
       
@@ -916,9 +939,47 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
         modif.reparentNode(node, parentNode);
         modif.doIt();
       }
+
+      // check if this mesh contains a texture reference
+      if((!existed) && (geoType == 0))
+      {
+        if(geometryVal.callMethod("Boolean", "hasTextureReference", 0, 0).getBoolean())
+        {
+          FabricCore::RTVal refPolygonMesh = geometryVal.callMethod("PolygonMesh", "createTextureReferenceMesh", 0, 0);
+          MObject refNode = dfgPolygonMeshToMFnMesh(refPolygonMesh, false /* insideCompute */);
+
+          if(!refNode.isNull())
+          {
+            MDagModifier dagModif;
+            dagModif.renameNode(refNode, m_settings.nameSpace + name + "_reference");
+            dagModif.doIt();
+
+            if(!parentNode.isNull())
+            {
+              dagModif.reparentNode(refNode, parentNode);
+              dagModif.doIt();
+            }
+          }
+
+          MFnDagNode refDagNode(getShapeForNode(refNode));
+          MFnDagNode meshDagNode(getShapeForNode(node));
+          MPlug messagePlug = refDagNode.findPlug("message");
+          MPlug refObjPlug = meshDagNode.findPlug("referenceObject");
+
+          MDGModifier dgModif;
+          dgModif.connect(messagePlug, refObjPlug);
+          dgModif.doIt();
+
+          MPlug overrideEnabledPlug = MFnDagNode(refNode).findPlug("overrideEnabled");
+          overrideEnabledPlug.setValue((int)1); // enable overrides
+          MPlug overrideDisplayTypePlug = MFnDagNode(refNode).findPlug("overrideDisplayType");
+          overrideDisplayTypePlug.setValue((int)1); // template display mode
+        }
+      }
     
       updateTransformForObject(obj, node);
-      updateMaterialForObject(obj, node);
+      if(geoType == 0)
+        updateMaterialForObject(obj, node);
     }
     else if(!parentNode.isNull())
     {
@@ -1252,7 +1313,11 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     if(property == L"localTransform")
     {
       // we also need a node for matrix conversion
-      MGlobal::executeCommand("loadPlugin -name \"matrixNodes\" -quiet;");
+      if(!s_loadedMatrixPlugin)
+      {
+        MGlobal::executeCommand("loadPlugin -quiet \"matrixNodes\";");
+        s_loadedMatrixPlugin = true;
+      }
       MObject decomposeNode = getOrCreateNodeForPath(evaluatorPath+"/Decompose", "decomposeMatrix", true, false /* isDag */);
       if(decomposeNode.isNull())
       {
@@ -1281,20 +1346,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
           return false;
 
         // extend the dep node to the shape
-        MStatus extendToShapeStatus;
-        MFnDagNode shapeDagNode(objDepNode.object(), &extendToShapeStatus);
-        if(extendToShapeStatus == MS::kSuccess)
-        {
-          MDagPath shapeDagPath;
-          extendToShapeStatus = shapeDagNode.getPath(shapeDagPath);
-          if(extendToShapeStatus == MS::kSuccess)
-          {
-            if(shapeDagPath.extendToShape() == MS::kSuccess)
-            {
-              shapeDagNode.setObject(shapeDagPath.node());
-            }
-          }
-        }
+        MFnDagNode shapeDagNode(getShapeForNode(objDepNode.object()));
 
         //const Integer ImporterShape_Mesh = 0;
         //const Integer ImporterShape_Curves = 1;
@@ -1307,11 +1359,64 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
           modif.connect(evaluatorDepNode.findPlug("geometry"), shapeDagNode.findPlug("inMesh"));
           modif.doIt();
         }
-        else
+        else if(geoType == 1) // a curves
         {
-          // other cases are not yet supported by the shape creation anyway....
+          MDGModifier modif;
+          MPlug geometryPlug = evaluatorDepNode.findPlug("geometry");
+          MObject curveValue;
+          geometryPlug.getValue(curveValue);
+          modif.connect(geometryPlug.elementByLogicalIndex(0), shapeDagNode.findPlug("create"));
+          modif.doIt();
         }
       }
+    }
+    else if(property == L"focalLength")
+    {
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+      if(camera.isNullObject())
+        return false;
+
+      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("focalLength"), cameraDagNode.findPlug("focalLength"));
+      modif.doIt();
+    }
+    else if(property == L"focusDistance")
+    {
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+      if(camera.isNullObject())
+        return false;
+
+      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("focusDistance"), cameraDagNode.findPlug("focusDistance"));
+      modif.doIt();
+    }
+    else if(property == L"near")
+    {
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+      if(camera.isNullObject())
+        return false;
+
+      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("near"), cameraDagNode.findPlug("nearClipPlane"));
+      modif.doIt();
+    }
+    else if(property == L"far")
+    {
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+      if(camera.isNullObject())
+        return false;
+
+      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug("far"), cameraDagNode.findPlug("farClipPlane"));
+      modif.doIt();
     }
     else
     {
@@ -1320,4 +1425,13 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     }
   }
   return success;
+}
+
+MObject FabricImportPatternCommand::getShapeForNode(MObject node)
+{
+  MFnDagNode dagNode(node);
+  MDagPath dagPath;
+  dagNode.getPath(dagPath);
+  dagPath.extendToShape();
+  return dagPath.node();
 }

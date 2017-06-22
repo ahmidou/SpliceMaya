@@ -536,7 +536,8 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
   if(prog)
     prog->close();
 
-  mayaLogFunc(MString(getName())+": export done.");
+
+  mayaLogFunc(MString(getName())+": export finished.");
   return MS::kSuccess;
 }
 
@@ -548,6 +549,30 @@ bool FabricExportPatternCommand::registerNode(const MObject & node, std::string 
     return false;
   if(dagNode.isIntermediateObject())
     return false;
+
+  // filter out texture reference objects
+  MDagPath dagPath;
+  dagNode.getPath(dagPath);
+  dagPath.extendToShape();
+  MFnDependencyNode shapeNode(dagPath.node());
+  MPlug messagePlug = shapeNode.findPlug("message");
+  if(!messagePlug.isNull())
+  {
+    MPlugArray connections;
+    messagePlug.connectedTo(connections, false, true);
+    for(unsigned int i=0;i<connections.length();i++)
+    {
+      MPlug connection = connections[i];
+      if(connection.partialName(false /*includeNodeName*/) == "rob") // referenceObject
+      {
+        MFnDependencyNode connectedNode(connection.node());
+        if(connectedNode.typeName() == shapeNode.typeName())
+        {
+          return false;
+        }
+      }
+    }
+  }
 
   std::string path = dagNode.name().asChar();
   if(prefix.length() > 0)
@@ -593,7 +618,8 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
   FabricCore::RTVal val;
   try
   {
-    if(typeName == L"mesh") // or curves or points
+    if(typeName == L"mesh" ||
+      typeName == L"nurbsCurve") // or points
     {
       FabricCore::RTVal args[3];
       args[0] = FabricCore::RTVal::ConstructString(m_client, "Shape");
@@ -601,12 +627,20 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
       args[2] = args[1];
       val = m_importer.callMethod("ImporterShape", "getOrCreateObject", 3, &args[0]);
 
-      FabricCore::RTVal geometryTypeVal = FabricCore::RTVal::ConstructSInt32(m_client, 0); //ImporterShape_Mesh = 0
+      FabricCore::RTVal geometryTypeVal;
+      if(typeName == L"mesh")
+        geometryTypeVal = FabricCore::RTVal::ConstructSInt32(m_client, 0); //ImporterShape_Mesh = 0
+      else if(typeName == L"nurbsCurve")
+        geometryTypeVal = FabricCore::RTVal::ConstructSInt32(m_client, 1); //ImporterShape_Curves = 1
       val.callMethod("", "setGeometryType", 1, &geometryTypeVal);
     }
     else if(typeName == L"camera")
     {
-      mayaLogFunc(MString(getName())+": Warning: '"+dagNode.name()+"' is a camera - to be implemented.");
+      FabricCore::RTVal args[3];
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "Camera");
+      args[1] = FabricCore::RTVal::ConstructString(m_client, path.asChar());
+      args[2] = args[1];
+      val = m_importer.callMethod("ImporterCamera", "getOrCreateObject", 3, &args[0]);
     }
     else if(typeName == L"pointlight" ||
       typeName == L"spotlight" ||
@@ -677,7 +711,36 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
     }
     else if(objectType == "Camera")
     {
-      mayaLogFunc(MString(getName())+": Warning: Lights still need to be implemented");
+      FabricCore::RTVal camera = FabricCore::RTVal::Create(m_client, "ImporterCamera", 1, &object);
+      if(!camera.isValid())
+        return false;
+      if(camera.isNullObject())
+        return false;
+
+      MFnCamera cameraNode(node);
+
+      FabricCore::RTVal args[2];
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "fovY");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.verticalFieldOfView());
+      camera.callMethod("", "setProperty", 2, args);
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "focalLength");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.focalLength());
+      camera.callMethod("", "setProperty", 2, args);
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "focusDistance");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.focusDistance());
+      camera.callMethod("", "setProperty", 2, args);
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "near");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.nearClippingPlane());
+      camera.callMethod("", "setProperty", 2, args);
+
+      args[0] = FabricCore::RTVal::ConstructString(m_client, "far");
+      args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.farClippingPlane());
+      camera.callMethod("", "setProperty", 2, args);
+
       return false;
     }
     else if(objectType == "Light")
@@ -702,35 +765,9 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
 
           // check if the mesh has a deformer
           // if not let's exit if this is not the first frame...!
-          bool isDeforming = false;
-          if(isStart)
-          {
-            MStringArray history;
-            MGlobal::executeCommand("listHistory "+shapeNode.fullPathName(), history);
-            if(history.length() > 0)
-            {
-              MString deformHistoryCmd = "ls -type \"geometryFilter\" -long";
-              for(unsigned int i=0;i<history.length();i++)
-                deformHistoryCmd += " \""+history[i]+"\"";
-
-              MStringArray deformHistory;
-              MGlobal::executeCommand(deformHistoryCmd, deformHistory);
-              isDeforming = deformHistory.length() > 0;
-            }
-
-            if(isDeforming)
-            {
-              // also mark the property as varying (constant == false)
-              FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "geometry");
-              shape.callMethod("", "setPropertyVarying", 1, &arg);
-            }
-          }
-          else
-          {
-            isDeforming = shape.callMethod("Boolean", "isConstant", 1, &m_exporterContext);
-            if(!isDeforming)
-              return true;
-          }
+          bool isDeforming = isShapeDeforming(shape, node, isStart);
+          if((!isStart) && (!isDeforming))
+            return true;
 
           MPlug meshPlug = shapeNode.findPlug("outMesh");
           if(meshPlug.isNull())
@@ -755,7 +792,84 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             meshVal = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
             shape.callMethod("", "setGeometry", 1, &meshVal);
           }
-          return !dfgMFnMeshToPolygonMesh(meshData, meshVal).isNullObject();
+          
+          if(dfgMFnMeshToPolygonMesh(meshData, meshVal).isNullObject())
+            return false;
+
+          // look for texture references
+          if(isStart)
+          {
+            MPlug refObjectPlug = shapeNode.findPlug("referenceObject");
+            if(!refObjectPlug.isNull())
+            {
+              MPlugArray connections;
+              refObjectPlug.connectedTo(connections, true, false);
+              for(unsigned int i=0;i<connections.length();i++)
+              {
+                MPlug connection = connections[i];
+                MFnDependencyNode connectedNode(connection.node());
+
+                if(connectedNode.typeName() == shapeNode.typeName())
+                {
+                  FabricCore::RTVal refObjectMeshVal = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
+                  MPlug refObjectMeshPlug = shapeNode.findPlug("outMesh");
+                  MObject refObjectMeshObj;
+                  refObjectMeshPlug.getValue(refObjectMeshObj);
+                  MFnMesh refObjectMeshData(refObjectMeshObj);
+
+                  if(!dfgMFnMeshToPolygonMesh(refObjectMeshData, refObjectMeshVal).isNullObject())
+                  {
+                    meshVal.callMethod("", "setTextureReference", 1, &refObjectMeshVal);
+                  }
+                }
+              }
+            }
+          }
+
+          return true;
+        }
+        case 1: // ImporterShape_Curves
+        {
+          MFnDagNode shapeNode(node);
+
+          // check if the curves has a deformer
+          // if not let's exit if this is not the first frame...!
+          bool isDeforming = isShapeDeforming(shape, node, isStart);
+          if((!isStart) && (!isDeforming))
+            return true;
+
+          MPlug localPlug = shapeNode.findPlug("local");
+          if(localPlug.isNull())
+          {
+            mayaLogFunc(MString(getName())+": Warning: Node "+MString(shapeNode.fullPathName())+") does not have a 'local' plug.");
+            return false;
+          }
+
+          MObject curveObj;
+          localPlug.getValue(curveObj);
+          MStatus curveStatus;
+          MFnNurbsCurve curveData(curveObj, &curveStatus);
+          if(curveStatus != MS::kSuccess)
+          {
+            mayaLogFunc(MString(getName())+": Warning: Node "+MString(shapeNode.fullPathName())+" does not have a valid 'local' plug.");
+            return false;
+          }
+
+          FabricCore::RTVal curvesVal = shape.callMethod("Curves", "getGeometry", 1, &m_exporterContext);
+          if(curvesVal.isNullObject())
+          {
+            curvesVal = FabricCore::RTVal::Create(m_client, "Curves", 0, 0);
+
+            FabricCore::RTVal curveCountVal = FabricCore::RTVal::ConstructUInt32(m_client, 1);
+            curvesVal.callMethod( "", "setCurveCount", 1, &curveCountVal );
+
+            shape.callMethod("", "setGeometry", 1, &curvesVal);
+          }
+
+          if(!dfgMFnNurbsCurveToCurves(0, curveData, curvesVal))
+            return false;
+
+          return true;
         }
         default:
         {
@@ -765,6 +879,11 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
           return false;
         }
       }
+    }
+    else if(objectType == "FaceSet")
+    {
+      mayaLogFunc(MString(getName())+": Warning: FaceSets still need to be implemented");
+      return false;
     }
     else
     {
@@ -790,4 +909,37 @@ MString FabricExportPatternCommand::getPathFromDagPath(MDagPath dagPath)
       path[i] = '/';
   }
   return path.c_str();
+}
+
+bool FabricExportPatternCommand::isShapeDeforming(FabricCore::RTVal shapeVal, MObject node, bool isStart)
+{
+  MFnDagNode shapeNode(node);
+  bool isDeforming = false;
+  if(isStart)
+  {
+    MStringArray history;
+    MGlobal::executeCommand("listHistory "+shapeNode.fullPathName(), history);
+    if(history.length() > 0)
+    {
+      MString deformHistoryCmd = "ls -type \"geometryFilter\" -long";
+      for(unsigned int i=0;i<history.length();i++)
+        deformHistoryCmd += " \""+history[i]+"\"";
+
+      MStringArray deformHistory;
+      MGlobal::executeCommand(deformHistoryCmd, deformHistory);
+      isDeforming = deformHistory.length() > 0;
+    }
+
+    if(isDeforming)
+    {
+      // also mark the property as varying (constant == false)
+      FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "geometry");
+      shapeVal.callMethod("", "setPropertyVarying", 1, &arg);
+    }
+  }
+  else
+  {
+    isDeforming = !shapeVal.callMethod("Boolean", "isConstant", 1, &m_exporterContext).getBoolean();
+  }
+  return isDeforming;
 }

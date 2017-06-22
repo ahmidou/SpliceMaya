@@ -55,6 +55,7 @@ private:
   FabricCore::RTVal createRTValForNode(const MObject & node);
   bool updateRTValForNode(double t, const MObject & node, FabricCore::RTVal & object);
   MString getPathFromDagPath(MDagPath dagPath);
+  bool isShapeDeforming(FabricCore::RTVal shapeVal, MObject node, bool isStart);
 
   FabricCore::Client m_client;
   FabricCore::RTVal m_exporterContext;
