@@ -812,7 +812,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
                 if(connectedNode.typeName() == shapeNode.typeName())
                 {
                   FabricCore::RTVal refObjectMeshVal = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
-                  MPlug refObjectMeshPlug = shapeNode.findPlug("outMesh");
+                  MPlug refObjectMeshPlug = connectedNode.findPlug("outMesh");
                   MObject refObjectMeshObj;
                   refObjectMeshPlug.getValue(refObjectMeshObj);
                   MFnMesh refObjectMeshData(refObjectMeshObj);
