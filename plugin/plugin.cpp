@@ -260,7 +260,7 @@ void initializeCommands(MFnPlugin &plugin)
   {
     new FabricUI::Application::FabricApplicationStates(FabricDFGWidget::GetCoreClient());
     FabricUI::Commands::KLCommandRegistry *registry = new FabricUI::Commands::KLCommandRegistry();
-    registry->synchronizeKL();
+    // registry->synchronizeKL();
     new FabricUI::Commands::KLCommandManager();
     CommandManagerMayaCallback::GetCommandManagerMayaCallback();
 

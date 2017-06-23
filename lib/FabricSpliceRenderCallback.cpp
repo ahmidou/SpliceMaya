@@ -90,7 +90,8 @@ inline void initID(const MString &panelName) {
  
     FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
     FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
-    RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
+    //RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
+    RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);
 
     RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
     RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
