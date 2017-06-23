@@ -2423,8 +2423,11 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
     MPlug plug = thisNode.findPlug(plugName);
     if(!plug.isNull())
     {
-      return;
-      // removeMayaAttribute(nameStr.c_str());
+      // FE-7722 -> Only work for maya > 2017 update 4
+      if(MGlobal::apiVersion() >= 201760)
+        removeMayaAttribute(nameStr.c_str());
+      else
+        return;
     }
 
     FabricCore::DFGExec exec = getDFGExec();
@@ -2460,6 +2463,20 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   }
   else if( descStr == FTL_STR("argInserted") )
   {
+    // FE-7722 -> Only work for maya > 2017 update 4
+    if(MGlobal::apiVersion() >= 201760)
+    {
+      std::string nameStr = jsonObject->getString( FTL_STR("name") );
+      MString plugName = getPlugName(nameStr.c_str());
+      std::string typeStr = jsonObject->getString( FTL_STR("type") );
+
+      MFnDependencyNode thisNode(getThisMObject());
+
+      FabricCore::DFGExec exec = getDFGExec();
+      FabricCore::DFGPortType portType = exec.getExecPortType(nameStr.c_str());
+      addMayaAttribute(nameStr.c_str(), typeStr.c_str(), portType);
+    }
+
     generateAttributeLookups();
   }
   else if(   descStr == FTL_STR("varInserted")
