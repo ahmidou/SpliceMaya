@@ -2,17 +2,22 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
 
-#include <iostream>
 #include <sstream>
+#include <iostream>
 #include <maya/MGlobal.h>
+#include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
 #include "CommandManagerMayaCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
+#include <FabricUI/Commands/KLCommandManager.h>
+#include <FabricUI/Commands/KLCommandRegistry.h>
 #include <FabricUI/Commands/BaseScriptableCommand.h>
 #include <FabricUI/Commands/BaseRTValScriptableCommand.h>
+#include <FabricUI/Application/FabricApplicationStates.h>
 
 using namespace FabricUI;
-using namespace Commands;
+using namespace FabricUI::Commands;
+using namespace FabricCore;
 
 bool CommandManagerMayaCallback::s_instanceFlag = false;
 CommandManagerMayaCallback* CommandManagerMayaCallback::s_cmdManagerMayaCallback = 0;
@@ -32,9 +37,9 @@ CommandManagerMayaCallback::CommandManagerMayaCallback()
       << "CommandManagerMayaCallback::CommandManagerMayaCallback "
       << QObject::connect(
         manager,
-        SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, bool)),
+        SIGNAL(commandDone(BaseCommand*, bool, bool)),
         this,
-        SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, bool))
+        SLOT(onCommandDone(BaseCommand*, bool, bool))
         )
         << std::endl;
   }
@@ -136,4 +141,39 @@ void CommandManagerMayaCallback::onCommandDone(
   // Create the maya command.
   if(addToStack)
     MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), true);
+}
+
+void CommandManagerMayaCallback::plug()
+{
+  FabricCore::Client client = FabricDFGWidget::GetCoreClient();
+  new Application::FabricApplicationStates(client);
+  
+  KLCommandRegistry *registry = new KLCommandRegistry();
+  registry->synchronizeKL();
+  
+  new KLCommandManager();
+    
+  CommandManagerMayaCallback::GetCommandManagerMayaCallback();
+}
+
+void CommandManagerMayaCallback::clear()
+{
+  CommandManager::getCommandManager()->clear();
+}
+
+void CommandManagerMayaCallback::unplug()
+{
+  clear();
+
+  CommandManager *manager = CommandManager::getCommandManager();
+  delete manager;
+  manager = 0;
+
+  CommandRegistry *registry =  CommandRegistry::getCommandRegistry();
+  delete registry;
+  registry = 0;
+
+  CommandManagerMayaCallback *callback = GetCommandManagerMayaCallback();
+  delete callback;
+  callback = 0;
 }

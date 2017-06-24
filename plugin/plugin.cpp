@@ -45,9 +45,6 @@
 #include "FabricCommand.h"
 #include "FabricExecuteCommand.h"
 #include "CommandManagerMayaCallback.h"
-#include <FabricUI/Commands/KLCommandManager.h>
-#include <FabricUI/Commands/KLCommandRegistry.h>
-#include <FabricUI/Application/FabricApplicationStates.h>
 
 #ifdef _MSC_VER
   #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
@@ -111,6 +108,7 @@ void onSceneSave(void *userData){
 }
 
 void onSceneNew(void *userData){
+  CommandManagerMayaCallback::clear();
   std::cout << "plugin.onSceneNew" << std::endl;
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
@@ -142,6 +140,8 @@ void onSceneNew(void *userData){
 }
 
 void onSceneLoad(void *userData){
+  CommandManagerMayaCallback::clear();
+
   std::cout << "plugin.onSceneLoad" << std::endl;
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
@@ -258,11 +258,7 @@ void initializeCommands(MFnPlugin &plugin)
 {
   try
   {
-    new FabricUI::Application::FabricApplicationStates(FabricDFGWidget::GetCoreClient());
-    FabricUI::Commands::KLCommandRegistry *registry = new FabricUI::Commands::KLCommandRegistry();
-    // registry->synchronizeKL();
-    new FabricUI::Commands::KLCommandManager();
-    CommandManagerMayaCallback::GetCommandManagerMayaCallback();
+    CommandManagerMayaCallback::plug();
 
     MStatus status;
     INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricCommand::creator));
@@ -455,6 +451,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
 void uninitializeCommands(MFnPlugin &plugin) 
 {
+  CommandManagerMayaCallback::unplug();
   MStatus status = MStatus::kSuccess;
   UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricCommand"));
   UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricExecuteCommand"));

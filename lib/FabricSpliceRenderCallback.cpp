@@ -90,25 +90,24 @@ inline void initID(const MString &panelName) {
  
     FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
     FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
-    //RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
     RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);
-
-    RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
-    RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
- 
-    RTVal args[2] = {
-      RTVal::ConstructString(FabricSpliceRenderCallback::sDrawContext.getContext(), "default"),
-      viewport
-    };
-
-    RTVal drawing = FabricSplice::constructObjectRTVal("InlineDrawingScope");
-    drawing = drawing.callMethod("InlineDrawing", "getDrawing", 0, 0);
-    drawing.callMethod("", "registerViewport", 2, args);
+    //RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
   }
   // else if(FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject()) {
   //   FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
   //   FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
   //   //RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
+  //   // RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
+  //   // RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
+ 
+  //   // RTVal args[2] = {
+  //   //   RTVal::ConstructString(FabricSpliceRenderCallback::sDrawContext.getContext(), "default"),
+  //   //   viewport
+  //   // };
+
+  //   // RTVal drawing = FabricSplice::constructObjectRTVal("InlineDrawingScope");
+  //   // drawing = drawing.callMethod("InlineDrawing", "getDrawing", 0, 0);
+  //   // drawing.callMethod("", "registerViewport", 2, args);
   // }
 }
 
@@ -209,6 +208,7 @@ inline void setProjection(bool id, const MMatrix &projection, RTVal &camera) {
   else camera.setMember("projection", projectionMat);
 }
 
+MString gRenderName = "";
 inline void setupIDViewport(
   const MString &panelName, 
   double width, 
@@ -225,19 +225,36 @@ inline void setupIDViewport(
   RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
   RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
   viewport.callMethod("", "setName", 1, &panelNameVal);
-  RTVal args[3] = {
+
+  M3dView view;
+  M3dView::getM3dViewFromModelPanel(panelName, view);
+  MString renderName = getActiveRenderName(view);
+
+  if(gRenderName != renderName)
+  {
+    if(gRenderName == "")
+    {
+      RTVal args2[2] = { panelNameVal, viewport };
+      RTVal drawing = FabricSplice::constructObjectRTVal("InlineDrawingScope");
+      drawing = drawing.callMethod("InlineDrawing", "getDrawing", 0, 0);
+      drawing.callMethod("", "registerViewport", 2, args2);
+    }
+    gRenderName = renderName;
+  }
+
+  RTVal args[3] = 
+  {
     FabricSpliceRenderCallback::sDrawContext,
     FabricSplice::constructFloat64RTVal(width),
     FabricSplice::constructFloat64RTVal(height)
   };
   viewport.callMethod("", "resize", 3, args);
- 
+
   RTVal camera = viewport.callMethod("InlineCamera", "getCamera", 0, 0);
   setCamera(true, width, height, mCamera, camera);
   setProjection(true, projection, camera);
 }
 
-MString gRenderName = "NoViewport";
 inline void setupRTR2Viewport(
   const MString &renderName, 
   const MString &panelName, 

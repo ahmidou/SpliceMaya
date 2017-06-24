@@ -25,7 +25,13 @@ class CommandManagerMayaCallback : public QObject
  	  /// Gets the manager callback singleton.
     /// Thows an error if the manager callback has not been created.
     static CommandManagerMayaCallback* GetCommandManagerMayaCallback();
-   
+    
+    static void plug();
+
+    static void clear();
+
+    static void unplug();
+
   private slots:
     /// \internal
     /// Called when a command has been pushed to the manager. 
