@@ -94,6 +94,13 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
   optionsLayout->addWidget(subStepsLineEdit, 5, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(subStepsLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onSubStepsChanged(const QString &)));
 
+  QLabel * userAttributesLabel = new QLabel("User Attributes", optionsWidget);
+  optionsLayout->addWidget(userAttributesLabel, 6, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QCheckBox * userAttributesCheckbox = new QCheckBox(optionsWidget);
+  userAttributesCheckbox->setCheckState(m_settings.userAttributes ? Qt::Checked : Qt::Unchecked);
+  optionsLayout->addWidget(userAttributesCheckbox, 6, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(userAttributesCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onUserAttributesChanged(int)));
+
   QDialogButtonBox * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
   layout->addWidget(buttons);
 
@@ -144,4 +151,9 @@ void FabricExportPatternDialog::onFPSChanged(const QString & text)
 void FabricExportPatternDialog::onSubStepsChanged(const QString & text)
 {
   m_settings.substeps = (unsigned int)text.toDouble();
+}
+
+void FabricExportPatternDialog::onUserAttributesChanged(int state)
+{
+  m_settings.userAttributes = state == Qt::Checked;
 }

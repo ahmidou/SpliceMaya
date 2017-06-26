@@ -47,6 +47,7 @@ MSyntax FabricExportPatternCommand::newSyntax()
   syntax.addFlag( "-s", "-stop", MSyntax::kDouble );
   syntax.addFlag( "-r", "-framerate", MSyntax::kDouble );
   syntax.addFlag( "-t", "-substeps", MSyntax::kLong );
+  syntax.addFlag( "-u", "-userAttributes", MSyntax::kBoolean );
   return syntax;
 }
 
@@ -171,6 +172,10 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
   if( argParser.isFlagSet("substeps") )
   {
     m_settings.substeps = argParser.flagArgumentInt("substeps", 0);
+  }
+  if( argParser.isFlagSet("userAttributes") )
+  {
+    m_settings.userAttributes = argParser.flagArgumentBool("userAttributes", 0);
   }
 
   if( argParser.isFlagSet("objects") )
@@ -757,8 +762,6 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
       args[0] = FabricCore::RTVal::ConstructString(m_client, "far");
       args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)cameraNode.farClippingPlane());
       camera.callMethod("", "setProperty", 2, args);
-
-      return false;
     }
     else if(objectType == "Light")
     {
@@ -842,8 +845,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
               }
             }
           }
-
-          return true;
+          break;
         }
         case 1: // ImporterShape_Curves
         {
@@ -885,8 +887,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
 
           if(!dfgMFnNurbsCurveToCurves(0, curveData, curvesVal))
             return false;
-
-          return true;
+          break;
         }
         default:
         {
@@ -914,6 +915,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
     return false;
   }
 
+  processUserAttributes(object, node);      
   return true;
 }
 
@@ -959,4 +961,10 @@ bool FabricExportPatternCommand::isShapeDeforming(FabricCore::RTVal shapeVal, MO
     isDeforming = !shapeVal.callMethod("Boolean", "isConstant", 1, &m_exporterContext).getBoolean();
   }
   return isDeforming;
+}
+
+void FabricExportPatternCommand::processUserAttributes(FabricCore::RTVal obj, const MObject & node)
+{
+  if(!m_settings.userAttributes)
+    return;
 }

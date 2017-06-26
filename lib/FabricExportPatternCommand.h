@@ -26,6 +26,7 @@ struct FabricExportPatternSettings
   unsigned int substeps;
   MStringArray objects;
   bool useLastArgValues;
+  bool userAttributes;
 
   FabricExportPatternSettings()
   {
@@ -36,6 +37,7 @@ struct FabricExportPatternSettings
     fps = 24.0;
     substeps = 1;
     useLastArgValues = true;
+    userAttributes = true;
   }
 };
 
@@ -57,6 +59,7 @@ private:
   bool updateRTValForNode(double t, const MObject & node, FabricCore::RTVal & object);
   MString getPathFromDagPath(MDagPath dagPath);
   bool isShapeDeforming(FabricCore::RTVal shapeVal, MObject node, bool isStart);
+  void processUserAttributes(FabricCore::RTVal obj, const MObject & node);
 
   FabricCore::Client m_client;
   FabricCore::RTVal m_exporterContext;

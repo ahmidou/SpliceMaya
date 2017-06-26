@@ -27,6 +27,7 @@ public:
 public slots:
   void onAccepted();
   void onRejected() { m_wasAccepted = false; close(); }
+  void onUserAttributesChanged(int state);
   void onAttachToExistingChanged(int state);
   void onEnableMaterialsChanged(int state);
   void onScaleChanged(const QString & text);

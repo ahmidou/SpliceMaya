@@ -30,6 +30,7 @@ public slots:
   void onEndFrameChanged(const QString & text);
   void onFPSChanged(const QString & text);
   void onSubStepsChanged(const QString & text);
+  void onUserAttributesChanged(int state);
 
 private:
 

@@ -25,6 +25,7 @@ struct FabricImportPatternSettings
   bool enableMaterials;
   bool attachToExisting;
   bool useLastArgValues;
+  bool userAttributes;
 
   FabricImportPatternSettings()
   {
@@ -35,6 +36,7 @@ struct FabricImportPatternSettings
     enableMaterials = false;
     attachToExisting = false;
     useLastArgValues = true;
+    userAttributes = true;
   }
 };
 
@@ -69,4 +71,5 @@ private:
   bool updateTransformForObject(FabricCore::RTVal obj, MObject node = MObject::kNullObj);
   bool updateMaterialForObject(FabricCore::RTVal obj, MObject node);
   bool updateEvaluatorForObject(FabricCore::RTVal obj);
+  void processUserAttributes(FabricCore::RTVal objRef);
 };

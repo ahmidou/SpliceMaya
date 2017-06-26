@@ -46,6 +46,7 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.addFlag( "-r", "-root", MSyntax::kString );
   syntax.addFlag( "-a", "-args", MSyntax::kString );
   syntax.addFlag( "-g", "-geometries", MSyntax::kString );
+  syntax.addFlag( "-u", "-userAttributes", MSyntax::kBoolean );
   return syntax;
 }
 
@@ -160,6 +161,10 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   if( argParser.isFlagSet("attachToExisting") )
   {
     m_settings.attachToExisting = argParser.flagArgumentBool("attachToExisting", 0);
+  }
+  if( argParser.isFlagSet("userAttributes") )
+  {
+    m_settings.userAttributes = argParser.flagArgumentBool("userAttributes", 0);
   }
 
   MStringArray result;
@@ -589,6 +594,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
     {
       updateTransformForObject(m_objectList[i]);
       updateEvaluatorForObject(m_objectList[i]);
+      processUserAttributes(m_objectList[i]);
       // todo: light, cameras etc..
 
       if(prog)
@@ -1469,4 +1475,39 @@ MObject FabricImportPatternCommand::getShapeForNode(MObject node)
   dagNode.getPath(dagPath);
   dagPath.extendToShape();
   return dagPath.node();
+}
+
+void FabricImportPatternCommand::processUserAttributes(FabricCore::RTVal objRef)
+{
+  if(!m_settings.userAttributes)
+    return;
+
+  FabricCore::RTVal obj = FabricCore::RTVal::Create(objRef.getContext(), "ImporterObject", 1, &objRef);
+  if(obj.isNullObject())
+    return;
+
+  MString objPath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
+
+  std::map< std::string, MObject >::iterator it = m_nodes.find(simplifyPath(objPath).asChar());
+  if(it == m_nodes.end())
+  {
+    FabricCore::RTVal shape = FabricCore::RTVal::Create(obj.getContext(), "ImporterShape", 1, &obj);
+    if(!shape.isNullObject())
+    {
+      if(!shape.callMethod("Boolean", "hasLocalTransform", 0, 0).getBoolean())
+      {
+        MString name;
+        MString transformPath = parentPath(objPath, &name);
+        it = m_nodes.find(simplifyPath(transformPath).asChar());
+      }
+    }
+  }
+  if(it == m_nodes.end())
+  {
+    mayaLogErrorFunc("Missing node for '"+objPath+"'.");
+    return;
+  }
+
+  MObject objNode = it->second;
+  MFnDependencyNode objDepNode(objNode);
 }
