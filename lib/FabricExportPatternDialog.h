@@ -6,6 +6,7 @@
 
 #include "Foundation.h"
 #include <QDialog>
+#include <QSettings>
 #include <DFG/DFGUICmdHandler_QUndo.h>
 #include <ModelItems/BindingModelItem.h>
 #include <ValueEditor/VEEditorOwner.h>
@@ -33,6 +34,7 @@ public slots:
 private:
 
   FabricExportPatternSettings m_settings;
+  QSettings * m_qSettings;
 
   QUndoStack * m_stack;
   FabricCore::Client m_client;

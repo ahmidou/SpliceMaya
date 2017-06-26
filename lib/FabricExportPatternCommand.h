@@ -24,8 +24,8 @@ struct FabricExportPatternSettings
   double endFrame;
   double fps;
   unsigned int substeps;
-
   MStringArray objects;
+  bool useLastArgValues;
 
   FabricExportPatternSettings()
   {
@@ -35,6 +35,7 @@ struct FabricExportPatternSettings
     endFrame = 1;
     fps = 24.0;
     substeps = 1;
+    useLastArgValues = true;
   }
 };
 

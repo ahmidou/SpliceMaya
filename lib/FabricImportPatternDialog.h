@@ -6,6 +6,7 @@
 
 #include "Foundation.h"
 #include <QDialog>
+#include <QSettings>
 #include <DFG/DFGUICmdHandler_QUndo.h>
 #include <ModelItems/BindingModelItem.h>
 #include <ValueEditor/VEEditorOwner.h>
@@ -14,6 +15,8 @@
 class FabricImportPatternDialog : public QDialog
 {
   Q_OBJECT
+
+  friend class FabricExportPatternDialog;
   
 public:
   FabricImportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, FabricImportPatternSettings settings);
@@ -29,9 +32,14 @@ public slots:
   void onScaleChanged(const QString & text);
   void onNameSpaceChanged(const QString & text);
 
+protected:
+  static void storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding, QSettings ** settings);
+  static void restoreSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding, QSettings ** settings);
+
 private:
 
   FabricImportPatternSettings m_settings;
+  QSettings * m_qSettings;
 
   QUndoStack * m_stack;
   FabricCore::Client m_client;

@@ -270,6 +270,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
             value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), json.c_str());
           }
           binding.setArgValue(name.c_str(), value);
+          m_settings.useLastArgValues = false;
           found = true;
           break;
         }

@@ -12,15 +12,21 @@
 
 #include "FabricImportPatternDialog.h"
 #include "FabricImportPatternCommand.h"
+#include "FabricSpliceHelpers.h"
 
 FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, FabricImportPatternSettings settings)
 : QDialog(parent)
 , m_settings(settings)
+, m_qSettings(NULL)
 , m_client(client)
 , m_binding(binding)
 , m_wasAccepted(false)
 {
   setWindowTitle("Fabric Import Pattern");
+
+  if(m_settings.useLastArgValues)
+    restoreSettings(client, m_settings.filePath, m_binding, &m_qSettings);
+
   m_stack = new QUndoStack();
   m_handler = new FabricUI::DFG::DFGUICmdHandler_QUndo(m_stack);
   m_bindingItem = new FabricUI::ModelItems::BindingModelItem(m_handler, binding, true, false, false);
@@ -89,6 +95,8 @@ FabricImportPatternDialog::~FabricImportPatternDialog()
   delete m_bindingItem;
   delete m_handler;
   delete m_stack;
+  if(m_qSettings)
+    delete(m_qSettings);
 }
 
 void FabricImportPatternDialog::onAccepted()
@@ -96,6 +104,7 @@ void FabricImportPatternDialog::onAccepted()
   FabricCore::DFGBinding binding = m_binding;
   FabricCore::Client client = m_client;
   FabricImportPatternSettings settings = m_settings;
+  storeSettings(client, settings.filePath, binding, &m_qSettings);
   close();
   FabricImportPatternCommand().invoke(client, binding, settings);
 }
@@ -120,3 +129,88 @@ void FabricImportPatternDialog::onNameSpaceChanged(const QString & text)
   m_settings.nameSpace = text.toUtf8().constData();
 }
 
+void FabricImportPatternDialog::storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding, QSettings ** settings)
+{
+  if(settings == NULL)
+    return;
+  if((*settings) == NULL)
+  {
+    MString app = "Fabric Engine Maya - Asset Pattern";
+    (*settings) = new QSettings(app.asChar(), patternPath.asChar());
+  }
+
+  try
+  {
+    FabricCore::DFGExec exec = binding.getExec();
+    for(unsigned int i=0;i<exec.getExecPortCount();i++)
+    {
+      if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
+        continue;
+
+      FTL::CStrRef type = exec.getExecPortResolvedType(i);
+      if(type != "String" && type != "FilePath" && !FabricCore::GetRegisteredTypeIsShallow(client.getContext(), type.c_str()))
+        continue;
+
+      FTL::CStrRef name = exec.getExecPortName(i);
+
+      FabricCore::RTVal value = binding.getArgValue(i);
+      if(type == "FilePath")
+        value = value.callMethod("String", "string", 0, 0);
+      QString jsonValue = value.getJSON().getStringCString();
+      (*settings)->setValue(name.c_str(), jsonValue);
+    }
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+  }
+}
+
+void FabricImportPatternDialog::restoreSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding, QSettings ** settings)
+{
+  if(settings == NULL)
+    return;
+  if((*settings) == NULL)
+  {
+    MString app = "Fabric Engine Maya - Asset Pattern";
+    (*settings) = new QSettings(app.asChar(), patternPath.asChar());
+  }
+
+  try
+  {
+    FabricCore::DFGExec exec = binding.getExec();
+    for(unsigned int i=0;i<exec.getExecPortCount();i++)
+    {
+      if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
+        continue;
+
+      FTL::CStrRef type = exec.getExecPortResolvedType(i);
+      if(type != "String" && type != "FilePath" && !FabricCore::GetRegisteredTypeIsShallow(client.getContext(), type.c_str()))
+        continue;
+
+      FTL::CStrRef name = exec.getExecPortName(i);
+
+      QVariant jsonVariant = (*settings)->value(name.c_str());
+      if(!jsonVariant.isValid())
+        continue;
+
+      MString jsonString = jsonVariant.toString().toUtf8().constData();
+
+      FabricCore::RTVal value;
+      if(type == "FilePath")
+      {
+        FabricCore::RTVal valueStr = FabricCore::ConstructRTValFromJSON(client, "String", jsonString.asChar());
+        value = FabricCore::RTVal::Create(client, "FilePath", 1, &valueStr);
+      }
+      else
+      {
+        value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), jsonString.asChar());
+      }
+      binding.setArgValue(i, value);
+    }
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+  }
+}

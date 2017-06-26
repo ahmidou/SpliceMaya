@@ -24,6 +24,7 @@ struct FabricImportPatternSettings
   double scale;
   bool enableMaterials;
   bool attachToExisting;
+  bool useLastArgValues;
 
   FabricImportPatternSettings()
   {
@@ -33,6 +34,7 @@ struct FabricImportPatternSettings
     scale = 1.0;
     enableMaterials = false;
     attachToExisting = false;
+    useLastArgValues = true;
   }
 };
 
