@@ -35,7 +35,6 @@ public slots:
 private:
 
   FabricExportPatternSettings m_settings;
-  QSettings * m_qSettings;
 
   QUndoStack * m_stack;
   FabricCore::Client m_client;

@@ -34,13 +34,12 @@ public slots:
   void onNameSpaceChanged(const QString & text);
 
 protected:
-  static void storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding, QSettings ** settings);
-  static void restoreSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding, QSettings ** settings);
+  static void storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding);
+  static void restoreSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding);
 
 private:
 
   FabricImportPatternSettings m_settings;
-  QSettings * m_qSettings;
 
   QUndoStack * m_stack;
   FabricCore::Client m_client;

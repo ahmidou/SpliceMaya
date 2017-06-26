@@ -1482,32 +1482,106 @@ void FabricImportPatternCommand::processUserAttributes(FabricCore::RTVal objRef)
   if(!m_settings.userAttributes)
     return;
 
-  FabricCore::RTVal obj = FabricCore::RTVal::Create(objRef.getContext(), "ImporterObject", 1, &objRef);
-  if(obj.isNullObject())
-    return;
-
-  MString objPath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
-
-  std::map< std::string, MObject >::iterator it = m_nodes.find(simplifyPath(objPath).asChar());
-  if(it == m_nodes.end())
+  try
   {
-    FabricCore::RTVal shape = FabricCore::RTVal::Create(obj.getContext(), "ImporterShape", 1, &obj);
-    if(!shape.isNullObject())
+    FabricCore::RTVal obj = FabricCore::RTVal::Create(objRef.getContext(), "ImporterObject", 1, &objRef);
+    if(obj.isNullObject())
+      return;
+
+    FabricCore::RTVal userPropertiesVal = obj.callMethod("String[]", "getUserProperties", 1, &m_context);
+    if(userPropertiesVal.getArraySize() == 0)
+      return;
+
+    MString objPath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
+
+    std::map< std::string, MObject >::iterator it = m_nodes.find(simplifyPath(objPath).asChar());
+    if(it == m_nodes.end())
     {
-      if(!shape.callMethod("Boolean", "hasLocalTransform", 0, 0).getBoolean())
+      FabricCore::RTVal shape = FabricCore::RTVal::Create(obj.getContext(), "ImporterShape", 1, &obj);
+      if(!shape.isNullObject())
       {
-        MString name;
-        MString transformPath = parentPath(objPath, &name);
-        it = m_nodes.find(simplifyPath(transformPath).asChar());
+        if(!shape.callMethod("Boolean", "hasLocalTransform", 0, 0).getBoolean())
+        {
+          MString name;
+          MString transformPath = parentPath(objPath, &name);
+          it = m_nodes.find(simplifyPath(transformPath).asChar());
+        }
+      }
+    }
+    if(it == m_nodes.end())
+    {
+      mayaLogErrorFunc("Missing node for '"+objPath+"'.");
+      return;
+    }
+
+    MObject objNode = it->second;
+    MFnDependencyNode objDepNode(objNode);
+
+    for(unsigned int i=0;i<userPropertiesVal.getArraySize();i++)
+    {
+      FabricCore::RTVal propNameVal = userPropertiesVal.getArrayElement(i);
+      MString propName = propNameVal.getStringCString();
+      MString propType = obj.callMethod("String", "getPropertyType", 1, &propNameVal).getStringCString();
+
+      FabricCore::RTVal updatePropArgs[2];
+      updatePropArgs[0] = propNameVal;
+      updatePropArgs[1] = m_context;
+      obj.callMethod("", "updateProperty", 2, updatePropArgs);
+
+      MPlug plug = objDepNode.findPlug(propName);
+
+      if(propType == "Boolean")
+      {
+        if(plug.isNull())
+        {
+          MFnNumericAttribute nAttr;
+          MObject attr = nAttr.create(propName, propName, MFnNumericData::kBoolean);
+          objDepNode.addAttribute(attr);
+          plug = MPlug(objNode, attr);
+        }
+        plug.setValue(obj.callMethod("Boolean", "getBooleanProperty", 1, &propNameVal).getBoolean());
+      }
+      else if(propType == "SInt32")
+      {
+        if(plug.isNull())
+        {
+          MFnNumericAttribute nAttr;
+          MObject attr = nAttr.create(propName, propName, MFnNumericData::kInt);
+          objDepNode.addAttribute(attr);
+          plug = MPlug(objNode, attr);
+        }
+        plug.setValue(obj.callMethod("SInt32", "getSInt32Property", 1, &propNameVal).getSInt32());
+      }
+      else if(propType == "Float32")
+      {
+        if(plug.isNull())
+        {
+          MFnNumericAttribute nAttr;
+          MObject attr = nAttr.create(propName, propName, MFnNumericData::kFloat);
+          objDepNode.addAttribute(attr);
+          plug = MPlug(objNode, attr);
+        }
+        plug.setValue(obj.callMethod("Float32", "getFloat32Property", 1, &propNameVal).getFloat32());
+      }
+      else if(propType == "String")
+      {
+        if(plug.isNull())
+        {
+          MFnTypedAttribute tAttr;
+          MObject attr = tAttr.create(propName, propName, MFnData::kString);
+          objDepNode.addAttribute(attr);
+          plug = MPlug(objNode, attr);
+        }
+        plug.setValue(obj.callMethod("String", "getStringProperty", 1, &propNameVal).getStringCString());
+      }
+      else
+      {
+        mayaLogFunc(MString(getName())+": Warning: UserProperty '"+propName+"' of type '"+propType+"' is not supported.");
       }
     }
   }
-  if(it == m_nodes.end())
+  catch(FabricCore::Exception e)
   {
-    mayaLogErrorFunc("Missing node for '"+objPath+"'.");
-    return;
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
   }
-
-  MObject objNode = it->second;
-  MFnDependencyNode objDepNode(objNode);
 }

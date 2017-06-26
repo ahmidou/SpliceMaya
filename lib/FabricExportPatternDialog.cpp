@@ -18,7 +18,6 @@
 FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings)
 : QDialog(parent)
 , m_settings(settings)
-, m_qSettings(NULL)
 , m_client(client)
 , m_binding(binding)
 , m_wasAccepted(false)
@@ -26,7 +25,7 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
   setWindowTitle("Fabric Export Pattern");
 
   if(m_settings.useLastArgValues)
-    FabricImportPatternDialog::restoreSettings(client, m_settings.filePath, m_binding, &m_qSettings);
+    FabricImportPatternDialog::restoreSettings(client, m_settings.filePath, m_binding);
 
   m_stack = new QUndoStack();
   m_handler = new FabricUI::DFG::DFGUICmdHandler_QUndo(m_stack);
@@ -114,8 +113,6 @@ FabricExportPatternDialog::~FabricExportPatternDialog()
   delete m_bindingItem;
   delete m_handler;
   delete m_stack;
-  if(m_qSettings)
-    delete(m_qSettings);
 }
 
 void FabricExportPatternDialog::onAccepted()
@@ -123,7 +120,7 @@ void FabricExportPatternDialog::onAccepted()
   FabricCore::Client client = m_client;
   FabricCore::DFGBinding binding = m_binding;
   FabricExportPatternSettings settings = m_settings;
-  FabricImportPatternDialog::storeSettings(client, settings.filePath, binding, &m_qSettings);
+  FabricImportPatternDialog::storeSettings(client, settings.filePath, binding);
   close();
   FabricExportPatternCommand().invoke(client, binding, settings);
 }

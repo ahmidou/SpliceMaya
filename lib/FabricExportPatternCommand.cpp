@@ -915,7 +915,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
     return false;
   }
 
-  processUserAttributes(object, node);      
+  processUserAttributes(object, node, isStart);
   return true;
 }
 
@@ -963,8 +963,118 @@ bool FabricExportPatternCommand::isShapeDeforming(FabricCore::RTVal shapeVal, MO
   return isDeforming;
 }
 
-void FabricExportPatternCommand::processUserAttributes(FabricCore::RTVal obj, const MObject & node)
+void FabricExportPatternCommand::processUserAttributes(FabricCore::RTVal obj, const MObject & node, bool isStart)
 {
   if(!m_settings.userAttributes)
     return;
+  if(node.isNull())
+    return;
+  MFnDependencyNode depNode(node);
+
+  try
+  {
+    FabricCore::RTVal userProperties = FabricCore::RTVal::ConstructVariableArray(m_client, "String");
+
+    for(unsigned int i=0;i<depNode.attributeCount();i++)
+    {
+      MObject attribute = depNode.attribute(i);
+      if(depNode.attributeClass(attribute) != MFnDependencyNode::kLocalDynamicAttr)
+        continue;
+
+      MString name = MFnAttribute(attribute).name();
+      FabricCore::RTVal nameVal = FabricCore::RTVal::ConstructString(m_client, name.asChar());
+      FabricCore::RTVal args[2];
+      args[0] = nameVal;
+
+      MPlug plug(node, attribute);
+
+      MStatus castStatus;
+
+      MFnNumericAttribute numericAttr(attribute, &castStatus);
+      if(castStatus == MS::kSuccess)
+      {
+        switch(numericAttr.unitType())
+        {
+          case MFnNumericData::kBoolean:
+          {
+            bool value;
+            plug.getValue(value);
+            args[1] = FabricCore::RTVal::ConstructBoolean(m_client, value);
+            obj.callMethod("", "setProperty", 2, args);
+            break;
+          }
+          case MFnNumericData::kInt:
+          {
+            int value;
+            plug.getValue(value);
+            args[1] = FabricCore::RTVal::ConstructSInt32(m_client, value);
+            obj.callMethod("", "setProperty", 2, args);
+            break;
+          }
+          case MFnNumericData::kFloat:
+          {
+            float value;
+            plug.getValue(value);
+            args[1] = FabricCore::RTVal::ConstructFloat32(m_client, value);
+            obj.callMethod("", "setProperty", 2, args);
+            break;
+          }
+          case MFnNumericData::kDouble:
+          {
+            double value;
+            plug.getValue(value);
+            args[1] = FabricCore::RTVal::ConstructFloat32(m_client, (float)value);
+            obj.callMethod("", "setProperty", 2, args);
+            break;
+          }
+          default:
+          {
+            if(isStart)
+              mayaLogFunc(MString(getName())+": Warning: User attribute '"+name+"'' is not supported.");
+            continue;
+          }
+        }
+
+        userProperties.callMethod("", "push", 1, &nameVal);
+        continue;
+      }
+
+      MFnTypedAttribute typedAttr(attribute, &castStatus);
+      if(castStatus == MS::kSuccess)
+      {
+        switch(typedAttr.attrType())
+        {
+          case MFnData::kString:
+          {
+            MString value;
+            plug.getValue(value);
+            args[1] = FabricCore::RTVal::ConstructString(m_client, value.asChar());
+            obj.callMethod("", "setProperty", 2, args);
+            break;
+          }
+          default:
+          {
+            if(isStart)
+              mayaLogFunc(MString(getName())+": Warning: User attribute '"+name+"'' is not supported.");
+            continue;
+          }
+        }
+
+        userProperties.callMethod("", "push", 1, &nameVal);
+        continue;
+      }
+
+      if(isStart)
+        mayaLogFunc(MString(getName())+": Warning: User attribute '"+name+"'' is not supported.");
+    }
+
+    if(userProperties.getArraySize() > 0)
+    {
+      obj.callMethod("", "setUserProperties", 1, &userProperties);
+    }
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
+  }
 }

@@ -17,7 +17,6 @@
 FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, FabricImportPatternSettings settings)
 : QDialog(parent)
 , m_settings(settings)
-, m_qSettings(NULL)
 , m_client(client)
 , m_binding(binding)
 , m_wasAccepted(false)
@@ -25,7 +24,7 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
   setWindowTitle("Fabric Import Pattern");
 
   if(m_settings.useLastArgValues)
-    restoreSettings(client, m_settings.filePath, m_binding, &m_qSettings);
+    restoreSettings(client, m_settings.filePath, m_binding);
 
   m_stack = new QUndoStack();
   m_handler = new FabricUI::DFG::DFGUICmdHandler_QUndo(m_stack);
@@ -102,8 +101,6 @@ FabricImportPatternDialog::~FabricImportPatternDialog()
   delete m_bindingItem;
   delete m_handler;
   delete m_stack;
-  if(m_qSettings)
-    delete(m_qSettings);
 }
 
 void FabricImportPatternDialog::onAccepted()
@@ -111,7 +108,7 @@ void FabricImportPatternDialog::onAccepted()
   FabricCore::DFGBinding binding = m_binding;
   FabricCore::Client client = m_client;
   FabricImportPatternSettings settings = m_settings;
-  storeSettings(client, settings.filePath, binding, &m_qSettings);
+  storeSettings(client, settings.filePath, binding);
   close();
   FabricImportPatternCommand().invoke(client, binding, settings);
 }
@@ -141,15 +138,10 @@ void FabricImportPatternDialog::onNameSpaceChanged(const QString & text)
   m_settings.nameSpace = text.toUtf8().constData();
 }
 
-void FabricImportPatternDialog::storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding, QSettings ** settings)
+void FabricImportPatternDialog::storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding)
 {
-  if(settings == NULL)
-    return;
-  if((*settings) == NULL)
-  {
-    MString app = "Fabric Engine Maya - Asset Pattern";
-    (*settings) = new QSettings(app.asChar(), patternPath.asChar());
-  }
+  MString app = "Fabric Engine";
+  QSettings settings(app.asChar(), patternPath.asChar());
 
   try
   {
@@ -169,7 +161,7 @@ void FabricImportPatternDialog::storeSettings(FabricCore::Client client, MString
       if(type == "FilePath")
         value = value.callMethod("String", "string", 0, 0);
       QString jsonValue = value.getJSON().getStringCString();
-      (*settings)->setValue(name.c_str(), jsonValue);
+      settings.setValue(name.c_str(), jsonValue);
     }
   }
   catch(FabricCore::Exception e)
@@ -178,15 +170,10 @@ void FabricImportPatternDialog::storeSettings(FabricCore::Client client, MString
   }
 }
 
-void FabricImportPatternDialog::restoreSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding, QSettings ** settings)
+void FabricImportPatternDialog::restoreSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding)
 {
-  if(settings == NULL)
-    return;
-  if((*settings) == NULL)
-  {
-    MString app = "Fabric Engine Maya - Asset Pattern";
-    (*settings) = new QSettings(app.asChar(), patternPath.asChar());
-  }
+  MString app = "Fabric Engine";
+  QSettings settings(app.asChar(), patternPath.asChar());
 
   try
   {
@@ -202,7 +189,7 @@ void FabricImportPatternDialog::restoreSettings(FabricCore::Client client, MStri
 
       FTL::CStrRef name = exec.getExecPortName(i);
 
-      QVariant jsonVariant = (*settings)->value(name.c_str());
+      QVariant jsonVariant = settings.value(name.c_str());
       if(!jsonVariant.isValid())
         continue;
 
