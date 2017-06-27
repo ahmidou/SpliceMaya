@@ -6,6 +6,7 @@
 
 #include "Foundation.h"
 #include <QDialog>
+#include <QSettings>
 #include <DFG/DFGUICmdHandler_QUndo.h>
 #include <ModelItems/BindingModelItem.h>
 #include <ValueEditor/VEEditorOwner.h>
@@ -29,6 +30,7 @@ public slots:
   void onEndFrameChanged(const QString & text);
   void onFPSChanged(const QString & text);
   void onSubStepsChanged(const QString & text);
+  void onUserAttributesChanged(int state);
 
 private:
 
