@@ -1161,7 +1161,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   {
     MGlobal::executeCommand("select -r "+objDepNode.name()+";");
     MStringArray results;
-    MString deformerCmd = "deformer -type \"canvasFuncDeformer\" -name \"Evaluator\";";
+    MString deformerCmd = "deformer -type \"canvasFuncDeformer\" -name \""+evaluatorName+"\";";
     MGlobal::executeCommand(deformerCmd, results);
     if(results.length() == 0)
     {
@@ -1251,7 +1251,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   {
     FabricCore::RTVal indexVal = FabricCore::RTVal::ConstructUInt32(m_client, i);
     int argPortType = evaluator.callMethod("SInt32", "getArgPortType", 1, &indexVal).getSInt32();
-    if(argPortType != FEC_DFGPortType_Out)
+    if(argPortType == FEC_DFGPortType_In)
       continue;
 
     MString argName = evaluator.callMethod("String", "getArgName", 1, &indexVal).getStringCString();
@@ -1429,7 +1429,8 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
       MPlug plug = objDepNode.findPlug(argName);
       if(plug.isNull())
       {
-        mayaLogErrorFunc("Evaluator uses unsupported property '"+argName+"'.");
+        if(argPortType == FEC_DFGPortType_Out)
+          mayaLogErrorFunc("Evaluator uses unsupported property '"+argName+"'.");
         continue;
       }
 
