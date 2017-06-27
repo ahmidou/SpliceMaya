@@ -64,6 +64,7 @@ private:
 
   MString parentPath(MString path, MString * name = NULL);
   MString simplifyPath(MString path);
+  MString mayaPathFromPatternPath(MString path);
   MObject getOrCreateNodeForPath(MString path, MString type="transform", bool createIfMissing = true, bool isDagNode = true);
   MObject getOrCreateNodeForObject(FabricCore::RTVal obj);
   MObject getOrCreateShapeForObject(FabricCore::RTVal obj);
