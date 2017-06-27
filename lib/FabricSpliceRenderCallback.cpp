@@ -82,8 +82,12 @@ inline MString getActiveRenderName(const M3dView &view) {
 
 inline void initID(const MString &panelName) {
  
-  if(!FabricSpliceRenderCallback::sDrawContext.isValid()) {
- 
+  if( !FabricSpliceRenderCallback::sDrawContext.isValid() || 
+      (FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject())
+    ) 
+  {
+    std::cout << "setupIDViewport::initID " << panelName.asChar() << std::endl;
+
     KLCommandRegistry *registry = qobject_cast<KLCommandRegistry*>(
       CommandRegistry::getCommandRegistry());
     registry->synchronizeKL();
@@ -93,22 +97,6 @@ inline void initID(const MString &panelName) {
     RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);
     //RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
   }
-  // else if(FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject()) {
-  //   FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
-  //   FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
-  //   //RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
-  //   // RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
-  //   // RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
- 
-  //   // RTVal args[2] = {
-  //   //   RTVal::ConstructString(FabricSpliceRenderCallback::sDrawContext.getContext(), "default"),
-  //   //   viewport
-  //   // };
-
-  //   // RTVal drawing = FabricSplice::constructObjectRTVal("InlineDrawingScope");
-  //   // drawing = drawing.callMethod("InlineDrawing", "getDrawing", 0, 0);
-  //   // drawing.callMethod("", "registerViewport", 2, args);
-  // }
 }
 
 bool FabricSpliceRenderCallback::isRTR2Enable() {
@@ -209,6 +197,7 @@ inline void setProjection(bool id, const MMatrix &projection, RTVal &camera) {
 }
 
 MString gRenderName = "";
+MString gpPanelName = "";
 inline void setupIDViewport(
   const MString &panelName, 
   double width, 
@@ -230,6 +219,9 @@ inline void setupIDViewport(
   M3dView::getM3dViewFromModelPanel(panelName, view);
   MString renderName = getActiveRenderName(view);
 
+  std::cout << "setupIDViewport::gRenderName " << gRenderName.asChar() << std::endl;
+  std::cout << "setupIDViewport::renderName " << renderName.asChar() << std::endl;
+  std::cout << "setupIDViewport::panelName " << panelName.asChar() << std::endl;
   if(gRenderName != renderName)
   {
     if(gRenderName == "")

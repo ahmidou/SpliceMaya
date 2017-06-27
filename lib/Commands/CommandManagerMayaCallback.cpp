@@ -37,9 +37,9 @@ CommandManagerMayaCallback::CommandManagerMayaCallback()
       << "CommandManagerMayaCallback::CommandManagerMayaCallback "
       << QObject::connect(
         manager,
-        SIGNAL(commandDone(BaseCommand*, bool, bool)),
+        SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, bool)),
         this,
-        SLOT(onCommandDone(BaseCommand*, bool, bool))
+        SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, bool))
         )
         << std::endl;
   }
