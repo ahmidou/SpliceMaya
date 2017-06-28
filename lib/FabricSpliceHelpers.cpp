@@ -30,7 +30,7 @@ MString getModuleFolder()
 
 void mayaLogFunc(const MString & message)
 {
-  MGlobal::displayInfo(MString("[Splice] ")+message);
+  MGlobal::displayInfo(MString("[Fabric] ")+message);
   FabricUI::DFG::DFGLogWidget::log(message.asChar());
 }
 
@@ -50,7 +50,7 @@ void mayaLogErrorFunc(const MString & message)
 {
   if(!gErrorEnabled)
     return;
-  MGlobal::displayError(MString("[Splice] ")+message);
+  MGlobal::displayError(MString("[Fabric] ")+message);
   FabricUI::DFG::DFGLogWidget::log(message.asChar());
   gErrorOccured = true;
 }
