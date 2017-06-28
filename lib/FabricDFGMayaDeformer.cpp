@@ -127,7 +127,8 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
       }
       catch(FabricCore::Exception e)
       {
-        mayaLogErrorFunc(e.getDesc_cstr());
+        MFnDependencyNode depNode(thisMObject());
+        mayaLogErrorFunc(depNode.name()+": "+MString(e.getDesc_cstr()));
         return MStatus::kSuccess;
       }
       binding.setArgValue_lockType(getLockType(), portName.asChar(), rtMeshes, false);
@@ -154,7 +155,8 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
       }
       catch(FabricCore::Exception e)
       {
-        mayaLogErrorFunc(e.getDesc_cstr());
+        MFnDependencyNode depNode(thisMObject());
+        mayaLogErrorFunc(depNode.name()+": "+MString(e.getDesc_cstr()));
         return MStatus::kSuccess;
       }
 
@@ -162,7 +164,7 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
       transferOutputValuesToMaya(block, true);
     }
 
-    MAYADFG_CATCH_END(&stat);
+    MAYADFG_CATCH_MPXNODE_END(&stat);
   }
   else if (stateData.asShort() == 1)  // 1: HasNoEffect.
   {
