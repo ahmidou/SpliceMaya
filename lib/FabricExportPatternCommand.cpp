@@ -670,7 +670,24 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
     {
       mayaLogFunc(MString(getName())+": Warning: '"+dagNode.name()+"' is a light - to be implemented.");
     }
-    else if(typeName == L"transform")
+    else if(typeName == L"pointConstraint" ||
+      typeName == L"orientConstraint" ||
+      typeName == L"scaleConstraint" ||
+      typeName == L"parentConstraint" ||
+      typeName == L"aimConstraint" ||
+      typeName == L"poleVectorConstraint" ||
+      typeName == L"distanceDimShape"
+      )
+    {
+      // ignore those
+      return FabricCore::RTVal();
+    }
+    else if(typeName == L"transform" ||
+      typeName == L"locator" ||
+      typeName == L"joint" ||
+      typeName == L"ikEffector" ||
+      typeName == L"ikHandle"
+      )
     {
       MString objType = "Transform";
 
