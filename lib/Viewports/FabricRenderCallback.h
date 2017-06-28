@@ -2,8 +2,8 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#ifndef __FABRIC_SPLICE_RENDER_CALLBACK_H__
-#define __FABRIC_SPLICE_RENDER_CALLBACK_H__
+#ifndef __FABRIC_MAYA_RENDER_CALLBACK__
+#define __FABRIC_MAYA_RENDER_CALLBACK__
 
 #include <FabricCore.h>
 #include <maya/MString.h>
@@ -69,5 +69,4 @@ class FabricRenderCallback {
     
 };
 
-
-#endif // __FABRIC_SPLICE_RENDER_CALLBACK_H__
+#endif // __FABRIC_MAYA_RENDER_CALLBACK__
