@@ -7,7 +7,7 @@
 #include "FabricCommand.h"
 #include "FabricDFGWidget.h"
 #include <FabricUI/Util/RTValUtil.h>
-#include "CommandManagerMayaCallback.h"
+#include "FabricCommandManagerCallback.h"
 #include "../Application/FabricMayaException.h"
 #include <FabricUI/Commands/KLCommandManager.h>
 #include <FabricUI/Commands/KLCommandRegistry.h>
@@ -22,25 +22,25 @@ using namespace FabricUI::Commands;
 using namespace FabricMaya::Commands;
 using namespace FabricMaya::Application;
 
-bool CommandManagerMayaCallback::s_instanceFlag = false;
-CommandManagerMayaCallback* CommandManagerMayaCallback::s_cmdManagerMayaCallback = 0;
+bool FabricCommandManagerCallback::s_instanceFlag = false;
+FabricCommandManagerCallback* FabricCommandManagerCallback::s_cmdManagerMayaCallback = 0;
 
-CommandManagerMayaCallback::CommandManagerMayaCallback()
+FabricCommandManagerCallback::FabricCommandManagerCallback()
   : QObject()
   , m_createdFromManagerCallback(false)
 {
 }
 
-CommandManagerMayaCallback::~CommandManagerMayaCallback()
+FabricCommandManagerCallback::~FabricCommandManagerCallback()
 {
   s_instanceFlag = false;
 }
 
-CommandManagerMayaCallback *CommandManagerMayaCallback::GetManagerCallback()
+FabricCommandManagerCallback *FabricCommandManagerCallback::GetManagerCallback()
 {
   if(!s_instanceFlag)
   {
-    s_cmdManagerMayaCallback = new CommandManagerMayaCallback();
+    s_cmdManagerMayaCallback = new FabricCommandManagerCallback();
     s_instanceFlag = true;
   }
   return s_cmdManagerMayaCallback;
@@ -54,7 +54,7 @@ inline void encodeArg(
   cmdArgs << arg.toUtf8().constData();
 }
  
-void CommandManagerMayaCallback::onCommandDone(
+void FabricCommandManagerCallback::onCommandDone(
   BaseCommand *cmd,
   bool addToStack,
   bool replaceLog)
@@ -109,10 +109,10 @@ void CommandManagerMayaCallback::onCommandDone(
     MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), true);
   }
 
-  FABRIC_MAYA_CATCH_END("CommandManagerMayaCallback::onCommandDone");
+  FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::onCommandDone");
 }
 
-void CommandManagerMayaCallback::plug()
+void FabricCommandManagerCallback::plug()
 {
   FABRIC_MAYA_CATCH_BEGIN();
 
@@ -130,10 +130,10 @@ void CommandManagerMayaCallback::plug()
     SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, bool))
     );
 
-  FABRIC_MAYA_CATCH_END("CommandManagerMayaCallback::plug");
+  FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::plug");
 }
 
-void CommandManagerMayaCallback::unplug()
+void FabricCommandManagerCallback::unplug()
 {  
   FABRIC_MAYA_CATCH_BEGIN();
 
@@ -147,10 +147,10 @@ void CommandManagerMayaCallback::unplug()
   delete registry;
   registry = 0;
 
-  FABRIC_MAYA_CATCH_END("CommandManagerMayaCallback::unplug");
+  FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::unplug");
 }
 
-void CommandManagerMayaCallback::reset()
+void FabricCommandManagerCallback::reset()
 {
   FABRIC_MAYA_CATCH_BEGIN();
 
@@ -160,16 +160,16 @@ void CommandManagerMayaCallback::reset()
     CommandRegistry::getCommandRegistry());
   registry->synchronizeKL();
 
-  FABRIC_MAYA_CATCH_END("CommandManagerMayaCallback::reset");
+  FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::reset");
 }
 
-void CommandManagerMayaCallback::commandCreatedFromManagerCallback(
+void FabricCommandManagerCallback::commandCreatedFromManagerCallback(
   bool createdFromManagerCallback)
 {
   m_createdFromManagerCallback = createdFromManagerCallback;
 }
 
-bool CommandManagerMayaCallback::isCommandCreatedFromManagerCallback()
+bool FabricCommandManagerCallback::isCommandCreatedFromManagerCallback()
 {
   return m_createdFromManagerCallback;
 }

@@ -2,8 +2,8 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
 
-#ifndef __MAYA_COMMAND_MANAGER_MAYA_CALLBACK__
-#define __MAYA_COMMAND_MANAGER_MAYA_CALLBACK__
+#ifndef __MAYA_FABRIC_COMMAND_MANAGER_CALLBACK__
+#define __MAYA_FABRIC_COMMAND_MANAGER_CALLBACK__
 
 #include <QObject>
 #include <FabricUI/Commands/BaseCommand.h>
@@ -11,7 +11,7 @@
 namespace FabricMaya {
 namespace Commands {
 
-class CommandManagerMayaCallback : public QObject
+class FabricCommandManagerCallback : public QObject
 {
   /**
     CommandManagerQtCallback is connected to the CommandManager.
@@ -21,13 +21,13 @@ class CommandManagerMayaCallback : public QObject
   Q_OBJECT
     
   public:
-    CommandManagerMayaCallback();
+    FabricCommandManagerCallback();
     
-    virtual ~CommandManagerMayaCallback();
+    virtual ~FabricCommandManagerCallback();
 
  	  /// Gets the manager callback singleton.
     /// Thows an error if the manager callback has not been created.
-    static CommandManagerMayaCallback* GetManagerCallback();
+    static FabricCommandManagerCallback* GetManagerCallback();
     
     /// Plugs and initializes the command system.
     /// To call from the plugin.
@@ -65,8 +65,8 @@ class CommandManagerMayaCallback : public QObject
     	);
 
   private:
-  	/// CommandManagerMayaCallback singleton, set from Constructor.
-    static CommandManagerMayaCallback *s_cmdManagerMayaCallback;
+  	/// FabricCommandManagerCallback singleton, set from Constructor.
+    static FabricCommandManagerCallback *s_cmdManagerMayaCallback;
     /// Check if the singleton has been set.
     static bool s_instanceFlag;
     /// \internal
@@ -78,4 +78,4 @@ class CommandManagerMayaCallback : public QObject
 } // namespace Commands
 } // namespace FabricMaya
 
-#endif // __MAYA_COMMAND_MANAGER_MAYA_CALLBACK__
+#endif // __MAYA_FABRIC_COMMAND_MANAGER_CALLBACK__

@@ -43,7 +43,7 @@
 #include "FabricExportPatternCommand.h"
 
 #include "FabricCommand.h"
-#include "CommandManagerMayaCallback.h"
+#include "FabricCommandManagerCallback.h"
 
 #ifdef _MSC_VER
   #define MAYA_EXPORT extern "C" __declspec(dllexport) MStatus _cdecl
@@ -107,7 +107,7 @@ void onSceneSave(void *userData){
 }
 
 void onSceneNew(void *userData){
-  FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
+  FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
@@ -136,11 +136,11 @@ void onSceneNew(void *userData){
       handleVal.callMethod("", "removeAllObjects", 0, NULL);
     }
   }
-  //FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
+  //FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onSceneLoad(void *userData){
-  FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
+  FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
@@ -201,7 +201,7 @@ void onSceneLoad(void *userData){
   // [FE-6612] invalidate all DFG nodes.
   for (unsigned int i=0;i<FabricDFGBaseInterface::getNumInstances();i++)
     FabricDFGBaseInterface::getInstanceByIndex(i)->invalidateNode();
-  //FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
+  //FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onBeforeImport(void *userData){
@@ -420,7 +420,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   else
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
 
-  FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->plug();
+  FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->plug();
   INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricMaya::Commands::FabricCommand::creator));
 
   return status;
@@ -540,7 +540,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasSetExecuteShared" ) );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasReloadExtension"  ) );
 
-  FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->unplug();
+  FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->unplug();
   UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricCommand"));
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements

@@ -4,7 +4,7 @@
  
 #include "FabricCommand.h"
 #include "FabricSpliceHelpers.h"
-#include "CommandManagerMayaCallback.h"
+#include "FabricCommandManagerCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
 #include "../Application/FabricMayaException.h"
 
@@ -41,11 +41,11 @@ MStatus FabricCommand::doIt(
   // Create the maya command assiciated with the fabric command.
   // The maya command does nothing since all the logic is done
   // by the fabric command framework.
-  if(CommandManagerMayaCallback::GetManagerCallback()->isCommandCreatedFromManagerCallback())
+  if(FabricCommandManagerCallback::GetManagerCallback()->isCommandCreatedFromManagerCallback())
   {
     m_isUndoable = true;
     setHistoryOn(true); 
-    CommandManagerMayaCallback::GetManagerCallback()->commandCreatedFromManagerCallback(false);
+    FabricCommandManagerCallback::GetManagerCallback()->commandCreatedFromManagerCallback(false);
   }
   
   // Create the fabric command. The maya will be created 

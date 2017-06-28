@@ -19,7 +19,7 @@
 #if MAYA_API_VERSION >= 201600
 #include "Viewport2Override.h"
 #endif
-#include "Commands/CommandManagerMayaCallback.h"
+#include "Commands/FabricCommandManagerCallback.h"
 
 using namespace FabricUI;
 using namespace FabricCore;
@@ -83,7 +83,7 @@ inline void initID(const MString &panelName) {
       (FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject())
     ) 
   {
-    FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
+    FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
     FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
     FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
     RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);

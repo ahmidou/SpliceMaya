@@ -15,7 +15,7 @@ class FabricCommand : public MPxCommand
 {
   /**
     FabricCommand represents in Maya a FabricUI::Commands::BaseCommands. 
-    FabricCommand are constructed either from the CommandManagerMayaCallback 
+    FabricCommand are constructed either from the FabricCommandManagerCallback 
     when a Fabric command has been created or explicitly in Maya.
 
     Usage:    
