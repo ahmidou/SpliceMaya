@@ -377,11 +377,8 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
       return mayaErrorOccured();
     }
     MFnDagNode dagNode(node);
-    MStatus parentStatus;
-    MFnDagNode parentNode(dagNode.parent(0), &parentStatus);
     MString prefix;
-    if(parentStatus == MS::kSuccess)
-      prefix = parentNode.dagPath().fullPathName();
+    getParentDagNode(node, &prefix);
     registerNode(node, prefix.asChar());
   }
 
@@ -563,13 +560,20 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
   return MS::kSuccess;
 }
 
-bool FabricExportPatternCommand::registerNode(const MObject & node, std::string prefix)
+bool FabricExportPatternCommand::registerNode(const MObject & node, MString prefix, bool addChildren)
 {
   MStatus status;
   MFnDagNode dagNode(node, &status);
   if(status != MS::kSuccess)
     return false;
   if(dagNode.isIntermediateObject())
+    return false;
+
+  MString path = dagNode.name().asChar();
+  if(prefix.length() > 0)
+    path = prefix + "|" + path;
+
+  if(m_nodePaths.find(path.asChar()) != m_nodePaths.end())
     return false;
 
   // filter out texture reference objects
@@ -595,32 +599,29 @@ bool FabricExportPatternCommand::registerNode(const MObject & node, std::string 
       }
     }
   }
-
   MStatus parentStatus;
-  MFnDagNode parentNode(dagNode.parent(0), &parentStatus);
-  if(parentStatus == MS::kSuccess)
+
+  MObject parentNode = getParentDagNode(node);
+  if(!parentNode.isNull())
   {
-    MString parentPrefix = prefix;
-    int pipeIndex = parentPrefix.rindex('|');
-    if(pipeIndex > 0)
-      parentPrefix = parentPrefix.substr(0, pipeIndex - 1);
+    MString grandParentPrefix = prefix;
+    int pipeIndex = grandParentPrefix.rindex('|');
+    if(pipeIndex > 1)
+      grandParentPrefix = grandParentPrefix.substring(0, pipeIndex - 1);
     else
-      parentPrefix = "";
-    registerNode(parentNode.node(), parentPrefix);
+      grandParentPrefix = "";
+    registerNode(parentNode, grandParentPrefix, false /* addChildren */);
   }
 
-  std::string path = dagNode.name().asChar();
-  if(prefix.length() > 0)
-    path = prefix + "|" + path;
 
-  if(m_nodePaths.find(path) != m_nodePaths.end())
-    return false;
-
-  m_nodePaths.insert(std::pair< std::string, size_t >(path, m_nodes.size()));
+  m_nodePaths.insert(std::pair< std::string, size_t >(path.asChar(), m_nodes.size()));
   m_nodes.push_back(node);
 
-  for(unsigned int i=0;i<dagNode.childCount();i++)
-    registerNode(dagNode.child(i), path);
+  if(addChildren)
+  {
+    for(unsigned int i=0;i<dagNode.childCount();i++)
+      registerNode(dagNode.child(i), path);
+  }
 
   return true;
 }
@@ -683,7 +684,8 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
     {
       mayaLogFunc(MString(getName())+": Warning: '"+dagNode.name()+"' is a light - to be implemented.");
     }
-    else if(typeName == L"pointConstraint" ||
+    else if(typeName == L"world" ||
+      typeName == L"pointConstraint" ||
       typeName == L"orientConstraint" ||
       typeName == L"scaleConstraint" ||
       typeName == L"parentConstraint" ||
@@ -1107,4 +1109,37 @@ void FabricExportPatternCommand::processUserAttributes(FabricCore::RTVal obj, co
   {
     mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
   }
+}
+
+MObject FabricExportPatternCommand::getParentDagNode(MObject node, MString * parentPrefix)
+{
+  MStatus status;
+
+  if(parentPrefix != NULL)
+    (*parentPrefix) = "";
+
+  MFnDagNode dagNode(node, &status);
+  if(status != MS::kSuccess)
+    return MObject();
+
+  MDagPathArray dagPaths;
+  MDagPath::getAllPathsTo(node, dagPaths);
+  if(dagPaths.length() == 0)
+    return MObject();
+
+  MDagPath dagPath = dagPaths[0];
+  if(dagPath.pop() != MS::kSuccess)
+    return MObject();
+
+  if(parentPrefix != NULL)
+  {
+    (*parentPrefix) = dagPath.fullPathName();
+    int pipeIndex = (*parentPrefix).rindex('|');
+    if(pipeIndex > 0)
+      (*parentPrefix) = (*parentPrefix).substring(0, pipeIndex - 1);
+    else
+      (*parentPrefix) = "";
+  }
+
+  return dagPath.node();
 }
