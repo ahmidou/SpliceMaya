@@ -596,6 +596,19 @@ bool FabricExportPatternCommand::registerNode(const MObject & node, std::string 
     }
   }
 
+  MStatus parentStatus;
+  MFnDagNode parentNode(dagNode.parent(0), &parentStatus);
+  if(parentStatus == MS::kSuccess)
+  {
+    MString parentPrefix = prefix;
+    int pipeIndex = parentPrefix.rindex('|');
+    if(pipeIndex > 0)
+      parentPrefix = parentPrefix.substr(0, pipeIndex - 1);
+    else
+      parentPrefix = "";
+    registerNode(parentNode.node(), parentPrefix);
+  }
+
   std::string path = dagNode.name().asChar();
   if(prefix.length() > 0)
     path = prefix + "|" + path;
