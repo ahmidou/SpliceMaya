@@ -74,7 +74,6 @@ MStatus FabricCommand::doIt(
 
       manager->createCommand(name.asChar(), cmdArgs);
       std::cout << manager->getContent(false).toUtf8().constData() << std::endl;
-
     }
     
     status = MS::kSuccess;
