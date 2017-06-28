@@ -43,7 +43,6 @@
 #include "FabricExportPatternCommand.h"
 
 #include "FabricCommand.h"
-#include "FabricExecuteCommand.h"
 #include "CommandManagerMayaCallback.h"
 
 #ifdef _MSC_VER
@@ -108,8 +107,8 @@ void onSceneSave(void *userData){
 }
 
 void onSceneNew(void *userData){
-  CommandManagerMayaCallback::clear();
-  std::cout << "plugin.onSceneNew" << std::endl;
+  CommandManagerMayaCallback::GetManagerCallback()->reset();
+
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
 
@@ -140,9 +139,8 @@ void onSceneNew(void *userData){
 }
 
 void onSceneLoad(void *userData){
-  CommandManagerMayaCallback::clear();
+  CommandManagerMayaCallback::GetManagerCallback()->reset();
 
-  std::cout << "plugin.onSceneLoad" << std::endl;
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
 
@@ -258,11 +256,9 @@ void initializeCommands(MFnPlugin &plugin)
 {
   try
   {
-    CommandManagerMayaCallback::plug();
-
+    CommandManagerMayaCallback::GetManagerCallback()->plug();
     MStatus status;
     INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricCommand::creator));
-    INITPLUGIN_STATE(status, plugin.registerCommand("FabricExecuteCommand", FabricExecuteCommand::creator));
   }
 
   catch(FabricCore::Exception e)
@@ -451,10 +447,9 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
 void uninitializeCommands(MFnPlugin &plugin) 
 {
-  CommandManagerMayaCallback::unplug();
+  CommandManagerMayaCallback::GetManagerCallback()->unplug();
   MStatus status = MStatus::kSuccess;
   UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricCommand"));
-  UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricExecuteCommand"));
 }
 
 #if defined(OSMac_)

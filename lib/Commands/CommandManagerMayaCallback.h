@@ -24,13 +24,19 @@ class CommandManagerMayaCallback : public QObject
 
  	  /// Gets the manager callback singleton.
     /// Thows an error if the manager callback has not been created.
-    static CommandManagerMayaCallback* GetCommandManagerMayaCallback();
+    static CommandManagerMayaCallback* GetManagerCallback();
     
-    static void plug();
+    void plug();
 
-    static void clear();
+    void reset();
 
-    static void unplug();
+    void unplug();
+
+    void commandCreatedFromManagerCallback(
+      bool createdFromManagerCallback
+      );
+
+    bool isCommandCreatedFromManagerCallback();
 
   private slots:
     /// \internal
@@ -46,4 +52,6 @@ class CommandManagerMayaCallback : public QObject
     static CommandManagerMayaCallback *s_cmdManagerMayaCallback;
     /// Check if the singleton has been set.
     static bool s_instanceFlag;
+    /// 
+    bool m_createdFromManagerCallback;
 };

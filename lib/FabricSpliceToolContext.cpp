@@ -121,10 +121,11 @@ bool FabricSpliceToolCmd::isUndoable() const {
 class EventFilterObject : public QObject {
   public:
     FabricSpliceToolContext *tool;
+    M3dView view;
     bool eventFilter(QObject *object, QEvent *event);
 };
 
-static EventFilterObject sEventFilterObject;
+static std::map<void*, EventFilterObject*> sEventFilterObjectMap;
 
 const char helpString[] = "Click and drag to interact with Fabric:Splice.";
 
@@ -162,7 +163,6 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
     if(eventDispatcherHandle.isValid())
     {
       mEventDispatcher = eventDispatcherHandle.callMethod("EventDispatcher", "getEventDispatcher", 0, 0);
-
       if(mEventDispatcher.isValid())
       {
         mEventDispatcher.callMethod("", "activateManipulation", 0, 0);
@@ -183,8 +183,22 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
     return;
   }
 
-  sEventFilterObject.tool = this;
-  view.widget()->installEventFilter(&sEventFilterObject);
+  // Install filters on all views
+  MStringArray modelPanels;
+  MGlobal::executeCommand( MString( "getPanel -type \"modelPanel\"" ), modelPanels );
+  for( int i = 0; i < modelPanels.length(); i++ ) 
+  {
+    M3dView panelView;
+    if( MStatus::kSuccess == M3dView::getM3dViewFromModelPanel( modelPanels[i], panelView ) ) 
+    {
+      EventFilterObject* filter = new EventFilterObject();
+      filter->tool = this;
+      filter->view = panelView;
+      sEventFilterObjectMap[panelView.widget()] = filter;
+      panelView.widget()->installEventFilter( filter );
+    }
+  }
+
   view.widget()->setFocus();
 
   view.refresh(true);
@@ -193,9 +207,15 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
 void FabricSpliceToolContext::toolOffCleanup() {
   try
   {
-    M3dView view = M3dView::active3dView();
+    for( std::map<void*, EventFilterObject*>::iterator it = sEventFilterObjectMap.begin(); it != sEventFilterObjectMap.end(); ++it ) {
+      EventFilterObject* filter = it->second;
+      filter->view.widget()->removeEventFilter( filter );
+      delete filter;
+    }
 
-    view.widget()->removeEventFilter(&sEventFilterObject);
+    sEventFilterObjectMap.clear();
+ 
+    M3dView view = M3dView::active3dView();
     view.widget()->clearFocus();
 
     if(mEventDispatcher.isValid())

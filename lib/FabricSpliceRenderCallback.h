@@ -18,7 +18,7 @@ class FabricSpliceRenderCallback {
 
   public:
 
-    static uint32_t gPanelId;
+    static uint32_t gViewId;
 
     static bool gCallbackEnabled;
     

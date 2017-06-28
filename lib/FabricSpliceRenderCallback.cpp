@@ -19,15 +19,12 @@
 #if MAYA_API_VERSION >= 201600
 #include "Viewport2Override.h"
 #endif
-
-#include <FabricUI/Commands/KLCommandRegistry.h>
-#include <FabricUI/Application/FabricApplicationStates.h>
+#include "Commands/CommandManagerMayaCallback.h"
 
 using namespace FabricUI;
-using namespace FabricUI::Commands;
 using namespace FabricCore;
 
-uint32_t FabricSpliceRenderCallback::gPanelId = 0;
+uint32_t FabricSpliceRenderCallback::gViewId = 0;
 bool gRTRPassEnabled = true;
 bool FabricSpliceRenderCallback::gCallbackEnabled = true;
 RTVal FabricSpliceRenderCallback::sDrawContext;
@@ -86,16 +83,11 @@ inline void initID(const MString &panelName) {
       (FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject())
     ) 
   {
+    CommandManagerMayaCallback::GetManagerCallback()->reset();
     std::cout << "setupIDViewport::initID " << panelName.asChar() << std::endl;
-
-    KLCommandRegistry *registry = qobject_cast<KLCommandRegistry*>(
-      CommandRegistry::getCommandRegistry());
-    registry->synchronizeKL();
- 
     FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
     FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
     RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);
-    //RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::WRenderEngineInlineDrawingSetup", 0, 0);
   }
 }
 
@@ -197,7 +189,7 @@ inline void setProjection(bool id, const MMatrix &projection, RTVal &camera) {
 }
 
 MString gRenderName = "";
-MString gpPanelName = "";
+MString gPanelName = "";
 inline void setupIDViewport(
   const MString &panelName, 
   double width, 
@@ -219,19 +211,19 @@ inline void setupIDViewport(
   M3dView::getM3dViewFromModelPanel(panelName, view);
   MString renderName = getActiveRenderName(view);
 
-  std::cout << "setupIDViewport::gRenderName " << gRenderName.asChar() << std::endl;
-  std::cout << "setupIDViewport::renderName " << renderName.asChar() << std::endl;
-  std::cout << "setupIDViewport::panelName " << panelName.asChar() << std::endl;
-  if(gRenderName != renderName)
+  if(gRenderName != renderName || gPanelName != panelName)
   {
-    if(gRenderName == "")
-    {
-      RTVal args2[2] = { panelNameVal, viewport };
-      RTVal drawing = FabricSplice::constructObjectRTVal("InlineDrawingScope");
-      drawing = drawing.callMethod("InlineDrawing", "getDrawing", 0, 0);
-      drawing.callMethod("", "registerViewport", 2, args2);
-    }
+    std::cout << "setupIDViewport::gRenderName " << gRenderName.asChar() << std::endl;
+    std::cout << "setupIDViewport::renderName " << renderName.asChar() << std::endl;
+    std::cout << "setupIDViewport::gPanelName " << gPanelName.asChar() << std::endl;
+    std::cout << "setupIDViewport::panelName " << panelName.asChar() << std::endl;
+    RTVal args2[2] = { panelNameVal, viewport };
+    RTVal drawing = FabricSplice::constructObjectRTVal("InlineDrawingScope");
+    drawing = drawing.callMethod("InlineDrawing", "getDrawing", 0, 0);
+    drawing.callMethod("", "registerViewport", 2, args2);
+   
     gRenderName = renderName;
+    gPanelName = panelName;
   }
 
   RTVal args[3] = 
@@ -259,14 +251,14 @@ inline void setupRTR2Viewport(
 
   if(!FabricSpliceRenderCallback::isRTR2Enable()) return;
 
-  FabricSpliceRenderCallback::gPanelId = panelName.substringW(panelName.length()-2, panelName.length()-1).asInt();
+  FabricSpliceRenderCallback::gViewId = panelName.substringW(panelName.length()-2, panelName.length()-1).asInt();
   if(gRenderName != renderName)
   {
     gRenderName = renderName;
-    FabricSpliceRenderCallback::shHostGLRenderer.removeViewport(FabricSpliceRenderCallback::gPanelId);
+    FabricSpliceRenderCallback::shHostGLRenderer.removeViewport(FabricSpliceRenderCallback::gViewId);
   }
 
-  RTVal viewport = FabricSpliceRenderCallback::shHostGLRenderer.getOrAddViewport(FabricSpliceRenderCallback::gPanelId);
+  RTVal viewport = FabricSpliceRenderCallback::shHostGLRenderer.getOrAddViewport(FabricSpliceRenderCallback::gViewId);
   RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
   setCamera(false, width, height, mCamera, camera);
   setProjection(false, projection, camera);
@@ -301,7 +293,7 @@ MStatus FabricSpliceRenderCallback::drawRTR2(uint32_t width, uint32_t height, ui
   if(isRTR2Enable())
   {
     FabricSpliceRenderCallback::shHostGLRenderer.render(
-      gPanelId,
+      gViewId,
       width,
       height,
       2,

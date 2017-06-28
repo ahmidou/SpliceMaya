@@ -11,19 +11,46 @@ class FabricCommand : public MPxCommand
 {
   /**
     FabricCommand represents in Maya a FabricUI::Commands::BaseCommands. 
-    FabricCommand are constructed from the CommandManagerMayaCallback when
-    a Fabric command has been created. FabricCommand doesn't own the Fabric 
-    command. It's used to log the command in the script-editor and to synch-
-    ronize the maya and fabric undo-redo stack.
+    FabricCommand are constructed either from the CommandManagerMayaCallback 
+    when a Fabric command has been created or explicitly in Maya.
 
-    FabricCommand shall not be used to create a Fabric command from Maya 
-    script editor. Use 'FabricExecuteCommand' instead.
-  */
+    Usage:    
+    - C++:
+      #include <maya/MGlobal.h>
+      
+      MString cmd = "FabricCommand cmdName";
+      cmd += " ";
+      cmd += "arg_1_name \"arg_1_value\"";
+      cmd += ...
+      cmd += " ";
+      cmd += "arg_n_name \"arg_n_value\"";
+
+      MGlobal::executeCommandOnIdle(
+        cmd,
+        true
+        );
+
+    - Python:
+      import maya.OpenMaya as om
+
+      cmd = "FabricCommand cmdName"
+      cmd = cmd + " "
+      cmd = cmd + "arg_1_name \"arg_1_value\""
+      cmd = cmd + ...
+      cmd = cmd + " "
+      cmd = cmd + "arg_n_name \"arg_n_value\""
+
+      om.MGlobal_executeCommandOnIdle(cmd)  */
 
   public:
     FabricCommand();
 
     virtual ~FabricCommand();
+
+    /// \internal
+    /// To check if the command is created from 
+    /// the fabric manager or explicitely from Maya.
+    static MString createFromManagerCallback;
 
     /// Implementation of MPxCommand.
     static void* creator();

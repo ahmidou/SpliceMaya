@@ -2,11 +2,12 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
  
-#include <string>
 #include "FabricCommand.h"
 #include "FabricSpliceHelpers.h"
-#include <FabricUI/Commands/BaseCommand.h>
+#include "CommandManagerMayaCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
+
+MString FabricCommand::createFromManagerCallback = "FabricMayaCommand_createFromManagerCallback";
 
 FabricCommand::FabricCommand()
   : m_isUndoable(false)
@@ -15,23 +16,6 @@ FabricCommand::FabricCommand()
 
 FabricCommand::~FabricCommand()
 {
-  // Synchronize the maya and fabric stacks.
-  // A command is destructed if it's has been undone
-  // and a new command is created.
-  try
-  {
-    //FabricUI::Commands::CommandManager *manager = 
-    //  FabricUI::Commands::CommandManager::getCommandManager();
-
-    //manager->clearRedoStack();
-  }
-
-  catch (std::string &e) 
-  {
-    printf(
-      "FabricCommand::~FabricCommand, exception: %s\n", 
-      e.c_str());
-  }
 }
 
 void* FabricCommand::creator()
@@ -48,20 +32,51 @@ MStatus FabricCommand::doIt(
   const MArgList &args)
 {
   MStatus status;
-
   try
   {
-    FabricUI::Commands::CommandManager *manager = 
-      FabricUI::Commands::CommandManager::getCommandManager();
+    std::cout
+      << "\nFabricCommand::doIt " 
+      << CommandManagerMayaCallback::GetManagerCallback()->isCommandCreatedFromManagerCallback() 
+      << std::endl;
 
-    // Gets the last command pushed.
-    FabricUI::Commands::BaseCommand *cmd = manager->getCommandAtIndex(
-      manager->getStackIndex()
-      );
+    // Create the maya command.
+    if(CommandManagerMayaCallback::GetManagerCallback()->isCommandCreatedFromManagerCallback())
+    {
+      m_isUndoable = true;
+      setHistoryOn(true); 
+      CommandManagerMayaCallback::GetManagerCallback()->commandCreatedFromManagerCallback(false);
+    }
+    
+    // Create the fabric command.
+    // The maya will be created after.
+    else
+    {
+      m_isUndoable = false;
+      setHistoryOn(false);
 
-    m_isUndoable = cmd->canUndo();
-    setHistoryOn(true); 
-  
+      MString name = args.asString(0, &status);
+
+      // Get the command args.
+      QMap<QString, QString > cmdArgs;
+      for(unsigned int i=1; i<args.length(&status); ++i)
+      {
+        QString key = args.asString(i, &status).asChar();
+        QString value = args.asString(++i, &status).asChar();
+
+        std::cout << "key " << key.toUtf8().constData() << std::endl;
+        std::cout << "value " << value.toUtf8().constData() << std::endl;
+        cmdArgs[key] = value;
+      }
+
+      FabricUI::Commands::CommandManager *manager = 
+        FabricUI::Commands::CommandManager::getCommandManager();
+      std::cout << "Create Command" << std::endl;
+
+      manager->createCommand(name.asChar(), cmdArgs);
+      std::cout << manager->getContent(false).toUtf8().constData() << std::endl;
+
+    }
+    
     status = MS::kSuccess;
   }
 

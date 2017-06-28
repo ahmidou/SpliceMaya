@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include <maya/MGlobal.h>
+#include "FabricCommand.h"
 #include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
 #include "CommandManagerMayaCallback.h"
@@ -24,24 +25,112 @@ CommandManagerMayaCallback* CommandManagerMayaCallback::s_cmdManagerMayaCallback
 
 CommandManagerMayaCallback::CommandManagerMayaCallback()
   : QObject()
+  , m_createdFromManagerCallback(false)
 {
-  // std::cout 
-  //   << "CommandManagerMayaCallback::CommandManagerMayaCallback "
-  //   << std::endl;
+}
 
+CommandManagerMayaCallback::~CommandManagerMayaCallback()
+{
+  s_instanceFlag = false;
+}
+
+CommandManagerMayaCallback *CommandManagerMayaCallback::GetManagerCallback()
+{
+  if(!s_instanceFlag)
+  {
+    s_cmdManagerMayaCallback = new CommandManagerMayaCallback();
+    s_instanceFlag = true;
+  }
+  return s_cmdManagerMayaCallback;
+}
+
+inline QString encodeJSONChars(
+  QString const&string)
+{
+  QString result = string;
+  result = result.replace("\"", "'").replace("\\", "\\\\").replace(" ", "");
+  return result.replace("\r", "").replace("\n", "").replace("\t", "");
+}
+
+inline QString encodeJSON(
+  QString const&string)
+{
+  return "\"" + encodeJSONChars(string) + "\"";
+}
+
+inline void encodeArg(
+  const QString &arg,
+  std::stringstream &cmdArgs)
+{
+  cmdArgs << ' ';
+  cmdArgs << arg.toUtf8().constData();
+}
+ 
+void CommandManagerMayaCallback::onCommandDone(
+  BaseCommand *cmd,
+  bool addToStack,
+  bool replaceLog)
+{
+  if(addToStack)
+  {
+    std::stringstream fabricCmd;
+    fabricCmd << "FabricCommand";
+    encodeArg(cmd->getName(), fabricCmd);
+
+    // Fabric command args.
+    BaseScriptableCommand *scriptCmd = qobject_cast<BaseScriptableCommand*>(cmd);
+
+    if(scriptCmd)
+    {
+      // Check if it's a BaseRTValScriptableCommand,
+      // to know how to cast the string.
+      BaseRTValScriptableCommand *rtValScriptCmd = qobject_cast<BaseRTValScriptableCommand*>(cmd);
+      foreach(QString key, scriptCmd->getArgKeys())
+      {
+        std::cout 
+          << "CommandManagerMayaCallback::key "
+          << key.toUtf8().constData() 
+          << std::endl;
+
+        encodeArg(key, fabricCmd);
+        if(rtValScriptCmd)
+        {
+          QString path = rtValScriptCmd->getRTValArgPath(key).toUtf8().constData();
+          if(!path.isEmpty())
+            encodeArg("\"<" + rtValScriptCmd->getRTValArgPath(key) + ">\"", fabricCmd);
+          else
+            encodeArg(encodeJSON(scriptCmd->getArg(key)), fabricCmd);
+        }
+        else
+          encodeArg(scriptCmd->getArg(key), fabricCmd);
+      }
+    }
+
+    // Indicates that the command has been created already.
+    // so we don't re-create it when constructing the maya command.
+    m_createdFromManagerCallback = true;
+    MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), true);
+  }
+}
+
+void CommandManagerMayaCallback::plug()
+{
   try
   {
-    CommandManager *manager = CommandManager::getCommandManager();
-
-    std::cout 
-      << "CommandManagerMayaCallback::CommandManagerMayaCallback "
-      << QObject::connect(
-        manager,
-        SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, bool)),
-        this,
-        SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, bool))
-        )
-        << std::endl;
+    FabricCore::Client client = FabricDFGWidget::GetCoreClient();
+    new Application::FabricApplicationStates(client);
+    
+    KLCommandRegistry *registry = new KLCommandRegistry();
+    registry->synchronizeKL();
+    
+    KLCommandManager *manager = new KLCommandManager();
+    
+    QObject::connect(
+      manager,
+      SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, bool)),
+      this,
+      SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, bool))
+      );
   }
   catch (std::string &e) 
   {
@@ -54,116 +143,18 @@ CommandManagerMayaCallback::CommandManagerMayaCallback()
   }
 }
 
-CommandManagerMayaCallback::~CommandManagerMayaCallback()
-{
-  s_instanceFlag = false;
-}
-
-CommandManagerMayaCallback *CommandManagerMayaCallback::GetCommandManagerMayaCallback()
-{
-  if(!s_instanceFlag)
-  {
-    s_cmdManagerMayaCallback = new CommandManagerMayaCallback();
-    s_instanceFlag = true;
-  }
-  return s_cmdManagerMayaCallback;
-}
-
-inline void encodeArg(
-  const QString &arg,
-  std::stringstream &cmdArgs)
-{
-  cmdArgs << ' ';
-  cmdArgs << arg.toUtf8().constData();
-}
- 
-inline void encodeRTValArg(
-  const QString &arg,
-  std::stringstream &cmdArgs)
-{
-  cmdArgs << ' ';
-  cmdArgs << "\"" << arg.toUtf8().constData() << "\"";
-}
-
-void CommandManagerMayaCallback::onCommandDone(
-  BaseCommand *cmd,
-  bool addToStack,
-  bool replaceLog)
-{
-  // std::cout 
-  //   << "CommandManagerMayaCallback::onCommandDone "
-  //   << cmd->getName().toUtf8().constData() 
-  //   << std::endl;
-  // Construct a Maya 'FabricCommand'  
-  // that represents the Fabric command.
-  std::stringstream fabricCmd;
-
-  // Maya command name.
-  fabricCmd << "FabricCommand";
-
-  // Fabric command name.
-  encodeArg(cmd->getName(), fabricCmd);
-   
-  // Fabric command args.
-  BaseScriptableCommand *scriptCmd = qobject_cast<BaseScriptableCommand*>(cmd);
-
-  if(scriptCmd)
-  {
-    // Check if it's a BaseRTValScriptableCommand,
-    // to know how to cast the string.
-    BaseRTValScriptableCommand *rtValScriptCmd = qobject_cast<BaseRTValScriptableCommand*>(cmd);
-    foreach(QString key, scriptCmd->getArgKeys())
-    {
-      std::cout 
-        << "CommandManagerMayaCallback::key "
-        << key.toUtf8().constData() 
-        << std::endl;
-
-      encodeArg(key, fabricCmd);
-      if(rtValScriptCmd)
-      {
-        std::cout 
-          << "CommandManagerMayaCallback::path "
-          << rtValScriptCmd->getRTValArgPath(key).toUtf8().constData() 
-          << std::endl;
-      }
-      //   encodeRTValArg(scriptCmd->getArg(key), fabricCmd);
-      // else
-      //   encodeArg(scriptCmd->getArg(key), fabricCmd);
-    }
-  }
-
-  std::cout 
-    << "CommandManagerMayaCallback::onCommandDone "
-    << fabricCmd.str().c_str() 
-    << std::endl;
-
-  // Create the maya command.
-  if(addToStack)
-    MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), true);
-}
-
-void CommandManagerMayaCallback::plug()
-{
-  FabricCore::Client client = FabricDFGWidget::GetCoreClient();
-  new Application::FabricApplicationStates(client);
-  
-  KLCommandRegistry *registry = new KLCommandRegistry();
-  registry->synchronizeKL();
-  
-  new KLCommandManager();
-    
-  CommandManagerMayaCallback::GetCommandManagerMayaCallback();
-}
-
-void CommandManagerMayaCallback::clear()
+void CommandManagerMayaCallback::reset()
 {
   CommandManager::getCommandManager()->clear();
+
+  KLCommandRegistry *registry = qobject_cast<KLCommandRegistry*>(
+    CommandRegistry::getCommandRegistry());
+  registry->synchronizeKL();
 }
 
 void CommandManagerMayaCallback::unplug()
 {
-  clear();
+  CommandManager::getCommandManager()->clear();
 
   CommandManager *manager = CommandManager::getCommandManager();
   delete manager;
@@ -172,8 +163,15 @@ void CommandManagerMayaCallback::unplug()
   CommandRegistry *registry =  CommandRegistry::getCommandRegistry();
   delete registry;
   registry = 0;
+}
 
-  CommandManagerMayaCallback *callback = GetCommandManagerMayaCallback();
-  delete callback;
-  callback = 0;
+void CommandManagerMayaCallback::commandCreatedFromManagerCallback(
+  bool createdFromManagerCallback)
+{
+  m_createdFromManagerCallback = createdFromManagerCallback;
+}
+
+bool CommandManagerMayaCallback::isCommandCreatedFromManagerCallback()
+{
+  return m_createdFromManagerCallback;
 }
