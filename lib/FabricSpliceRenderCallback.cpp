@@ -84,7 +84,6 @@ inline void initID(const MString &panelName) {
     ) 
   {
     CommandManagerMayaCallback::GetManagerCallback()->reset();
-    std::cout << "setupIDViewport::initID " << panelName.asChar() << std::endl;
     FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
     FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
     RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);
@@ -213,10 +212,6 @@ inline void setupIDViewport(
 
   if(gRenderName != renderName || gPanelName != panelName)
   {
-    std::cout << "setupIDViewport::gRenderName " << gRenderName.asChar() << std::endl;
-    std::cout << "setupIDViewport::renderName " << renderName.asChar() << std::endl;
-    std::cout << "setupIDViewport::gPanelName " << gPanelName.asChar() << std::endl;
-    std::cout << "setupIDViewport::panelName " << panelName.asChar() << std::endl;
     RTVal args2[2] = { panelNameVal, viewport };
     RTVal drawing = FabricSplice::constructObjectRTVal("InlineDrawingScope");
     drawing = drawing.callMethod("InlineDrawing", "getDrawing", 0, 0);

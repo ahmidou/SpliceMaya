@@ -30,7 +30,9 @@ class FabricSpliceRenderCallback {
     
     static void unplug();
 
-    static void enable(bool enable);
+    static void enable(
+      bool enable
+      );
     
     static void disable();
     
@@ -42,14 +44,27 @@ class FabricSpliceRenderCallback {
     
     static void drawID();
 
-    static MStatus drawRTR2(uint32_t width, uint32_t height, uint32_t phase);
+    static MStatus drawRTR2(
+      uint32_t width, 
+      uint32_t height, 
+      uint32_t phase
+      );
 
-    static void preDrawCallback(const MString &panelName, void *clientData);
+    static void preDrawCallback(
+      const MString &panelName, 
+      void *clientData
+      );
    
-    static void postDrawCallback(const MString &panelName, void *clientData);
+    static void postDrawCallback(
+      const MString &panelName, 
+      void *clientData
+      );
 
 #if MAYA_API_VERSION >= 201600
-    static void viewport2OverridePreDrawCallback(MHWRender::MDrawContext &context, void* clientData);
+  static void viewport2OverridePreDrawCallback(
+    MHWRender::MDrawContext &context, 
+    void* clientData
+    );
 #endif
     
 };

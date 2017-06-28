@@ -8,15 +8,18 @@
 #include "FabricCommand.h"
 #include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
+#include <FabricUI/Util/RTValUtil.h>
 #include "CommandManagerMayaCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
 #include <FabricUI/Commands/KLCommandManager.h>
 #include <FabricUI/Commands/KLCommandRegistry.h>
+#include <FabricUI/Commands/CommandArgHelpers.h>
 #include <FabricUI/Commands/BaseScriptableCommand.h>
 #include <FabricUI/Commands/BaseRTValScriptableCommand.h>
 #include <FabricUI/Application/FabricApplicationStates.h>
 
 using namespace FabricUI;
+using namespace FabricUI::Util;
 using namespace FabricUI::Commands;
 using namespace FabricCore;
 
@@ -87,22 +90,25 @@ void CommandManagerMayaCallback::onCommandDone(
       BaseRTValScriptableCommand *rtValScriptCmd = qobject_cast<BaseRTValScriptableCommand*>(cmd);
       foreach(QString key, scriptCmd->getArgKeys())
       {
-        std::cout 
-          << "CommandManagerMayaCallback::key "
-          << key.toUtf8().constData() 
-          << std::endl;
-
-        encodeArg(key, fabricCmd);
-        if(rtValScriptCmd)
+        if(!scriptCmd->hasArgFlag(key, CommandArgFlags::DONT_LOG_ARG))
         {
-          QString path = rtValScriptCmd->getRTValArgPath(key).toUtf8().constData();
-          if(!path.isEmpty())
-            encodeArg("\"<" + rtValScriptCmd->getRTValArgPath(key) + ">\"", fabricCmd);
+          encodeArg(key, fabricCmd);
+          if(rtValScriptCmd)
+          {
+            QString path = rtValScriptCmd->getRTValArgPath(key).toUtf8().constData();
+            if(!path.isEmpty())
+              encodeArg("\"<" + path + ">\"", fabricCmd);
+            else
+              encodeArg(
+                CommandArgHelpers::encodeJSON(RTValUtil::toJSON(rtValScriptCmd->getRTValArgValue(key))), 
+                  fabricCmd
+                  );
+          }
           else
-            encodeArg(encodeJSON(scriptCmd->getArg(key)), fabricCmd);
+            encodeArg(
+              scriptCmd->getArg(key), 
+              fabricCmd);
         }
-        else
-          encodeArg(scriptCmd->getArg(key), fabricCmd);
       }
     }
 

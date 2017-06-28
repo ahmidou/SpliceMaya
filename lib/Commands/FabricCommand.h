@@ -40,8 +40,8 @@ class FabricCommand : public MPxCommand
       cmd = cmd + " "
       cmd = cmd + "arg_n_name \"arg_n_value\""
 
-      om.MGlobal_executeCommandOnIdle(cmd)  */
-
+      om.MGlobal_executeCommandOnIdle(cmd)  
+  */
   public:
     FabricCommand();
 
@@ -70,5 +70,6 @@ class FabricCommand : public MPxCommand
     virtual MStatus redoIt();
 
   private:
+    /// \internal
     bool m_isUndoable;
 };

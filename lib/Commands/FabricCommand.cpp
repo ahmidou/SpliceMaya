@@ -7,6 +7,9 @@
 #include "CommandManagerMayaCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
 
+using namespace FabricUI;
+using namespace FabricUI::Commands;
+ 
 MString FabricCommand::createFromManagerCallback = "FabricMayaCommand_createFromManagerCallback";
 
 FabricCommand::FabricCommand()
@@ -34,11 +37,6 @@ MStatus FabricCommand::doIt(
   MStatus status;
   try
   {
-    std::cout
-      << "\nFabricCommand::doIt " 
-      << CommandManagerMayaCallback::GetManagerCallback()->isCommandCreatedFromManagerCallback() 
-      << std::endl;
-
     // Create the maya command.
     if(CommandManagerMayaCallback::GetManagerCallback()->isCommandCreatedFromManagerCallback())
     {
@@ -54,26 +52,14 @@ MStatus FabricCommand::doIt(
       m_isUndoable = false;
       setHistoryOn(false);
 
-      MString name = args.asString(0, &status);
-
       // Get the command args.
       QMap<QString, QString > cmdArgs;
       for(unsigned int i=1; i<args.length(&status); ++i)
-      {
-        QString key = args.asString(i, &status).asChar();
-        QString value = args.asString(++i, &status).asChar();
+        cmdArgs[args.asString(i, &status).asChar()] = args.asString(++i, &status).asChar();
 
-        std::cout << "key " << key.toUtf8().constData() << std::endl;
-        std::cout << "value " << value.toUtf8().constData() << std::endl;
-        cmdArgs[key] = value;
-      }
-
-      FabricUI::Commands::CommandManager *manager = 
-        FabricUI::Commands::CommandManager::getCommandManager();
-      std::cout << "Create Command" << std::endl;
-
-      manager->createCommand(name.asChar(), cmdArgs);
-      std::cout << manager->getContent(false).toUtf8().constData() << std::endl;
+      CommandManager::getCommandManager()->createCommand(
+        args.asString(0, &status).asChar(), 
+        cmdArgs);
     }
     
     status = MS::kSuccess;
@@ -98,10 +84,7 @@ MStatus FabricCommand::undoIt()
 
   try
   {
-    FabricUI::Commands::CommandManager *manager = 
-      FabricUI::Commands::CommandManager::getCommandManager();
-
-    manager->undoCommand();
+    CommandManager::getCommandManager()->undoCommand();
     status = MS::kSuccess;
   }
 
@@ -124,10 +107,7 @@ MStatus FabricCommand::redoIt()
 
   try
   {
-    FabricUI::Commands::CommandManager *manager = 
-      FabricUI::Commands::CommandManager::getCommandManager();
-
-    manager->redoCommand();
+    CommandManager::getCommandManager()->redoCommand();
     status = MS::kSuccess;
   }
 
