@@ -2,19 +2,22 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
 
-#pragma once
+#ifndef __MAYA_COMMAND_MANAGER_MAYA_CALLBACK__
+#define __MAYA_COMMAND_MANAGER_MAYA_CALLBACK__
 
 #include <QObject>
 #include <FabricUI/Commands/BaseCommand.h>
  
+namespace FabricMaya {
+namespace Commands {
+
 class CommandManagerMayaCallback : public QObject
 {
   /**
-    CommandManagerQtCallback is connected to the CommandManagerCallback.
+    CommandManagerQtCallback is connected to the CommandManager.
     It adds the commands into the maya undo stack when they are created
     from Canvas. 
   */
-
   Q_OBJECT
     
   public:
@@ -26,21 +29,35 @@ class CommandManagerMayaCallback : public QObject
     /// Thows an error if the manager callback has not been created.
     static CommandManagerMayaCallback* GetManagerCallback();
     
+    /// Plugs and initializes the command system.
+    /// To call from the plugin.
     void plug();
 
+    /// Unplugs and deletes the command system.
+    /// To call from the plugin.
+    void unplug();
+ 
+    /// Resets the commands system (clears manager stacks)
     void reset();
 
-    void unplug();
-
+    /// \internal
+    /// To know if the command is created from maya or
+    /// by the manager
     void commandCreatedFromManagerCallback(
       bool createdFromManagerCallback
       );
 
+    /// \internal
+    /// To know if the command is created from maya or
+    /// by the manager
     bool isCommandCreatedFromManagerCallback();
 
   private slots:
     /// \internal
-    /// Called when a command has been pushed to the manager. 
+    /// Called when a command has been pushed to the manager.
+    /// \param cmd The command that has been pushed.
+    /// \param addToStack If true, the command has been pushed in the manager stack.
+    /// \param replaceLog If true, the log of the last pushed command must be udpated.
     void onCommandDone(
     	FabricUI::Commands::BaseCommand *cmd,
       bool addToStack,
@@ -52,6 +69,13 @@ class CommandManagerMayaCallback : public QObject
     static CommandManagerMayaCallback *s_cmdManagerMayaCallback;
     /// Check if the singleton has been set.
     static bool s_instanceFlag;
-    /// 
+    /// \internal
+    /// To know if the command is created from maya or
+    /// by the manager
     bool m_createdFromManagerCallback;
 };
+
+} // namespace Commands
+} // namespace FabricMaya
+
+#endif // __MAYA_COMMAND_MANAGER_MAYA_CALLBACK__

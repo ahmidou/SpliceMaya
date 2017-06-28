@@ -12,15 +12,13 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceToolContext.h"
 #include "FabricSpliceRenderCallback.h"
- 
 #include <FabricUI/Viewports/QtToKLEvent.h>
+#include "../Application/FabricMayaException.h"
 #include <FabricUI/Commands/KLCommandManager.h>
-#include <FabricUI/Application/FabricException.h>
- 
-using namespace FabricUI;
-using namespace FabricUI::Commands;
+  
 using namespace FabricCore;
-using namespace Application;
+using namespace FabricUI::Commands;
+using namespace FabricMaya::Application;
 
 /////////////////////////////////////////////////////
 // FabricSpliceManipulationCmd
@@ -157,30 +155,17 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
     return;
   }
 
-  try
+  FABRIC_MAYA_CATCH_BEGIN();
+
+  RTVal eventDispatcherHandle = FabricSplice::constructObjectRTVal("EventDispatcherHandle");
+  if(eventDispatcherHandle.isValid())
   {
-    RTVal eventDispatcherHandle = FabricSplice::constructObjectRTVal("EventDispatcherHandle");
-    if(eventDispatcherHandle.isValid())
+    mEventDispatcher = eventDispatcherHandle.callMethod("EventDispatcher", "getEventDispatcher", 0, 0);
+    if(mEventDispatcher.isValid())
     {
-      mEventDispatcher = eventDispatcherHandle.callMethod("EventDispatcher", "getEventDispatcher", 0, 0);
-      if(mEventDispatcher.isValid())
-      {
-        mEventDispatcher.callMethod("", "activateManipulation", 0, 0);
-        view.refresh(true);
-      }
+      mEventDispatcher.callMethod("", "activateManipulation", 0, 0);
+      view.refresh(true);
     }
-  } 
-
-  catch(Exception e) 
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return;
-  }
-
-  catch(FabricSplice::Exception e)
-  {
-    mayaLogErrorFunc(e.what());
-    return;
   }
 
   // Install filters on all views
@@ -200,40 +185,35 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
   }
 
   view.widget()->setFocus();
-
   view.refresh(true);
+
+  FABRIC_MAYA_CATCH_END("FabricSpliceToolContext::toolOnSetup");
 }
 
 void FabricSpliceToolContext::toolOffCleanup() {
-  try
+  
+  FABRIC_MAYA_CATCH_BEGIN();
+
+  for( std::map<void*, EventFilterObject*>::iterator it = sEventFilterObjectMap.begin(); it != sEventFilterObjectMap.end(); ++it ) 
   {
-    for( std::map<void*, EventFilterObject*>::iterator it = sEventFilterObjectMap.begin(); it != sEventFilterObjectMap.end(); ++it ) {
-      EventFilterObject* filter = it->second;
-      filter->view.widget()->removeEventFilter( filter );
-      delete filter;
-    }
-
-    sEventFilterObjectMap.clear();
- 
-    M3dView view = M3dView::active3dView();
-    view.widget()->clearFocus();
-
-    if(mEventDispatcher.isValid())
-    {
-      // By deactivating the manipulation, we enable the manipulators to perform
-      // cleanup, such as hiding paint brushes/gizmos. 
-      mEventDispatcher.callMethod("", "deactivateManipulation", 0, 0);
-      view.refresh(true);
-
-      mEventDispatcher.invalidate();
-    }
-
-    view.refresh(true);
+    EventFilterObject* filter = it->second;
+    filter->view.widget()->removeEventFilter( filter );
+    delete filter;
   }
-  catch (Exception e)
+
+  sEventFilterObjectMap.clear();
+  if(mEventDispatcher.isValid())
   {
-    mayaLogErrorFunc(e.getDesc_cstr());
+    // By deactivating the manipulation, we enable the manipulators to perform
+    // cleanup, such as hiding paint brushes/gizmos. 
+    mEventDispatcher.callMethod("", "deactivateManipulation", 0, 0);
+    mEventDispatcher.invalidate();
   }
+
+  M3dView view = M3dView::active3dView();
+  view.widget()->clearFocus();
+  view.refresh(true);
+  FABRIC_MAYA_CATCH_END("FabricSpliceToolContext::toolOffCleanup");
 }
 
 MStatus FabricSpliceToolContext::doPress(MEvent & event) {
@@ -281,6 +261,8 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     return false;
   }
 
+  FABRIC_MAYA_CATCH_BEGIN();
+
   RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
   RTVal klevent = QtToKLEvent(event, viewport, "Maya" );
    
@@ -289,21 +271,20 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     //////////////////////////
     // Invoke the event...
     mEventDispatcher.callMethod("Boolean", "onEvent", 1, &klevent);
-
     bool result = klevent.callMethod("Boolean", "isAccepted", 0, 0).getBoolean();
 
     // The manipulation system has requested that a node is dirtified.
     // here we use the maya command to dirtify the specified dg node.
     RTVal host = klevent.maybeGetMember("host");
     MString dirtifyDCCNode(host.maybeGetMember("dirtifyNode").getStringCString());
-    if(dirtifyDCCNode.length() > 0){
+    if(dirtifyDCCNode.length() > 0)
       MGlobal::executeCommand(MString("dgdirty \"") + dirtifyDCCNode + MString("\""));
-    }
-
+    
     // The manipulation system has requested that a custom command be invoked.
     // Invoke the custom command passing the speficied args.
     MString customCommand(host.maybeGetMember("customCommand").getStringCString());
-    if(customCommand.length() > 0){
+    if(customCommand.length() > 0)
+    {
       RTVal customCommandParams = host.maybeGetMember("customCommandParams");
       if(customCommandParams.callMethod("Size", "size", 0, 0).getUInt32() > 0)
       {
@@ -427,39 +408,31 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     {
       KLCommandManager *manager = qobject_cast<KLCommandManager*>(
         CommandManager::getCommandManager());
-
-      // Check the command execution and print the exception, 
-      // we don't want to crash the app if the command fails.
-      try
-      {
-        manager->synchronizeKL();
-      }
-
-      catch(FabricException &e)
-      {
-        FabricException::Throw(
-          "GLViewportWidget::onEvent",
-          "",
-          e.what(),
-          PRINT);
-      }
+      manager->synchronizeKL();
+      event->accept();
     }
 
     if(host.maybeGetMember("redrawRequested").getBoolean())
       view.refresh(true);
 
-    if(host.callMethod("Boolean", "undoRedoCommandsAdded", 0, 0).getBoolean()){
+    if(host.callMethod("Boolean", "undoRedoCommandsAdded", 0, 0).getBoolean())
+    {
       // Cache the rtvals in a static variable that the command will then stor in the undo stack.
-      FabricSpliceManipulationCmd::s_rtval_commands = host.callMethod("UndoRedoCommand[]", "getUndoRedoCommands", 0, 0);
+      FabricSpliceManipulationCmd::s_rtval_commands = host.callMethod(
+        "UndoRedoCommand[]", 
+        "getUndoRedoCommands", 
+        0, 
+        0);
 
       bool displayEnabled = true;
       MGlobal::executeCommand(MString("fabricSpliceManipulation"), displayEnabled);
     }
 
     klevent.invalidate();
-
     return result;
   }
+
+  FABRIC_MAYA_CATCH_END("FabricSpliceToolContext::onEvent");
 
   return false;
 }
@@ -509,33 +482,15 @@ bool FabricSpliceToolContext::onEvent(QEvent *event) {
     return false;
   }
  
-  try
-  {
-    M3dView view = M3dView::active3dView();
-    if(!FabricSpliceRenderCallback::isRTR2Enable())
-    {
-      if(onIDEvent(event, view))
-      {
-        event->accept();
+  FABRIC_MAYA_CATCH_BEGIN();
 
-       
-        return true;
-      }
-      return false;
-    }
-    
-    else onRTR2Event(event, view);
-  }
+  M3dView view = M3dView::active3dView();
+  if(!FabricSpliceRenderCallback::isRTR2Enable())
+   return onIDEvent(event, view);
+  else
+    return onRTR2Event(event, view);
 
-  catch(Exception e) 
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return false;
-  }
-  catch(FabricSplice::Exception e){
-    mayaLogErrorFunc(e.what());
-    return false;
-  }
+  FABRIC_MAYA_CATCH_END("FabricSpliceToolContext::onEvent");
 
   // the event was not handled by FabricEngine manipulation system. 
   return false;

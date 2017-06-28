@@ -107,7 +107,7 @@ void onSceneSave(void *userData){
 }
 
 void onSceneNew(void *userData){
-  CommandManagerMayaCallback::GetManagerCallback()->reset();
+  FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
@@ -136,10 +136,11 @@ void onSceneNew(void *userData){
       handleVal.callMethod("", "removeAllObjects", 0, NULL);
     }
   }
+  //FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
 }
 
 void onSceneLoad(void *userData){
-  CommandManagerMayaCallback::GetManagerCallback()->reset();
+  FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
   FabricSpliceRenderCallback::sDrawContext.invalidate(); 
@@ -200,6 +201,7 @@ void onSceneLoad(void *userData){
   // [FE-6612] invalidate all DFG nodes.
   for (unsigned int i=0;i<FabricDFGBaseInterface::getNumInstances();i++)
     FabricDFGBaseInterface::getInstanceByIndex(i)->invalidateNode();
+  //FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
 }
 
 void onBeforeImport(void *userData){
@@ -251,21 +253,6 @@ bool isDestroyingScene()
         if (status != MStatus::kSuccess) \
           status = tmp; \
       }
-
-void initializeCommands(MFnPlugin &plugin) 
-{
-  try
-  {
-    CommandManagerMayaCallback::GetManagerCallback()->plug();
-    MStatus status;
-    INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricCommand::creator));
-  }
-
-  catch(FabricCore::Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-  }
-}
 
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
@@ -433,7 +420,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   else
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
 
-  initializeCommands(plugin);
+  FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->plug();
+  INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricMaya::Commands::FabricCommand::creator));
 
   return status;
 }
@@ -444,13 +432,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
         if (status != MStatus::kSuccess) \
           status = tmp; \
       }
-
-void uninitializeCommands(MFnPlugin &plugin) 
-{
-  CommandManagerMayaCallback::GetManagerCallback()->unplug();
-  MStatus status = MStatus::kSuccess;
-  UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricCommand"));
-}
 
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
@@ -559,7 +540,8 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasSetExecuteShared" ) );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasReloadExtension"  ) );
 
-  uninitializeCommands(plugin);
+  FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->unplug();
+  UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricCommand"));
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by

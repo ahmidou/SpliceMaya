@@ -3,14 +3,12 @@
 //
 
 #include <sstream>
-#include <iostream>
 #include <maya/MGlobal.h>
 #include "FabricCommand.h"
 #include "FabricDFGWidget.h"
-#include "FabricSpliceHelpers.h"
 #include <FabricUI/Util/RTValUtil.h>
 #include "CommandManagerMayaCallback.h"
-#include <FabricUI/Commands/CommandManager.h>
+#include "../Application/FabricMayaException.h"
 #include <FabricUI/Commands/KLCommandManager.h>
 #include <FabricUI/Commands/KLCommandRegistry.h>
 #include <FabricUI/Commands/CommandArgHelpers.h>
@@ -18,10 +16,11 @@
 #include <FabricUI/Commands/BaseRTValScriptableCommand.h>
 #include <FabricUI/Application/FabricApplicationStates.h>
 
-using namespace FabricUI;
+using namespace FabricCore;
 using namespace FabricUI::Util;
 using namespace FabricUI::Commands;
-using namespace FabricCore;
+using namespace FabricMaya::Commands;
+using namespace FabricMaya::Application;
 
 bool CommandManagerMayaCallback::s_instanceFlag = false;
 CommandManagerMayaCallback* CommandManagerMayaCallback::s_cmdManagerMayaCallback = 0;
@@ -47,22 +46,8 @@ CommandManagerMayaCallback *CommandManagerMayaCallback::GetManagerCallback()
   return s_cmdManagerMayaCallback;
 }
 
-inline QString encodeJSONChars(
-  QString const&string)
-{
-  QString result = string;
-  result = result.replace("\"", "'").replace("\\", "\\\\").replace(" ", "");
-  return result.replace("\r", "").replace("\n", "").replace("\t", "");
-}
-
-inline QString encodeJSON(
-  QString const&string)
-{
-  return "\"" + encodeJSONChars(string) + "\"";
-}
-
 inline void encodeArg(
-  const QString &arg,
+  QString const&arg,
   std::stringstream &cmdArgs)
 {
   cmdArgs << ' ';
@@ -74,6 +59,8 @@ void CommandManagerMayaCallback::onCommandDone(
   bool addToStack,
   bool replaceLog)
 {
+  FABRIC_MAYA_CATCH_BEGIN();
+
   if(addToStack)
   {
     std::stringstream fabricCmd;
@@ -85,9 +72,8 @@ void CommandManagerMayaCallback::onCommandDone(
 
     if(scriptCmd)
     {
-      // Check if it's a BaseRTValScriptableCommand,
-      // to know how to cast the string.
       BaseRTValScriptableCommand *rtValScriptCmd = qobject_cast<BaseRTValScriptableCommand*>(cmd);
+      
       foreach(QString key, scriptCmd->getArgKeys())
       {
         if(!scriptCmd->hasArgFlag(key, CommandArgFlags::DONT_LOG_ARG))
@@ -97,17 +83,22 @@ void CommandManagerMayaCallback::onCommandDone(
           {
             QString path = rtValScriptCmd->getRTValArgPath(key).toUtf8().constData();
             if(!path.isEmpty())
-              encodeArg("\"<" + path + ">\"", fabricCmd);
+              encodeArg(
+                "\"<" + path + ">\"", 
+                fabricCmd
+                );
+
             else
               encodeArg(
                 CommandArgHelpers::encodeJSON(RTValUtil::toJSON(rtValScriptCmd->getRTValArgValue(key))), 
-                  fabricCmd
-                  );
+                fabricCmd
+                );
           }
           else
             encodeArg(
               scriptCmd->getArg(key), 
-              fabricCmd);
+              fabricCmd
+              );
         }
       }
     }
@@ -117,49 +108,35 @@ void CommandManagerMayaCallback::onCommandDone(
     m_createdFromManagerCallback = true;
     MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), true);
   }
+
+  FABRIC_MAYA_CATCH_END("CommandManagerMayaCallback::onCommandDone");
 }
 
 void CommandManagerMayaCallback::plug()
 {
-  try
-  {
-    FabricCore::Client client = FabricDFGWidget::GetCoreClient();
-    new Application::FabricApplicationStates(client);
-    
-    KLCommandRegistry *registry = new KLCommandRegistry();
-    registry->synchronizeKL();
-    
-    KLCommandManager *manager = new KLCommandManager();
-    
-    QObject::connect(
-      manager,
-      SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, bool)),
-      this,
-      SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, bool))
-      );
-  }
-  catch (std::string &e) 
-  {
-    mayaLogErrorFunc(
-      QString(
-        QString("CommandManagerMayaCallback::CommandManagerMayaCallback, exception: ") + 
-        e.c_str()
-        ).toUtf8().constData()
-      );
-  }
-}
+  FABRIC_MAYA_CATCH_BEGIN();
 
-void CommandManagerMayaCallback::reset()
-{
-  CommandManager::getCommandManager()->clear();
-
-  KLCommandRegistry *registry = qobject_cast<KLCommandRegistry*>(
-    CommandRegistry::getCommandRegistry());
+  FabricCore::Client client = FabricDFGWidget::GetCoreClient();
+  new FabricUI::Application::FabricApplicationStates(client);
+  
+  KLCommandRegistry *registry = new KLCommandRegistry();
   registry->synchronizeKL();
+  
+  KLCommandManager *manager = new KLCommandManager();
+  QObject::connect(
+    manager,
+    SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, bool)),
+    this,
+    SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, bool))
+    );
+
+  FABRIC_MAYA_CATCH_END("CommandManagerMayaCallback::plug");
 }
 
 void CommandManagerMayaCallback::unplug()
-{
+{  
+  FABRIC_MAYA_CATCH_BEGIN();
+
   CommandManager::getCommandManager()->clear();
 
   CommandManager *manager = CommandManager::getCommandManager();
@@ -169,6 +146,21 @@ void CommandManagerMayaCallback::unplug()
   CommandRegistry *registry =  CommandRegistry::getCommandRegistry();
   delete registry;
   registry = 0;
+
+  FABRIC_MAYA_CATCH_END("CommandManagerMayaCallback::unplug");
+}
+
+void CommandManagerMayaCallback::reset()
+{
+  FABRIC_MAYA_CATCH_BEGIN();
+
+  CommandManager::getCommandManager()->clear();
+
+  KLCommandRegistry *registry = qobject_cast<KLCommandRegistry*>(
+    CommandRegistry::getCommandRegistry());
+  registry->synchronizeKL();
+
+  FABRIC_MAYA_CATCH_END("CommandManagerMayaCallback::reset");
 }
 
 void CommandManagerMayaCallback::commandCreatedFromManagerCallback(

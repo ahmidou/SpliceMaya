@@ -83,7 +83,7 @@ inline void initID(const MString &panelName) {
       (FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject())
     ) 
   {
-    CommandManagerMayaCallback::GetManagerCallback()->reset();
+    FabricMaya::Commands::CommandManagerMayaCallback::GetManagerCallback()->reset();
     FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
     FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
     RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);

@@ -2,10 +2,14 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
 
-#pragma once
+#ifndef __MAYA_FABRIC_COMMAND__
+#define __MAYA_FABRIC_COMMAND__
 
 #include <maya/MArgList.h>
 #include <maya/MPxCommand.h>
+
+namespace FabricMaya {
+namespace Commands {
 
 class FabricCommand : public MPxCommand
 {
@@ -46,12 +50,7 @@ class FabricCommand : public MPxCommand
     FabricCommand();
 
     virtual ~FabricCommand();
-
-    /// \internal
-    /// To check if the command is created from 
-    /// the fabric manager or explicitely from Maya.
-    static MString createFromManagerCallback;
-
+ 
     /// Implementation of MPxCommand.
     static void* creator();
     
@@ -73,3 +72,8 @@ class FabricCommand : public MPxCommand
     /// \internal
     bool m_isUndoable;
 };
+
+} // namespace Commands
+} // namespace FabricMaya
+
+#endif // __MAYA_FABRIC_COMMAND__

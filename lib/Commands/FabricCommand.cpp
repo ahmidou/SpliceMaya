@@ -6,11 +6,11 @@
 #include "FabricSpliceHelpers.h"
 #include "CommandManagerMayaCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
+#include "../Application/FabricMayaException.h"
 
-using namespace FabricUI;
 using namespace FabricUI::Commands;
- 
-MString FabricCommand::createFromManagerCallback = "FabricMayaCommand_createFromManagerCallback";
+using namespace FabricMaya::Commands;
+using namespace FabricMaya::Application;
 
 FabricCommand::FabricCommand()
   : m_isUndoable(false)
@@ -35,91 +35,63 @@ MStatus FabricCommand::doIt(
   const MArgList &args)
 {
   MStatus status;
-  try
+  
+  FABRIC_MAYA_CATCH_BEGIN();
+
+  // Create the maya command assiciated with the fabric command.
+  // The maya command does nothing since all the logic is done
+  // by the fabric command framework.
+  if(CommandManagerMayaCallback::GetManagerCallback()->isCommandCreatedFromManagerCallback())
   {
-    // Create the maya command.
-    if(CommandManagerMayaCallback::GetManagerCallback()->isCommandCreatedFromManagerCallback())
-    {
-      m_isUndoable = true;
-      setHistoryOn(true); 
-      CommandManagerMayaCallback::GetManagerCallback()->commandCreatedFromManagerCallback(false);
-    }
-    
-    // Create the fabric command.
-    // The maya will be created after.
-    else
-    {
-      m_isUndoable = false;
-      setHistoryOn(false);
-
-      // Get the command args.
-      QMap<QString, QString > cmdArgs;
-      for(unsigned int i=1; i<args.length(&status); ++i)
-        cmdArgs[args.asString(i, &status).asChar()] = args.asString(++i, &status).asChar();
-
-      CommandManager::getCommandManager()->createCommand(
-        args.asString(0, &status).asChar(), 
-        cmdArgs);
-    }
-    
-    status = MS::kSuccess;
+    m_isUndoable = true;
+    setHistoryOn(true); 
+    CommandManagerMayaCallback::GetManagerCallback()->commandCreatedFromManagerCallback(false);
   }
-
-  catch (std::string &e) 
+  
+  // Create the fabric command. The maya will be created 
+  // after by the CommandManager/CommandManagerCallback.
+  else
   {
-    mayaLogErrorFunc(
-      QString(
-        QString("FabricCommand::doIt, exception: ") + 
-        e.c_str()
-        ).toUtf8().constData()
-      );
+    m_isUndoable = false;
+    setHistoryOn(false);
+
+    // Get the command args.
+    QMap<QString, QString > cmdArgs;
+    for(unsigned int i=1; i<args.length(&status); ++i)
+      cmdArgs[args.asString(i, &status).asChar()] = args.asString(++i, &status).asChar();
+    
+    CommandManager::getCommandManager()->createCommand(
+      args.asString(0, &status).asChar(), 
+      cmdArgs);
   }
+  
+  status = MS::kSuccess;
+
+  FABRIC_MAYA_CATCH_END("FabricCommand::doIt");
 
   return status;
 }
 
 MStatus FabricCommand::undoIt()
 {
-  MStatus status = MS::kFailure;
+  FABRIC_MAYA_CATCH_BEGIN();
+ 
+  CommandManager::getCommandManager()->undoCommand();
+  return MS::kSuccess;
 
-  try
-  {
-    CommandManager::getCommandManager()->undoCommand();
-    status = MS::kSuccess;
-  }
+  FABRIC_MAYA_CATCH_END("FabricCommand::undoIt");
 
-  catch (std::string &e) 
-  {
-    mayaLogErrorFunc(
-      QString(
-        QString("FabricCommand::undoIt, exception: ") + 
-        e.c_str()
-        ).toUtf8().constData()
-      );
-  }
-
-  return status;
+  return MS::kFailure;
 }
 
 MStatus FabricCommand::redoIt()
 {
-  MStatus status = MS::kFailure;
+  FABRIC_MAYA_CATCH_BEGIN();
 
-  try
-  {
-    CommandManager::getCommandManager()->redoCommand();
-    status = MS::kSuccess;
-  }
+  CommandManager::getCommandManager()->redoCommand();
+  return MS::kSuccess;
+  
+  FABRIC_MAYA_CATCH_END("FabricCommand::redoIt");
 
-  catch (std::string &e) 
-  {
-    mayaLogErrorFunc(
-      QString(
-        QString("FabricCommand::redoIt, exception: ") + 
-        e.c_str()
-        ).toUtf8().constData()
-      );
-  }
-
-  return status;
+  return MS::kFailure;
 }

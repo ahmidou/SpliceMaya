@@ -39,8 +39,9 @@ uses_qt5 = int(float(str(MAYA_VERSION[:4]))) >= 2017
 mayaFlags = {
   'CPPPATH': [
       env.Dir('lib').srcnode(),
-      env.Dir('lib').Dir('Render').srcnode(),
+      env.Dir('lib').Dir('Application').srcnode(),
       env.Dir('lib').Dir('Commands').srcnode(),
+      env.Dir('lib').Dir('Render').srcnode(),
       env.Dir('plugin').srcnode(),
     ],
   'LIBPATH': [
@@ -133,6 +134,7 @@ if not os.path.exists(uiSconscript.abspath):
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
+env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Application')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Commands')])
 
 if int(float(str(MAYA_VERSION[:4]))) >= 2016:
@@ -178,6 +180,7 @@ target = 'FabricMaya'
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
 libSources += env.Glob('lib/Commands/*.cpp')
+libSources += env.Glob('lib/Application/*.cpp')
 if int(float(str(MAYA_VERSION[:4]))) >= 2016:
   libSources += env.Glob('lib/Render/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
