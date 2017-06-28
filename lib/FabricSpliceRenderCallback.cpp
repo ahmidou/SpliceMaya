@@ -17,7 +17,7 @@
 #include <maya/MEventMessage.h>
 #include <maya/MViewport2Renderer.h>
 #if MAYA_API_VERSION >= 201600
-#include "Viewport2Override.h"
+#include "Viewports/FabricViewport2Override.h"
 #endif
 #include "Commands/FabricCommandManagerCallback.h"
 
@@ -337,7 +337,7 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
   }
 }
 
-// Special preDraw Callback for Viewport2Override in Maya >= 2016
+// Special preDraw Callback for FabricViewport2Override in Maya >= 2016
 #if MAYA_API_VERSION >= 201600
 void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDrawContext &context, void* clientData) {
 
@@ -345,7 +345,7 @@ void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDr
   context.renderingDestination(panelName);
 
   MString renderName = getActiveRenderName();
-  if(renderName != "Viewport2Override")
+  if(renderName != FabricViewport2Override_name)
     return;
 
   int oriX, oriY, width, height;
@@ -378,7 +378,7 @@ void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void
 #if MAYA_API_VERSION >= 201600
   if(
       getActiveRenderName(view) == "vp2Renderer" ||   
-      getActiveRenderName(view) == "Viewport2Override"
+      getActiveRenderName(view) == FabricViewport2Override_name
     )
     return;
 #endif
@@ -419,14 +419,14 @@ void FabricSpliceRenderCallback::plug() {
 
 // In Maya >= 2016, we override the viewport 2.0
 // Create a pretDraw Callback, the postDraw Callback is done 
-// within the override, cf Viewport2Override class.
+// within the override, cf FabricViewport2Override class.
 #if MAYA_API_VERSION >= 201600
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer) 
     {
-      Viewport2Override *overridePtr = new Viewport2Override("Viewport2Override");
+      FabricViewport2Override *overridePtr = new FabricViewport2Override(FabricViewport2Override_name);
       if(overridePtr) renderer->registerOverride(overridePtr);
-      renderer->addNotification(viewport2OverridePreDrawCallback, "Viewport2OverridePreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
+      renderer->addNotification(viewport2OverridePreDrawCallback, "FabricViewport2OverridePreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
     }
 #endif
 }
@@ -444,8 +444,8 @@ void FabricSpliceRenderCallback::unplug() {
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer)
     {
-      renderer->removeNotification("Viewport2OverridePreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic);
-      const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride(Viewport2Override_name);
+      renderer->removeNotification("FabricViewport2OverridePreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic);
+      const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride(FabricViewport2Override_name);
       if(overridePtr)
       {
         renderer->deregisterOverride(overridePtr);

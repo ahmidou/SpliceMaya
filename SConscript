@@ -41,7 +41,7 @@ mayaFlags = {
       env.Dir('lib').srcnode(),
       env.Dir('lib').Dir('Application').srcnode(),
       env.Dir('lib').Dir('Commands').srcnode(),
-      env.Dir('lib').Dir('Render').srcnode(),
+      env.Dir('lib').Dir('Viewports').srcnode(),
       env.Dir('plugin').srcnode(),
     ],
   'LIBPATH': [
@@ -138,7 +138,7 @@ env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Application
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Commands')])
 
 if int(float(str(MAYA_VERSION[:4]))) >= 2016:
-  env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Render')])
+  env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Viewports')])
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
 env.Append(CPPPATH = [uiSconscript.dir])
@@ -182,7 +182,7 @@ libSources = env.Glob('lib/*.cpp')
 libSources += env.Glob('lib/Commands/*.cpp')
 libSources += env.Glob('lib/Application/*.cpp')
 if int(float(str(MAYA_VERSION[:4]))) >= 2016:
-  libSources += env.Glob('lib/Render/*.cpp')
+  libSources += env.Glob('lib/Viewports/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 libSources += env.QTMOC(env.File('lib/FabricImportPatternDialog.h'))
 libSources += env.QTMOC(env.File('lib/FabricExportPatternDialog.h'))

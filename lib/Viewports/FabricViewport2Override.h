@@ -12,14 +12,14 @@
 
 using namespace MHWRender;
 
-const MString Viewport2Override_name = "Viewport2Override";
+const MString FabricViewport2Override_name = "Viewport2Override";
 
-class Viewport2Override : public MRenderOverride {
+class FabricViewport2Override : public MRenderOverride {
 
   public:
-    Viewport2Override(const MString &name);
+    FabricViewport2Override(const MString &name);
     
-    virtual ~Viewport2Override();
+    virtual ~FabricViewport2Override();
 
     virtual MString uiName() const;
     

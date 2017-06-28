@@ -2,7 +2,7 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#include "Viewport2Override.h"
+#include "FabricViewport2Override.h"
 using namespace MHWRender;
 
 class SceneRenderOverride : public MSceneRender {
@@ -40,7 +40,7 @@ class UserRenderOperationOverride : public MUserRenderOperation {
 };
 
 
-Viewport2Override::Viewport2Override(const MString &name) : MRenderOverride(name) {
+FabricViewport2Override::FabricViewport2Override(const MString &name) : MRenderOverride(name) {
   mCurrentOp = -1;
   mOps[0] = mOps[1] = mOps[2] = mOps[3] = NULL;
   mOpNames[0] = "SceneRenderOverride";
@@ -49,22 +49,22 @@ Viewport2Override::Viewport2Override(const MString &name) : MRenderOverride(name
   mOpNames[3] = "SimpleTargetOverride";
 }
 
-Viewport2Override::~Viewport2Override() {
+FabricViewport2Override::~FabricViewport2Override() {
   for(uint32_t i=0; i<4; i++) {
     delete mOps[i];
     mOps[i] = NULL;
   }
 }
 
-MString Viewport2Override::uiName() const { 
+MString FabricViewport2Override::uiName() const { 
   return "Fabric Viewport 2.0"; 
 }
     
-DrawAPI Viewport2Override::supportedDrawAPIs() const { 
+DrawAPI FabricViewport2Override::supportedDrawAPIs() const { 
   return kAllDevices; 
 };
 
-MStatus Viewport2Override::setup(const MString &destination) {
+MStatus FabricViewport2Override::setup(const MString &destination) {
   MRenderer *theRenderer = MRenderer::theRenderer();
   if(!theRenderer) return MStatus::kFailure;
  
@@ -77,21 +77,21 @@ MStatus Viewport2Override::setup(const MString &destination) {
   return (!mOps[0] || !mOps[1] || !mOps[2] || !mOps[3]) ? MStatus::kFailure : MStatus::kSuccess;
 }
 
-MStatus Viewport2Override::cleanup() {
+MStatus FabricViewport2Override::cleanup() {
   mCurrentOp = -1;
   return MStatus::kSuccess;
 }
   
-bool Viewport2Override::startOperationIterator() {
+bool FabricViewport2Override::startOperationIterator() {
   mCurrentOp = 0;
   return true;
 }
 
-MRenderOperation* Viewport2Override::renderOperation() {
+MRenderOperation* FabricViewport2Override::renderOperation() {
   return (mCurrentOp >= 0 && mCurrentOp < 4) ? mOps[mCurrentOp] : NULL;
 }
 
-bool Viewport2Override::nextRenderOperation() {
+bool FabricViewport2Override::nextRenderOperation() {
   mCurrentOp++;
   return (mCurrentOp < 4);
 }
