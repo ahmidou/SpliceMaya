@@ -10,8 +10,8 @@
 #include <FabricSplice.h>
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGBaseInterface.h"
-#include "FabricSpliceToolContext.h"
-#include "FabricSpliceRenderCallback.h"
+#include "FabricToolContext.h"
+#include "FabricRenderCallback.h"
 #include <FabricUI/Viewports/QtToKLEvent.h>
 #include "../Application/FabricMayaException.h"
 #include <FabricUI/Commands/KLCommandManager.h>
@@ -21,25 +21,25 @@ using namespace FabricUI::Commands;
 using namespace FabricMaya::Application;
 
 /////////////////////////////////////////////////////
-// FabricSpliceManipulationCmd
-RTVal FabricSpliceManipulationCmd::s_rtval_commands;
+// FabricManipulationCmd
+RTVal FabricManipulationCmd::s_rtval_commands;
 
-FabricSpliceManipulationCmd::FabricSpliceManipulationCmd() {
+FabricManipulationCmd::FabricManipulationCmd() {
   m_rtval_commands = s_rtval_commands;
 }
 
-FabricSpliceManipulationCmd::~FabricSpliceManipulationCmd() {
+FabricManipulationCmd::~FabricManipulationCmd() {
 }
 
-void* FabricSpliceManipulationCmd::creator() {
-  return new FabricSpliceManipulationCmd;
+void* FabricManipulationCmd::creator() {
+  return new FabricManipulationCmd;
 }
 
-MStatus FabricSpliceManipulationCmd::doIt(const MArgList &args) {
+MStatus FabricManipulationCmd::doIt(const MArgList &args) {
   return MStatus::kSuccess;
 }
 
-MStatus FabricSpliceManipulationCmd::redoIt() {
+MStatus FabricManipulationCmd::redoIt() {
   try
   {
     if(m_rtval_commands.isValid()){
@@ -58,7 +58,7 @@ MStatus FabricSpliceManipulationCmd::redoIt() {
   }
 }
 
-MStatus FabricSpliceManipulationCmd::undoIt() {
+MStatus FabricManipulationCmd::undoIt() {
   try
   {
     if(m_rtval_commands.isValid()){
@@ -77,48 +77,48 @@ MStatus FabricSpliceManipulationCmd::undoIt() {
   }
 }
 
-bool FabricSpliceManipulationCmd::isUndoable() const {
+bool FabricManipulationCmd::isUndoable() const {
   return true;
 }
 
 
 /////////////////////////////////////////////////////
-// FabricSpliceManipulationCmd
-FabricSpliceToolCmd::FabricSpliceToolCmd() {
-  setCommandString("FabricSpliceToolCmd");
+// FabricManipulationCmd
+FabricToolCmd::FabricToolCmd() {
+  setCommandString("FabricToolCmd");
 }
 
-FabricSpliceToolCmd::~FabricSpliceToolCmd() {
+FabricToolCmd::~FabricToolCmd() {
 }
 
-void* FabricSpliceToolCmd::creator() {
-  return new FabricSpliceToolCmd;
+void* FabricToolCmd::creator() {
+  return new FabricToolCmd;
 }
 
-MStatus FabricSpliceToolCmd::doIt(const MArgList &args) {
+MStatus FabricToolCmd::doIt(const MArgList &args) {
   return redoIt();
 }
 
-MStatus FabricSpliceToolCmd::redoIt() {
+MStatus FabricToolCmd::redoIt() {
   // we don't do anything during the tool really
   return MStatus::kSuccess;
 }
 
-MStatus FabricSpliceToolCmd::undoIt() {
+MStatus FabricToolCmd::undoIt() {
   return MStatus::kSuccess;
 }
 
-bool FabricSpliceToolCmd::isUndoable() const {
+bool FabricToolCmd::isUndoable() const {
   return false;
 }
 
 
 
 /////////////////////////////////////////////////////
-// FabricSpliceToolContext
+// FabricToolContext
 class EventFilterObject : public QObject {
   public:
-    FabricSpliceToolContext *tool;
+    FabricToolContext *tool;
     M3dView view;
     bool eventFilter(QObject *object, QEvent *event);
 };
@@ -127,14 +127,14 @@ static std::map<void*, EventFilterObject*> sEventFilterObjectMap;
 
 const char helpString[] = "Click and drag to interact with Fabric:Splice.";
 
-FabricSpliceToolContext::FabricSpliceToolContext() {
+FabricToolContext::FabricToolContext() {
 }
 
-void FabricSpliceToolContext::getClassName(MString & name) const {
+void FabricToolContext::getClassName(MString & name) const {
   name.set("FabricSpliceTool");
 }
 
-void FabricSpliceToolContext::toolOnSetup(MEvent &) {
+void FabricToolContext::toolOnSetup(MEvent &) {
   M3dView view = M3dView::active3dView();
   setCursor(MCursor::editCursor);
   setHelpString(helpString);
@@ -187,10 +187,10 @@ void FabricSpliceToolContext::toolOnSetup(MEvent &) {
   view.widget()->setFocus();
   view.refresh(true);
 
-  FABRIC_MAYA_CATCH_END("FabricSpliceToolContext::toolOnSetup");
+  FABRIC_MAYA_CATCH_END("FabricToolContext::toolOnSetup");
 }
 
-void FabricSpliceToolContext::toolOffCleanup() {
+void FabricToolContext::toolOffCleanup() {
   
   FABRIC_MAYA_CATCH_BEGIN();
 
@@ -213,38 +213,38 @@ void FabricSpliceToolContext::toolOffCleanup() {
   M3dView view = M3dView::active3dView();
   view.widget()->clearFocus();
   view.refresh(true);
-  FABRIC_MAYA_CATCH_END("FabricSpliceToolContext::toolOffCleanup");
+  FABRIC_MAYA_CATCH_END("FabricToolContext::toolOffCleanup");
 }
 
-MStatus FabricSpliceToolContext::doPress(MEvent & event) {
+MStatus FabricToolContext::doPress(MEvent & event) {
   return MS::kSuccess;
 }
 
-MStatus FabricSpliceToolContext::doDrag(MEvent & event) {
+MStatus FabricToolContext::doDrag(MEvent & event) {
   return MS::kSuccess;
 }
 
-MStatus FabricSpliceToolContext::doRelease(MEvent & event) {
+MStatus FabricToolContext::doRelease(MEvent & event) {
   return MS::kSuccess;
 }
 
-MStatus FabricSpliceToolContext::doEnterRegion(MEvent & event) {
+MStatus FabricToolContext::doEnterRegion(MEvent & event) {
   return setHelpString(helpString);
 }
 
-MPxContext* FabricSpliceToolContextCmd::makeObj() {
-  return new FabricSpliceToolContext;
+MPxContext* FabricToolContextCmd::makeObj() {
+  return new FabricToolContext;
 }
 
-void* FabricSpliceToolContextCmd::creator() {
-  return new FabricSpliceToolContextCmd;
+void* FabricToolContextCmd::creator() {
+  return new FabricToolContextCmd;
 }
 
 bool EventFilterObject::eventFilter(QObject *object, QEvent *event) {
   return tool->onEvent(event);
 }
  
-bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
+bool FabricToolContext::onIDEvent(QEvent *event, M3dView &view) {
   
   const Client *client = 0;
   FECS_DGGraph_getClient(&client);
@@ -255,7 +255,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     return false;
   }
 
-  if(!FabricSpliceRenderCallback::sDrawContext.isValid())
+  if(!FabricRenderCallback::sDrawContext.isValid())
   {
     mayaLogFunc("InlineDrawing not constructed yet. A DrawingHandle Node must be created before the manipulation tool can be activated.");
     return false;
@@ -263,7 +263,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
 
   FABRIC_MAYA_CATCH_BEGIN();
 
-  RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
+  RTVal viewport = FabricRenderCallback::sDrawContext.maybeGetMember("viewport");
   RTVal klevent = QtToKLEvent(event, viewport, "Maya" );
    
   if(klevent.isValid() && !klevent.isNullObject())
@@ -418,7 +418,7 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     if(host.callMethod("Boolean", "undoRedoCommandsAdded", 0, 0).getBoolean())
     {
       // Cache the rtvals in a static variable that the command will then stor in the undo stack.
-      FabricSpliceManipulationCmd::s_rtval_commands = host.callMethod(
+      FabricManipulationCmd::s_rtval_commands = host.callMethod(
         "UndoRedoCommand[]", 
         "getUndoRedoCommands", 
         0, 
@@ -432,18 +432,18 @@ bool FabricSpliceToolContext::onIDEvent(QEvent *event, M3dView &view) {
     return result;
   }
 
-  FABRIC_MAYA_CATCH_END("FabricSpliceToolContext::onEvent");
+  FABRIC_MAYA_CATCH_END("FabricToolContext::onEvent");
 
   return false;
 }
 
-bool FabricSpliceToolContext::onRTR2Event(QEvent *event, M3dView &view) {
+bool FabricToolContext::onRTR2Event(QEvent *event, M3dView &view) {
 
   MString panelName;
   M3dView::getM3dViewFromModelPanel(panelName, view);
   unsigned int panelId = panelName.substringW(panelName.length()-2, panelName.length()-1).asInt();
  
-  bool res = FabricSpliceRenderCallback::shHostGLRenderer.onEvent(
+  bool res = FabricRenderCallback::shHostGLRenderer.onEvent(
     panelId, 
     event, 
     false);
@@ -455,7 +455,7 @@ bool FabricSpliceToolContext::onRTR2Event(QEvent *event, M3dView &view) {
     {
       if(mouseEvent->modifiers() & Qt::ShiftModifier)
       {
-        FabricSpliceRenderCallback::shHostGLRenderer.emitShowContextualMenu(
+        FabricRenderCallback::shHostGLRenderer.emitShowContextualMenu(
           panelId,
           mouseEvent->pos(), 
           view.widget());
@@ -468,9 +468,9 @@ bool FabricSpliceToolContext::onRTR2Event(QEvent *event, M3dView &view) {
   return res;
 }
 
-bool FabricSpliceToolContext::onEvent(QEvent *event) {
+bool FabricToolContext::onEvent(QEvent *event) {
 
-  if(!FabricSpliceRenderCallback::canDraw()) 
+  if(!FabricRenderCallback::canDraw()) 
   {
     mayaLogFunc("Viewport not constructed yet.");
     return false;
@@ -485,12 +485,12 @@ bool FabricSpliceToolContext::onEvent(QEvent *event) {
   FABRIC_MAYA_CATCH_BEGIN();
 
   M3dView view = M3dView::active3dView();
-  if(!FabricSpliceRenderCallback::isRTR2Enable())
+  if(!FabricRenderCallback::isRTR2Enable())
    return onIDEvent(event, view);
   else
     return onRTR2Event(event, view);
 
-  FABRIC_MAYA_CATCH_END("FabricSpliceToolContext::onEvent");
+  FABRIC_MAYA_CATCH_END("FabricToolContext::onEvent");
 
   // the event was not handled by FabricEngine manipulation system. 
   return false;

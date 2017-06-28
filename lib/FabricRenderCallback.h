@@ -14,7 +14,7 @@ bool isRTRPassEnabled();
 
 void enableRTRPass(bool enable);
 
-class FabricSpliceRenderCallback {
+class FabricRenderCallback {
 
   public:
 

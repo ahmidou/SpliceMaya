@@ -27,7 +27,7 @@
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceEditorCmd.h"
 #include "FabricSpliceEditorWidget.h"
-#include "FabricSpliceRenderCallback.h"
+#include "FabricRenderCallback.h"
 #include "FabricSpliceHelpers.h"
 
 #define kActionFlag "-a"

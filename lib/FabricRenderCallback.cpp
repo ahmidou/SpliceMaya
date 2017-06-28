@@ -4,7 +4,7 @@
 
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGBaseInterface.h"
-#include "FabricSpliceRenderCallback.h"
+#include "FabricRenderCallback.h"
 
 #include <maya/M3dView.h>
 #include <maya/MGlobal.h>
@@ -24,11 +24,11 @@
 using namespace FabricUI;
 using namespace FabricCore;
 
-uint32_t FabricSpliceRenderCallback::gViewId = 0;
+uint32_t FabricRenderCallback::gViewId = 0;
 bool gRTRPassEnabled = true;
-bool FabricSpliceRenderCallback::gCallbackEnabled = true;
-RTVal FabricSpliceRenderCallback::sDrawContext;
-SceneHub::SHGLRenderer FabricSpliceRenderCallback::shHostGLRenderer;
+bool FabricRenderCallback::gCallbackEnabled = true;
+RTVal FabricRenderCallback::sDrawContext;
+SceneHub::SHGLRenderer FabricRenderCallback::shHostGLRenderer;
 
 bool isRTRPassEnabled() {
   return gRTRPassEnabled;
@@ -38,22 +38,22 @@ void enableRTRPass(bool enable) {
   gRTRPassEnabled = enable;
 }
 
-bool FabricSpliceRenderCallback::isEnabled() {
-  return FabricSpliceRenderCallback::gCallbackEnabled;
+bool FabricRenderCallback::isEnabled() {
+  return FabricRenderCallback::gCallbackEnabled;
 }
 
-void FabricSpliceRenderCallback::enable(bool enable) {
-  FabricSpliceRenderCallback::gCallbackEnabled = enable;
+void FabricRenderCallback::enable(bool enable) {
+  FabricRenderCallback::gCallbackEnabled = enable;
 }
  
-void FabricSpliceRenderCallback::disable() {
-  FabricSpliceRenderCallback::sDrawContext.invalidate(); 
+void FabricRenderCallback::disable() {
+  FabricRenderCallback::sDrawContext.invalidate(); 
 }
  
 // **************
 
-bool FabricSpliceRenderCallback::canDraw() {
-  if(!FabricSpliceRenderCallback::gCallbackEnabled)
+bool FabricRenderCallback::canDraw() {
+  if(!FabricRenderCallback::gCallbackEnabled)
     return false;
   if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
     return false;
@@ -79,18 +79,18 @@ inline MString getActiveRenderName(const M3dView &view) {
 
 inline void initID(const MString &panelName) {
  
-  if( !FabricSpliceRenderCallback::sDrawContext.isValid() || 
-      (FabricSpliceRenderCallback::sDrawContext.isObject() && FabricSpliceRenderCallback::sDrawContext.isNullObject())
+  if( !FabricRenderCallback::sDrawContext.isValid() || 
+      (FabricRenderCallback::sDrawContext.isObject() && FabricRenderCallback::sDrawContext.isNullObject())
     ) 
   {
     FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
-    FabricSpliceRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
-    FabricSpliceRenderCallback::sDrawContext = FabricSpliceRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
-    RTVal::Create(FabricSpliceRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);
+    FabricRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
+    FabricRenderCallback::sDrawContext = FabricRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
+    RTVal::Create(FabricRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);
   }
 }
 
-bool FabricSpliceRenderCallback::isRTR2Enable() {
+bool FabricRenderCallback::isRTR2Enable() {
 #ifndef FABRIC_SCENEHUB
   return false;
 #endif
@@ -196,14 +196,14 @@ inline void setupIDViewport(
   const MFnCamera &mCamera,
   const MMatrix &projection) 
 {
-  if(!FabricSpliceRenderCallback::canDraw()) return;
+  if(!FabricRenderCallback::canDraw()) return;
 
   initID(panelName);
 
-  FabricSpliceRenderCallback::sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
+  FabricRenderCallback::sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
 
   RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
-  RTVal viewport = FabricSpliceRenderCallback::sDrawContext.maybeGetMember("viewport");
+  RTVal viewport = FabricRenderCallback::sDrawContext.maybeGetMember("viewport");
   viewport.callMethod("", "setName", 1, &panelNameVal);
 
   M3dView view;
@@ -223,7 +223,7 @@ inline void setupIDViewport(
 
   RTVal args[3] = 
   {
-    FabricSpliceRenderCallback::sDrawContext,
+    FabricRenderCallback::sDrawContext,
     FabricSplice::constructFloat64RTVal(width),
     FabricSplice::constructFloat64RTVal(height)
   };
@@ -242,24 +242,24 @@ inline void setupRTR2Viewport(
   const MFnCamera &mCamera,
   const MMatrix &projection) 
 { 
-  if(!FabricSpliceRenderCallback::canDraw()) return;
+  if(!FabricRenderCallback::canDraw()) return;
 
-  if(!FabricSpliceRenderCallback::isRTR2Enable()) return;
+  if(!FabricRenderCallback::isRTR2Enable()) return;
 
-  FabricSpliceRenderCallback::gViewId = panelName.substringW(panelName.length()-2, panelName.length()-1).asInt();
+  FabricRenderCallback::gViewId = panelName.substringW(panelName.length()-2, panelName.length()-1).asInt();
   if(gRenderName != renderName)
   {
     gRenderName = renderName;
-    FabricSpliceRenderCallback::shHostGLRenderer.removeViewport(FabricSpliceRenderCallback::gViewId);
+    FabricRenderCallback::shHostGLRenderer.removeViewport(FabricRenderCallback::gViewId);
   }
 
-  RTVal viewport = FabricSpliceRenderCallback::shHostGLRenderer.getOrAddViewport(FabricSpliceRenderCallback::gViewId);
+  RTVal viewport = FabricRenderCallback::shHostGLRenderer.getOrAddViewport(FabricRenderCallback::gViewId);
   RTVal camera = viewport.callMethod("RTRBaseCamera", "getRTRCamera", 0, 0);
   setCamera(false, width, height, mCamera, camera);
   setProjection(false, projection, camera);
 }
 
-void FabricSpliceRenderCallback::drawID() {
+void FabricRenderCallback::drawID() {
   if(!canDraw()) return;
 
   try
@@ -274,20 +274,20 @@ void FabricSpliceRenderCallback::drawID() {
   }
   catch(Exception e)
   {
-    MString str("FabricSpliceRenderCallback::drawID: ");
+    MString str("FabricRenderCallback::drawID: ");
     str += e.getDesc_cstr();
     mayaLogErrorFunc(str.asChar());
   } 
 }
 
-MStatus FabricSpliceRenderCallback::drawRTR2(uint32_t width, uint32_t height, uint32_t phase) {
+MStatus FabricRenderCallback::drawRTR2(uint32_t width, uint32_t height, uint32_t phase) {
   MStatus status = MStatus::kSuccess;
 
   if(!canDraw()) return status;
 
   if(isRTR2Enable())
   {
-    FabricSpliceRenderCallback::shHostGLRenderer.render(
+    FabricRenderCallback::shHostGLRenderer.render(
       gViewId,
       width,
       height,
@@ -306,7 +306,7 @@ MStatus FabricSpliceRenderCallback::drawRTR2(uint32_t width, uint32_t height, ui
   return status;
 }
 
-void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void *clientData) {
+void FabricRenderCallback::preDrawCallback(const MString &panelName, void *clientData) {
   
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
@@ -339,13 +339,13 @@ void FabricSpliceRenderCallback::preDrawCallback(const MString &panelName, void 
 
 // Special preDraw Callback for FabricViewport2Override in Maya >= 2016
 #if MAYA_API_VERSION >= 201600
-void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDrawContext &context, void* clientData) {
+void FabricRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDrawContext &context, void* clientData) {
 
   MString panelName;
   context.renderingDestination(panelName);
 
   MString renderName = getActiveRenderName();
-  if(renderName != FabricViewport2Override_name)
+  if(renderName != FabricMaya::Viewports::FabricViewport2Override_name)
     return;
 
   int oriX, oriY, width, height;
@@ -353,7 +353,7 @@ void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDr
 
   MDagPath cameraDag = context.getCurrentCameraPath(&status);
   MFnCamera mCamera(cameraDag);
-  MMatrix projection = context.getMatrix(MDrawContext::kProjectionMtx, &status);
+  MMatrix projection = context.getMatrix(MHWRender::MDrawContext::kProjectionMtx, &status);
 
   if(!isRTR2Enable())
   {
@@ -368,7 +368,7 @@ void FabricSpliceRenderCallback::viewport2OverridePreDrawCallback(MHWRender::MDr
 }
 #endif
 
-void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void *clientData) {
+void FabricRenderCallback::postDrawCallback(const MString &panelName, void *clientData) {
 
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
@@ -378,7 +378,7 @@ void FabricSpliceRenderCallback::postDrawCallback(const MString &panelName, void
 #if MAYA_API_VERSION >= 201600
   if(
       getActiveRenderName(view) == "vp2Renderer" ||   
-      getActiveRenderName(view) == FabricViewport2Override_name
+      getActiveRenderName(view) == FabricMaya::Viewports::FabricViewport2Override_name
     )
     return;
 #endif
@@ -404,7 +404,7 @@ inline void onModelPanelSetFocus(void *client) {
   MGlobal::executeCommandOnIdle("refresh;", false);
 }
 
-void FabricSpliceRenderCallback::plug() {
+void FabricRenderCallback::plug() {
   
   gOnPanelFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
   
@@ -424,14 +424,23 @@ void FabricSpliceRenderCallback::plug() {
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer) 
     {
-      FabricViewport2Override *overridePtr = new FabricViewport2Override(FabricViewport2Override_name);
-      if(overridePtr) renderer->registerOverride(overridePtr);
-      renderer->addNotification(viewport2OverridePreDrawCallback, "FabricViewport2OverridePreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic, 0);
+      FabricMaya::Viewports::FabricViewport2Override *overridePtr = new FabricMaya::Viewports::FabricViewport2Override(
+        FabricMaya::Viewports::FabricViewport2Override_name);
+      
+      if(overridePtr) 
+        renderer->registerOverride(
+          overridePtr);
+      
+      renderer->addNotification(
+        viewport2OverridePreDrawCallback, 
+        "FabricViewport2OverridePreDrawPass", 
+        MHWRender::MPassContext::kBeginSceneRenderSemantic, 
+        0);
     }
 #endif
 }
 
-void FabricSpliceRenderCallback::unplug() {
+void FabricRenderCallback::unplug() {
 
   MEventMessage::removeCallback(gOnPanelFocusCallbackId);
   for(int i=0; i<gCallbackCount; i++) 
@@ -444,11 +453,18 @@ void FabricSpliceRenderCallback::unplug() {
     MHWRender::MRenderer* renderer = MHWRender::MRenderer::theRenderer();
     if(renderer)
     {
-      renderer->removeNotification("FabricViewport2OverridePreDrawPass", MHWRender::MPassContext::kBeginSceneRenderSemantic);
-      const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride(FabricViewport2Override_name);
+      renderer->removeNotification(
+        "FabricViewport2OverridePreDrawPass", 
+        MHWRender::MPassContext::kBeginSceneRenderSemantic);
+
+      const MHWRender::MRenderOverride* overridePtr = renderer->findRenderOverride(
+        FabricMaya::Viewports::FabricViewport2Override_name);
+
       if(overridePtr)
       {
-        renderer->deregisterOverride(overridePtr);
+        renderer->deregisterOverride(
+          overridePtr);
+        
         delete overridePtr;
         overridePtr = 0;
       }

@@ -2,8 +2,8 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#ifndef __MAYA_FABRIC_MAYA_EXCEPTION__
-#define __MAYA_FABRIC_MAYA_EXCEPTION__
+#ifndef __FABRIC_MAYA_MAYA_EXCEPTION__
+#define __FABRIC_MAYA_MAYA_EXCEPTION__
 
 #include <FabricSplice.h>
 #include <FabricUI/Application/FabricException.h>
@@ -81,4 +81,4 @@ class FabricMayaException : public FabricUI::Application::FabricException
   } 
 
 
-#endif // __MAYA_FABRIC_MAYA_EXCEPTION__
+#endif // __FABRIC_MAYA_MAYA_EXCEPTION__

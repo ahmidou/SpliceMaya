@@ -2,8 +2,8 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
 
-#ifndef __MAYA_FABRIC_COMMAND__
-#define __MAYA_FABRIC_COMMAND__
+#ifndef __FABRIC_MAYA_COMMAND__
+#define __FABRIC_MAYA_COMMAND__
 
 #include <maya/MArgList.h>
 #include <maya/MPxCommand.h>
@@ -76,4 +76,4 @@ class FabricCommand : public MPxCommand
 } // namespace Commands
 } // namespace FabricMaya
 
-#endif // __MAYA_FABRIC_COMMAND__
+#endif // __FABRIC_MAYA_COMMAND__

@@ -9,15 +9,15 @@
 #include <FabricSplice.h>
 #include "FabricSpliceBaseInterface.h"
 
-class FabricSpliceManipulationCmd : public MPxToolCommand {
+class FabricManipulationCmd : public MPxToolCommand {
 
   private:
     FabricCore::RTVal m_rtval_commands;
     
   public:
-    FabricSpliceManipulationCmd(); 
+    FabricManipulationCmd(); 
 
-    virtual ~FabricSpliceManipulationCmd(); 
+    virtual ~FabricManipulationCmd(); 
     
     static void* creator();
 
@@ -34,11 +34,11 @@ class FabricSpliceManipulationCmd : public MPxToolCommand {
 };
 
 
-class FabricSpliceToolCmd : public MPxToolCommand {
+class FabricToolCmd : public MPxToolCommand {
   public:
-    FabricSpliceToolCmd(); 
+    FabricToolCmd(); 
 
-    virtual ~FabricSpliceToolCmd(); 
+    virtual ~FabricToolCmd(); 
     
     static void* creator();
 
@@ -52,9 +52,9 @@ class FabricSpliceToolCmd : public MPxToolCommand {
 };
 
 
-class FabricSpliceToolContext : public MPxContext {
+class FabricToolContext : public MPxContext {
   public:
-    FabricSpliceToolContext();
+    FabricToolContext();
     
     virtual void getClassName(MString & name) const;
     
@@ -81,7 +81,7 @@ class FabricSpliceToolContext : public MPxContext {
 };
 
 
-class FabricSpliceToolContextCmd : public MPxContextCommand {
+class FabricToolContextCmd : public MPxContextCommand {
   public: 
     virtual MPxContext* makeObj();
 

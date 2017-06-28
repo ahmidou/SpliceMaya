@@ -162,7 +162,7 @@ void FabricDFGWidget::setCurrentUINodeName(
           "",
           exec,
           &m_cmdHandler,
-          &FabricSpliceRenderCallback::shHostGLRenderer, 
+          &FabricRenderCallback::shHostGLRenderer, 
           false, 
           config);
 #else

@@ -27,8 +27,8 @@
 #include "FabricSpliceCommand.h"
 #include "FabricSpliceEditorCmd.h"
 #include "FabricSpliceMayaData.h"
-#include "FabricSpliceToolContext.h"
-#include "FabricSpliceRenderCallback.h"
+#include "FabricToolContext.h"
+#include "FabricRenderCallback.h"
 #include "FabricDFGCommands.h"
 #include "FabricDFGMayaDeformer_Func.h"
 #include "FabricDFGMayaDeformer_Graph.h"
@@ -110,7 +110,7 @@ void onSceneNew(void *userData){
   FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
-  FabricSpliceRenderCallback::sDrawContext.invalidate(); 
+  FabricRenderCallback::sDrawContext.invalidate(); 
 
   MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
   MGlobal::executeCommandOnIdle(cmd, false);
@@ -143,7 +143,7 @@ void onSceneLoad(void *userData){
   FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
-  FabricSpliceRenderCallback::sDrawContext.invalidate(); 
+  FabricRenderCallback::sDrawContext.invalidate(); 
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
     FabricSplice::Logging::enableTimers();
@@ -272,14 +272,14 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status = MStatus::kSuccess;
 
-  INITPLUGIN_STATE( status, plugin.registerContextCommand("FabricSpliceToolContext", FabricSpliceToolContextCmd::creator, "FabricSpliceToolCommand", FabricSpliceToolCmd::creator) );
+  INITPLUGIN_STATE( status, plugin.registerContextCommand("FabricToolContext", FabricToolContextCmd::creator, "FabricToolCommand", FabricToolCmd::creator) );
 
   loadMenu();
 
   // FE-6558 : Don't plug the render-callback if not interactive.
   // Otherwise it will crash on linux machine without DISPLAY
   if (MGlobal::mayaState() == MGlobal::kInteractive)
-    FabricSpliceRenderCallback::plug();
+    FabricRenderCallback::plug();
 
   gOnSceneSaveCallbackId            = MSceneMessage::addCallback(MSceneMessage::kBeforeSave,           onSceneSave    );
   gOnSceneLoadCallbackId            = MSceneMessage::addCallback(MSceneMessage::kAfterOpen,            onSceneLoad    );
@@ -304,7 +304,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   INITPLUGIN_STATE( status, plugin.registerCommand("fabricSplice",             FabricSpliceCommand        ::creator) );
   INITPLUGIN_STATE( status, plugin.registerCommand("fabricSpliceEditor",       FabricSpliceEditorCmd      ::creator, FabricSpliceEditorCmd::newSyntax) );
-  INITPLUGIN_STATE( status, plugin.registerCommand("fabricSpliceManipulation", FabricSpliceManipulationCmd::creator) );
+  INITPLUGIN_STATE( status, plugin.registerCommand("fabricSpliceManipulation", FabricManipulationCmd::creator) );
 
   INITPLUGIN_STATE( status, plugin.registerNode("spliceMayaNode",     FabricSpliceMayaNode    ::id, FabricSpliceMayaNode    ::creator, FabricSpliceMayaNode    ::initialize) );
   INITPLUGIN_STATE( status, plugin.registerNode("spliceMayaDeformer", FabricSpliceMayaDeformer::id, FabricSpliceMayaDeformer::creator, FabricSpliceMayaDeformer::initialize, MPxNode::kDeformerNode) );
@@ -466,7 +466,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   // FE-6558 : Don't unplug the render-callback if not interactive.
   // Otherwise it will crash on linux machine without DISPLAY
   if (MGlobal::mayaState() == MGlobal::kInteractive)
-    FabricSpliceRenderCallback::unplug();
+    FabricRenderCallback::unplug();
 
   UNINITPLUGIN_STATE( status, MDGMessage::removeCallback(gOnNodeAddedCallbackId) );
   UNINITPLUGIN_STATE( status, MDGMessage::removeCallback(gOnNodeRemovedCallbackId) );
@@ -479,7 +479,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 
   MQtUtil::deregisterUIType("FabricSpliceEditor");
 
-  UNINITPLUGIN_STATE( status, plugin.deregisterContextCommand("FabricSpliceToolContext", "FabricSpliceToolCommand") );
+  UNINITPLUGIN_STATE( status, plugin.deregisterContextCommand("FabricToolContext", "FabricToolCommand") );
 
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand("fabricDFG") );
   MQtUtil::deregisterUIType("FabricDFGWidget");

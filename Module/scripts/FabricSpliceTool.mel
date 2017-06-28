@@ -3,7 +3,7 @@ global proc fabricSpliceActivateTool()
   // check to see if the context already exists
   global string $gFabricSpliceToolName;
   if(size($gFabricSpliceToolName) == 0)
-    $gFabricSpliceToolName = `eval "FabricSpliceToolContext"`;
+    $gFabricSpliceToolName = `eval "FabricToolContext"`;
 
   string $currentTool = `currentCtx`;
   if($currentTool == $gFabricSpliceToolName)
