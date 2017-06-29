@@ -107,6 +107,10 @@ void FabricDFGBaseInterface::bindingChanged()
   m_binding.setNotificationCallback( BindingNotificationCallback, this );
   MString idStr; idStr.set(m_id);
   m_binding.setMetadata("maya_id", idStr.asChar(), false);
+
+  MFnDependencyNode thisNode(getThisMObject());
+ 
+  m_binding.setMetadata("resolver_id", thisNode.name().asChar(), false);
   m_binding.setMetadata("host_app", "Maya", false);
 
   QString resolverID = "DFGPathValueResolver_" + QString::number(m_id);
