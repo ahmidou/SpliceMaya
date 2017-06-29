@@ -514,7 +514,6 @@ bool FabricToolContext::onRTR2Event(
 bool FabricToolContext::onEvent(
   QEvent *event) 
 {
-
   if(!FabricRenderCallback::canDraw()) 
   {
     mayaLogFunc("Viewport not constructed yet.");
@@ -531,7 +530,18 @@ bool FabricToolContext::onEvent(
 
   M3dView view = M3dView::active3dView();
   if(!FabricRenderCallback::isRTR2Enable())
-   return onIDEvent(event, view);
+  {
+    bool res = onIDEvent(event, view);
+
+    if(event->type() == QEvent::MouseButtonRelease)
+    {
+      KLCommandManager *manager = qobject_cast<KLCommandManager*>(
+        CommandManager::getCommandManager());
+      manager->synchronizeKL();
+    }
+
+    return res;
+  }
   else
     return onRTR2Event(event, view);
 

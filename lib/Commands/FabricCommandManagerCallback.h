@@ -55,11 +55,12 @@ class FabricCommandManagerCallback : public QObject
     /// Called when a command has been pushed to the manager.
     /// \param cmd The command that has been pushed.
     /// \param addToStack If true, the command has been pushed in the manager stack.
-    /// \param replaceLog If true, the log of the last pushed command must be udpated.
+    /// \param merge (NoCanMerge, CanMerge or MergeDone).
     void onCommandDone(
     	FabricUI::Commands::BaseCommand *cmd,
       bool addToStack,
-      bool replaceLog
+      int canMergeID,
+      int merge
     	);
 
   private:

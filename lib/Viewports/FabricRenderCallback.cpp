@@ -2,6 +2,7 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
+#include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricRenderCallback.h"
 #include "FabricDFGBaseInterface.h"
@@ -123,12 +124,8 @@ bool FabricRenderCallback::isRTR2Enable()
   
   if(!shHostGLRenderer.getSHGLRenderer().isValid())
   {
-    const Client *client = 0;
-    FECS_DGGraph_getClient(&client);
-    if(!client) 
-      return false;
-    else
-      shHostGLRenderer.setClient(*client);
+    FabricCore::Client client = FabricDFGWidget::GetCoreClient();
+    shHostGLRenderer.setClient(client);
    
     RTVal host = FabricSplice::constructObjectRTVal("SHGLHostRenderer");
     RTVal isValidVal = FabricSplice::constructBooleanRTVal(false);
@@ -165,7 +162,7 @@ inline void setCamera(
 {
   MDagPath mCameraDag;
   MStatus status = mCamera.getPath(mCameraDag);
-  (void)status;
+  //(void)status;
   MMatrix mMatrix = mCameraDag.inclusiveMatrix();
 
   RTVal cameraMat = FabricSplice::constructRTVal("Mat44");
@@ -350,8 +347,7 @@ MStatus FabricRenderCallback::drawRTR2(
 void FabricRenderCallback::preDrawCallback(
   const MString &panelName, 
   void *clientData) 
-{
-  
+{  
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
   MString renderName = getActiveRenderName(view);
@@ -387,7 +383,6 @@ void FabricRenderCallback::viewport2OverridePreDrawCallback(
   MHWRender::MDrawContext &context, 
   void* clientData) 
 {
-
   MString panelName;
   context.renderingDestination(panelName);
 
@@ -419,7 +414,6 @@ void FabricRenderCallback::postDrawCallback(
   const MString &panelName, 
   void *clientData) 
 {
-
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
 
@@ -458,7 +452,6 @@ inline void onModelPanelSetFocus(
 
 void FabricRenderCallback::plug() 
 {
-  
   gOnPanelFocusCallbackId = MEventMessage::addEventCallback("ModelPanelSetFocus", &onModelPanelSetFocus);
   
   MStatus status;
@@ -495,7 +488,6 @@ void FabricRenderCallback::plug()
 
 void FabricRenderCallback::unplug() 
 {
-
   MEventMessage::removeCallback(gOnPanelFocusCallbackId);
   for(int i=0; i<gCallbackCount; i++) 
   {

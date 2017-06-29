@@ -49,7 +49,7 @@ class FabricMayaException : public FabricUI::Application::FabricException
       methodName, \
       "Caught Core Exception", \
       e.getDesc_cstr(), \
-      LOG \
+      FabricUI::Application::FabricException::LOG \
       ); \
   } \
   catch (FTL::JSONException &je) \
@@ -58,7 +58,7 @@ class FabricMayaException : public FabricUI::Application::FabricException
       methodName, \
       "Caught JSON Exception", \
       je.getDescCStr(), \
-      LOG \
+      FabricUI::Application::FabricException::LOG \
       ); \
   } \
   catch (FabricUI::Application::FabricException &e) \
@@ -67,7 +67,7 @@ class FabricMayaException : public FabricUI::Application::FabricException
       methodName, \
       "Caught App Exception", \
       e.what(), \
-      LOG \
+      FabricUI::Application::FabricException::LOG \
       ); \
   } \
   catch (FabricSplice::Exception &e) \
@@ -76,9 +76,8 @@ class FabricMayaException : public FabricUI::Application::FabricException
       methodName, \
       "Caught Splice Exception", \
       e.what(), \
-      LOG \
+      FabricUI::Application::FabricException::LOG \
       ); \
   } 
-
 
 #endif // __FABRIC_MAYA_MAYA_EXCEPTION__

@@ -8,10 +8,10 @@
 #include "FabricDFGWidget.h"
 #include <FabricUI/Util/RTValUtil.h>
 #include "FabricCommandManagerCallback.h"
+#include <FabricUI/Commands/CommandHelpers.h>
 #include "../Application/FabricMayaException.h"
 #include <FabricUI/Commands/KLCommandManager.h>
 #include <FabricUI/Commands/KLCommandRegistry.h>
-#include <FabricUI/Commands/CommandArgHelpers.h>
 #include <FabricUI/Commands/BaseScriptableCommand.h>
 #include <FabricUI/Commands/BaseRTValScriptableCommand.h>
 #include <FabricUI/Application/FabricApplicationStates.h>
@@ -57,11 +57,24 @@ inline void encodeArg(
 void FabricCommandManagerCallback::onCommandDone(
   BaseCommand *cmd,
   bool addToStack,
-  bool replaceLog)
+  int canMergeID,
+  int merge)
 {
+/*   std::cout 
+    << "\nFabricCommandManagerCallback::onCommandDone"
+    << ", addToStack "
+    << addToStack
+    << ", canMergeID "
+    << canMergeID
+    << ", merge "
+    << merge
+    << std::endl;
+*/
   FABRIC_MAYA_CATCH_BEGIN();
 
-  if(addToStack)
+  if( (canMergeID == CommandManager::NoCanMergeID && addToStack && merge == CommandManager::NoCanMerge) || 
+      (!addToStack && merge == CommandManager::MergeDone)
+    )
   {
     std::stringstream fabricCmd;
     fabricCmd << "FabricCommand";
@@ -83,14 +96,13 @@ void FabricCommandManagerCallback::onCommandDone(
           {
             QString path = rtValScriptCmd->getRTValArgPath(key).toUtf8().constData();
             if(!path.isEmpty())
-              encodeArg(
-                "\"<" + path + ">\"", 
+              encodeArg(CommandHelpers::encodeJSON(CommandHelpers::castToPathValuePath(path)),
                 fabricCmd
                 );
 
             else
               encodeArg(
-                CommandArgHelpers::encodeJSON(RTValUtil::toJSON(rtValScriptCmd->getRTValArgValue(key))), 
+                CommandHelpers::encodeJSON(RTValUtil::toJSON(rtValScriptCmd->getRTValArgValue(key))), 
                 fabricCmd
                 );
           }
@@ -106,7 +118,7 @@ void FabricCommandManagerCallback::onCommandDone(
     // Indicates that the command has been created already.
     // so we don't re-create it when constructing the maya command.
     m_createdFromManagerCallback = true;
-    MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), true);
+    MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), cmd->canLog());
   }
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::onCommandDone");
@@ -125,9 +137,9 @@ void FabricCommandManagerCallback::plug()
   KLCommandManager *manager = new KLCommandManager();
   QObject::connect(
     manager,
-    SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, bool)),
+    SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, int, int)),
     this,
-    SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, bool))
+    SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, int, int))
     );
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::plug");
