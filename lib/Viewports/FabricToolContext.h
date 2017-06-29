@@ -2,12 +2,16 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#pragma once
+#ifndef __FABRIC_MAYA_TOOL_CONTEXT__
+#define __FABRIC_MAYA_TOOL_CONTEXT__
 
 #include <QObject>
 #include "Foundation.h"
 #include <FabricSplice.h>
 #include "FabricSpliceBaseInterface.h"
+
+namespace FabricMaya {
+namespace Viewports {
 
 class FabricManipulationCmd : public MPxToolCommand {
 
@@ -21,7 +25,9 @@ class FabricManipulationCmd : public MPxToolCommand {
     
     static void* creator();
 
-    MStatus doIt(const MArgList& args);
+    MStatus doIt(
+      const MArgList& args
+      );
 
     MStatus redoIt();
 
@@ -42,7 +48,9 @@ class FabricToolCmd : public MPxToolCommand {
     
     static void* creator();
 
-    MStatus doIt(const MArgList& args);
+    MStatus doIt(
+      const MArgList& args
+      );
 
     MStatus redoIt();
 
@@ -56,26 +64,46 @@ class FabricToolContext : public MPxContext {
   public:
     FabricToolContext();
     
-    virtual void getClassName(MString & name) const;
-    
-    virtual void toolOnSetup(MEvent &event);
+    virtual void getClassName(
+      MString & name
+      ) const;
+  
+    virtual void toolOnSetup(
+      MEvent &event
+      );
     
     virtual void toolOffCleanup();
     
-    virtual MStatus doPress(MEvent &event);
+    virtual MStatus doPress(
+      MEvent &event
+      );
     
-    virtual MStatus doDrag(MEvent &event);
+    virtual MStatus doDrag(
+      MEvent &event
+      );
     
-    virtual MStatus doRelease(MEvent &event);
+    virtual MStatus doRelease(
+      MEvent &event
+      );
     
-    virtual MStatus doEnterRegion(MEvent &event);
+    virtual MStatus doEnterRegion(
+      MEvent &event
+      );
 
-    bool onEvent(QEvent *event);
+    bool onEvent(
+      QEvent *event
+      );
 
   private:
-    bool onIDEvent(QEvent *event, M3dView &view);
+    bool onIDEvent(
+      QEvent *event, 
+      M3dView &view
+      );
 
-    bool onRTR2Event(QEvent *event, M3dView &view);
+    bool onRTR2Event(
+      QEvent *event, 
+      M3dView &view
+      );
     
     FabricCore::RTVal mEventDispatcher;
 };
@@ -87,3 +115,8 @@ class FabricToolContextCmd : public MPxContextCommand {
 
     static void* creator();
 };
+
+} // namespace Viewports
+} // namespace FabricMaya
+
+#endif // __FABRIC_MAYA_TOOL_CONTEXT__

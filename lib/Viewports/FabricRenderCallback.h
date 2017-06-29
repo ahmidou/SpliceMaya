@@ -10,14 +10,18 @@
 #include <maya/MDrawContext.h>
 #include <FabricUI/SceneHub/SHGLRenderer.h>
 
+namespace FabricMaya {
+namespace Viewports {
+
 bool isRTRPassEnabled();
 
-void enableRTRPass(bool enable);
+void enableRTRPass(
+  bool enable
+  );
 
 class FabricRenderCallback {
 
   public:
-
     static uint32_t gViewId;
 
     static bool gCallbackEnabled;
@@ -68,5 +72,8 @@ class FabricRenderCallback {
 #endif
     
 };
+
+} // namespace Viewports
+} // namespace FabricMaya
 
 #endif // __FABRIC_MAYA_RENDER_CALLBACK__

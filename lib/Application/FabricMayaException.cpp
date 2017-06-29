@@ -13,7 +13,9 @@ FabricMayaException::FabricMayaException(
 {
 }
 
-FabricMayaException::~FabricMayaException() throw() {}
+FabricMayaException::~FabricMayaException() throw() 
+{
+}
 
 void FabricMayaException::log() const throw()
 {

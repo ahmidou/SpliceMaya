@@ -1,48 +1,48 @@
 
 // [andrew 20130620] all hell breaks loose in Linux if these aren't included first
-#include <QDataStream>
+#include <QEvent>
 #include <QMetaType>
 #include <QTextEdit>
 #include <QComboBox>
-#include <QEvent>
+#include <QDataStream>
 
 #include "plugin.h"
+#include <maya/MQtUtil.h>
 #include <maya/MGlobal.h>
 #include <maya/MStatus.h>
+#include <maya/MFileIO.h>
 #include <maya/MFnPlugin.h>
-#include <maya/MSceneMessage.h>
+#include <maya/MUiMessage.h>
 #include <maya/MDGMessage.h>
 #include <maya/MAnimMessage.h>
-#include <maya/MUiMessage.h>
+#include <maya/MSceneMessage.h>
 #include <maya/MEventMessage.h>
-#include <maya/MQtUtil.h>
 #include <maya/MCommandResult.h>
 #include <maya/MViewport2Renderer.h>
-#include <maya/MFileIO.h>
 
 #include <FabricSplice.h>
-#include "FabricSpliceMayaDeformer.h"
-#include "FabricSpliceMayaNode.h"
-#include "FabricConstraint.h"
-#include "FabricSpliceCommand.h"
-#include "FabricSpliceEditorCmd.h"
-#include "FabricSpliceMayaData.h"
-#include "FabricToolContext.h"
-#include "FabricRenderCallback.h"
-#include "FabricDFGCommands.h"
-#include "FabricDFGMayaDeformer_Func.h"
-#include "FabricDFGMayaDeformer_Graph.h"
-#include "FabricDFGMayaNode_Func.h"
-#include "FabricDFGMayaNode_Graph.h"
-#include "FabricExtensionPackageNode.h"
 #include "FabricDFGWidget.h"
-#include "FabricDFGWidgetCommand.h"
+#include "FabricConstraint.h"
+#include "FabricDFGCommands.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricSpliceCommand.h"
+#include "FabricSpliceMayaNode.h"
+#include "FabricSpliceMayaData.h"
+#include "FabricSpliceEditorCmd.h"
+#include "FabricDFGMayaNode_Func.h"
+#include "FabricDFGWidgetCommand.h"
+#include "FabricDFGMayaNode_Graph.h"
+#include "FabricSpliceMayaDeformer.h"
 #include "FabricUpgradeAttrCommand.h"
+#include "FabricDFGMayaDeformer_Func.h"
+#include "FabricExtensionPackageNode.h"
 #include "FabricImportPatternCommand.h"
 #include "FabricExportPatternCommand.h"
+#include "FabricDFGMayaDeformer_Graph.h"
 
 #include "FabricCommand.h"
+#include "FabricToolContext.h"
+#include "FabricRenderCallback.h"
 #include "FabricCommandManagerCallback.h"
 
 #ifdef _MSC_VER
@@ -110,7 +110,7 @@ void onSceneNew(void *userData){
   FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
-  FabricRenderCallback::sDrawContext.invalidate(); 
+  FabricMaya::Viewports::FabricRenderCallback::sDrawContext.invalidate(); 
 
   MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
   MGlobal::executeCommandOnIdle(cmd, false);
@@ -143,7 +143,7 @@ void onSceneLoad(void *userData){
   FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
-  FabricRenderCallback::sDrawContext.invalidate(); 
+  FabricMaya::Viewports::FabricRenderCallback::sDrawContext.invalidate(); 
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
     FabricSplice::Logging::enableTimers();
@@ -272,14 +272,14 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status = MStatus::kSuccess;
 
-  INITPLUGIN_STATE( status, plugin.registerContextCommand("FabricToolContext", FabricToolContextCmd::creator, "FabricToolCommand", FabricToolCmd::creator) );
+  INITPLUGIN_STATE( status, plugin.registerContextCommand("FabricToolContext", FabricMaya::Viewports::FabricToolContextCmd::creator, "FabricToolCommand", FabricMaya::Viewports::FabricToolCmd::creator) );
 
   loadMenu();
 
   // FE-6558 : Don't plug the render-callback if not interactive.
   // Otherwise it will crash on linux machine without DISPLAY
   if (MGlobal::mayaState() == MGlobal::kInteractive)
-    FabricRenderCallback::plug();
+    FabricMaya::Viewports::FabricRenderCallback::plug();
 
   gOnSceneSaveCallbackId            = MSceneMessage::addCallback(MSceneMessage::kBeforeSave,           onSceneSave    );
   gOnSceneLoadCallbackId            = MSceneMessage::addCallback(MSceneMessage::kAfterOpen,            onSceneLoad    );
@@ -304,7 +304,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   INITPLUGIN_STATE( status, plugin.registerCommand("fabricSplice",             FabricSpliceCommand        ::creator) );
   INITPLUGIN_STATE( status, plugin.registerCommand("fabricSpliceEditor",       FabricSpliceEditorCmd      ::creator, FabricSpliceEditorCmd::newSyntax) );
-  INITPLUGIN_STATE( status, plugin.registerCommand("fabricSpliceManipulation", FabricManipulationCmd::creator) );
+  INITPLUGIN_STATE( status, plugin.registerCommand("fabricSpliceManipulation", FabricMaya::Viewports::FabricManipulationCmd::creator) );
 
   INITPLUGIN_STATE( status, plugin.registerNode("spliceMayaNode",     FabricSpliceMayaNode    ::id, FabricSpliceMayaNode    ::creator, FabricSpliceMayaNode    ::initialize) );
   INITPLUGIN_STATE( status, plugin.registerNode("spliceMayaDeformer", FabricSpliceMayaDeformer::id, FabricSpliceMayaDeformer::creator, FabricSpliceMayaDeformer::initialize, MPxNode::kDeformerNode) );
@@ -466,7 +466,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   // FE-6558 : Don't unplug the render-callback if not interactive.
   // Otherwise it will crash on linux machine without DISPLAY
   if (MGlobal::mayaState() == MGlobal::kInteractive)
-    FabricRenderCallback::unplug();
+    FabricMaya::Viewports::FabricRenderCallback::unplug();
 
   UNINITPLUGIN_STATE( status, MDGMessage::removeCallback(gOnNodeAddedCallbackId) );
   UNINITPLUGIN_STATE( status, MDGMessage::removeCallback(gOnNodeRemovedCallbackId) );

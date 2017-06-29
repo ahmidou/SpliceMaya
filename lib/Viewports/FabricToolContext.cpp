@@ -2,7 +2,6 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#include <iostream>
 #include <QMouseEvent>
 #include <FTL/StrRef.h>
 #include <maya/MCursor.h>
@@ -18,97 +17,110 @@
   
 using namespace FabricCore;
 using namespace FabricUI::Commands;
+using namespace FabricMaya::Viewports;
 using namespace FabricMaya::Application;
 
 /////////////////////////////////////////////////////
 // FabricManipulationCmd
 RTVal FabricManipulationCmd::s_rtval_commands;
 
-FabricManipulationCmd::FabricManipulationCmd() {
+FabricManipulationCmd::FabricManipulationCmd() 
+{
   m_rtval_commands = s_rtval_commands;
 }
 
-FabricManipulationCmd::~FabricManipulationCmd() {
+FabricManipulationCmd::~FabricManipulationCmd() 
+{
 }
 
-void* FabricManipulationCmd::creator() {
+void* FabricManipulationCmd::creator() 
+{
   return new FabricManipulationCmd;
 }
 
-MStatus FabricManipulationCmd::doIt(const MArgList &args) {
+MStatus FabricManipulationCmd::doIt(
+  const MArgList &args) 
+{
   return MStatus::kSuccess;
 }
 
-MStatus FabricManipulationCmd::redoIt() {
-  try
+MStatus FabricManipulationCmd::redoIt() 
+{
+  FABRIC_MAYA_CATCH_BEGIN();
+
+  if(m_rtval_commands.isValid())
   {
-    if(m_rtval_commands.isValid()){
-      for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++){
-        m_rtval_commands.getArrayElement(i).callMethod("", "doAction", 0, 0);
-      }
-    }
-    M3dView view = M3dView::active3dView();
-    view.refresh(true);
-    return MStatus::kSuccess;
+    for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++)
+      m_rtval_commands.getArrayElement(i).callMethod("", "doAction", 0, 0);
   }
-  catch (Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return MStatus::kFailure;
-  }
+  M3dView view = M3dView::active3dView();
+  view.refresh(true);
+  return MStatus::kSuccess;
+ 
+  FABRIC_MAYA_CATCH_END("FabricManipulationCmd::redoIt");
+
+  return MStatus::kFailure;
 }
 
-MStatus FabricManipulationCmd::undoIt() {
-  try
+MStatus FabricManipulationCmd::undoIt() 
+{
+  FABRIC_MAYA_CATCH_BEGIN();
+
+  if(m_rtval_commands.isValid())
   {
-    if(m_rtval_commands.isValid()){
-      for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++){
-        m_rtval_commands.getArrayElement(i).callMethod("", "undoAction", 0, 0);
-      }
-    }
-    M3dView view = M3dView::active3dView();
-    view.refresh(true);
-    return MStatus::kSuccess;
+    for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++)
+      m_rtval_commands.getArrayElement(i).callMethod("", "undoAction", 0, 0);
   }
-  catch (Exception e)
-  {
-    mayaLogErrorFunc(e.getDesc_cstr());
-    return MStatus::kFailure;
-  }
+  M3dView view = M3dView::active3dView();
+  view.refresh(true);
+  return MStatus::kSuccess;
+
+  FABRIC_MAYA_CATCH_END("FabricManipulationCmd::undoIt");
+ 
+  return MStatus::kFailure;
 }
 
-bool FabricManipulationCmd::isUndoable() const {
+bool FabricManipulationCmd::isUndoable() const 
+{
   return true;
 }
 
 
 /////////////////////////////////////////////////////
 // FabricManipulationCmd
-FabricToolCmd::FabricToolCmd() {
+FabricToolCmd::FabricToolCmd() 
+{
   setCommandString("FabricToolCmd");
 }
 
-FabricToolCmd::~FabricToolCmd() {
+FabricToolCmd::~FabricToolCmd() 
+{
 }
 
-void* FabricToolCmd::creator() {
+void* FabricToolCmd::creator() 
+{
   return new FabricToolCmd;
 }
 
-MStatus FabricToolCmd::doIt(const MArgList &args) {
+MStatus FabricToolCmd::doIt(
+  const MArgList &args) 
+{
   return redoIt();
 }
 
-MStatus FabricToolCmd::redoIt() {
+MStatus FabricToolCmd::redoIt() 
+{
   // we don't do anything during the tool really
   return MStatus::kSuccess;
 }
 
-MStatus FabricToolCmd::undoIt() {
+MStatus FabricToolCmd::undoIt() 
+{
   return MStatus::kSuccess;
 }
 
-bool FabricToolCmd::isUndoable() const {
+bool FabricToolCmd::isUndoable() const 
+{
   return false;
 }
 
@@ -116,25 +128,36 @@ bool FabricToolCmd::isUndoable() const {
 
 /////////////////////////////////////////////////////
 // FabricToolContext
-class EventFilterObject : public QObject {
+class EventFilterObject : public QObject 
+{
   public:
     FabricToolContext *tool;
+
     M3dView view;
-    bool eventFilter(QObject *object, QEvent *event);
+
+    bool eventFilter(
+      QObject *object, 
+      QEvent *event
+      );
 };
 
 static std::map<void*, EventFilterObject*> sEventFilterObjectMap;
 
 const char helpString[] = "Click and drag to interact with Fabric:Splice.";
 
-FabricToolContext::FabricToolContext() {
+FabricToolContext::FabricToolContext() 
+{
 }
 
-void FabricToolContext::getClassName(MString & name) const {
+void FabricToolContext::getClassName(
+  MString & name) const 
+{
   name.set("FabricSpliceTool");
 }
 
-void FabricToolContext::toolOnSetup(MEvent &) {
+void FabricToolContext::toolOnSetup(
+  MEvent &) 
+{
   M3dView view = M3dView::active3dView();
   setCursor(MCursor::editCursor);
   setHelpString(helpString);
@@ -190,7 +213,8 @@ void FabricToolContext::toolOnSetup(MEvent &) {
   FABRIC_MAYA_CATCH_END("FabricToolContext::toolOnSetup");
 }
 
-void FabricToolContext::toolOffCleanup() {
+void FabricToolContext::toolOffCleanup() 
+{
   
   FABRIC_MAYA_CATCH_BEGIN();
 
@@ -216,35 +240,51 @@ void FabricToolContext::toolOffCleanup() {
   FABRIC_MAYA_CATCH_END("FabricToolContext::toolOffCleanup");
 }
 
-MStatus FabricToolContext::doPress(MEvent & event) {
+MStatus FabricToolContext::doPress(
+  MEvent & event) 
+{
   return MS::kSuccess;
 }
 
-MStatus FabricToolContext::doDrag(MEvent & event) {
+MStatus FabricToolContext::doDrag(
+  MEvent & event) 
+{
   return MS::kSuccess;
 }
 
-MStatus FabricToolContext::doRelease(MEvent & event) {
+MStatus FabricToolContext::doRelease(
+  MEvent & event) 
+{
   return MS::kSuccess;
 }
 
-MStatus FabricToolContext::doEnterRegion(MEvent & event) {
+MStatus FabricToolContext::doEnterRegion(
+  MEvent & event) 
+{
   return setHelpString(helpString);
 }
 
-MPxContext* FabricToolContextCmd::makeObj() {
+MPxContext* FabricToolContextCmd::makeObj() 
+{
   return new FabricToolContext;
 }
 
-void* FabricToolContextCmd::creator() {
+void* FabricToolContextCmd::creator() 
+{
   return new FabricToolContextCmd;
 }
 
-bool EventFilterObject::eventFilter(QObject *object, QEvent *event) {
+bool EventFilterObject::eventFilter(
+  QObject *object, 
+  QEvent *event) 
+{
   return tool->onEvent(event);
 }
  
-bool FabricToolContext::onIDEvent(QEvent *event, M3dView &view) {
+bool FabricToolContext::onIDEvent(
+  QEvent *event, 
+  M3dView &view) 
+{
   
   const Client *client = 0;
   FECS_DGGraph_getClient(&client);
@@ -404,17 +444,6 @@ bool FabricToolContext::onIDEvent(QEvent *event, M3dView &view) {
       }
     }
 
-    if(result)
-    {
-      KLCommandManager *manager = qobject_cast<KLCommandManager*>(
-        CommandManager::getCommandManager());
-      manager->synchronizeKL();
-      event->accept();
-    }
-
-    if(host.maybeGetMember("redrawRequested").getBoolean())
-      view.refresh(true);
-
     if(host.callMethod("Boolean", "undoRedoCommandsAdded", 0, 0).getBoolean())
     {
       // Cache the rtvals in a static variable that the command will then stor in the undo stack.
@@ -428,6 +457,17 @@ bool FabricToolContext::onIDEvent(QEvent *event, M3dView &view) {
       MGlobal::executeCommand(MString("fabricSpliceManipulation"), displayEnabled);
     }
 
+    if(result)
+    {
+      KLCommandManager *manager = qobject_cast<KLCommandManager*>(
+        CommandManager::getCommandManager());
+      manager->synchronizeKL();
+      event->accept();
+    }
+
+    if(host.maybeGetMember("redrawRequested").getBoolean())
+      view.refresh(true);
+
     klevent.invalidate();
     return result;
   }
@@ -437,7 +477,10 @@ bool FabricToolContext::onIDEvent(QEvent *event, M3dView &view) {
   return false;
 }
 
-bool FabricToolContext::onRTR2Event(QEvent *event, M3dView &view) {
+bool FabricToolContext::onRTR2Event(
+  QEvent *event, 
+  M3dView &view) 
+{
 
   MString panelName;
   M3dView::getM3dViewFromModelPanel(panelName, view);
@@ -468,7 +511,9 @@ bool FabricToolContext::onRTR2Event(QEvent *event, M3dView &view) {
   return res;
 }
 
-bool FabricToolContext::onEvent(QEvent *event) {
+bool FabricToolContext::onEvent(
+  QEvent *event) 
+{
 
   if(!FabricRenderCallback::canDraw()) 
   {
