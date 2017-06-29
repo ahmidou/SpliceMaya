@@ -27,6 +27,7 @@ struct FabricExportPatternSettings
   MStringArray objects;
   bool useLastArgValues;
   bool userAttributes;
+  bool stripNameSpaces;
 
   FabricExportPatternSettings()
   {
@@ -38,6 +39,7 @@ struct FabricExportPatternSettings
     substeps = 1;
     useLastArgValues = true;
     userAttributes = true;
+    stripNameSpaces = false;
   }
 };
 

@@ -671,7 +671,8 @@ MString FabricImportPatternCommand::simplifyPath(MString path)
   if(path.index('/') > 0)
   {
     MStringArray parts;
-    path.split('/', parts);
+    if(path.split('/', parts) != MS::kSuccess)
+      parts.append(path);
     MString concat;
     for(unsigned int i=0;i<parts.length();i++)
     {
@@ -1234,7 +1235,8 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   {
     MString extDep = extDeps.getArrayElement(i).getStringCString();
     MStringArray parts;
-    extDep.split(':', parts);
+    if(extDep.split(':', parts) != MS::kSuccess)
+      parts.append(extDep);
     if(parts.length() == 1)
       exec.addExtDep(parts[0].asChar());
     else
@@ -1247,7 +1249,8 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   klCode += "\ndfgEntry {\n";
   MString evaluatorCode = evaluator.callMethod("String", "getKLCode", 0, 0).getStringCString();
   MStringArray evaluatorCodeLines;
-  evaluatorCode.split('\n', evaluatorCodeLines);
+  if(evaluatorCode.split('\n', evaluatorCodeLines) != MS::kSuccess)
+    evaluatorCodeLines.append(evaluatorCode);
   for(unsigned int i=0;i<evaluatorCodeLines.length();i++)
     klCode += "  " + evaluatorCodeLines[i] + "\n";
   klCode += "}\n";
@@ -1669,7 +1672,8 @@ void FabricImportPatternCommand::processUserAttributes(FabricCore::RTVal objRef)
 MString FabricImportPatternCommand::mayaPathFromPatternPath(MString path)
 {
   MStringArray parts;
-  path.split('/', parts);
+  if(path.split('/', parts) != MS::kSuccess)
+    parts.append(path);
 
   MString result;
   for(unsigned int i=0;i<parts.length();i++)

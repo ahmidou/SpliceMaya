@@ -48,6 +48,7 @@ MSyntax FabricExportPatternCommand::newSyntax()
   syntax.addFlag( "-r", "-framerate", MSyntax::kDouble );
   syntax.addFlag( "-t", "-substeps", MSyntax::kLong );
   syntax.addFlag( "-u", "-userAttributes", MSyntax::kBoolean );
+  syntax.addFlag( "-x", "-stripNameSpaces", MSyntax::kBoolean );
   return syntax;
 }
 
@@ -177,11 +178,19 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
   {
     m_settings.userAttributes = argParser.flagArgumentBool("userAttributes", 0);
   }
+  if( argParser.isFlagSet("stripNameSpaces") )
+  {
+    m_settings.stripNameSpaces = argParser.flagArgumentBool("stripNameSpaces", 0);
+  }
 
   if( argParser.isFlagSet("objects") )
   {
     MString objects = argParser.flagArgumentString("objects", 0);
-    objects.split(',', m_settings.objects);
+    if(objects.length() > 0)
+    {
+      if(objects.split(',', m_settings.objects) != MS::kSuccess)
+        m_settings.objects.append(objects);
+    }
   }
 
   MStringArray result;
@@ -953,13 +962,25 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
 
 MString FabricExportPatternCommand::getPathFromDagPath(MDagPath dagPath)
 {
-  std::string path = dagPath.fullPathName().asChar();
-  for(size_t i=0;i<path.size();i++)
+  MString fullPath = dagPath.fullPathName();
+  MStringArray parts;
+  if(fullPath.split('|', parts) != MS::kSuccess)
+    parts.append(dagPath.fullPathName());
+
+  MString result;
+  for(unsigned int i=0;i<parts.length();i++)
   {
-    if(path[i] == '|')
-      path[i] = '/';
+    MString part = parts[i];
+    if(part.length() == 0)
+      continue;    
+    if(m_settings.stripNameSpaces)
+    {
+      if(part.rindex(':') > 0)
+        part = part.substring(part.rindex(':') + 1, part.length()-1);
+    }
+    result += "/" + part;
   }
-  return path.c_str();
+  return result;
 }
 
 bool FabricExportPatternCommand::isShapeDeforming(FabricCore::RTVal shapeVal, MObject node, bool isStart)

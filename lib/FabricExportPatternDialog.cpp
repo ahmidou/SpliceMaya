@@ -100,6 +100,13 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
   optionsLayout->addWidget(userAttributesCheckbox, 6, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(userAttributesCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onUserAttributesChanged(int)));
 
+  QLabel * stripNameSpacesLabel = new QLabel("Strip NameSpaces", optionsWidget);
+  optionsLayout->addWidget(stripNameSpacesLabel, 7, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QCheckBox * stripNameSpacesCheckbox = new QCheckBox(optionsWidget);
+  stripNameSpacesCheckbox->setCheckState(m_settings.stripNameSpaces ? Qt::Checked : Qt::Unchecked);
+  optionsLayout->addWidget(stripNameSpacesCheckbox, 7, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(stripNameSpacesCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onStripNameSpacesChanged(int)));
+
   QDialogButtonBox * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
   layout->addWidget(buttons);
 
@@ -153,4 +160,9 @@ void FabricExportPatternDialog::onSubStepsChanged(const QString & text)
 void FabricExportPatternDialog::onUserAttributesChanged(int state)
 {
   m_settings.userAttributes = state == Qt::Checked;
+}
+
+void FabricExportPatternDialog::onStripNameSpacesChanged(int state)
+{
+  m_settings.stripNameSpaces = state == Qt::Checked;
 }
