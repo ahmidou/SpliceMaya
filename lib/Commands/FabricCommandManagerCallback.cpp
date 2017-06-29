@@ -27,7 +27,7 @@ FabricCommandManagerCallback* FabricCommandManagerCallback::s_cmdManagerMayaCall
 
 FabricCommandManagerCallback::FabricCommandManagerCallback()
   : QObject()
-  , m_createdFromManagerCallback(false)
+  , m_commandCreatedFromManagerCallback(false)
 {
 }
 
@@ -56,24 +56,28 @@ inline void encodeArg(
  
 void FabricCommandManagerCallback::onCommandDone(
   BaseCommand *cmd,
-  bool addToStack,
+  bool addedToStack,
   int canMergeID,
   int merge)
 {
-/*   std::cout 
+  /*   
+    std::cout 
     << "\nFabricCommandManagerCallback::onCommandDone"
-    << ", addToStack "
-    << addToStack
+    << ", addedToStack "
+    << addedToStack
     << ", canMergeID "
     << canMergeID
     << ", merge "
     << merge
     << std::endl;
-*/
+  */
   FABRIC_MAYA_CATCH_BEGIN();
 
-  if( (canMergeID == CommandManager::NoCanMergeID && addToStack && merge == CommandManager::NoCanMerge) || 
-      (!addToStack && merge == CommandManager::MergeDone)
+  // Maya creates log commands after they've been performed, while in Fabric, it's possible 
+  // to log a command and then update it's content using the merging framework. We create 
+  // the maya command if the fabric command isn't merging or he merging is done.
+  if( ( canMergeID == CommandManager::NoCanMergeID && merge == CommandManager::NoCanMerge) || 
+      ( canMergeID != CommandManager::NoCanMergeID && merge == CommandManager::MergeDone )
     )
   {
     std::stringstream fabricCmd;
@@ -117,8 +121,12 @@ void FabricCommandManagerCallback::onCommandDone(
 
     // Indicates that the command has been created already.
     // so we don't re-create it when constructing the maya command.
-    m_createdFromManagerCallback = true;
-    MGlobal::executeCommandOnIdle(fabricCmd.str().c_str(), cmd->canLog());
+    m_commandCreatedFromManagerCallback = true;
+    m_commandCanUndo = addedToStack;
+    MGlobal::executeCommandOnIdle(
+      fabricCmd.str().c_str(), 
+      cmd->canLog()
+      );
   }
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::onCommandDone");
@@ -178,10 +186,15 @@ void FabricCommandManagerCallback::reset()
 void FabricCommandManagerCallback::commandCreatedFromManagerCallback(
   bool createdFromManagerCallback)
 {
-  m_createdFromManagerCallback = createdFromManagerCallback;
+  m_commandCreatedFromManagerCallback = createdFromManagerCallback;
 }
 
 bool FabricCommandManagerCallback::isCommandCreatedFromManagerCallback()
 {
-  return m_createdFromManagerCallback;
+  return m_commandCreatedFromManagerCallback;
+}
+
+bool FabricCommandManagerCallback::isCommandCanUndo()
+{
+  return m_commandCanUndo;
 }

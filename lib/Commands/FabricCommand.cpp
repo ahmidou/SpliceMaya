@@ -38,12 +38,12 @@ MStatus FabricCommand::doIt(
 
   FABRIC_MAYA_CATCH_BEGIN();
 
-  // Create the maya command assiciated with the fabric command.
+  // Create the maya command associated with the fabric command.
   // The maya command does nothing since all the logic is done
   // by the fabric command framework.
   if(FabricCommandManagerCallback::GetManagerCallback()->isCommandCreatedFromManagerCallback())
   {
-    m_isUndoable = true;
+    m_isUndoable = FabricCommandManagerCallback::GetManagerCallback()->isCommandCanUndo();
     setHistoryOn(true); 
     FabricCommandManagerCallback::GetManagerCallback()->commandCreatedFromManagerCallback(false);
   }
@@ -58,7 +58,12 @@ MStatus FabricCommand::doIt(
     // Get the command args.
     QMap<QString, QString > cmdArgs;
     for(unsigned int i=1; i<args.length(&status); ++i)
-      cmdArgs[args.asString(i, &status).asChar()] = args.asString(++i, &status).asChar();
+    {
+      QString key = args.asString(i, &status).asChar();
+      i += 1;
+      QString arg = args.asString(i, &status).asChar();
+      cmdArgs[key] = arg;
+    }
     
     CommandManager::getCommandManager()->createCommand(
       args.asString(0, &status).asChar(), 

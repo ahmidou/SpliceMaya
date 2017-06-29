@@ -50,15 +50,19 @@ class FabricCommandManagerCallback : public QObject
     /// To know if the command is created from maya or by the manager
     bool isCommandCreatedFromManagerCallback();
 
+    /// \internal
+    /// To know if the command is created from maya or by the manager
+    bool isCommandCanUndo();
+
   private slots:
     /// \internal
     /// Called when a command has been pushed to the manager.
     /// \param cmd The command that has been pushed.
-    /// \param addToStack If true, the command has been pushed in the manager stack.
+    /// \param addedToStack If true, the command has been pushed in the manager stack.
     /// \param merge (NoCanMerge, CanMerge or MergeDone).
     void onCommandDone(
     	FabricUI::Commands::BaseCommand *cmd,
-      bool addToStack,
+      bool addedToStack,
       int canMergeID,
       int merge
     	);
@@ -70,7 +74,10 @@ class FabricCommandManagerCallback : public QObject
     static bool s_instanceFlag;
     /// \internal
     /// To know if the command is created from maya or by the manager
-    bool m_createdFromManagerCallback;
+    bool m_commandCreatedFromManagerCallback;
+    /// \internal
+    /// To know if the last command created is undoable
+    bool m_commandCanUndo;
 };
 
 } // namespace Commands
