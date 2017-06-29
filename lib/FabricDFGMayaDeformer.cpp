@@ -109,6 +109,8 @@ MStatus FabricDFGMayaDeformer::deform(MDataBlock& block, MItGeometry& iter, cons
       rtMeshes = binding.getArgValue(portName.asChar());
       if(!rtMeshes.isValid()) return MStatus::kSuccess;
       if(!rtMeshes.isArray()) return MStatus::kSuccess;
+      if(rtMeshes.getArraySize() <= multiIndex)
+        return MStatus::kSuccess;
       rtMesh = rtMeshes.getArrayElement(multiIndex);
       if(!rtMesh.isValid() || rtMesh.isNullObject())
         return MStatus::kSuccess;

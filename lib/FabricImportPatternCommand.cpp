@@ -593,8 +593,8 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
     for(size_t i=0;i<m_objectList.size();i++)
     {
       updateTransformForObject(m_objectList[i]);
-      updateEvaluatorForObject(m_objectList[i]);
       processUserAttributes(m_objectList[i]);
+      updateEvaluatorForObject(m_objectList[i]);
       // todo: light, cameras etc..
 
       if(prog)
@@ -716,14 +716,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
   if(m_settings.attachToExisting)
   {
     MSelectionList sl;
-    std::string pathStr = path.asChar();
-    for(size_t i=0;i<pathStr.length();i++)
-    {
-      if(pathStr[i] != '/')
-        continue;
-      pathStr[i] = '|';
-    }
-    sl.add(pathStr.c_str());
+    sl.add(mayaPathFromPatternPath(path));
     sl.add(name); // also add by name in case the pathStr failed
 
     if(sl.length() > 0)
@@ -1130,34 +1123,8 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   if(evaluator.isNullObject())
     return false;
 
-  FabricCore::RTVal filePathVal = evaluator.callMethod("FilePath", "getFilePath", 0, 0);
-  filePathVal = filePathVal.callMethod("FilePath", "expandEnvVars", 0, 0);
-  std::string filePath = filePathVal.callMethod("String", "string", 0, 0).getStringCString();
-  for(unsigned int i=0;i<filePath.length();i++)
-  {
-    if(filePath[i] == '\\')
-      filePath[i] = '/';
-  }
-  MString filePathM = filePath.c_str();
-  if(!FTL::FSExists(filePathM.asChar()))
-  {
-    mayaLogErrorFunc("Evaluator filePath \""+filePathM+"\" does no exist.");
-    return mayaErrorOccured();
-  }
-
-  MStringArray evaluatorParts;
-  filePathM.split('/', evaluatorParts);
-  MString evaluatorName = evaluatorParts[evaluatorParts.length()-1];
-  evaluatorParts.clear();
-  evaluatorName.split('.', evaluatorParts);
-  evaluatorName = evaluatorParts[0];
-  if(evaluatorName.substring(evaluatorName.length()-9, evaluatorName.length()-1) == "Evaluator")
-    evaluatorName = evaluatorName.substring(0, evaluatorName.length()-10);
-  if(evaluatorName.substring(evaluatorName.length()-8, evaluatorName.length()-1) == "Deformer")
-    evaluatorName = evaluatorName.substring(0, evaluatorName.length()-9);
-
-  FabricCore::RTVal propertiesVal = evaluator.callMethod("String[]", "getProperties", 0, 0);
-  if(propertiesVal.getArraySize() == 0)
+  MString evaluatorName = evaluator.callMethod("String", "getName", 0, 0).getStringCString();
+  if(evaluatorName.length() == 0)
     return false;
 
   MString objPath = obj.callMethod("String", "getInstancePath", 0, 0).getStringCString();
@@ -1174,7 +1141,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
         MString name;
         MString transformPath = parentPath(objPath, &name);
         it = m_nodes.find(simplifyPath(transformPath).asChar());
-        evaluatorPath = transformPath + "/GeometryEvaluator";
+        evaluatorPath = transformPath + "/" + evaluatorName + "Geo";
       }
     }
   }
@@ -1194,7 +1161,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   {
     MGlobal::executeCommand("select -r "+objDepNode.name()+";");
     MStringArray results;
-    MString deformerCmd = "deformer -type \"canvasFuncDeformer\" -name \"Evaluator\";";
+    MString deformerCmd = "deformer -type \"canvasFuncDeformer\" -name \""+evaluatorName+"\";";
     MGlobal::executeCommand(deformerCmd, results);
     if(results.length() == 0)
     {
@@ -1224,160 +1191,116 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   MPlug enableEvalContextPlug = evaluatorDepNode.findPlug("enableEvalContext");
   enableEvalContextPlug.setValue(false);
 
-  // setup the evaluator code
-  MStatus st = MGlobal::executeCommand("dfgImportJSON -m "+evaluatorDepNode.name()+" -f \""+filePathM+"\";");
-  if(st != MS::kSuccess)
-  {
-    mayaLogErrorFunc("Failed to load evaluator code '"+filePathM+"'.");
+  // get access to the underlying DFG binding
+  FabricDFGBaseInterface * interf = FabricDFGBaseInterface::getInstanceByMObject(evaluatorNode);
+  if(interf == NULL)
     return false;
-  }
 
-  // assign all of the arguments
+  FabricCore::DFGBinding binding = interf->getDFGBinding();
+  FabricCore::DFGExec exec = interf->getDFGExec();
+  
   unsigned int argCount = evaluator.callMethod("UInt32", "getArgCount", 0, 0).getUInt32();
   for(unsigned int i=0;i<argCount;i++)
   {
-    FabricCore::RTVal argIndex = FabricCore::RTVal::ConstructUInt32(obj.getContext(), i);
-    MString argName = evaluator.callMethod("String", "getArgName", 1, &argIndex).getStringCString();
-    MString argType = evaluator.callMethod("String", "getArgType", 1, &argIndex).getStringCString();
+    FabricCore::RTVal indexVal = FabricCore::RTVal::ConstructUInt32(m_client, i);
+    MString argName = evaluator.callMethod("String", "getArgName", 1, &indexVal).getStringCString();
+    MString argDataType = evaluator.callMethod("String", "getArgDataType", 1, &indexVal).getStringCString();
+    int argPortType = evaluator.callMethod("SInt32", "getArgPortType", 1, &indexVal).getSInt32();
+    FabricCore::RTVal argValueVal = evaluator.callMethod("RTVal", "getArgValue", 1, &indexVal).getUnwrappedRTVal();
 
-    if(argType == L"Scalar")
-      argType = L"Float32";
-    if(argType == L"Integer")
-      argType = L"SInt32";
-
-    FabricCore::RTVal argValueVal = evaluator.callMethod("RTVal", "getArgValue", 1, &argIndex);
-    argValueVal = argValueVal.getUnwrappedRTVal();
-
-    MString argValueType = argValueVal.getTypeNameCStr();
-    if(argValueType == L"Scalar")
-      argValueType = L"Float32";
-    if(argValueType == L"Integer")
-      argValueType = L"SInt32";
-
-    if(argValueType != argType)
+    // check if the port exists already
+    try
     {
-      mayaLogFunc(MString(getName())+": Warning: Argument value is not a "+argType+".");
-      continue;
+      exec.getExecPortType(argName.asChar());
     }
-
-    MPlug plug = evaluatorDepNode.findPlug(argName);
-    if(plug.isNull())
+    catch(FabricCore::Exception e)
     {
-      mayaLogFunc(MString(getName())+": Warning: Cannot find plug for evaluator argument "+argName+".");
-      continue;
-    }
-
-    // todo: we should probably centralize this code in a function
-    // since we are using it in several places - structurally somewhat different but similar.
-    if(argType == L"Boolean")
-    {
-      plug.setValue(argValueVal.getBoolean());
-    }
-    else if(argType == L"SInt32")
-    {
-      plug.setValue(argValueVal.getSInt32());
-    }
-    else if(argType == L"UInt32")
-    {
-      plug.setValue((int)argValueVal.getUInt32());
-    }
-    else if(argType == L"Float32")
-    {
-      if(argName == L"time" || argName == L"timeline")
-      {
-        // setup an expression to drive the time
-        MString exprCmd = "expression -s \""+
-          plug.name()+
-          " = time;\"  -o "+
-          evaluatorDepNode.name()+
-          " -ae 1 -uc all ;";
-        MGlobal::executeCommand(exprCmd);
-      }
-      else
-      {
-        plug.setValue(argValueVal.getFloat32());
-      }
-    }
-    else if(argType == L"Float64")
-    {
-      plug.setValue(argValueVal.getFloat64());
-    }
-    else if(argType == L"String")
-    {
-      plug.setValue(MString(argValueVal.getStringCString()));
-    }
-    else if(argType == L"Vec2")
-    {
-      plug.child(0).setValue(argValueVal.maybeGetMember("x").getFloat32());
-      plug.child(1).setValue(argValueVal.maybeGetMember("y").getFloat32());
-    }
-    else if(argType == L"Vec3")
-    {
-      plug.child(0).setValue(argValueVal.maybeGetMember("x").getFloat32());
-      plug.child(1).setValue(argValueVal.maybeGetMember("y").getFloat32());
-      plug.child(2).setValue(argValueVal.maybeGetMember("z").getFloat32());
-    }
-    else if(argType == L"Color")
-    {
-      plug.child(0).setValue(argValueVal.maybeGetMember("r").getFloat32());
-      plug.child(1).setValue(argValueVal.maybeGetMember("g").getFloat32());
-      plug.child(2).setValue(argValueVal.maybeGetMember("b").getFloat32());
-      plug.child(3).setValue(argValueVal.maybeGetMember("a").getFloat32());
+      exec.addExecPort(argName.asChar(), (FEC_DFGPortType)argPortType, argDataType.asChar());
     }
   }
 
-  bool success = false;
-  for(unsigned int i=0;i<propertiesVal.getArraySize();i++)
+  MString klCode;
+
+  // set the extension dependencies
+  FabricCore::RTVal extDeps = evaluator.callMethod("String[]", "getExtDeps", 0, 0);
+  for(unsigned int i=0;i<extDeps.getArraySize();i++)
   {
-    MString property = propertiesVal.getArrayElement(i).getStringCString();
-    if(property == L"localTransform")
+    MString extDep = extDeps.getArrayElement(i).getStringCString();
+    MStringArray parts;
+    extDep.split(':', parts);
+    if(parts.length() == 1)
+      exec.addExtDep(parts[0].asChar());
+    else
+      exec.addExtDep(parts[0].asChar(), parts[1].asChar());
+
+    klCode += "require "+parts[0]+";\n";
+  }
+
+  // set the kl code
+  klCode += "\ndfgEntry {\n";
+  MString evaluatorCode = evaluator.callMethod("String", "getKLCode", 0, 0).getStringCString();
+  MStringArray evaluatorCodeLines;
+  evaluatorCode.split('\n', evaluatorCodeLines);
+  for(unsigned int i=0;i<evaluatorCodeLines.length();i++)
+    klCode += "  " + evaluatorCodeLines[i] + "\n";
+  klCode += "}\n";
+  exec.setCode(klCode.asChar());
+
+  bool success = true;
+  for(unsigned int i=0;i<argCount;i++)
+  {
+    FabricCore::RTVal indexVal = FabricCore::RTVal::ConstructUInt32(m_client, i);
+    int argPortType = evaluator.callMethod("SInt32", "getArgPortType", 1, &indexVal).getSInt32();
+    if(argPortType == FEC_DFGPortType_In)
+      continue;
+
+    MString argName = evaluator.callMethod("String", "getArgName", 1, &indexVal).getStringCString();
+    MString argDataType = evaluator.callMethod("String", "getArgDataType", 1, &indexVal).getStringCString();
+
+    if(argName == L"translate")
     {
-      // we also need a node for matrix conversion
-      if(!s_loadedMatrixPlugin)
+      if(argDataType != "Vec3")
       {
-        MGlobal::executeCommand("loadPlugin -quiet \"matrixNodes\";");
-        s_loadedMatrixPlugin = true;
+        success = false;
       }
-      MObject decomposeNode = getOrCreateNodeForPath(evaluatorPath+"/Decompose", "decomposeMatrix", true, false /* isDag */);
-      if(decomposeNode.isNull())
+      else
       {
-        mayaLogErrorFunc("Missing node for '"+evaluatorPath+"/Decompose'.");
-        return false;
+        MDGModifier modif;
+        modif.connect(evaluatorDepNode.findPlug("translate"), objDepNode.findPlug("translate"));
+        modif.doIt();
       }
-
-      MFnDependencyNode decomposeDepNode(decomposeNode);
-
-      MDGModifier modif;
-      modif.connect(evaluatorDepNode.findPlug("localTransform"), decomposeDepNode.findPlug("inputMatrix"));
-      modif.connect(decomposeDepNode.findPlug("outputTranslate"), objDepNode.findPlug("translate"));
-      modif.connect(decomposeDepNode.findPlug("outputRotate"), objDepNode.findPlug("rotate"));
-      modif.connect(decomposeDepNode.findPlug("outputScale"), objDepNode.findPlug("scale"));
-      modif.doIt();
-
-      success = true;
     }
-    else if(property == L"translate")
+    else if(argName == L"rotate")
     {
-      MDGModifier modif;
-      modif.connect(evaluatorDepNode.findPlug("translate"), objDepNode.findPlug("translate"));
-      modif.doIt();
-      success = true;
+      if(argDataType != "Euler")
+      {
+        success = false;
+      }
+      else
+      {
+        MDGModifier modif;
+        modif.connect(evaluatorDepNode.findPlug("rotate"), objDepNode.findPlug("rotate"));
+        modif.doIt();
+      }
     }
-    else if(property == L"rotate")
+    else if(argName == L"scale")
     {
-      MDGModifier modif;
-      modif.connect(evaluatorDepNode.findPlug("rotate"), objDepNode.findPlug("rotate"));
-      modif.doIt();
-      success = true;
+      if(argDataType != "Vec3")
+      {
+        success = false;
+      }
+      else
+      {
+        MDGModifier modif;
+        modif.connect(evaluatorDepNode.findPlug("scale"), objDepNode.findPlug("scale"));
+        modif.doIt();
+      }
     }
-    else if(property == L"scale")
+    else if(argName == L"meshes") // deformer arg
     {
-      MDGModifier modif;
-      modif.connect(evaluatorDepNode.findPlug("scale"), objDepNode.findPlug("scale"));
-      modif.doIt();
-      success = true;
+      // don't do anything here
     }
-    else if(property == L"geometry")
+    else if(argName == L"geometry")
     {
       // we are already hooked up since this is a deformer?
       if(!isDeformer)
@@ -1396,75 +1319,225 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
         int geoType = geoTypeVal.getSInt32();
         if (geoType == 0) // a mesh
         {
-          MDGModifier modif;
-          modif.connect(evaluatorDepNode.findPlug("geometry"), shapeDagNode.findPlug("inMesh"));
-          modif.doIt();
+          if(argDataType != "PolygonMesh")
+          {
+            success = false;
+          }
+          else
+          {
+            MDGModifier modif;
+            modif.connect(evaluatorDepNode.findPlug("geometry"), shapeDagNode.findPlug("inMesh"));
+            modif.doIt();
+          }
         }
-        else if(geoType == 1) // a curves
+        else if(geoType == 1) // curves
         {
-          MDGModifier modif;
-          MPlug geometryPlug = evaluatorDepNode.findPlug("geometry");
-          MObject curveValue;
-          geometryPlug.getValue(curveValue);
-          modif.connect(geometryPlug.elementByLogicalIndex(0), shapeDagNode.findPlug("create"));
-          modif.doIt();
+          if(argDataType != "Curves")
+          {
+            success = false;
+          }
+          else
+          {
+            MDGModifier modif;
+            MPlug geometryPlug = evaluatorDepNode.findPlug("geometry");
+            MObject curveValue;
+            geometryPlug.getValue(curveValue);
+            modif.connect(geometryPlug.elementByLogicalIndex(0), shapeDagNode.findPlug("create"));
+            modif.doIt();
+          }
         }
       }
     }
-    else if(property == L"focalLength")
+    else if(argName == L"focalLength")
     {
-      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
-      if(camera.isNullObject())
-        return false;
+      if(argDataType != "Float32")
+      {
+        success = false;
+      }
+      else
+      {
+        FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+        if(camera.isNullObject())
+          return false;
 
-      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+        MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
 
-      MDGModifier modif;
-      modif.connect(evaluatorDepNode.findPlug("focalLength"), cameraDagNode.findPlug("focalLength"));
-      modif.doIt();
+        MDGModifier modif;
+        modif.connect(evaluatorDepNode.findPlug("focalLength"), cameraDagNode.findPlug("focalLength"));
+        modif.doIt();
+      }
     }
-    else if(property == L"focusDistance")
+    else if(argName == L"focusDistance")
     {
-      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
-      if(camera.isNullObject())
-        return false;
+      if(argDataType != "Float32")
+      {
+        success = false;
+      }
+      else
+      {
+        FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+        if(camera.isNullObject())
+          return false;
 
-      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+        MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
 
-      MDGModifier modif;
-      modif.connect(evaluatorDepNode.findPlug("focusDistance"), cameraDagNode.findPlug("focusDistance"));
-      modif.doIt();
+        MDGModifier modif;
+        modif.connect(evaluatorDepNode.findPlug("focusDistance"), cameraDagNode.findPlug("focusDistance"));
+        modif.doIt();
+      }
     }
-    else if(property == L"near")
+    else if(argName == L"near")
     {
-      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
-      if(camera.isNullObject())
-        return false;
+      if(argDataType != "Float32")
+      {
+        success = false;
+      }
+      else
+      {
+        FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+        if(camera.isNullObject())
+          return false;
 
-      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+        MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
 
-      MDGModifier modif;
-      modif.connect(evaluatorDepNode.findPlug("near"), cameraDagNode.findPlug("nearClipPlane"));
-      modif.doIt();
+        MDGModifier modif;
+        modif.connect(evaluatorDepNode.findPlug("near"), cameraDagNode.findPlug("nearClipPlane"));
+        modif.doIt();
+      }
     }
-    else if(property == L"far")
+    else if(argName == L"far")
     {
-      FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
-      if(camera.isNullObject())
-        return false;
+      if(argDataType != "Float32")
+      {
+        success = false;
+      }
+      else
+      {
+        FabricCore::RTVal camera = FabricCore::RTVal::Create(obj.getContext(), "ImporterCamera", 1, &obj);
+        if(camera.isNullObject())
+          return false;
 
-      MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
+        MFnDagNode cameraDagNode(getShapeForNode(objDepNode.object()));
 
-      MDGModifier modif;
-      modif.connect(evaluatorDepNode.findPlug("far"), cameraDagNode.findPlug("farClipPlane"));
-      modif.doIt();
+        MDGModifier modif;
+        modif.connect(evaluatorDepNode.findPlug("far"), cameraDagNode.findPlug("farClipPlane"));
+        modif.doIt();
+      }
     }
     else
     {
-      mayaLogErrorFunc("Evaluator uses unsupported property '"+property+"'.");
-      continue;
+      MPlug plug = objDepNode.findPlug(argName);
+      if(plug.isNull())
+      {
+        if(argPortType == FEC_DFGPortType_Out)
+          mayaLogErrorFunc("Evaluator uses unsupported property '"+argName+"'.");
+        continue;
+      }
+
+      // user properties and others
+      MDGModifier modif;
+      modif.connect(evaluatorDepNode.findPlug(argName), plug);
+      modif.doIt();
     }
   }
+
+  // assign all of the arguments
+  for(unsigned int i=0;i<argCount;i++)
+  {
+    FabricCore::RTVal indexVal = FabricCore::RTVal::ConstructUInt32(m_client, i);
+    int argPortType = evaluator.callMethod("SInt32", "getArgPortType", 1, &indexVal).getSInt32();
+    if(argPortType != FEC_DFGPortType_In)
+      continue;
+
+    MString argName = evaluator.callMethod("String", "getArgName", 1, &indexVal).getStringCString();
+    MString argDataType = evaluator.callMethod("String", "getArgDataType", 1, &indexVal).getStringCString();
+
+    if(argDataType == L"Scalar")
+      argDataType = L"Float32";
+    if(argDataType == L"Integer")
+      argDataType = L"SInt32";
+
+    FabricCore::RTVal argValueVal = evaluator.callMethod("RTVal", "getArgValue", 1, &indexVal);
+    argValueVal = argValueVal.getUnwrappedRTVal();
+
+    MString argValueType = argValueVal.getTypeNameCStr();
+    if(argValueType == L"Scalar")
+      argValueType = L"Float32";
+    if(argValueType == L"Integer")
+      argValueType = L"SInt32";
+
+    if(argValueType != argDataType)
+    {
+      mayaLogFunc(MString(getName())+": Warning: Argument value is not a "+argDataType+".");
+      continue;
+    }
+
+    MPlug plug = evaluatorDepNode.findPlug(argName);
+    if(plug.isNull())
+    {
+      mayaLogFunc(MString(getName())+": Warning: Cannot find plug for evaluator argument "+argName+".");
+      continue;
+    }
+
+    // todo: we should probably centralize this code in a function
+    // since we are using it in several places - structurally somewhat different but similar.
+    if(argDataType == L"Boolean")
+    {
+      plug.setValue(argValueVal.getBoolean());
+    }
+    else if(argDataType == L"SInt32")
+    {
+      plug.setValue(argValueVal.getSInt32());
+    }
+    else if(argDataType == L"UInt32")
+    {
+      plug.setValue((int)argValueVal.getUInt32());
+    }
+    else if(argDataType == L"Float32")
+    {
+      if(argName == L"time" || argName == L"timeline")
+      {
+        // setup an expression to drive the time
+        MString exprCmd = "expression -s \""+
+          plug.name()+
+          " = time;\"  -o "+
+          evaluatorDepNode.name()+
+          " -ae 1 -uc all ;";
+        MGlobal::executeCommand(exprCmd);
+      }
+      else
+      {
+        plug.setValue(argValueVal.getFloat32());
+      }
+    }
+    else if(argDataType == L"Float64")
+    {
+      plug.setValue(argValueVal.getFloat64());
+    }
+    else if(argDataType == L"String")
+    {
+      plug.setValue(MString(argValueVal.getStringCString()));
+    }
+    else if(argDataType == L"Vec2")
+    {
+      plug.child(0).setValue(argValueVal.maybeGetMember("x").getFloat32());
+      plug.child(1).setValue(argValueVal.maybeGetMember("y").getFloat32());
+    }
+    else if(argDataType == L"Vec3")
+    {
+      plug.child(0).setValue(argValueVal.maybeGetMember("x").getFloat32());
+      plug.child(1).setValue(argValueVal.maybeGetMember("y").getFloat32());
+      plug.child(2).setValue(argValueVal.maybeGetMember("z").getFloat32());
+    }
+    else if(argDataType == L"Color")
+    {
+      plug.child(0).setValue(argValueVal.maybeGetMember("r").getFloat32());
+      plug.child(1).setValue(argValueVal.maybeGetMember("g").getFloat32());
+      plug.child(2).setValue(argValueVal.maybeGetMember("b").getFloat32());
+      plug.child(3).setValue(argValueVal.maybeGetMember("a").getFloat32());
+    }
+  }
+
   return success;
 }
 
@@ -1584,4 +1657,16 @@ void FabricImportPatternCommand::processUserAttributes(FabricCore::RTVal objRef)
   {
     mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
   }
+}
+
+MString FabricImportPatternCommand::mayaPathFromPatternPath(MString path)
+{
+  std::string pathStr = path.asChar();
+  for(size_t i=0;i<pathStr.length();i++)
+  {
+    if(pathStr[i] != '/')
+      continue;
+    pathStr[i] = '|';
+  }
+  return pathStr.c_str();
 }

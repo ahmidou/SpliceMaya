@@ -57,6 +57,7 @@ public:
   void constructBaseInterface();
 
   static FabricDFGBaseInterface * getInstanceByName(const std::string & name);
+  static FabricDFGBaseInterface * getInstanceByMObject(const MObject & object);
   static FabricDFGBaseInterface * getInstanceById(unsigned int id);
   static FabricDFGBaseInterface * getInstanceByIndex(unsigned int index);
   static unsigned int getNumInstances();
