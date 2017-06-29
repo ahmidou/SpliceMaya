@@ -166,10 +166,14 @@ FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByName(
   MGlobal::getSelectionListByName(name.c_str(), selList);
   MObject spliceMayaNodeObj;
   selList.getDependNode(0, spliceMayaNodeObj);
+  return getInstanceByMObject(spliceMayaNodeObj);
+}
 
+FabricDFGBaseInterface * FabricDFGBaseInterface::getInstanceByMObject(const MObject & object)
+{
   for(size_t i=0;i<_instances.size();i++)
   {
-    if(_instances[i]->getThisMObject() == spliceMayaNodeObj)
+    if(_instances[i]->getThisMObject() == object)
     {
       return _instances[i];
     }

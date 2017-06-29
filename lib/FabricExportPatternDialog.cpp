@@ -13,6 +13,7 @@
 
 #include "FabricExportPatternDialog.h"
 #include "FabricExportPatternCommand.h"
+#include "FabricImportPatternDialog.h"
 
 FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings)
 : QDialog(parent)
@@ -22,9 +23,13 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
 , m_wasAccepted(false)
 {
   setWindowTitle("Fabric Export Pattern");
+
+  if(m_settings.useLastArgValues)
+    FabricImportPatternDialog::restoreSettings(client, m_settings.filePath, m_binding);
+
   m_stack = new QUndoStack();
   m_handler = new FabricUI::DFG::DFGUICmdHandler_QUndo(m_stack);
-  m_bindingItem = new FabricUI::ModelItems::BindingModelItem(m_handler, binding);
+  m_bindingItem = new FabricUI::ModelItems::BindingModelItem(m_handler, binding, true, false, false);
   m_owner = new FabricUI::ValueEditor::VEEditorOwner();
   m_owner->initConnections();
   m_owner->emitReplaceModelRoot( m_bindingItem );
@@ -88,6 +93,13 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
   optionsLayout->addWidget(subStepsLineEdit, 5, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(subStepsLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onSubStepsChanged(const QString &)));
 
+  QLabel * userAttributesLabel = new QLabel("User Attributes", optionsWidget);
+  optionsLayout->addWidget(userAttributesLabel, 6, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QCheckBox * userAttributesCheckbox = new QCheckBox(optionsWidget);
+  userAttributesCheckbox->setCheckState(m_settings.userAttributes ? Qt::Checked : Qt::Unchecked);
+  optionsLayout->addWidget(userAttributesCheckbox, 6, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(userAttributesCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onUserAttributesChanged(int)));
+
   QDialogButtonBox * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
   layout->addWidget(buttons);
 
@@ -108,6 +120,7 @@ void FabricExportPatternDialog::onAccepted()
   FabricCore::Client client = m_client;
   FabricCore::DFGBinding binding = m_binding;
   FabricExportPatternSettings settings = m_settings;
+  FabricImportPatternDialog::storeSettings(client, settings.filePath, binding);
   close();
   FabricExportPatternCommand().invoke(client, binding, settings);
 }
@@ -135,4 +148,9 @@ void FabricExportPatternDialog::onFPSChanged(const QString & text)
 void FabricExportPatternDialog::onSubStepsChanged(const QString & text)
 {
   m_settings.substeps = (unsigned int)text.toDouble();
+}
+
+void FabricExportPatternDialog::onUserAttributesChanged(int state)
+{
+  m_settings.userAttributes = state == Qt::Checked;
 }

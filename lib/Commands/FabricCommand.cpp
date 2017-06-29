@@ -35,7 +35,7 @@ MStatus FabricCommand::doIt(
   const MArgList &args)
 {
   MStatus status;
-  
+
   FABRIC_MAYA_CATCH_BEGIN();
 
   // Create the maya command assiciated with the fabric command.
@@ -66,32 +66,24 @@ MStatus FabricCommand::doIt(
   }
   
   status = MS::kSuccess;
-
   FABRIC_MAYA_CATCH_END("FabricCommand::doIt");
-
   return status;
 }
 
 MStatus FabricCommand::undoIt()
 {
   FABRIC_MAYA_CATCH_BEGIN();
- 
   CommandManager::getCommandManager()->undoCommand();
   return MS::kSuccess;
-
   FABRIC_MAYA_CATCH_END("FabricCommand::undoIt");
-
   return MS::kFailure;
 }
 
 MStatus FabricCommand::redoIt()
 {
   FABRIC_MAYA_CATCH_BEGIN();
-
   CommandManager::getCommandManager()->redoCommand();
   return MS::kSuccess;
-  
   FABRIC_MAYA_CATCH_END("FabricCommand::redoIt");
-
   return MS::kFailure;
 }

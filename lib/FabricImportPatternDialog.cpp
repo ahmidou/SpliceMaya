@@ -12,6 +12,7 @@
 
 #include "FabricImportPatternDialog.h"
 #include "FabricImportPatternCommand.h"
+#include "FabricSpliceHelpers.h"
 
 FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, FabricImportPatternSettings settings)
 : QDialog(parent)
@@ -21,9 +22,13 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
 , m_wasAccepted(false)
 {
   setWindowTitle("Fabric Import Pattern");
+
+  if(m_settings.useLastArgValues)
+    restoreSettings(client, m_settings.filePath, m_binding);
+
   m_stack = new QUndoStack();
   m_handler = new FabricUI::DFG::DFGUICmdHandler_QUndo(m_stack);
-  m_bindingItem = new FabricUI::ModelItems::BindingModelItem(m_handler, binding);
+  m_bindingItem = new FabricUI::ModelItems::BindingModelItem(m_handler, binding, true, false, false);
   m_owner = new FabricUI::ValueEditor::VEEditorOwner();
   m_owner->initConnections();
   m_owner->emitReplaceModelRoot( m_bindingItem );
@@ -54,26 +59,33 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
   optionsLayout->addWidget(attachToExistingCheckbox, 0, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(attachToExistingCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onAttachToExistingChanged(int)));
 
+  QLabel * userAttributesLabel = new QLabel("User Attributes", optionsWidget);
+  optionsLayout->addWidget(userAttributesLabel, 1, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QCheckBox * userAttributesCheckbox = new QCheckBox(optionsWidget);
+  userAttributesCheckbox->setCheckState(m_settings.userAttributes ? Qt::Checked : Qt::Unchecked);
+  optionsLayout->addWidget(userAttributesCheckbox, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(userAttributesCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onUserAttributesChanged(int)));
+
   QLabel * enableMaterialsLabel = new QLabel("Enable Materials", optionsWidget);
-  optionsLayout->addWidget(enableMaterialsLabel, 1, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(enableMaterialsLabel, 2, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QCheckBox * enableMaterialsCheckbox = new QCheckBox(optionsWidget);
   enableMaterialsCheckbox->setCheckState(m_settings.enableMaterials ? Qt::Checked : Qt::Unchecked);
-  optionsLayout->addWidget(enableMaterialsCheckbox, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(enableMaterialsCheckbox, 2, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(enableMaterialsCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onEnableMaterialsChanged(int)));
 
   QLabel * scaleLabel = new QLabel("Scale", optionsWidget);
-  optionsLayout->addWidget(scaleLabel, 2, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(scaleLabel, 3, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * scaleLineEdit = new QLineEdit(optionsWidget);
   scaleLineEdit->setValidator(new QDoubleValidator());
   scaleLineEdit->setText(QString::number(m_settings.scale));
-  optionsLayout->addWidget(scaleLineEdit, 2, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(scaleLineEdit, 3, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(scaleLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onScaleChanged(const QString &)));
 
   QLabel * nameSpaceLabel = new QLabel("NameSpace", optionsWidget);
-  optionsLayout->addWidget(nameSpaceLabel, 3, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(nameSpaceLabel, 4, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * nameSpaceLineEdit = new QLineEdit(optionsWidget);
   nameSpaceLineEdit->setText(m_settings.nameSpace.asChar());
-  optionsLayout->addWidget(nameSpaceLineEdit, 3, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(nameSpaceLineEdit, 4, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(nameSpaceLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onNameSpaceChanged(const QString &)));
 
   QDialogButtonBox * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
@@ -96,6 +108,7 @@ void FabricImportPatternDialog::onAccepted()
   FabricCore::DFGBinding binding = m_binding;
   FabricCore::Client client = m_client;
   FabricImportPatternSettings settings = m_settings;
+  storeSettings(client, settings.filePath, binding);
   close();
   FabricImportPatternCommand().invoke(client, binding, settings);
 }
@@ -103,6 +116,11 @@ void FabricImportPatternDialog::onAccepted()
 void FabricImportPatternDialog::onAttachToExistingChanged(int state)
 {
   m_settings.attachToExisting = state == Qt::Checked;
+}
+
+void FabricImportPatternDialog::onUserAttributesChanged(int state)
+{
+  m_settings.userAttributes = state == Qt::Checked;
 }
 
 void FabricImportPatternDialog::onEnableMaterialsChanged(int state)
@@ -120,3 +138,78 @@ void FabricImportPatternDialog::onNameSpaceChanged(const QString & text)
   m_settings.nameSpace = text.toUtf8().constData();
 }
 
+void FabricImportPatternDialog::storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding)
+{
+  MString app = "Fabric Engine";
+  QSettings settings(app.asChar(), patternPath.asChar());
+
+  try
+  {
+    FabricCore::DFGExec exec = binding.getExec();
+    for(unsigned int i=0;i<exec.getExecPortCount();i++)
+    {
+      if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
+        continue;
+
+      FTL::CStrRef type = exec.getExecPortResolvedType(i);
+      if(type != "String" && type != "FilePath" && !FabricCore::GetRegisteredTypeIsShallow(client.getContext(), type.c_str()))
+        continue;
+
+      FTL::CStrRef name = exec.getExecPortName(i);
+
+      FabricCore::RTVal value = binding.getArgValue(i);
+      if(type == "FilePath")
+        value = value.callMethod("String", "string", 0, 0);
+      QString jsonValue = value.getJSON().getStringCString();
+      settings.setValue(name.c_str(), jsonValue);
+    }
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+  }
+}
+
+void FabricImportPatternDialog::restoreSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding)
+{
+  MString app = "Fabric Engine";
+  QSettings settings(app.asChar(), patternPath.asChar());
+
+  try
+  {
+    FabricCore::DFGExec exec = binding.getExec();
+    for(unsigned int i=0;i<exec.getExecPortCount();i++)
+    {
+      if(exec.getExecPortType(i) != FabricCore::DFGPortType_In)
+        continue;
+
+      FTL::CStrRef type = exec.getExecPortResolvedType(i);
+      if(type != "String" && type != "FilePath" && !FabricCore::GetRegisteredTypeIsShallow(client.getContext(), type.c_str()))
+        continue;
+
+      FTL::CStrRef name = exec.getExecPortName(i);
+
+      QVariant jsonVariant = settings.value(name.c_str());
+      if(!jsonVariant.isValid())
+        continue;
+
+      MString jsonString = jsonVariant.toString().toUtf8().constData();
+
+      FabricCore::RTVal value;
+      if(type == "FilePath")
+      {
+        FabricCore::RTVal valueStr = FabricCore::ConstructRTValFromJSON(client, "String", jsonString.asChar());
+        value = FabricCore::RTVal::Create(client, "FilePath", 1, &valueStr);
+      }
+      else
+      {
+        value = FabricCore::ConstructRTValFromJSON(client, type.c_str(), jsonString.asChar());
+      }
+      binding.setArgValue(i, value);
+    }
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+  }
+}
