@@ -26,6 +26,7 @@
 #include <maya/MFnSet.h>
 #include <maya/MFnLambertShader.h>
 #include <maya/MCommandResult.h>
+#include <maya/MNamespace.h>
 
 #include <FTL/FS.h>
 
@@ -145,9 +146,8 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     m_settings.nameSpace = argParser.flagArgumentString("namespace", 0);
     if(m_settings.nameSpace.length() > 0)
     {
-      MString suffix = m_settings.nameSpace.substring(m_settings.nameSpace.length()-2, m_settings.nameSpace.length()-1);
-      if(suffix != L"::")
-        m_settings.nameSpace = m_settings.nameSpace + L"::";
+      while(m_settings.nameSpace.substring(m_settings.nameSpace.length()-1, m_settings.nameSpace.length()-1) == ":")
+        m_settings.nameSpace = m_settings.nameSpace.substring(0, m_settings.nameSpace.length()-2);
     }
   }
   if( argParser.isFlagSet("scale") )
@@ -507,6 +507,14 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
     prog->open();
   }
 
+  MString prevNameSpace = MNamespace::currentNamespace();
+  if(m_settings.nameSpace.length() > 0)
+  {
+    if(!MNamespace::namespaceExists(m_settings.nameSpace))
+      MNamespace::addNamespace(m_settings.nameSpace);
+    MNamespace::setCurrentNamespace(m_settings.nameSpace);
+  }
+
   try
   {
     m_context = FabricCore::RTVal::Construct(m_client, "ImporterContext", 0, 0);
@@ -582,6 +590,8 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
         {
           prog->close();
           mayaLogFunc(MString(getName())+": aborted by user.");
+          MNamespace::setCurrentNamespace(prevNameSpace);
+
           return MS::kFailure;
         }
         prog->increment();
@@ -603,6 +613,8 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
         {
           prog->close();
           mayaLogFunc(MString(getName())+": aborted by user.");
+          MNamespace::setCurrentNamespace(prevNameSpace);
+
           return MS::kFailure;
         }
         prog->increment();
@@ -628,6 +640,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
   setResult(result);
   mayaLogFunc(MString(getName())+": import done.");
+  MNamespace::setCurrentNamespace(prevNameSpace);
   return MS::kSuccess;
 }
 
@@ -737,7 +750,8 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
     MDagModifier modif;
     node = modif.createNode(type, parentNode);
     modif.doIt();
-    modif.renameNode(node, m_settings.nameSpace + name);
+
+    modif.renameNode(node, name);
     modif.doIt();
   }
   else
@@ -745,7 +759,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
     MDGModifier modif;
     node = modif.createNode(type);
     modif.doIt();
-    modif.renameNode(node, m_settings.nameSpace + name);
+    modif.renameNode(node, name);
     modif.doIt();
   }
 
@@ -896,14 +910,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       if(m_settings.attachToExisting)
       {
         MSelectionList sl;
-        std::string pathStr = lookupPath.asChar();
-        for(size_t i=0;i<pathStr.length();i++)
-        {
-          if(pathStr[i] != '/')
-            continue;
-          pathStr[i] = '|';
-        }
-        sl.add(pathStr.c_str());
+        sl.add(mayaPathFromPatternPath(lookupPath));
         if(sl.length() > 0)
         {
           MDagPath dagPath;
@@ -931,7 +938,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       m_nodes.insert(std::pair< std::string, MObject > (lookupPath.asChar(), node));
       
       MDagModifier modif;
-      modif.renameNode(node, m_settings.nameSpace + name);
+      modif.renameNode(node, name);
       modif.doIt();
 
       if(!parentNode.isNull())
@@ -951,7 +958,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
           if(!refNode.isNull())
           {
             MDagModifier dagModif;
-            dagModif.renameNode(refNode, m_settings.nameSpace + name + "_reference");
+            dagModif.renameNode(refNode, name + "_reference");
             dagModif.reparentNode(refNode, node);
             dagModif.doIt();
 
@@ -1661,12 +1668,18 @@ void FabricImportPatternCommand::processUserAttributes(FabricCore::RTVal objRef)
 
 MString FabricImportPatternCommand::mayaPathFromPatternPath(MString path)
 {
-  std::string pathStr = path.asChar();
-  for(size_t i=0;i<pathStr.length();i++)
+  MStringArray parts;
+  path.split('/', parts);
+
+  MString result;
+  for(unsigned int i=0;i<parts.length();i++)
   {
-    if(pathStr[i] != '/')
-      continue;
-    pathStr[i] = '|';
+    if(i > 0)
+      result += "|";
+    if(m_settings.nameSpace.length() > 0)
+      result += m_settings.nameSpace + ":" + parts[i];
+    else
+      result += parts[i];
   }
-  return pathStr.c_str();
+  return result;
 }

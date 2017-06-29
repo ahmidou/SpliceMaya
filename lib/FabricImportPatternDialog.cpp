@@ -136,6 +136,11 @@ void FabricImportPatternDialog::onScaleChanged(const QString & text)
 void FabricImportPatternDialog::onNameSpaceChanged(const QString & text)
 {
   m_settings.nameSpace = text.toUtf8().constData();
+  if(m_settings.nameSpace.length() > 0)
+  {
+    while(m_settings.nameSpace.substring(m_settings.nameSpace.length()-1, m_settings.nameSpace.length()-1) == ":")
+      m_settings.nameSpace = m_settings.nameSpace.substring(0, m_settings.nameSpace.length()-2);
+  }
 }
 
 void FabricImportPatternDialog::storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding)
