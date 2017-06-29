@@ -73,7 +73,9 @@ bool FabricRenderCallback::canDraw()
 {
   if(!FabricRenderCallback::gCallbackEnabled)
     return false;
-  if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
+  if(!FabricSplice::SceneManagement::hasRenderableContent() && 
+    FabricDFGBaseInterface::getNumInstances() == 0 &&
+    !FabricImportPatternDialog::isPreviewRenderingEnabled())
     return false;
   return gRTRPassEnabled;
 }
