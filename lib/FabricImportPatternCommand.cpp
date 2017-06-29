@@ -41,6 +41,7 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.addFlag( "-q", "-disableDialogs", MSyntax::kBoolean );
   syntax.addFlag( "-k", "-namespace", MSyntax::kString );
   syntax.addFlag( "-x", "-attachToExisting", MSyntax::kBoolean );
+  syntax.addFlag( "-w", "-attachToSceneTime", MSyntax::kBoolean );
   syntax.addFlag( "-m", "-enableMaterials", MSyntax::kBoolean );
   syntax.addFlag( "-s", "-scale", MSyntax::kDouble );
   syntax.addFlag( "-n", "-canvasnode", MSyntax::kString );
@@ -446,14 +447,12 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         QApplication::sendEvent(mainWindow, &event);
 
         FabricImportPatternDialog * dialog = new FabricImportPatternDialog(mainWindow, m_client, binding, m_settings);
-        dialog->setWindowModality(Qt::ApplicationModal);
-        dialog->setSizeGripEnabled(true);
-        dialog->open();
 
-        if(!dialog->wasAccepted())
-        {
-          return MS::kSuccess;
-        }
+        // disable modality
+        dialog->setWindowModality(Qt::NonModal);
+        // dialog->setWindowModality(Qt::ApplicationModal);
+        dialog->setSizeGripEnabled(true);
+        dialog->show();
       }
       else
       {
@@ -507,7 +506,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
     prog->open();
   }
 
-  MString prevNameSpace = MNamespace::currentNamespace();
+  m_prevNameSpace = MNamespace::currentNamespace();
   if(m_settings.nameSpace.length() > 0)
   {
     if(!MNamespace::namespaceExists(m_settings.nameSpace))
@@ -590,8 +589,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
         {
           prog->close();
           mayaLogFunc(MString(getName())+": aborted by user.");
-          MNamespace::setCurrentNamespace(prevNameSpace);
-
+          cleanup(binding);
           return MS::kFailure;
         }
         prog->increment();
@@ -613,8 +611,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
         {
           prog->close();
           mayaLogFunc(MString(getName())+": aborted by user.");
-          MNamespace::setCurrentNamespace(prevNameSpace);
-
+          cleanup(binding);
           return MS::kFailure;
         }
         prog->increment();
@@ -640,10 +637,16 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
   setResult(result);
   mayaLogFunc(MString(getName())+": import done.");
-  MNamespace::setCurrentNamespace(prevNameSpace);
+  cleanup(binding);
   return MS::kSuccess;
 }
 
+void FabricImportPatternCommand::cleanup(FabricCore::DFGBinding binding)
+{
+  binding.setNotificationCallback(NULL, NULL);
+  binding.deallocValues();
+  MNamespace::setCurrentNamespace(m_prevNameSpace);
+}
 
 MString FabricImportPatternCommand::parentPath(MString path, MString * name)
 {
@@ -1505,7 +1508,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     }
     else if(argDataType == L"Float32")
     {
-      if(argName == L"time" || argName == L"timeline")
+      if((argName == L"time" || argName == L"timeline") && m_settings.attachToSceneTime)
       {
         // setup an expression to drive the time
         MString exprCmd = "expression -s \""+

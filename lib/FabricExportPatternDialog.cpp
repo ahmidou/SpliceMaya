@@ -23,6 +23,7 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
 , m_wasAccepted(false)
 {
   setWindowTitle("Fabric Export Pattern");
+  setAttribute(Qt::WA_DeleteOnClose, true);
 
   if(m_settings.useLastArgValues)
     FabricImportPatternDialog::restoreSettings(client, m_settings.filePath, m_binding);
@@ -53,58 +54,65 @@ FabricExportPatternDialog::FabricExportPatternDialog(QWidget * parent, FabricCor
   optionsWidget->setLayout(optionsLayout);
   layout->addWidget(optionsWidget);
 
+  int row = 0;
   QLabel * scaleLabel = new QLabel("Scale", optionsWidget);
-  optionsLayout->addWidget(scaleLabel, 1, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(scaleLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * scaleLineEdit = new QLineEdit(optionsWidget);
   scaleLineEdit->setValidator(new QDoubleValidator());
   scaleLineEdit->setText(QString::number(m_settings.scale));
-  optionsLayout->addWidget(scaleLineEdit, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(scaleLineEdit, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(scaleLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onScaleChanged(const QString &)));
 
+  row++;
   QLabel * startFrameLabel = new QLabel("Start Frame", optionsWidget);
-  optionsLayout->addWidget(startFrameLabel, 2, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(startFrameLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * startFrameLineEdit = new QLineEdit(optionsWidget);
   startFrameLineEdit->setValidator(new QDoubleValidator());
   startFrameLineEdit->setText(QString::number(m_settings.startFrame));
-  optionsLayout->addWidget(startFrameLineEdit, 2, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(startFrameLineEdit, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(startFrameLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onStartFrameChanged(const QString &)));
 
+  row++;
   QLabel * endFrameLabel = new QLabel("End Frame", optionsWidget);
-  optionsLayout->addWidget(endFrameLabel, 3, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(endFrameLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * endFrameLineEdit = new QLineEdit(optionsWidget);
   endFrameLineEdit->setValidator(new QDoubleValidator());
   endFrameLineEdit->setText(QString::number(m_settings.endFrame));
-  optionsLayout->addWidget(endFrameLineEdit, 3, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(endFrameLineEdit, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(endFrameLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onEndFrameChanged(const QString &)));
 
+  row++;
   QLabel * fpsLabel = new QLabel("FPS", optionsWidget);
-  optionsLayout->addWidget(fpsLabel, 4, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(fpsLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * fpsLineEdit = new QLineEdit(optionsWidget);
   fpsLineEdit->setValidator(new QDoubleValidator());
   fpsLineEdit->setText(QString::number(m_settings.fps));
-  optionsLayout->addWidget(fpsLineEdit, 4, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(fpsLineEdit, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(fpsLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onFPSChanged(const QString &)));
 
+  row++;
   QLabel * subStepsLabel = new QLabel("Sub Steps", optionsWidget);
-  optionsLayout->addWidget(subStepsLabel, 5, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(subStepsLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * subStepsLineEdit = new QLineEdit(optionsWidget);
   subStepsLineEdit->setValidator(new QIntValidator(1, 32));
   subStepsLineEdit->setText(QString::number(1.0 / m_settings.substeps));
-  optionsLayout->addWidget(subStepsLineEdit, 5, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(subStepsLineEdit, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(subStepsLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onSubStepsChanged(const QString &)));
 
+  row++;
   QLabel * userAttributesLabel = new QLabel("User Attributes", optionsWidget);
-  optionsLayout->addWidget(userAttributesLabel, 6, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(userAttributesLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QCheckBox * userAttributesCheckbox = new QCheckBox(optionsWidget);
   userAttributesCheckbox->setCheckState(m_settings.userAttributes ? Qt::Checked : Qt::Unchecked);
-  optionsLayout->addWidget(userAttributesCheckbox, 6, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(userAttributesCheckbox, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(userAttributesCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onUserAttributesChanged(int)));
 
+  row++;
   QLabel * stripNameSpacesLabel = new QLabel("Strip NameSpaces", optionsWidget);
-  optionsLayout->addWidget(stripNameSpacesLabel, 7, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(stripNameSpacesLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QCheckBox * stripNameSpacesCheckbox = new QCheckBox(optionsWidget);
   stripNameSpacesCheckbox->setCheckState(m_settings.stripNameSpaces ? Qt::Checked : Qt::Unchecked);
-  optionsLayout->addWidget(stripNameSpacesCheckbox, 7, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(stripNameSpacesCheckbox, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(stripNameSpacesCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onStripNameSpacesChanged(int)));
 
   QDialogButtonBox * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
@@ -120,6 +128,8 @@ FabricExportPatternDialog::~FabricExportPatternDialog()
   delete m_bindingItem;
   delete m_handler;
   delete m_stack;
+  m_binding.deallocValues();
+  m_binding = FabricCore::DFGBinding();
 }
 
 void FabricExportPatternDialog::onAccepted()

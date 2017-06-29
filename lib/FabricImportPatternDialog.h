@@ -10,6 +10,7 @@
 #include <DFG/DFGUICmdHandler_QUndo.h>
 #include <ModelItems/BindingModelItem.h>
 #include <ValueEditor/VEEditorOwner.h>
+#include <ValueEditor/VETreeWidget.h>
 #include "FabricImportPatternCommand.h"
 
 class FabricImportPatternDialog : public QDialog
@@ -23,21 +24,28 @@ public:
   virtual ~FabricImportPatternDialog();
 
   bool wasAccepted() const { return m_wasAccepted; }
+  static bool isPreviewRenderingEnabled() { return s_previewRenderingEnabled; }
 
 public slots:
   void onAccepted();
-  void onRejected() { m_wasAccepted = false; close(); }
+  void onRejected();
   void onUserAttributesChanged(int state);
   void onAttachToExistingChanged(int state);
+  void onAttachToSceneTimeChanged(int state);
   void onEnableMaterialsChanged(int state);
   void onScaleChanged(const QString & text);
   void onNameSpaceChanged(const QString & text);
 
 protected:
+  virtual void closeEvent(QCloseEvent * event);
   static void storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding);
   static void restoreSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding);
 
 private:
+
+  static void BindingNotificationCallback(void * userData, char const *jsonCString, uint32_t jsonLength);
+  void updatePreviewRendering(bool enableIfDisabled);
+  void disablePreviewRendering();
 
   FabricImportPatternSettings m_settings;
 
@@ -48,4 +56,5 @@ private:
   FabricUI::ModelItems::BindingModelItem * m_bindingItem;
   FabricUI::ValueEditor::VEEditorOwner * m_owner;
   bool m_wasAccepted;
+  static bool s_previewRenderingEnabled;
 };

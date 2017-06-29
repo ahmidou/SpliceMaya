@@ -9,10 +9,20 @@
 #include <QLineEdit>
 #include <QDoubleValidator>
 #include <QDialogButtonBox>
+#include <QPushButton>
+
+#include <maya/MGlobal.h>
 
 #include "FabricImportPatternDialog.h"
 #include "FabricImportPatternCommand.h"
 #include "FabricSpliceHelpers.h"
+
+#include <FTL/StrRef.h>
+#include <FTL/JSONDec.h>
+#include <FTL/JSONValue.h>
+#include <FTL/OwnedPtr.h>
+
+bool FabricImportPatternDialog::s_previewRenderingEnabled = false;
 
 FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCore::Client client, FabricCore::DFGBinding binding, FabricImportPatternSettings settings)
 : QDialog(parent)
@@ -22,6 +32,7 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
 , m_wasAccepted(false)
 {
   setWindowTitle("Fabric Import Pattern");
+  setAttribute(Qt::WA_DeleteOnClose, true);
 
   if(m_settings.useLastArgValues)
     restoreSettings(client, m_settings.filePath, m_binding);
@@ -38,13 +49,13 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
   setMaximumWidth(1200);
   setMinimumHeight(800);
 
-  QWidget * widget = m_owner->getWidget();
-  widget->setSizePolicy(QSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding ));
-  widget->setParent(this);
+  QWidget * valueEditor = m_owner->getWidget();
+  valueEditor->setSizePolicy(QSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding ));
+  valueEditor->setParent(this);
 
   QVBoxLayout * layout = new QVBoxLayout();
   setLayout(layout);
-  layout->addWidget(widget);
+  layout->addWidget(valueEditor);
 
   QWidget * optionsWidget = new QWidget(this);
   optionsWidget->setContentsMargins(0, 0, 0, 0);
@@ -52,47 +63,63 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
   optionsWidget->setLayout(optionsLayout);
   layout->addWidget(optionsWidget);
 
+  int row = 0;
+
   QLabel * attachToExistingLabel = new QLabel("Attach to existing", optionsWidget);
-  optionsLayout->addWidget(attachToExistingLabel, 0, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(attachToExistingLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QCheckBox * attachToExistingCheckbox = new QCheckBox(optionsWidget);
   attachToExistingCheckbox->setCheckState(m_settings.attachToExisting ? Qt::Checked : Qt::Unchecked);
-  optionsLayout->addWidget(attachToExistingCheckbox, 0, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(attachToExistingCheckbox, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(attachToExistingCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onAttachToExistingChanged(int)));
 
+  row++;
   QLabel * userAttributesLabel = new QLabel("User Attributes", optionsWidget);
-  optionsLayout->addWidget(userAttributesLabel, 1, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(userAttributesLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QCheckBox * userAttributesCheckbox = new QCheckBox(optionsWidget);
   userAttributesCheckbox->setCheckState(m_settings.userAttributes ? Qt::Checked : Qt::Unchecked);
-  optionsLayout->addWidget(userAttributesCheckbox, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(userAttributesCheckbox, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(userAttributesCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onUserAttributesChanged(int)));
 
+  row++;
   QLabel * enableMaterialsLabel = new QLabel("Enable Materials", optionsWidget);
-  optionsLayout->addWidget(enableMaterialsLabel, 2, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(enableMaterialsLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QCheckBox * enableMaterialsCheckbox = new QCheckBox(optionsWidget);
   enableMaterialsCheckbox->setCheckState(m_settings.enableMaterials ? Qt::Checked : Qt::Unchecked);
-  optionsLayout->addWidget(enableMaterialsCheckbox, 2, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(enableMaterialsCheckbox, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(enableMaterialsCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onEnableMaterialsChanged(int)));
 
+  row++;
   QLabel * scaleLabel = new QLabel("Scale", optionsWidget);
-  optionsLayout->addWidget(scaleLabel, 3, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(scaleLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * scaleLineEdit = new QLineEdit(optionsWidget);
   scaleLineEdit->setValidator(new QDoubleValidator());
   scaleLineEdit->setText(QString::number(m_settings.scale));
-  optionsLayout->addWidget(scaleLineEdit, 3, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(scaleLineEdit, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(scaleLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onScaleChanged(const QString &)));
 
+  row++;
   QLabel * nameSpaceLabel = new QLabel("NameSpace", optionsWidget);
-  optionsLayout->addWidget(nameSpaceLabel, 4, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(nameSpaceLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QLineEdit * nameSpaceLineEdit = new QLineEdit(optionsWidget);
   nameSpaceLineEdit->setText(m_settings.nameSpace.asChar());
-  optionsLayout->addWidget(nameSpaceLineEdit, 4, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  optionsLayout->addWidget(nameSpaceLineEdit, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(nameSpaceLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onNameSpaceChanged(const QString &)));
+
+  row++;
+  QLabel * attachToSceneTimeLabel = new QLabel("Connect scene time", optionsWidget);
+  optionsLayout->addWidget(attachToSceneTimeLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  QCheckBox * attachToSceneTimeCheckbox = new QCheckBox(optionsWidget);
+  attachToSceneTimeCheckbox->setCheckState(m_settings.attachToSceneTime ? Qt::Checked : Qt::Unchecked);
+  optionsLayout->addWidget(attachToSceneTimeCheckbox, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(attachToSceneTimeCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onAttachToSceneTimeChanged(int)));
 
   QDialogButtonBox * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
   layout->addWidget(buttons);
 
   QObject::connect(buttons, SIGNAL(accepted()), this, SLOT(onAccepted()));
   QObject::connect(buttons, SIGNAL(rejected()), this, SLOT(onRejected()));
+
+  updatePreviewRendering(true);
 }
 
 FabricImportPatternDialog::~FabricImportPatternDialog()
@@ -101,6 +128,7 @@ FabricImportPatternDialog::~FabricImportPatternDialog()
   delete m_bindingItem;
   delete m_handler;
   delete m_stack;
+  m_binding = FabricCore::DFGBinding();
 }
 
 void FabricImportPatternDialog::onAccepted()
@@ -109,13 +137,27 @@ void FabricImportPatternDialog::onAccepted()
   FabricCore::Client client = m_client;
   FabricImportPatternSettings settings = m_settings;
   storeSettings(client, settings.filePath, binding);
+  disablePreviewRendering();
   close();
   FabricImportPatternCommand().invoke(client, binding, settings);
+}
+
+void FabricImportPatternDialog::onRejected()
+{
+  m_wasAccepted = false;
+  m_binding.deallocValues();
+  disablePreviewRendering();
+  close();
 }
 
 void FabricImportPatternDialog::onAttachToExistingChanged(int state)
 {
   m_settings.attachToExisting = state == Qt::Checked;
+}
+
+void FabricImportPatternDialog::onAttachToSceneTimeChanged(int state)
+{
+  m_settings.attachToSceneTime = state == Qt::Checked;
 }
 
 void FabricImportPatternDialog::onUserAttributesChanged(int state)
@@ -141,6 +183,12 @@ void FabricImportPatternDialog::onNameSpaceChanged(const QString & text)
     while(m_settings.nameSpace.substring(m_settings.nameSpace.length()-1, m_settings.nameSpace.length()-1) == ":")
       m_settings.nameSpace = m_settings.nameSpace.substring(0, m_settings.nameSpace.length()-2);
   }
+}
+
+void FabricImportPatternDialog::closeEvent(QCloseEvent * event)
+{
+  disablePreviewRendering();
+  QDialog::closeEvent(event);
 }
 
 void FabricImportPatternDialog::storeSettings(FabricCore::Client client, MString patternPath, FabricCore::DFGBinding binding)
@@ -217,4 +265,59 @@ void FabricImportPatternDialog::restoreSettings(FabricCore::Client client, MStri
   {
     mayaLogErrorFunc(e.getDesc_cstr());
   }
+}
+
+void FabricImportPatternDialog::BindingNotificationCallback(void * userData, char const *jsonCString, uint32_t jsonLength)
+{
+  FabricImportPatternDialog * dialog = (FabricImportPatternDialog *)userData;
+  if(!dialog)
+    return;
+
+  FTL::CStrRef jsonStrRef( jsonCString, jsonLength );
+  FTL::JSONStrWithLoc jsonStrWithLoc( jsonStrRef );
+  FTL::OwnedPtr<FTL::JSONObject const> jsonObject(
+    FTL::JSONValue::Decode( jsonStrWithLoc )->cast<FTL::JSONObject>()
+    );
+  FTL::CStrRef descStr = jsonObject->getString( FTL_STR("desc") );
+  if ( descStr != FTL_STR("dirty") )
+    return;
+
+  dialog->updatePreviewRendering(false);
+}
+
+void FabricImportPatternDialog::updatePreviewRendering(bool enableIfDisabled)
+{
+  if((!s_previewRenderingEnabled) && (!enableIfDisabled))
+    return;
+
+  if(!s_previewRenderingEnabled)
+  {
+    m_binding.setNotificationCallback( FabricImportPatternDialog::BindingNotificationCallback, this );
+    s_previewRenderingEnabled = true;
+  }
+
+  try
+  {
+    m_binding.execute();
+  }
+  catch(FabricCore::Exception e)
+  {
+    mayaLogErrorFunc(e.getDesc_cstr());
+
+    if(m_binding.isValid())
+    {
+      MString errors = m_binding.getErrors(true).getCString();
+      mayaLogErrorFunc(errors);
+    }
+  }
+  MGlobal::executeCommand("refresh");
+}
+
+void FabricImportPatternDialog::disablePreviewRendering()
+{
+  if(!s_previewRenderingEnabled)
+    return;
+  m_binding.setNotificationCallback(NULL, NULL);
+  s_previewRenderingEnabled = false;
+  MGlobal::executeCommand("refresh");
 }

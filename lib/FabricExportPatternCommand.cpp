@@ -313,6 +313,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
 
       if(!dialog->wasAccepted())
       {
+        cleanup(binding);
         return MS::kSuccess;
       }
     }
@@ -486,6 +487,7 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
   catch(FabricCore::Exception e)
   {
     mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
+    cleanup(binding);
     return mayaErrorOccured();
   }
 
@@ -538,6 +540,7 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
       }
       if(prog)
         prog->close();
+      cleanup(binding);
       return mayaErrorOccured();
     }
 
@@ -547,6 +550,7 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
       {
         prog->close();
         mayaLogFunc(MString(getName())+": aborted by user.");
+        cleanup(binding);
         return MS::kFailure;
       }
       prog->increment();
@@ -566,7 +570,14 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
 
   mayaLogFunc(MString(getName())+": export finished.");
+  cleanup(binding);
   return MS::kSuccess;
+}
+
+void FabricExportPatternCommand::cleanup(FabricCore::DFGBinding binding)
+{
+  binding.setNotificationCallback(NULL, NULL);
+  binding.deallocValues();
 }
 
 bool FabricExportPatternCommand::registerNode(const MObject & node, MString prefix, bool addChildren)

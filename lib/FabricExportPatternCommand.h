@@ -53,6 +53,7 @@ public:
   virtual MStatus doIt(const MArgList &args);
   virtual bool isUndoable() const { return false; }
   MStatus invoke(FabricCore::Client client, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings);
+  void cleanup(FabricCore::DFGBinding binding);
 
 private:
 
