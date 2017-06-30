@@ -6,6 +6,7 @@
 #include "FabricSpliceHelpers.h"
 #include "FabricRenderCallback.h"
 #include "FabricDFGBaseInterface.h"
+#include "FabricImportPatternDialog.h"
 
 #include <maya/M3dView.h>
 #include <maya/MGlobal.h>
