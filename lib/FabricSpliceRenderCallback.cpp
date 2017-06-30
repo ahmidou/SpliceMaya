@@ -6,6 +6,7 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceBaseInterface.h"
 #include "FabricSpliceRenderCallback.h"
+#include "FabricImportPatternDialog.h"
 #include <maya/MFrameContext.h>
 #include <maya/MDrawContext.h>
 #include <maya/MEventMessage.h>
@@ -45,7 +46,9 @@ void FabricSpliceRenderCallback::disable() {
 bool FabricSpliceRenderCallback::canDraw() {
   if(!FabricSpliceRenderCallback::gCallbackEnabled)
     return false;
-  if(!FabricSplice::SceneManagement::hasRenderableContent() && FabricDFGBaseInterface::getNumInstances() == 0)
+  if(!FabricSplice::SceneManagement::hasRenderableContent() && 
+    FabricDFGBaseInterface::getNumInstances() == 0 &&
+    !FabricImportPatternDialog::isPreviewRenderingEnabled())
     return false;
   return gRTRPassEnabled;
 }

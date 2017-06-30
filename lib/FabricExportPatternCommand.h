@@ -27,6 +27,7 @@ struct FabricExportPatternSettings
   MStringArray objects;
   bool useLastArgValues;
   bool userAttributes;
+  bool stripNameSpaces;
 
   FabricExportPatternSettings()
   {
@@ -38,6 +39,7 @@ struct FabricExportPatternSettings
     substeps = 1;
     useLastArgValues = true;
     userAttributes = true;
+    stripNameSpaces = false;
   }
 };
 
@@ -51,15 +53,17 @@ public:
   virtual MStatus doIt(const MArgList &args);
   virtual bool isUndoable() const { return false; }
   MStatus invoke(FabricCore::Client client, FabricCore::DFGBinding binding, const FabricExportPatternSettings & settings);
+  void cleanup(FabricCore::DFGBinding binding);
 
 private:
 
-  bool registerNode(const MObject & node, std::string prefix);
+  bool registerNode(const MObject & node, MString prefix, bool addChildren=true);
   FabricCore::RTVal createRTValForNode(const MObject & node);
   bool updateRTValForNode(double t, const MObject & node, FabricCore::RTVal & object);
   MString getPathFromDagPath(MDagPath dagPath);
   bool isShapeDeforming(FabricCore::RTVal shapeVal, MObject node, bool isStart);
   void processUserAttributes(FabricCore::RTVal obj, const MObject & node, bool isStart);
+  MObject getParentDagNode(MObject node, MString * parentPrefix = NULL);
 
   FabricCore::Client m_client;
   FabricCore::RTVal m_exporterContext;

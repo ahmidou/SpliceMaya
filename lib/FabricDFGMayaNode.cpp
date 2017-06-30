@@ -91,7 +91,7 @@ MStatus FabricDFGMayaNode::compute(const MPlug& plug, MDataBlock& data){
       transferOutputValuesToMaya(data);
     }
 
-    MAYADFG_CATCH_END(&stat);
+    MAYADFG_CATCH_MPXNODE_END(&stat);
   }
   else if (stateData.asShort() == 1)  // 1: HasNoEffect.
   {
