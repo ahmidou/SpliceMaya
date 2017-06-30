@@ -75,7 +75,7 @@ void FabricCommandManagerCallback::onCommandDone(
 
   // Maya creates log commands after they've been performed, while in Fabric, it's possible 
   // to log a command and then update it's content using the merging framework. We create 
-  // the maya command if the fabric command isn't merging or he merging is done.
+  // the maya command if the fabric command isn't merging or the merging is done.
   if( ( canMergeID == CommandManager::NoCanMergeID && merge == CommandManager::NoCanMerge) || 
       ( canMergeID != CommandManager::NoCanMergeID && merge == CommandManager::MergeDone )
     )
@@ -122,7 +122,10 @@ void FabricCommandManagerCallback::onCommandDone(
     // Indicates that the command has been created already.
     // so we don't re-create it when constructing the maya command.
     m_commandCreatedFromManagerCallback = true;
-    m_commandCanUndo = addedToStack;
+    m_commandCanUndo = ( canMergeID != CommandManager::NoCanMergeID && merge == CommandManager::MergeDone )
+      ? true
+      : addedToStack;
+   
     MGlobal::executeCommandOnIdle(
       fabricCmd.str().c_str(), 
       cmd->canLog()
