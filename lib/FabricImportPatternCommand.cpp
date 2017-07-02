@@ -10,7 +10,7 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGWidget.h"
-#include "FabricDFGConversion.h"
+#include "FabricConversion.h"
 #include "FabricImportPatternDialog.h"
 #include "FabricProgressbarDialog.h"
 
@@ -359,7 +359,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         {
           MFnMesh mesh(obj);
           FabricCore::RTVal polygonMesh = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
-          polygonMesh = dfgMFnMeshToPolygonMesh(mesh, polygonMesh);
+          /*polygonMesh =*/ FabricConversion::MFnMeshToMesch(mesh, polygonMesh);
           binding.setArgValue(name.asChar(), polygonMesh);
         }
         else if(node.typeName() == "nurbsCurve")
@@ -368,7 +368,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
           FabricCore::RTVal curves = FabricCore::RTVal::Create(m_client, "Curves", 0, 0);
           FabricCore::RTVal curveCountRTVal = FabricCore::RTVal::ConstructUInt32(m_client, 1);
           curves.callMethod( "", "setCurveCount", 1, &curveCountRTVal );
-          dfgMFnNurbsCurveToCurves(0, nurbsCurve, curves);
+          FabricConversion::MFnNurbsCurveToCurve(0, nurbsCurve, curves);
           binding.setArgValue(name.asChar(), curves);
         }
       }
@@ -930,7 +930,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       {
         if(geoType == 0)
         {
-          node = dfgPolygonMeshToMFnMesh(geometryVal, false /* insideCompute */);
+          node = FabricConversion::MeschToMFnMesh(geometryVal, false /* insideCompute */);
         }
         else if(geoType == 1)
         {
@@ -957,7 +957,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
         if(geometryVal.callMethod("Boolean", "hasTextureReference", 0, 0).getBoolean())
         {
           FabricCore::RTVal refPolygonMesh = geometryVal.callMethod("PolygonMesh", "createTextureReferenceMesh", 0, 0);
-          MObject refNode = dfgPolygonMeshToMFnMesh(refPolygonMesh, false /* insideCompute */);
+          MObject refNode = FabricConversion::MeschToMFnMesh(refPolygonMesh, false /* insideCompute */);
 
           if(!refNode.isNull())
           {

@@ -10,7 +10,7 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGWidget.h"
-#include "FabricDFGConversion.h"
+#include "FabricConversion.h"
 #include "FabricExportPatternDialog.h"
 #include "FabricProgressbarDialog.h"
 
@@ -770,9 +770,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
 
       MFnTransform transformNode(node);
       MMatrix localMatrix = transformNode.transformation().asMatrix();
-      
-      FabricCore::RTVal matrixVal = FabricCore::RTVal::Construct(m_client, "Mat44", 0, 0);
-      MMatrixToMat44(localMatrix, matrixVal);
+      FabricCore::RTVal matrixVal = FabricConversion::MMatrixToMat44(localMatrix);
 
       // make sure to also mark the property as varying
       // todo: figure out if it is changing over time
@@ -865,7 +863,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             shape.callMethod("", "setGeometry", 1, &meshVal);
           }
           
-          if(dfgMFnMeshToPolygonMesh(meshData, meshVal).isNullObject())
+          if(!FabricConversion::MFnMeshToMesch(meshData, meshVal))
             return false;
 
           // look for texture references
@@ -889,7 +887,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
                   refObjectMeshPlug.getValue(refObjectMeshObj);
                   MFnMesh refObjectMeshData(refObjectMeshObj);
 
-                  if(!dfgMFnMeshToPolygonMesh(refObjectMeshData, refObjectMeshVal).isNullObject())
+                  if(FabricConversion::MFnMeshToMesch(refObjectMeshData, refObjectMeshVal))
                   {
                     meshVal.callMethod("", "setTextureReference", 1, &refObjectMeshVal);
                   }
@@ -937,7 +935,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             shape.callMethod("", "setGeometry", 1, &curvesVal);
           }
 
-          if(!dfgMFnNurbsCurveToCurves(0, curveData, curvesVal))
+          if(!FabricConversion::MFnNurbsCurveToCurve(0, curveData, curvesVal))
             return false;
           break;
         }

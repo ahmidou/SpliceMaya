@@ -8,12 +8,9 @@
 
 using namespace FabricCore;
  
-namespace FabricMaya {
-namespace Conversion {
-
 // ***************** RTVal to Maya ***************** // 
 // String
-inline RTVal MStringToString(MString const&str) {
+RTVal FabricConversion::MStringToString(MString const&str) {
   RTVal rtVal;
 
   CONVERSION_CATCH_BEGIN;
@@ -27,7 +24,7 @@ inline RTVal MStringToString(MString const&str) {
   return rtVal;
 }
 
-inline RTVal MStringArrayToStringArray(MStringArray const&array) {
+RTVal FabricConversion::MStringArrayToStringArray(MStringArray const&array) {
   RTVal rtVal;
 
   CONVERSION_CATCH_BEGIN;
@@ -47,7 +44,7 @@ inline RTVal MStringArrayToStringArray(MStringArray const&array) {
 }
 
 // Xfo 
-inline RTVal MMatrixToXfoArray(MMatrixArray const&array) { 
+RTVal FabricConversion::MMatrixToXfoArray(MMatrixArray const&array) { 
   RTVal xfoArrayVal;
 
   CONVERSION_CATCH_BEGIN;
@@ -67,7 +64,7 @@ inline RTVal MMatrixToXfoArray(MMatrixArray const&array) {
   return xfoArrayVal; 
 }
 
-inline RTVal MMatrixToXfo_dArray(MMatrixArray const&array) { 
+RTVal FabricConversion::MMatrixToXfo_dArray(MMatrixArray const&array) { 
   RTVal xfoArrayVal;
 
   CONVERSION_CATCH_BEGIN;
@@ -88,12 +85,12 @@ inline RTVal MMatrixToXfo_dArray(MMatrixArray const&array) {
 }
 
 // Geometry 
-inline void MFnMeshToMesch_single(MFnMesh &mesh, RTVal rtVal) {
+bool FabricConversion::MFnMeshToMesch(MFnMesh &mesh, RTVal rtVal) {
   
   CONVERSION_CATCH_BEGIN;
 
   if(!rtVal.isValid())
-    return;
+    return false;
 
   // determine if we need a topology update
   bool requireTopoUpdate = false;
@@ -207,24 +204,26 @@ inline void MFnMeshToMesch_single(MFnMesh &mesh, RTVal rtVal) {
   mayaCounts.clear();
   mayaIndices.clear();
 
-  CONVERSION_CATCH_END("FabricConversion::MFnMeshToMesch_single");
+  CONVERSION_CATCH_END("FabricConversion::MFnMeshToMesch");
+
+  return true;
 }
 
-inline RTVal MFnMeshToMesch(MFnMesh &mesh) {
+RTVal FabricConversion::MFnMeshToMesch(MFnMesh &mesh) {
   RTVal rtVal;
   CONVERSION_CATCH_BEGIN;
   rtVal = FabricSplice::constructObjectRTVal("PolygonMesh");
-  MFnMeshToMesch_single(mesh, rtVal);
+  MFnMeshToMesch(mesh, rtVal);
   CONVERSION_CATCH_END("FabricConversion::MFnMeshToMesch");
   return rtVal;
 }
 
-inline void MFnNurbsCurveToLines_single(MFnNurbsCurve &curve, RTVal lines) {
+bool FabricConversion::MFnNurbsCurveToLine(MFnNurbsCurve &curve, RTVal rtVal) {
   
   CONVERSION_CATCH_BEGIN;
 
-  if(!lines.isValid())
-    return;
+  if(!rtVal.isValid())
+    return false;
 
   MPointArray mayaPoints;
   curve.getCVs(mayaPoints);
@@ -256,28 +255,28 @@ inline void MFnNurbsCurveToLines_single(MFnNurbsCurve &curve, RTVal lines) {
   }
 
   RTVal mayaDoublesVal = FabricSplice::constructExternalArrayRTVal("Float64", mayaDoubles.size(), &mayaDoubles[0]);
-  lines.callMethod("", "_setPositionsFromExternalArray_d", 1, &mayaDoublesVal);
+  rtVal.callMethod("", "_setPositionsFromExternalArray_d", 1, &mayaDoublesVal);
 
   RTVal mayaIndicesVal = FabricSplice::constructExternalArrayRTVal("UInt32", mayaIndices.size(), &mayaIndices[0]);
-  lines.callMethod("", "_setTopologyFromExternalArray", 1, &mayaIndicesVal);
+  rtVal.callMethod("", "_setTopologyFromExternalArray", 1, &mayaIndicesVal);
 
   mayaPoints.clear();
 
-  CONVERSION_CATCH_END("FabricConversion::MFnNurbsCurveToLines_single");
+  CONVERSION_CATCH_END("FabricConversion::MFnNurbsCurveToLine");
+  return true;
 }
 
-inline RTVal MFnNurbsCurveToLines(MFnNurbsCurve &curve) {
-  RTVal lines;
+RTVal FabricConversion::MFnNurbsCurveToLine(MFnNurbsCurve &curve) {
+  RTVal rtVal;
   CONVERSION_CATCH_BEGIN;
-  lines = FabricSplice::constructObjectRTVal("Lines");
-  MFnNurbsCurveToLines_single(curve, lines);
-  CONVERSION_CATCH_END("FabricConversion::MFnNurbsCurveToLines");
-  return lines;
+  rtVal = FabricSplice::constructObjectRTVal("Lines");
+  MFnNurbsCurveToLine(curve, rtVal);
+  CONVERSION_CATCH_END("FabricConversion::MFnNurbsCurveToLine");
+  return rtVal;
 }
 
-inline bool MFnNurbsCurveToCurve_single(unsigned int index, MFnNurbsCurve &curve, RTVal &rtCurves)
-{
-  if(!rtCurves.isValid())
+bool FabricConversion::MFnNurbsCurveToCurve(unsigned int index, MFnNurbsCurve &curve, RTVal rtVal) {
+  if(!rtVal.isValid())
     return false;
 
   RTVal args[ 6 ];
@@ -302,41 +301,15 @@ inline bool MFnNurbsCurveToCurve_single(unsigned int index, MFnNurbsCurve &curve
   curve.getKnots( mayaKnots );
   args[4] = FabricSplice::constructExternalArrayRTVal( "Float64", mayaKnots.length(), &mayaKnots[0] );
 
-  rtCurves.callMethod( "", "setCurveFromMaya", 5, args );
+  rtVal.callMethod( "", "setCurveFromMaya", 5, args );
   return true;
 }
-/*
-// Geometry 
-inline void CurveToMFnNurbsCurve(
-  RTVal rtVal,
-  MFnNurbsCurve &curve) 
-{
-  CONVERSION_CATCH_BEGIN;
-
-  RTVal rtVal = rtVal.callMethod( 
-    "Curves", 
-    "createCurvesContainerIfNone", 
-    0, 0);
-
-  unsigned int curveIndex = rtVal.callMethod( 
-    "UInt32", 
-    "getCurveIndex", 
-    0, 0).getUInt32();
-
-  CurveToMFnNurbsCurve_single( 
-    rtVal, 
-    curveIndex, 
-    curve);
-
-  CONVERSION_CATCH_END;
-}
-*/
 // ***************** RTVal to Maya ***************** // 
 
 
 // ***************** RTVal to Maya ***************** // 
 // String
-inline MString StringToMString(RTVal rtVal) {
+MString FabricConversion::StringToMString(RTVal rtVal) {
   assert( rtVal.hasType( "String" ) );
 
   MString str;
@@ -350,7 +323,7 @@ inline MString StringToMString(RTVal rtVal) {
   return str;
 }
 
-inline MStringArray StringArrayToMStringArray(RTVal rtVal) {
+MStringArray FabricConversion::StringArrayToMStringArray(RTVal rtVal) {
   assert( rtVal.hasType( "String[]" ) );
 
   MStringArray strs;
@@ -371,7 +344,7 @@ inline MStringArray StringArrayToMStringArray(RTVal rtVal) {
 }
 
 // Xfo 
-inline MMatrixArray XfoArrayToMMatrixArray(RTVal rtVal) {
+MMatrixArray FabricConversion::XfoArrayToMMatrixArray(RTVal rtVal) {
   assert( rtVal.hasType( "Xfo[]" ) );
 
   MMatrixArray matrices;
@@ -391,7 +364,7 @@ inline MMatrixArray XfoArrayToMMatrixArray(RTVal rtVal) {
   return matrices;
 }
 
-inline MMatrixArray Xfo_dArrayToMMatrixArray(RTVal rtVal) {
+MMatrixArray FabricConversion::Xfo_dArrayToMMatrixArray(RTVal rtVal) {
   assert( rtVal.hasType( "Xfo_d[]" ) );
 
   MMatrixArray matrices;
@@ -412,7 +385,7 @@ inline MMatrixArray Xfo_dArrayToMMatrixArray(RTVal rtVal) {
 }
 
 // Geometry 
-inline MObject MeschToMFnMesh(RTVal rtVal, bool insideCompute, MFnMesh &mesh) {
+MObject FabricConversion::MeschToMFnMesh(RTVal rtVal, bool insideCompute, MFnMesh &mesh) {
   assert( rtVal.hasType( "PolygonMesh" ) );
 
   MObject result;
@@ -602,12 +575,12 @@ inline MObject MeschToMFnMesh(RTVal rtVal, bool insideCompute, MFnMesh &mesh) {
   return result;
 }
 
-inline MObject MeschToMFnMesh(RTVal rtVal, bool insideCompute) {
+MObject FabricConversion::MeschToMFnMesh(RTVal rtVal, bool insideCompute) {
   MFnMesh mesh;
   return MeschToMFnMesh(rtVal, insideCompute, mesh);
 }
 
-inline MObject LinesToMFnNurbsCurve(RTVal rtVal, MFnNurbsCurve &curve) {
+MObject FabricConversion::LinesToMFnNurbsCurve(RTVal rtVal, MFnNurbsCurve &curve) {
   MObject curveObject;
 
   CONVERSION_CATCH_BEGIN;
@@ -654,8 +627,6 @@ inline MObject LinesToMFnNurbsCurve(RTVal rtVal, MFnNurbsCurve &curve) {
   }
 
   MFnNurbsCurveData curveDataFn;
-  //MObject curveObject;
-  //MFnNurbsCurve curve;
   curveObject = curveDataFn.create();
 
   curve.create(
@@ -670,12 +641,12 @@ inline MObject LinesToMFnNurbsCurve(RTVal rtVal, MFnNurbsCurve &curve) {
   return curveObject;
 }
 
-inline MObject LinesToMFnNurbsCurve(RTVal rtVal) {
+MObject FabricConversion::LinesToMFnNurbsCurve(RTVal rtVal) {
   MFnNurbsCurve curve;
   return LinesToMFnNurbsCurve(rtVal, curve);
 }
 
-inline MObject CurveToMFnNurbsCurve_single(RTVal rtVal, int index, MFnNurbsCurve &curve) {
+MObject FabricConversion::CurveToMFnNurbsCurve(RTVal rtVal, int index, MFnNurbsCurve &curve) {
   MObject curveObject;
 
   CONVERSION_CATCH_BEGIN;
@@ -733,12 +704,20 @@ inline MObject CurveToMFnNurbsCurve_single(RTVal rtVal, int index, MFnNurbsCurve
     curveObject
     );
 
-  CONVERSION_CATCH_END("FabricConversion::CurveToMFnNurbsCurve_single");
+  CONVERSION_CATCH_END("FabricConversion::CurveToMFnNurbsCurve");
 
   return curveObject;
 }
 
-inline MObject CurveToMFnNurbsCurve(RTVal rtVal, MFnNurbsCurve &curve) {
+MObject FabricConversion::CurveToMFnNurbsCurve(RTVal rtVal, int index) {
+  MFnNurbsCurve curve;
+  return CurveToMFnNurbsCurve(rtVal, index, curve);
+}
+
+MObject FabricConversion::CurveToMFnNurbsCurve(RTVal rtVal, MFnNurbsCurve &curve) {
+
+  MObject curveObject;
+
   CONVERSION_CATCH_BEGIN;
 
   RTVal rtVal = rtVal.callMethod( 
@@ -751,19 +730,18 @@ inline MObject CurveToMFnNurbsCurve(RTVal rtVal, MFnNurbsCurve &curve) {
     "getCurveIndex", 
     0, 0).getUInt32();
 
-  return CurveToMFnNurbsCurve_single( 
+  curveObject = CurveToMFnNurbsCurve( 
     rtVal, 
     curveIndex, 
     curve);
 
   CONVERSION_CATCH_END("FabricConversion::CurveToMFnNurbsCurve");
+
+  return curveObject;
 }
 
-inline MObject CurveToMFnNurbsCurve(RTVal rtVal) {
+MObject FabricConversion::CurveToMFnNurbsCurve(RTVal rtVal) {
   MFnNurbsCurve curve;
   return CurveToMFnNurbsCurve(rtVal, curve);
 }
 // ***************** RTVal to Maya ***************** // 
-
-} // namespace Conversion 
-} // namespace FabricMaya
