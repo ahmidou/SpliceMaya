@@ -44,6 +44,9 @@ class FabricConversion
 public:
 // ***************** Maya to RTVal ***************** // 
 // template
+/// Converts a Maya array to a simple KL type array (Float32[], ..) and returns it.
+/// \param type The rtval kl type (Float32 for a Float32[] array).
+/// \param array Maya array to convert.
 template<typename FPTy, typename ArrayTy>
 static FabricCore::RTVal MayaToRTValArray(const char *type, ArrayTy const&array) {
 
@@ -66,6 +69,10 @@ static FabricCore::RTVal MayaToRTValArray(const char *type, ArrayTy const&array)
   return rtVal;
 }
  
+/// Converts a Maya vector (or point) to a KL vector (Vec3, ..) and returns it.
+/// \param dim The KL vector dimension.
+/// \param type The rtval vector type.
+/// \param array Maya vector to convert.
 template<typename FPTy, typename VectorTy> 
 static FabricCore::RTVal MayaToRTValVec(unsigned int dim, const char *type, VectorTy const&vector) {
 
@@ -88,6 +95,10 @@ static FabricCore::RTVal MayaToRTValVec(unsigned int dim, const char *type, Vect
   return rtVal;
 }
  
+/// Converts a Maya vector array to an array of KL vector (Vec3, ..) and returns it.
+/// \param dim The KL vector dimension.
+/// \param type The rtval vector type (Vec3 for a Vec3[] array).
+/// \param array Maya vector array to convert.
 template<typename FPTy, typename VectorArrayTy>
 static FabricCore::RTVal MayaToRTValVecArray(unsigned int dim, const char *type, VectorArrayTy const&array) {
   FabricCore::RTVal rtVal;
@@ -108,6 +119,7 @@ static FabricCore::RTVal MayaToRTValVecArray(unsigned int dim, const char *type,
   return rtVal;
 }
 
+/// \internal
 template<typename MatrixTy, typename FPTy>
 static void MayaToRTValMatrixData(MatrixTy const &matrix, FPTy *fpArray) {
 
@@ -116,6 +128,9 @@ static void MayaToRTValMatrixData(MatrixTy const &matrix, FPTy *fpArray) {
       fpArray[4*i + j] = (FPTy)matrix[j][i];
 }
 
+/// Converts a Maya matrix to a KL matrix (Mat44, ..) and returns it.
+/// \param type The rtval matrix type.
+/// \param array Maya matrix to convert.
 template<typename FPTy, typename MatrixTy>
 static FabricCore::RTVal MayaToRTValMatrix(const char *type, MatrixTy const&matrix) {
   FabricCore::RTVal rtVal;
@@ -135,6 +150,9 @@ static FabricCore::RTVal MayaToRTValMatrix(const char *type, MatrixTy const&matr
   return rtVal;
 }
 
+/// Converts a Maya matrix array to an array of KL matrix (Mat44, ..) and returns it.
+/// \param type The rtval matrix type (Mat44 for a Mat44[] array).
+/// \param array Maya matrix array to convert.
 template<typename FPTy, typename MatrixArrayTy>
 static FabricCore::RTVal MayaToRTValMatrixArray(const char *type, MatrixArrayTy const&array) {
   FabricCore::RTVal rtVal;
@@ -297,6 +315,9 @@ static bool MFnNurbsCurveToCurve(unsigned int index, MFnNurbsCurve &curve, Fabri
 // ***************** RTVal to Maya ***************** // 
 // template
 template<typename ArrayTy, typename FPTy>
+/// Converts an array of KL simple type (Float32[], ..) to a Maya array and returns it.
+/// \param type The rtval kl type (Float32 for a Float32[] array).
+/// \param rtVal The KL array to convert.
 static ArrayTy RTValToMayaArray(const char *type, FabricCore::RTVal rtVal) {
   
   QString arrayType = QString(type + QString("[]") );
@@ -318,6 +339,10 @@ static ArrayTy RTValToMayaArray(const char *type, FabricCore::RTVal rtVal) {
   return array;
 }
 
+/// Converts KL vector (Vec2, Vec3) to a Maya vector and returns it.
+/// \param dim The KL vector dimension.
+/// \param type The rtval vector type (for debbuging).
+/// \param rtVal The KL vector to convert.
 template<typename VectorTy, typename FPTy>
 static VectorTy RTValToMayaVec(unsigned int dim, const char *type, FabricCore::RTVal rtVal) {
   
@@ -344,12 +369,16 @@ static VectorTy RTValToMayaVec(unsigned int dim, const char *type, FabricCore::R
   return vector;
 }
 
-template<typename VectorTy, typename FPTy>
-static VectorTy RTValToMayaPoint(unsigned int dim, const char *type, FabricCore::RTVal rtVal) {
+/// Converts KL vector (Vec2, Vec3, Vec4) to a Maya point and returns it.
+/// \param dim The KL vector dimension.
+/// \param type The rtval vector type (for debbuging).
+/// \param rtVal The KL vector to convert.
+template<typename PointTy, typename FPTy>
+static PointTy RTValToMayaPoint(unsigned int dim, const char *type, FabricCore::RTVal rtVal) {
   
   assert( rtVal.hasType( type ) );
 
-  VectorTy point;
+  PointTy point;
 
   CONVERSION_CATCH_BEGIN;
 
@@ -357,13 +386,13 @@ static VectorTy RTValToMayaPoint(unsigned int dim, const char *type, FabricCore:
   FPTy *data = (FPTy*)dataRtVal.getData();
   
   if(dim == 2)
-    point = VectorTy( double(data[0]), double(data[1]), double(0), double(0) );
+    point = PointTy( double(data[0]), double(data[1]), double(0), double(0) );
 
   if(dim == 3)
-    point = VectorTy( double(data[0]), double(data[1]), double(data[2]), double(0) );
+    point = PointTy( double(data[0]), double(data[1]), double(data[2]), double(0) );
 
   if(dim == 4)
-    point = VectorTy( double(data[0]), double(data[1]), double(data[2]), double(data[3]) );
+    point = PointTy( double(data[0]), double(data[1]), double(data[2]), double(data[3]) );
 
   CONVERSION_CATCH_END(
     QString(
@@ -373,6 +402,10 @@ static VectorTy RTValToMayaPoint(unsigned int dim, const char *type, FabricCore:
   return point;
 }
 
+/// Converts an array of KL vector (Vec2[], Vec3[]) to a Maya vector array and returns it.
+/// \param dim The KL vector dimension.
+/// \param type The rtval vector type (for debbuging).
+/// \param rtVal The KL vector to convert.
 template<typename VectorArrayTy, typename VectorTy, typename FPTy>
 static VectorArrayTy RTValToMayaVecArray(unsigned int dim, const char *type, FabricCore::RTVal rtVal) {
 
@@ -397,6 +430,10 @@ static VectorArrayTy RTValToMayaVecArray(unsigned int dim, const char *type, Fab
   return vectors;
 }
 
+/// Converts an array of KL vector (Vec2[], Vec3[], Vec4[]) to a Maya point array and returns it.
+/// \param dim The KL vector dimension.
+/// \param type The rtval vector type (for debbuging).
+/// \param rtVal The KL vector to convert.
 template<typename PointArrayTy, typename PointTy, typename FPTy>
 static PointArrayTy RTValToMayaPointArray(unsigned int dim, const char *type, FabricCore::RTVal rtVal) {
 
@@ -421,6 +458,7 @@ static PointArrayTy RTValToMayaPointArray(unsigned int dim, const char *type, Fa
   return points;
 }
 
+/// \internal
 template<typename MatrixTy, typename FPTy>
 static void RTValToMayaMatrixData(FPTy const *data, MatrixTy &matrix) {
   FPTy vals[4][4] = {
@@ -432,6 +470,9 @@ static void RTValToMayaMatrixData(FPTy const *data, MatrixTy &matrix) {
   matrix = MatrixTy(vals);
 }
 
+/// Converts KL matrix (Mat44, ..) to a Maya matrix and returns it.
+/// \param type The rtval matrix type.
+/// \param rtVal The KL matrix to convert.
 template<typename MatrixTy, typename FPTy>
 static MatrixTy RTValToMayaMatrix(const char *type, FabricCore::RTVal rtVal) {
   
@@ -453,6 +494,9 @@ static MatrixTy RTValToMayaMatrix(const char *type, FabricCore::RTVal rtVal) {
   return matrix;
 }
 
+/// Converts an array of KL matrix (Mat44[], ..) to a Maya matrix array and returns it.
+/// \param type The rtval matrix type (Mat44 for a Mat44[] array).
+/// \param rtVal The KL matrix array to convert.
 template<typename MatrixArrayTy, typename MatrixTy, typename FPTy>
 static MatrixArrayTy RTValToMayaMatrixArray(const char *type, FabricCore::RTVal rtVal) {
 

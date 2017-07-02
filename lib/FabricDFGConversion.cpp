@@ -2196,41 +2196,8 @@ void dfgPlugToPort_Lines(
       MFnNurbsCurve curve(curveObj);
       FabricCore::RTVal rtVal = rtVals[handleIndex];
 
-      MPointArray mayaPoints;
-      curve.getCVs(mayaPoints);
-      std::vector<double> mayaDoubles(mayaPoints.length() * 3);
-
-      size_t nbSegments = (mayaPoints.length() - 1);
-      if(curve.form() == MFnNurbsCurve::kClosed)
-        nbSegments++;
-
-      std::vector<uint32_t> mayaIndices(nbSegments * 2);
-
-      size_t voffset = 0;
-      size_t coffset = 0;
-      for(unsigned int i=0;i<mayaPoints.length();i++)
-      {
-        mayaDoubles[voffset++] = mayaPoints[i].x;
-        mayaDoubles[voffset++] = mayaPoints[i].y;
-        mayaDoubles[voffset++] = mayaPoints[i].z;
-        if(i < mayaPoints.length() - 1)
-        {
-          mayaIndices[coffset++] = i;
-          mayaIndices[coffset++] = i + 1;
-        }
-        else if(curve.form() == MFnNurbsCurve::kClosed)
-        {
-          mayaIndices[coffset++] = i;
-          mayaIndices[coffset++] = 0;
-        }
-      }
-
-      FabricCore::RTVal mayaDoublesVal = FabricSplice::constructExternalArrayRTVal("Float64", mayaDoubles.size(), &mayaDoubles[0]);
-      rtVal.callMethod("", "_setPositionsFromExternalArray_d", 1, &mayaDoublesVal);
-
-      FabricCore::RTVal mayaIndicesVal = FabricSplice::constructExternalArrayRTVal("UInt32", mayaIndices.size(), &mayaIndices[0]);
-      rtVal.callMethod("", "_setTopologyFromExternalArray", 1, &mayaIndicesVal);
-    }
+      FabricConversion::MFnNurbsCurveToLine(curve, rtVal);
+     }
 
     setCB(getSetUD, portRTVal.getFECRTValRef());
   }
@@ -4639,13 +4606,9 @@ void dfgPortToPlug_Lines_singleLines(
   MDataHandle handle, 
   FabricCore::RTVal rtVal)
 {
-  CORE_CATCH_BEGIN;
-
   MObject curveObject = FabricConversion::LinesToMFnNurbsCurve(rtVal);
   handle.set(curveObject);
   handle.setClean();
-
-  CORE_CATCH_END;
 }
 
 void dfgPortToPlug_Lines(
