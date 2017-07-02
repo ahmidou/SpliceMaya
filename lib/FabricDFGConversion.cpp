@@ -2,27 +2,28 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
+#include <map>
+#include <vector>
+
 #include "FabricDFGConversion.h"
 #include "FabricSpliceMayaData.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGProfiling.h"
+#include "FabricConversion.h"
 
+#include <maya/MPlugArray.h>
+#include <maya/MFnData.h>
+#include <maya/MFnNumericData.h>
+#include <maya/MDataHandle.h>
 #include <maya/MGlobal.h>
 #include <maya/MFnDependencyNode.h>
 #include <maya/MFnTypedAttribute.h>
 #include <maya/MFnCompoundAttribute.h>
 #include <maya/MFnUnitAttribute.h>
-#include <maya/MFloatVector.h>
 #include <maya/MFnIntArrayData.h>
 #include <maya/MFnDoubleArrayData.h>
 #include <maya/MFnVectorArrayData.h>
 #include <maya/MFnPointArrayData.h>
-#include <maya/MIntArray.h>
-#include <maya/MDoubleArray.h>
-#include <maya/MVectorArray.h>
-#include <maya/MPointArray.h>
-#include <maya/MFloatVector.h>
-#include <maya/MMatrix.h>
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MAngle.h>
 #include <maya/MDistance.h>
@@ -30,7 +31,6 @@
 #include <maya/MFnPluginData.h>
 #include <maya/MFnMeshData.h>
 #include <maya/MFnNurbsCurveData.h>
-#include <maya/MFloatVectorArray.h>
 #include <maya/MFnAnimCurve.h>
 
 #define CORE_CATCH_BEGIN try {
@@ -44,13 +44,13 @@ typedef std::map<std::string, DFGArgToPlugFunc> DFGArgToPlugFuncMap;
 typedef DFGPlugToArgFuncMap::iterator DFGPlugToArgFuncIt;
 typedef DFGArgToPlugFuncMap::iterator DFGArgToPlugFuncIt;
 
-struct KLEuler{
+/*struct KLEuler{
   float x;
   float y;
   float z;
   int32_t order;
 };
-
+*/
 typedef float floatVec[3];
 
 
@@ -87,28 +87,14 @@ void FabricMatDataToMayaMatrix_44(FPTy const *data, MatrixTy &matrix) {
   };
   matrix = MatrixTy(vals);
 }
-
-inline void Mat44ToMFloatMatrix(FabricCore::RTVal &rtVal, MFloatMatrix &matrix) {
-  assert( rtVal.hasType( "Mat44" ) );
-  FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-  float * data = (float*)dataRtVal.getData();
-  FabricMatDataToMayaMatrix_44(data, matrix);
-}
-
+ 
 inline void Mat44ToMMatrix(FabricCore::RTVal &rtVal, MMatrix &matrix) {
   assert( rtVal.hasType( "Mat44" ) );
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
   float * data = (float*)dataRtVal.getData();
   FabricMatDataToMayaMatrix_44(data, matrix);
 }
-
-inline void Mat44_dToMMatrix(FabricCore::RTVal &rtVal, MMatrix &matrix) {
-  assert( rtVal.hasType( "Mat44_d" ) );
-  FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-  double * data = (double*)dataRtVal.getData();
-  FabricMatDataToMayaMatrix_44(data, matrix);
-}
-
+ 
 template<typename MatrixTy, typename FPTy>
 void MayaMatrixToFabricMatData_44(MatrixTy const &matrix, FPTy *fpArray) {
   fpArray[0]  = matrix[0][0];
@@ -134,27 +120,6 @@ void MMatrixToMat44(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
   FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
   float * fpArray = (float*)dataRtVal.getData();
   MayaMatrixToFabricMatData_44(matrix, fpArray);
-}
-
-void MMatrixToMat44_d(MMatrix const &matrix, FabricCore::RTVal &rtVal) {
-  assert( rtVal.hasType( "Mat44_d" ) );
-  FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-  double * fpArray = (double*)dataRtVal.getData();
-  MayaMatrixToFabricMatData_44(matrix, fpArray);
-}
-
-inline void MFloatMatrixToMat44(MFloatMatrix const &matrix, FabricCore::RTVal &rtVal) {
-  assert( rtVal.hasType( "Mat44" ) );
-  FabricCore::RTVal dataRtVal = rtVal.callMethod("Data", "data", 0, 0);
-  float * fpArray = (float*)dataRtVal.getData();
-  MayaMatrixToFabricMatData_44(matrix, fpArray);
-}
-
-void dfgPlugToPort_compound_convertMat44(const MMatrix & matrix, FabricCore::RTVal & rtVal) {
-  CORE_CATCH_BEGIN;
-  rtVal = FabricSplice::constructRTVal("Mat44", 0, 0);
-  MMatrixToMat44(matrix, rtVal);
-  CORE_CATCH_END;
 }
 // *****************            Helpers           ***************** // 
 
@@ -571,8 +536,8 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
             MDataHandle childHandle(handle.child(child.object()));
 
             childRTVal = FabricSplice::constructObjectRTVal("Mat44Param", 1, &childNameRTVal);
-            FabricCore::RTVal matrixRTVal;
-            dfgPlugToPort_compound_convertMat44(childHandle.asMatrix(), matrixRTVal);
+            FabricCore::RTVal matrixRTVal = FabricSplice::constructRTVal("Mat44", 0, 0);
+            MMatrixToMat44(childHandle.asMatrix(), matrixRTVal);
             childRTVal.callMethod("", "setValue", 1, &matrixRTVal);
           }
           else
@@ -585,7 +550,9 @@ void dfgPlugToPort_compound_convertCompound(MFnCompoundAttribute & compound, MDa
             for(unsigned int j=0;j<childHandle.elementCount();j++)
             {
               args[0] = FabricSplice::constructUInt32RTVal(j);
-              dfgPlugToPort_compound_convertMat44(childHandle.inputValue().asMatrix(), args[1]);
+              args[1] = FabricSplice::constructRTVal("Mat44", 0, 0);
+              MMatrixToMat44(childHandle.inputValue().asMatrix(), args[1]);
+
               childRTVal.callMethod("", "setValue", 2, &args[0]);
               childHandle.next();
             }
@@ -2313,7 +2280,7 @@ void dfgPlugToPort_PolygonMesh(
       MObject meshObj = handles[handleIndex].asMesh();
       MFnMesh mesh(meshObj);
       FabricCore::RTVal polygonMesh = rtVals[handleIndex];
-      polygonMesh = dfgMFnMeshToPolygonMesh(mesh, polygonMesh);
+      /*polygonMesh =*/ dfgMFnMeshToPolygonMesh(mesh, polygonMesh);
     }
 
     setCB(getSetUD, portRTVal.getFECRTValRef());
@@ -2891,13 +2858,6 @@ void dfgPlugToPort_spliceMayaData(
 
 
 // *****************       DFG Port to Plug       ***************** // 
-void dfgPortToPlug_compound_convertMat44(MMatrix & matrix, FabricCore::RTVal & rtVal)
-{
-  CORE_CATCH_BEGIN;
-  Mat44ToMMatrix(rtVal, matrix);
-  CORE_CATCH_END;
-}
-
 void dfgPortToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDataHandle & handle, FabricCore::RTVal & rtVal)
 {
   CORE_CATCH_BEGIN;
@@ -3468,7 +3428,7 @@ void dfgPortToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDa
 
             FabricCore::RTVal value = childRTVal.maybeGetMember("value");
             MMatrix m;
-            dfgPortToPlug_compound_convertMat44(m, value);
+            Mat44ToMMatrix(value, m);
             childHandle.setMMatrix(m);
           }
           else
@@ -3489,7 +3449,7 @@ void dfgPortToPlug_compound_convertCompound(MFnCompoundAttribute & compound, MDa
               FabricCore::RTVal value = childRTVal.maybeGetMember("value");
               MDataHandle elementHandle = arraybuilder.addElement(i);
               MMatrix m;
-              dfgPortToPlug_compound_convertMat44(m, value);
+              Mat44ToMMatrix(value, m);
               elementHandle.setMMatrix(m);
             }
 

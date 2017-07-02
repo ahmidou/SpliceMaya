@@ -3,24 +3,15 @@
 //
 
 #pragma once
-
 #include <iostream>
-#include <vector>
-#include <map>
-#include <maya/MDataBlock.h>
 #include <maya/MPlug.h>
-#include <maya/MPlugArray.h>
-#include <maya/MFnData.h>
-#include <maya/MFnNumericData.h>
-#include <maya/MStringArray.h>
-#include <maya/MDataHandle.h>
 #include <maya/MFnMesh.h>
+#include <maya/MDataBlock.h>
 #include <maya/MFnNurbsCurve.h>
-
+#include <FTL/StrRef.h>
 #include <FabricCore.h>
 #include <FabricSplice.h>
 
-#include <FTL/StrRef.h>
 
 typedef void(*DFGPlugToArgFunc)(
   unsigned argIndex,

@@ -40,6 +40,7 @@ mayaFlags = {
   'CPPPATH': [
       env.Dir('lib').srcnode(),
       env.Dir('lib').Dir('Render').srcnode(),
+      env.Dir('lib').Dir('Conversion').srcnode(),
       env.Dir('plugin').srcnode(),
     ],
   'LIBPATH': [
@@ -132,7 +133,8 @@ if not os.path.exists(uiSconscript.abspath):
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
-
+env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Conversion')])
+ 
 if int(float(str(MAYA_VERSION[:4]))) >= 2016:
   env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Render')])
 
@@ -175,6 +177,7 @@ target = 'FabricMaya'
 
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
+libSources += env.Glob('lib/Conversion/*.cpp')
 if int(float(str(MAYA_VERSION[:4]))) >= 2016:
   libSources += env.Glob('lib/Render/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
