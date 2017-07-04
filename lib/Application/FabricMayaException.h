@@ -2,14 +2,10 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#ifndef __FABRIC_MAYA_MAYA_EXCEPTION__
-#define __FABRIC_MAYA_MAYA_EXCEPTION__
+#pragma once
 
 #include <FabricSplice.h>
 #include <FabricUI/Application/FabricException.h>
-
-namespace FabricMaya {
-namespace Application {
 
 class FabricMayaException : public FabricUI::Application::FabricException
 {
@@ -34,9 +30,6 @@ class FabricMayaException : public FabricUI::Application::FabricException
     /// Logs the error in the maya editor.
     virtual void log() const throw();
 };
-
-} // namespace FabricMaya
-} // namespace FabricUI
 
 #define FABRIC_MAYA_CATCH_BEGIN() \
   try {
@@ -79,5 +72,3 @@ class FabricMayaException : public FabricUI::Application::FabricException
       FabricUI::Application::FabricException::LOG \
       ); \
   } 
-
-#endif // __FABRIC_MAYA_MAYA_EXCEPTION__

@@ -2,6 +2,7 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
+#include "Foundation.h"
 #include <maya/MSyntax.h>
 #include "FabricDFGWidget.h"
 #include "FabricSpliceHelpers.h"

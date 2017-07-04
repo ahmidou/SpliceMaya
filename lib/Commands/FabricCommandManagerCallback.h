@@ -2,15 +2,11 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
 
-#ifndef __FABRIC_MAYA_COMMAND_MANAGER_CALLBACK__
-#define __FABRIC_MAYA_COMMAND_MANAGER_CALLBACK__
+#pragma once
 
 #include <QObject>
 #include <FabricUI/Commands/BaseCommand.h>
  
-namespace FabricMaya {
-namespace Commands {
-
 class FabricCommandManagerCallback : public QObject
 {
   /**
@@ -74,8 +70,3 @@ class FabricCommandManagerCallback : public QObject
     /// To know if the last command created is undoable
     bool m_commandCanUndo;
 };
-
-} // namespace Commands
-} // namespace FabricMaya
-
-#endif // __FABRIC_MAYA_COMMAND_MANAGER_CALLBACK__

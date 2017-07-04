@@ -2,6 +2,7 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
  
+#include "Foundation.h"
 #include "FabricCommand.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricCommandManagerCallback.h"
@@ -9,8 +10,6 @@
 #include "../Application/FabricMayaException.h"
 
 using namespace FabricUI::Commands;
-using namespace FabricMaya::Commands;
-using namespace FabricMaya::Application;
 
 FabricCommand::FabricCommand()
   : m_isUndoable(false)

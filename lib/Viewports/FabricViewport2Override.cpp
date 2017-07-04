@@ -7,7 +7,6 @@
 #include "FabricRenderCallback.h"
 
 using namespace MHWRender;
-using namespace FabricMaya::Viewports;
 
 class SceneRenderOverride : public MSceneRender 
 {

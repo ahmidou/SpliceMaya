@@ -3,7 +3,6 @@
 //
 
 #pragma once
-
 #include <FTL/Profiling.h>
 
 class FabricMayaProfilingEvent : public FTL::AutoProfilingEvent

@@ -10,7 +10,7 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGWidget.h"
-#include "FabricDFGConversion.h"
+#include "FabricConversion.h"
 #include "FabricExportPatternDialog.h"
 #include "FabricProgressbarDialog.h"
 
@@ -49,6 +49,7 @@ MSyntax FabricExportPatternCommand::newSyntax()
   syntax.addFlag( "-r", "-framerate", MSyntax::kDouble );
   syntax.addFlag( "-t", "-substeps", MSyntax::kLong );
   syntax.addFlag( "-u", "-userAttributes", MSyntax::kBoolean );
+  syntax.addFlag( "-x", "-stripNameSpaces", MSyntax::kBoolean );
   return syntax;
 }
 
@@ -178,11 +179,19 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
   {
     m_settings.userAttributes = argParser.flagArgumentBool("userAttributes", 0);
   }
+  if( argParser.isFlagSet("stripNameSpaces") )
+  {
+    m_settings.stripNameSpaces = argParser.flagArgumentBool("stripNameSpaces", 0);
+  }
 
   if( argParser.isFlagSet("objects") )
   {
     MString objects = argParser.flagArgumentString("objects", 0);
-    objects.split(',', m_settings.objects);
+    if(objects.length() > 0)
+    {
+      if(objects.split(',', m_settings.objects) != MS::kSuccess)
+        m_settings.objects.append(objects);
+    }
   }
 
   MStringArray result;
@@ -305,6 +314,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
 
       if(!dialog->wasAccepted())
       {
+        cleanup(binding);
         return MS::kSuccess;
       }
     }
@@ -378,11 +388,8 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
       return mayaErrorOccured();
     }
     MFnDagNode dagNode(node);
-    MStatus parentStatus;
-    MFnDagNode parentNode(dagNode.parent(0), &parentStatus);
     MString prefix;
-    if(parentStatus == MS::kSuccess)
-      prefix = parentNode.dagPath().fullPathName();
+    getParentDagNode(node, &prefix);
     registerNode(node, prefix.asChar());
   }
 
@@ -481,6 +488,7 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
   catch(FabricCore::Exception e)
   {
     mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
+    cleanup(binding);
     return mayaErrorOccured();
   }
 
@@ -533,6 +541,7 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
       }
       if(prog)
         prog->close();
+      cleanup(binding);
       return mayaErrorOccured();
     }
 
@@ -542,6 +551,7 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
       {
         prog->close();
         mayaLogFunc(MString(getName())+": aborted by user.");
+        cleanup(binding);
         return MS::kFailure;
       }
       prog->increment();
@@ -561,16 +571,30 @@ MStatus FabricExportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
 
   mayaLogFunc(MString(getName())+": export finished.");
+  cleanup(binding);
   return MS::kSuccess;
 }
 
-bool FabricExportPatternCommand::registerNode(const MObject & node, std::string prefix)
+void FabricExportPatternCommand::cleanup(FabricCore::DFGBinding binding)
+{
+  binding.setNotificationCallback(NULL, NULL);
+  binding.deallocValues();
+}
+
+bool FabricExportPatternCommand::registerNode(const MObject & node, MString prefix, bool addChildren)
 {
   MStatus status;
   MFnDagNode dagNode(node, &status);
   if(status != MS::kSuccess)
     return false;
   if(dagNode.isIntermediateObject())
+    return false;
+
+  MString path = dagNode.name().asChar();
+  if(prefix.length() > 0)
+    path = prefix + "|" + path;
+
+  if(m_nodePaths.find(path.asChar()) != m_nodePaths.end())
     return false;
 
   // filter out texture reference objects
@@ -596,19 +620,29 @@ bool FabricExportPatternCommand::registerNode(const MObject & node, std::string 
       }
     }
   }
+  MStatus parentStatus;
 
-  std::string path = dagNode.name().asChar();
-  if(prefix.length() > 0)
-    path = prefix + "|" + path;
+  MObject parentNode = getParentDagNode(node);
+  if(!parentNode.isNull())
+  {
+    MString grandParentPrefix = prefix;
+    int pipeIndex = grandParentPrefix.rindex('|');
+    if(pipeIndex > 1)
+      grandParentPrefix = grandParentPrefix.substring(0, pipeIndex - 1);
+    else
+      grandParentPrefix = "";
+    registerNode(parentNode, grandParentPrefix, false /* addChildren */);
+  }
 
-  if(m_nodePaths.find(path) != m_nodePaths.end())
-    return false;
 
-  m_nodePaths.insert(std::pair< std::string, size_t >(path, m_nodes.size()));
+  m_nodePaths.insert(std::pair< std::string, size_t >(path.asChar(), m_nodes.size()));
   m_nodes.push_back(node);
 
-  for(unsigned int i=0;i<dagNode.childCount();i++)
-    registerNode(dagNode.child(i), path);
+  if(addChildren)
+  {
+    for(unsigned int i=0;i<dagNode.childCount();i++)
+      registerNode(dagNode.child(i), path);
+  }
 
   return true;
 }
@@ -671,7 +705,25 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
     {
       mayaLogFunc(MString(getName())+": Warning: '"+dagNode.name()+"' is a light - to be implemented.");
     }
-    else if(typeName == L"transform")
+    else if(typeName == L"world" ||
+      typeName == L"pointConstraint" ||
+      typeName == L"orientConstraint" ||
+      typeName == L"scaleConstraint" ||
+      typeName == L"parentConstraint" ||
+      typeName == L"aimConstraint" ||
+      typeName == L"poleVectorConstraint" ||
+      typeName == L"distanceDimShape"
+      )
+    {
+      // ignore those
+      return FabricCore::RTVal();
+    }
+    else if(typeName == L"transform" ||
+      typeName == L"locator" ||
+      typeName == L"joint" ||
+      typeName == L"ikEffector" ||
+      typeName == L"ikHandle"
+      )
     {
       MString objType = "Transform";
 
@@ -719,9 +771,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
 
       MFnTransform transformNode(node);
       MMatrix localMatrix = transformNode.transformation().asMatrix();
-      
-      FabricCore::RTVal matrixVal = FabricCore::RTVal::Construct(m_client, "Mat44", 0, 0);
-      MMatrixToMat44(localMatrix, matrixVal);
+      FabricCore::RTVal matrixVal = FabricConversion::MMatrixToMat44(localMatrix);
 
       // make sure to also mark the property as varying
       // todo: figure out if it is changing over time
@@ -814,7 +864,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             shape.callMethod("", "setGeometry", 1, &meshVal);
           }
           
-          if(dfgMFnMeshToPolygonMesh(meshData, meshVal).isNullObject())
+          if(!FabricConversion::MFnMeshToMesch(meshData, meshVal))
             return false;
 
           // look for texture references
@@ -838,7 +888,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
                   refObjectMeshPlug.getValue(refObjectMeshObj);
                   MFnMesh refObjectMeshData(refObjectMeshObj);
 
-                  if(!dfgMFnMeshToPolygonMesh(refObjectMeshData, refObjectMeshVal).isNullObject())
+                  if(FabricConversion::MFnMeshToMesch(refObjectMeshData, refObjectMeshVal))
                   {
                     meshVal.callMethod("", "setTextureReference", 1, &refObjectMeshVal);
                   }
@@ -886,7 +936,7 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             shape.callMethod("", "setGeometry", 1, &curvesVal);
           }
 
-          if(!dfgMFnNurbsCurveToCurves(0, curveData, curvesVal))
+          if(!FabricConversion::MFnNurbsCurveToCurve(0, curveData, curvesVal))
             return false;
           break;
         }
@@ -922,13 +972,25 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
 
 MString FabricExportPatternCommand::getPathFromDagPath(MDagPath dagPath)
 {
-  std::string path = dagPath.fullPathName().asChar();
-  for(size_t i=0;i<path.size();i++)
+  MString fullPath = dagPath.fullPathName();
+  MStringArray parts;
+  if(fullPath.split('|', parts) != MS::kSuccess)
+    parts.append(dagPath.fullPathName());
+
+  MString result;
+  for(unsigned int i=0;i<parts.length();i++)
   {
-    if(path[i] == '|')
-      path[i] = '/';
+    MString part = parts[i];
+    if(part.length() == 0)
+      continue;    
+    if(m_settings.stripNameSpaces)
+    {
+      if(part.rindex(':') > 0)
+        part = part.substring(part.rindex(':') + 1, part.length()-1);
+    }
+    result += "/" + part;
   }
-  return path.c_str();
+  return result;
 }
 
 bool FabricExportPatternCommand::isShapeDeforming(FabricCore::RTVal shapeVal, MObject node, bool isStart)
@@ -1078,4 +1140,37 @@ void FabricExportPatternCommand::processUserAttributes(FabricCore::RTVal obj, co
   {
     mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
   }
+}
+
+MObject FabricExportPatternCommand::getParentDagNode(MObject node, MString * parentPrefix)
+{
+  MStatus status;
+
+  if(parentPrefix != NULL)
+    (*parentPrefix) = "";
+
+  MFnDagNode dagNode(node, &status);
+  if(status != MS::kSuccess)
+    return MObject();
+
+  MDagPathArray dagPaths;
+  MDagPath::getAllPathsTo(node, dagPaths);
+  if(dagPaths.length() == 0)
+    return MObject();
+
+  MDagPath dagPath = dagPaths[0];
+  if(dagPath.pop() != MS::kSuccess)
+    return MObject();
+
+  if(parentPrefix != NULL)
+  {
+    (*parentPrefix) = dagPath.fullPathName();
+    int pipeIndex = (*parentPrefix).rindex('|');
+    if(pipeIndex > 0)
+      (*parentPrefix) = (*parentPrefix).substring(0, pipeIndex - 1);
+    else
+      (*parentPrefix) = "";
+  }
+
+  return dagPath.node();
 }

@@ -2,6 +2,7 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
+#include "Foundation.h"
 #include "FabricDFGMayaDeformer_Func.h"
 
 MTypeId FabricDFGMayaDeformer_Func::id(0x0011AE4B);

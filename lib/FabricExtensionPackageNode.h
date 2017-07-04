@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Foundation.h"
 #include <vector>
 #include <FabricCore.h>
 #include <maya/MPxNode.h> 

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <iostream>
+#include "Foundation.h"
 
 #include <maya/MArgList.h>
 #include <maya/MArgParser.h>
@@ -26,6 +26,7 @@ struct FabricImportPatternSettings
   bool attachToExisting;
   bool useLastArgValues;
   bool userAttributes;
+  bool attachToSceneTime;
 
   FabricImportPatternSettings()
   {
@@ -37,6 +38,7 @@ struct FabricImportPatternSettings
     attachToExisting = false;
     useLastArgValues = true;
     userAttributes = true;
+    attachToSceneTime = true;
   }
 };
 
@@ -49,7 +51,8 @@ public:
   static MSyntax newSyntax();
   virtual MStatus doIt(const MArgList &args);
   virtual bool isUndoable() const { return false; }
-  MStatus invoke(FabricCore::Client client, FabricCore::DFGBinding binding, const FabricImportPatternSettings & settings);
+  MStatus invoke(FabricCore::Client client, FabricCore::DFGBinding, const FabricImportPatternSettings & settings);
+  void cleanup(FabricCore::DFGBinding binding);
 
 private:
   FabricCore::Client m_client;
@@ -59,6 +62,7 @@ private:
   std::map< std::string, MObject > m_nodes;
   std::map< std::string, MObject > m_materialSets;
   static bool s_loadedMatrixPlugin;
+  MString m_prevNameSpace;
 
   FabricImportPatternSettings m_settings;
 

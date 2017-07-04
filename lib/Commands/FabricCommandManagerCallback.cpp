@@ -19,8 +19,6 @@
 using namespace FabricCore;
 using namespace FabricUI::Util;
 using namespace FabricUI::Commands;
-using namespace FabricMaya::Commands;
-using namespace FabricMaya::Application;
 
 bool FabricCommandManagerCallback::s_instanceFlag = false;
 FabricCommandManagerCallback* FabricCommandManagerCallback::s_cmdManagerMayaCallback = 0;

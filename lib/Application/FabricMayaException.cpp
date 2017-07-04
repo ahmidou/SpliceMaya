@@ -5,8 +5,6 @@
 #include "FabricMayaException.h"
 #include "FabricSpliceHelpers.h"
 
-using namespace FabricMaya::Application;
-
 FabricMayaException::FabricMayaException(
   QString const&message)
   : FabricUI::Application::FabricException(message)

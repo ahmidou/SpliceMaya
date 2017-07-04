@@ -2,6 +2,7 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
+#include "Foundation.h"
 #include <maya/MGlobal.h>
 #include <maya/MFileIO.h>
 #include "FabricDFGProfiling.h"
@@ -130,7 +131,8 @@ MStatus FabricDFGMayaDeformer::deform(
       }
       catch(FabricCore::Exception e)
       {
-        mayaLogErrorFunc(e.getDesc_cstr());
+        MFnDependencyNode depNode(thisMObject());
+        mayaLogErrorFunc(depNode.name()+": "+MString(e.getDesc_cstr()));
         return MStatus::kSuccess;
       }
       binding.setArgValue_lockType(getLockType(), portName.asChar(), rtMeshes, false);
@@ -157,7 +159,8 @@ MStatus FabricDFGMayaDeformer::deform(
       }
       catch(FabricCore::Exception e)
       {
-        mayaLogErrorFunc(e.getDesc_cstr());
+        MFnDependencyNode depNode(thisMObject());
+        mayaLogErrorFunc(depNode.name()+": "+MString(e.getDesc_cstr()));
         return MStatus::kSuccess;
       }
 
@@ -165,7 +168,7 @@ MStatus FabricDFGMayaDeformer::deform(
       transferOutputValuesToMaya(block, true);
     }
 
-    MAYADFG_CATCH_END(&stat);
+    MAYADFG_CATCH_MPXNODE_END(&stat);
   }
   else if (stateData.asShort() == 1)  // 1: HasNoEffect.
   {

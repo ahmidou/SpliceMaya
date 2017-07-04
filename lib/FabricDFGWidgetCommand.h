@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Foundation.h"
 #include <maya/MArgList.h>
 #include <maya/MPxCommand.h>
 

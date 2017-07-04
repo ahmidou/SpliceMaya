@@ -107,10 +107,10 @@ void onSceneSave(void *userData){
 }
 
 void onSceneNew(void *userData){
-  FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
+  FabricCommandManagerCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
-  FabricMaya::Viewports::FabricRenderCallback::sDrawContext.invalidate(); 
+  FabricRenderCallback::sDrawContext.invalidate(); 
 
   MString cmd = "source \"FabricDFGUI.mel\"; deleteDFGWidget();";
   MGlobal::executeCommandOnIdle(cmd, false);
@@ -136,14 +136,14 @@ void onSceneNew(void *userData){
       handleVal.callMethod("", "removeAllObjects", 0, NULL);
     }
   }
-  //FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
+  //FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onSceneLoad(void *userData){
-  FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
+  FabricCommandManagerCallback::GetManagerCallback()->reset();
 
   FabricSpliceEditorWidget::postClearAll();
-  FabricMaya::Viewports::FabricRenderCallback::sDrawContext.invalidate(); 
+  FabricRenderCallback::sDrawContext.invalidate(); 
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
     FabricSplice::Logging::enableTimers();
@@ -201,7 +201,7 @@ void onSceneLoad(void *userData){
   // [FE-6612] invalidate all DFG nodes.
   for (unsigned int i=0;i<FabricDFGBaseInterface::getNumInstances();i++)
     FabricDFGBaseInterface::getInstanceByIndex(i)->invalidateNode();
-  //FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
+  //FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onBeforeImport(void *userData){
@@ -272,14 +272,14 @@ MAYA_EXPORT initializePlugin(MObject obj)
   MFnPlugin plugin(obj, "FabricMaya", FabricSplice::GetFabricVersionStr(), "Any");
   MStatus status = MStatus::kSuccess;
 
-  INITPLUGIN_STATE( status, plugin.registerContextCommand("FabricToolContext", FabricMaya::Viewports::FabricToolContextCmd::creator, "FabricToolCommand", FabricMaya::Viewports::FabricToolCmd::creator) );
+  INITPLUGIN_STATE( status, plugin.registerContextCommand("FabricToolContext", FabricToolContextCmd::creator, "FabricToolCommand", FabricToolCmd::creator) );
 
   loadMenu();
 
   // FE-6558 : Don't plug the render-callback if not interactive.
   // Otherwise it will crash on linux machine without DISPLAY
   if (MGlobal::mayaState() == MGlobal::kInteractive)
-    FabricMaya::Viewports::FabricRenderCallback::plug();
+    FabricRenderCallback::plug();
 
   gOnSceneSaveCallbackId            = MSceneMessage::addCallback(MSceneMessage::kBeforeSave,           onSceneSave    );
   gOnSceneLoadCallbackId            = MSceneMessage::addCallback(MSceneMessage::kAfterOpen,            onSceneLoad    );
@@ -304,7 +304,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 
   INITPLUGIN_STATE( status, plugin.registerCommand("fabricSplice",             FabricSpliceCommand        ::creator) );
   INITPLUGIN_STATE( status, plugin.registerCommand("fabricSpliceEditor",       FabricSpliceEditorCmd      ::creator, FabricSpliceEditorCmd::newSyntax) );
-  INITPLUGIN_STATE( status, plugin.registerCommand("fabricSpliceManipulation", FabricMaya::Viewports::FabricManipulationCmd::creator) );
+  INITPLUGIN_STATE( status, plugin.registerCommand("fabricSpliceManipulation", FabricManipulationCmd      ::creator) );
 
   INITPLUGIN_STATE( status, plugin.registerNode("spliceMayaNode",     FabricSpliceMayaNode    ::id, FabricSpliceMayaNode    ::creator, FabricSpliceMayaNode    ::initialize) );
   INITPLUGIN_STATE( status, plugin.registerNode("spliceMayaDeformer", FabricSpliceMayaDeformer::id, FabricSpliceMayaDeformer::creator, FabricSpliceMayaDeformer::initialize, MPxNode::kDeformerNode) );
@@ -420,8 +420,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   else
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
 
-  FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->plug();
-  INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricMaya::Commands::FabricCommand::creator));
+  FabricCommandManagerCallback::GetManagerCallback()->plug();
+  INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricCommand::creator));
 
   return status;
 }
@@ -466,7 +466,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   // FE-6558 : Don't unplug the render-callback if not interactive.
   // Otherwise it will crash on linux machine without DISPLAY
   if (MGlobal::mayaState() == MGlobal::kInteractive)
-    FabricMaya::Viewports::FabricRenderCallback::unplug();
+    FabricRenderCallback::unplug();
 
   UNINITPLUGIN_STATE( status, MDGMessage::removeCallback(gOnNodeAddedCallbackId) );
   UNINITPLUGIN_STATE( status, MDGMessage::removeCallback(gOnNodeRemovedCallbackId) );
@@ -540,7 +540,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasSetExecuteShared" ) );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasReloadExtension"  ) );
 
-  FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->unplug();
+  FabricCommandManagerCallback::GetManagerCallback()->unplug();
   UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricCommand"));
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements

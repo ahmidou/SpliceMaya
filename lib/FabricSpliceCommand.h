@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Foundation.h"
 #include "FabricSpliceEditorWidget.h"
 
 #include <iostream>

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Foundation.h"
 #include <maya/MPxNode.h> 
 #include "FabricDFGBaseInterface.h"
 

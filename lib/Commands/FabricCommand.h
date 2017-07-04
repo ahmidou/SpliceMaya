@@ -2,14 +2,11 @@
 // Copyright (c) 2010-2017, Fabric Software Inc. All rights reserved.
 //
 
-#ifndef __FABRIC_MAYA_COMMAND__
-#define __FABRIC_MAYA_COMMAND__
+#pragma once
 
+#include "Foundation.h"
 #include <maya/MArgList.h>
 #include <maya/MPxCommand.h>
-
-namespace FabricMaya {
-namespace Commands {
 
 class FabricCommand : public MPxCommand
 {
@@ -72,8 +69,3 @@ class FabricCommand : public MPxCommand
     /// \internal
     bool m_isUndoable;
 };
-
-} // namespace Commands
-} // namespace FabricMaya
-
-#endif // __FABRIC_MAYA_COMMAND__

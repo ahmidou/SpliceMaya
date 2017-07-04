@@ -2,6 +2,7 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
+#include "Foundation.h"
 #include "FabricDFGMayaNode_Func.h"
 
 MTypeId FabricDFGMayaNode_Func::id(0x0011AE4A);

@@ -2,6 +2,7 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
+#include "Foundation.h"
 #include <maya/MFileIO.h>
 #include "FabricDFGMayaNode.h"
 #include "FabricDFGProfiling.h"
@@ -92,7 +93,7 @@ MStatus FabricDFGMayaNode::compute(
       transferOutputValuesToMaya(data);
     }
 
-    MAYADFG_CATCH_END(&stat);
+    MAYADFG_CATCH_MPXNODE_END(&stat);
   }
   else if (stateData.asShort() == 1)  // 1: HasNoEffect.
   {

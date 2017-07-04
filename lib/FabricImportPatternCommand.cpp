@@ -10,7 +10,7 @@
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGWidget.h"
-#include "FabricDFGConversion.h"
+#include "FabricConversion.h"
 #include "FabricImportPatternDialog.h"
 #include "FabricProgressbarDialog.h"
 
@@ -26,6 +26,7 @@
 #include <maya/MFnSet.h>
 #include <maya/MFnLambertShader.h>
 #include <maya/MCommandResult.h>
+#include <maya/MNamespace.h>
 
 #include <FTL/FS.h>
 
@@ -40,6 +41,7 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.addFlag( "-q", "-disableDialogs", MSyntax::kBoolean );
   syntax.addFlag( "-k", "-namespace", MSyntax::kString );
   syntax.addFlag( "-x", "-attachToExisting", MSyntax::kBoolean );
+  syntax.addFlag( "-w", "-attachToSceneTime", MSyntax::kBoolean );
   syntax.addFlag( "-m", "-enableMaterials", MSyntax::kBoolean );
   syntax.addFlag( "-s", "-scale", MSyntax::kDouble );
   syntax.addFlag( "-n", "-canvasnode", MSyntax::kString );
@@ -145,9 +147,8 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     m_settings.nameSpace = argParser.flagArgumentString("namespace", 0);
     if(m_settings.nameSpace.length() > 0)
     {
-      MString suffix = m_settings.nameSpace.substring(m_settings.nameSpace.length()-2, m_settings.nameSpace.length()-1);
-      if(suffix != L"::")
-        m_settings.nameSpace = m_settings.nameSpace + L"::";
+      while(m_settings.nameSpace.substring(m_settings.nameSpace.length()-1, m_settings.nameSpace.length()-1) == ":")
+        m_settings.nameSpace = m_settings.nameSpace.substring(0, m_settings.nameSpace.length()-2);
     }
   }
   if( argParser.isFlagSet("scale") )
@@ -358,7 +359,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         {
           MFnMesh mesh(obj);
           FabricCore::RTVal polygonMesh = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
-          polygonMesh = dfgMFnMeshToPolygonMesh(mesh, polygonMesh);
+          /*polygonMesh =*/ FabricConversion::MFnMeshToMesch(mesh, polygonMesh);
           binding.setArgValue(name.asChar(), polygonMesh);
         }
         else if(node.typeName() == "nurbsCurve")
@@ -367,7 +368,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
           FabricCore::RTVal curves = FabricCore::RTVal::Create(m_client, "Curves", 0, 0);
           FabricCore::RTVal curveCountRTVal = FabricCore::RTVal::ConstructUInt32(m_client, 1);
           curves.callMethod( "", "setCurveCount", 1, &curveCountRTVal );
-          dfgMFnNurbsCurveToCurves(0, nurbsCurve, curves);
+          FabricConversion::MFnNurbsCurveToCurve(0, nurbsCurve, curves);
           binding.setArgValue(name.asChar(), curves);
         }
       }
@@ -446,14 +447,12 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
         QApplication::sendEvent(mainWindow, &event);
 
         FabricImportPatternDialog * dialog = new FabricImportPatternDialog(mainWindow, m_client, binding, m_settings);
-        dialog->setWindowModality(Qt::ApplicationModal);
-        dialog->setSizeGripEnabled(true);
-        dialog->open();
 
-        if(!dialog->wasAccepted())
-        {
-          return MS::kSuccess;
-        }
+        // disable modality
+        dialog->setWindowModality(Qt::NonModal);
+        // dialog->setWindowModality(Qt::ApplicationModal);
+        dialog->setSizeGripEnabled(true);
+        dialog->show();
       }
       else
       {
@@ -505,6 +504,14 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
     prog->setWindowModality(Qt::ApplicationModal);
     prog->setSizeGripEnabled(true);
     prog->open();
+  }
+
+  m_prevNameSpace = MNamespace::currentNamespace();
+  if(m_settings.nameSpace.length() > 0)
+  {
+    if(!MNamespace::namespaceExists(m_settings.nameSpace))
+      MNamespace::addNamespace(m_settings.nameSpace);
+    MNamespace::setCurrentNamespace(m_settings.nameSpace);
   }
 
   try
@@ -582,6 +589,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
         {
           prog->close();
           mayaLogFunc(MString(getName())+": aborted by user.");
+          cleanup(binding);
           return MS::kFailure;
         }
         prog->increment();
@@ -603,6 +611,7 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
         {
           prog->close();
           mayaLogFunc(MString(getName())+": aborted by user.");
+          cleanup(binding);
           return MS::kFailure;
         }
         prog->increment();
@@ -628,9 +637,16 @@ MStatus FabricImportPatternCommand::invoke(FabricCore::Client client, FabricCore
 
   setResult(result);
   mayaLogFunc(MString(getName())+": import done.");
+  cleanup(binding);
   return MS::kSuccess;
 }
 
+void FabricImportPatternCommand::cleanup(FabricCore::DFGBinding binding)
+{
+  binding.setNotificationCallback(NULL, NULL);
+  binding.deallocValues();
+  MNamespace::setCurrentNamespace(m_prevNameSpace);
+}
 
 MString FabricImportPatternCommand::parentPath(MString path, MString * name)
 {
@@ -658,7 +674,8 @@ MString FabricImportPatternCommand::simplifyPath(MString path)
   if(path.index('/') > 0)
   {
     MStringArray parts;
-    path.split('/', parts);
+    if(path.split('/', parts) != MS::kSuccess)
+      parts.append(path);
     MString concat;
     for(unsigned int i=0;i<parts.length();i++)
     {
@@ -737,7 +754,8 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
     MDagModifier modif;
     node = modif.createNode(type, parentNode);
     modif.doIt();
-    modif.renameNode(node, m_settings.nameSpace + name);
+
+    modif.renameNode(node, name);
     modif.doIt();
   }
   else
@@ -745,7 +763,7 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
     MDGModifier modif;
     node = modif.createNode(type);
     modif.doIt();
-    modif.renameNode(node, m_settings.nameSpace + name);
+    modif.renameNode(node, name);
     modif.doIt();
   }
 
@@ -896,14 +914,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       if(m_settings.attachToExisting)
       {
         MSelectionList sl;
-        std::string pathStr = lookupPath.asChar();
-        for(size_t i=0;i<pathStr.length();i++)
-        {
-          if(pathStr[i] != '/')
-            continue;
-          pathStr[i] = '|';
-        }
-        sl.add(pathStr.c_str());
+        sl.add(mayaPathFromPatternPath(lookupPath));
         if(sl.length() > 0)
         {
           MDagPath dagPath;
@@ -919,7 +930,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       {
         if(geoType == 0)
         {
-          node = dfgPolygonMeshToMFnMesh(geometryVal, false /* insideCompute */);
+          node = FabricConversion::MeschToMFnMesh(geometryVal, false /* insideCompute */);
         }
         else if(geoType == 1)
         {
@@ -931,7 +942,7 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       m_nodes.insert(std::pair< std::string, MObject > (lookupPath.asChar(), node));
       
       MDagModifier modif;
-      modif.renameNode(node, m_settings.nameSpace + name);
+      modif.renameNode(node, name);
       modif.doIt();
 
       if(!parentNode.isNull())
@@ -946,12 +957,12 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
         if(geometryVal.callMethod("Boolean", "hasTextureReference", 0, 0).getBoolean())
         {
           FabricCore::RTVal refPolygonMesh = geometryVal.callMethod("PolygonMesh", "createTextureReferenceMesh", 0, 0);
-          MObject refNode = dfgPolygonMeshToMFnMesh(refPolygonMesh, false /* insideCompute */);
+          MObject refNode = FabricConversion::MeschToMFnMesh(refPolygonMesh, false /* insideCompute */);
 
           if(!refNode.isNull())
           {
             MDagModifier dagModif;
-            dagModif.renameNode(refNode, m_settings.nameSpace + name + "_reference");
+            dagModif.renameNode(refNode, name + "_reference");
             dagModif.reparentNode(refNode, node);
             dagModif.doIt();
 
@@ -1227,7 +1238,8 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   {
     MString extDep = extDeps.getArrayElement(i).getStringCString();
     MStringArray parts;
-    extDep.split(':', parts);
+    if(extDep.split(':', parts) != MS::kSuccess)
+      parts.append(extDep);
     if(parts.length() == 1)
       exec.addExtDep(parts[0].asChar());
     else
@@ -1240,7 +1252,8 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   klCode += "\ndfgEntry {\n";
   MString evaluatorCode = evaluator.callMethod("String", "getKLCode", 0, 0).getStringCString();
   MStringArray evaluatorCodeLines;
-  evaluatorCode.split('\n', evaluatorCodeLines);
+  if(evaluatorCode.split('\n', evaluatorCodeLines) != MS::kSuccess)
+    evaluatorCodeLines.append(evaluatorCode);
   for(unsigned int i=0;i<evaluatorCodeLines.length();i++)
     klCode += "  " + evaluatorCodeLines[i] + "\n";
   klCode += "}\n";
@@ -1495,7 +1508,7 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     }
     else if(argDataType == L"Float32")
     {
-      if(argName == L"time" || argName == L"timeline")
+      if((argName == L"time" || argName == L"timeline") && m_settings.attachToSceneTime)
       {
         // setup an expression to drive the time
         MString exprCmd = "expression -s \""+
@@ -1661,12 +1674,19 @@ void FabricImportPatternCommand::processUserAttributes(FabricCore::RTVal objRef)
 
 MString FabricImportPatternCommand::mayaPathFromPatternPath(MString path)
 {
-  std::string pathStr = path.asChar();
-  for(size_t i=0;i<pathStr.length();i++)
+  MStringArray parts;
+  if(path.split('/', parts) != MS::kSuccess)
+    parts.append(path);
+
+  MString result;
+  for(unsigned int i=0;i<parts.length();i++)
   {
-    if(pathStr[i] != '/')
-      continue;
-    pathStr[i] = '|';
+    if(i > 0)
+      result += "|";
+    if(m_settings.nameSpace.length() > 0)
+      result += m_settings.nameSpace + ":" + parts[i];
+    else
+      result += parts[i];
   }
-  return pathStr.c_str();
+  return result;
 }

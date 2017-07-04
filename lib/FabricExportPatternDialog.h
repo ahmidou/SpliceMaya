@@ -31,6 +31,7 @@ public slots:
   void onFPSChanged(const QString & text);
   void onSubStepsChanged(const QString & text);
   void onUserAttributesChanged(int state);
+  void onStripNameSpacesChanged(int state);
 
 private:
 

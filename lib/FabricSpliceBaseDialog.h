@@ -3,7 +3,7 @@
 //
 
 #pragma once
-
+#include "Foundation.h"
 #include <QWidget>
 #include <QDialog>
 #include <QLayout>

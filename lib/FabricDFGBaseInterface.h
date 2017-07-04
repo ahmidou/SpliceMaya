@@ -30,6 +30,16 @@ using namespace FabricUI;
     if ((MStatus *)(statusPtr) != NULL) \
       *statusPtr=MS::kFailure; \
   }
+#define MAYADFG_CATCH_MPXNODE_END(statusPtr) } \
+  catch (FabricCore::Exception e) { \
+    if (e.getDescLength()) \
+    { \
+      MFnDependencyNode depNode(thisMObject()); \
+      mayaLogErrorFunc(depNode.name()+": "+MString(e.getDesc_cstr())); \
+    } \
+    if ((MStatus *)(statusPtr) != NULL) \
+      *statusPtr=MS::kFailure; \
+  }
   
 class FabricDFGWidget;
 

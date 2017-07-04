@@ -2,16 +2,12 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#ifndef __FABRIC_MAYA_TOOL_CONTEXT__
-#define __FABRIC_MAYA_TOOL_CONTEXT__
+#pragma once
 
 #include <QObject>
 #include "Foundation.h"
 #include <FabricSplice.h>
 #include "FabricSpliceBaseInterface.h"
-
-namespace FabricMaya {
-namespace Viewports {
 
 class FabricManipulationCmd : public MPxToolCommand {
 
@@ -115,8 +111,3 @@ class FabricToolContextCmd : public MPxContextCommand {
 
     static void* creator();
 };
-
-} // namespace Viewports
-} // namespace FabricMaya
-
-#endif // __FABRIC_MAYA_TOOL_CONTEXT__

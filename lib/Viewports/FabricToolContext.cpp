@@ -17,8 +17,6 @@
   
 using namespace FabricCore;
 using namespace FabricUI::Commands;
-using namespace FabricMaya::Viewports;
-using namespace FabricMaya::Application;
 
 /////////////////////////////////////////////////////
 // FabricManipulationCmd

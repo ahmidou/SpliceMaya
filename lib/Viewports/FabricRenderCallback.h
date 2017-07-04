@@ -2,16 +2,12 @@
 // Copyright (c) 2010-2017 Fabric Software Inc. All rights reserved.
 //
 
-#ifndef __FABRIC_MAYA_RENDER_CALLBACK__
-#define __FABRIC_MAYA_RENDER_CALLBACK__
+#pragma once
 
 #include <FabricCore.h>
 #include <maya/MString.h>
 #include <maya/MDrawContext.h>
 #include <FabricUI/SceneHub/SHGLRenderer.h>
-
-namespace FabricMaya {
-namespace Viewports {
 
 bool isRTRPassEnabled();
 
@@ -72,8 +68,3 @@ class FabricRenderCallback {
 #endif
     
 };
-
-} // namespace Viewports
-} // namespace FabricMaya
-
-#endif // __FABRIC_MAYA_RENDER_CALLBACK__
