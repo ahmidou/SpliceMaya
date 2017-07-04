@@ -133,7 +133,7 @@ void onSceneNew(void *userData){
     if (client)
     {
       FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
-      handleVal.callMethod("", "removeAllObjects", 0, NULL);
+      handleVal.callMethod("", "onNewScene", 0, NULL);
     }
   }
   //FabricMaya::Commands::FabricCommandManagerCallback::GetManagerCallback()->reset();
