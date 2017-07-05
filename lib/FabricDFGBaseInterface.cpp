@@ -2535,13 +2535,13 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
 
     // remove existing attributes if types don't match
     MPlug plug = thisNode.findPlug(plugName);
-    if(!plug.isNull())
-      removeMayaAttribute(nameStr.c_str());
+    if( !plug.isNull() ) {
       // FE-7722 -> Only work for maya > 2017 update 4
-      if(MGlobal::apiVersion() >= 201760)
-        removeMayaAttribute(nameStr.c_str());
+      if( MGlobal::apiVersion() >= 201760 )
+        removeMayaAttribute( nameStr.c_str() );
       else
         return;
+    }
  
     DFGExec exec = getDFGExec();
     DFGPortType portType = exec.getExecPortType(nameStr.c_str());
