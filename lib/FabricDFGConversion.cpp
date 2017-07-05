@@ -2622,9 +2622,9 @@ void dfgPlugToPort_Curve(
     data );
 }
 
-void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal & trackVal) {
+void dfgPlugToPort_AnimXAnimCurve_helper(MFnAnimCurve & curve, FabricCore::RTVal & curveVal) {
 
-  FabricMayaProfilingEvent bracket("dfgPlugToPort_KeyframeTrack_helper");
+  FabricMayaProfilingEvent bracket("dfgPlugToPort_AnimXAnimCurve_helper");
 
   CORE_CATCH_BEGIN;
 
@@ -2640,108 +2640,50 @@ void dfgPlugToPort_KeyframeTrack_helper(MFnAnimCurve & curve, FabricCore::RTVal 
   else if(curveName.indexW("_translateZ") > -1 || curveName.indexW("_rotateZ") > -1 || curveName.indexW("_scaleZ") > -1)
     blue = 1.0;
 
-  trackVal = FabricSplice::constructObjectRTVal("KeyframeTrack");
-  FabricCore::RTVal keysVal = trackVal.maybeGetMember("keys");
-  FabricCore::RTVal colorVal = FabricSplice::constructRTVal("Color");
-  FabricCore::RTVal numKeysVal = FabricSplice::constructUInt32RTVal(curve.numKeys());
-  keysVal.callMethod("", "resize", 1, &numKeysVal);
+  FabricCore::RTVal constructCurveArgs[3];
+  constructCurveArgs[0] = FabricSplice::constructStringRTVal(curveName.asChar());
+  constructCurveArgs[1] = FabricSplice::constructRTVal("Color");
+  constructCurveArgs[1].setMember("r", FabricSplice::constructFloat64RTVal(red));
+  constructCurveArgs[1].setMember("g", FabricSplice::constructFloat64RTVal(green));
+  constructCurveArgs[1].setMember("b", FabricSplice::constructFloat64RTVal(blue));
+  constructCurveArgs[1].setMember("a", FabricSplice::constructFloat64RTVal(1.0));
+  constructCurveArgs[2] = FabricSplice::constructBooleanRTVal(curve.isWeighted());;
 
-  trackVal.setMember("name", FabricSplice::constructStringRTVal(curveName.asChar()));
-  colorVal.setMember("r", FabricSplice::constructFloat64RTVal(red));
-  colorVal.setMember("g", FabricSplice::constructFloat64RTVal(green));
-  colorVal.setMember("b", FabricSplice::constructFloat64RTVal(blue));
-  colorVal.setMember("a", FabricSplice::constructFloat64RTVal(1.0));
-  trackVal.setMember("color", colorVal);
-  trackVal.setMember("defaultInterpolation", FabricSplice::constructSInt32RTVal(2));
-  trackVal.setMember("defaultValue", FabricSplice::constructFloat64RTVal(0.0));
-
-  bool weighted = curve.isWeighted();
+  curveVal = FabricSplice::constructObjectRTVal("AnimX::AnimCurve", 3, constructCurveArgs);
 
   for(unsigned int i=0;i<curve.numKeys();i++)
   {
-    FabricCore::RTVal keyVal = FabricSplice::constructRTVal("Keyframe");
-    FabricCore::RTVal inTangentVal = FabricSplice::constructRTVal("Vec2");
-    FabricCore::RTVal outTangentVal = FabricSplice::constructRTVal("Vec2");
+    /*
+    Float64 time,
+    Float64 value,
+    TangentType tanInType,
+    Float64 tanInX,
+    Float64 tanInY,
+    TangentType tanOutType,
+    Float64 tanOutX,
+    Float64 tanOutY
+    */
 
-    // Integer interpolation;
-    double keyTime = curve.time(i).as(MTime::kSeconds);
-    double keyValue = curve.value(i);
-    keyVal.setMember("time", FabricSplice::constructFloat64RTVal(keyTime));
-    keyVal.setMember("value", FabricSplice::constructFloat64RTVal(keyValue));
+    float x,y;
+    FabricCore::RTVal pushKeyArgs[8];
+    pushKeyArgs[0] = FabricSplice::constructFloat64RTVal(curve.time(i).as(MTime::kSeconds));
+    pushKeyArgs[1] = FabricSplice::constructFloat64RTVal(curve.value(i));
+    pushKeyArgs[2] = FabricSplice::constructSInt32RTVal((int)curve.inTangentType(i));
+    curve.getTangent(i, x, y, true);
+    pushKeyArgs[3] = FabricSplice::constructFloat64RTVal(x);
+    pushKeyArgs[4] = FabricSplice::constructFloat64RTVal(y);
+    pushKeyArgs[5] = FabricSplice::constructSInt32RTVal((int)curve.outTangentType(i));
+    curve.getTangent(i, x, y, false);
+    pushKeyArgs[6] = FabricSplice::constructFloat64RTVal(x);
+    pushKeyArgs[7] = FabricSplice::constructFloat64RTVal(y);
 
-    if(i > 0)
-    {
-      double prevKeyTime = curve.time(i-1).as(MTime::kSeconds);
-      double timeDelta = keyTime - prevKeyTime;
-      
-      float x,y;
-      curve.getTangent(i, x, y, true);
-   
-      float weight = -1.0f/3.0f;
-      float gradient = 0.0f;
-      
-      // Weighted out tangents are defined as 3*(P4 - P3),
-      // So multiplly by 1/3 to get P3, and then divide by timeDelta
-      // to get the ratio stored by the Fabric Engine keyframes.
-      // Also note that the default value of 1/3 for the handle weight 
-      // will create equally spaced handles, effectively the same as
-      // Maya's non-weighted curves.
-      if(weighted && fabs(timeDelta) > 0.0001)
-        weight = x*weight/timeDelta;
-      if(fabs(x) > 0.0001)
-        gradient = y/x;
-        //gradient = ((y*1.0/3.0)/valueDelta)/((x*1.0/3.0)/timeDelta);
-
-      inTangentVal.setMember("x", FabricSplice::constructFloat64RTVal(weight));
-      inTangentVal.setMember("y", FabricSplice::constructFloat64RTVal(gradient));
-    }
-
-    if(i < curve.numKeys()-1)
-    {
-      double nextKeyTime = curve.time(i+1).as(MTime::kSeconds);
-      double timeDelta = nextKeyTime - keyTime;
-      
-      float x,y;
-      curve.getTangent(i, x, y, false);
-    
-      float weight = 1.0f/3.0f;
-      float gradient = 0.0f;
-      
-      // Weighted out tangents are defined as 3*(P2 - P1),
-      // So multiplly by 1/3 to get P2, and then divide by timeDelta
-      // to get the ratio stored by the Fabric Engine keyframes.
-      // Also note that the default value of 1/3 for the handle weight 
-      // will create equally spaced handles, effectively the same as
-      // Maya's non-weighted curves.
-      if(weighted && fabs(timeDelta) > 0.0001)
-       weight = x*weight/timeDelta;
-      if(fabs(x) > 0.0001)
-        gradient = y/x;
-        //gradient = ((y*1.0/3.0)/valueDelta)/((x*1.0/3.0)/timeDelta);
-
-      outTangentVal.setMember("x", FabricSplice::constructFloat64RTVal(weight));
-      outTangentVal.setMember("y", FabricSplice::constructFloat64RTVal(gradient));
-    }
-
-    keyVal.setMember("inTangent", inTangentVal);
-    keyVal.setMember("outTangent", outTangentVal);
-    int interpolation = 2;
-    if(curve.outTangentType(i) == MFnAnimCurve::kTangentStep)
-      interpolation = 0;
-    else if(curve.outTangentType(i) == MFnAnimCurve::kTangentLinear)
-      interpolation = 1;
-     else if(curve.outTangentType(i) == MFnAnimCurve::kTangentStepNext)
-      interpolation = 3;
-    keyVal.setMember("interpolation", FabricSplice::constructSInt32RTVal(interpolation));
-    keysVal.setArrayElement(i, keyVal);
+    curveVal.callMethod("", "pushKeyframe", 8, pushKeyArgs);
   }
-
-  trackVal.setMember("keys", keysVal);
 
   CORE_CATCH_END;
 }
 
-void dfgPlugToPort_KeyframeTrack(
+void dfgPlugToPort_AnimXAnimCurve(
   unsigned argIndex,
   char const *argName,
   char const *argTypeName,
@@ -2773,13 +2715,13 @@ void dfgPlugToPort_KeyframeTrack(
     if(curve.object().isNull())
       return;
 
-    FabricCore::RTVal trackVal;
-    dfgPlugToPort_KeyframeTrack_helper(curve, trackVal);
-    setCB(getSetUD, trackVal.getFECRTValRef());
+    FabricCore::RTVal curveVal;
+    dfgPlugToPort_AnimXAnimCurve_helper(curve, curveVal);
+    setCB(getSetUD, curveVal.getFECRTValRef());
   } else {
 
-    FabricCore::RTVal trackVals = FabricSplice::constructRTVal("KeyframeTrack[]");
-    trackVals.setArraySize(plug.numElements());
+    FabricCore::RTVal curveVals = FabricSplice::constructRTVal("AnimX::AnimCurve[]");
+    curveVals.setArraySize(plug.numElements());
 
     for(unsigned int j=0;j<plug.numElements();j++) {
 
@@ -2801,13 +2743,13 @@ void dfgPlugToPort_KeyframeTrack(
       if(curve.object().isNull())
         continue;
 
-      FabricCore::RTVal trackVal;
-      dfgPlugToPort_KeyframeTrack_helper(curve, trackVal);
+      FabricCore::RTVal curveVal;
+      dfgPlugToPort_AnimXAnimCurve_helper(curve, curveVal);
 
-      trackVals.setArrayElement(j, trackVal);
+      curveVals.setArrayElement(j, curveVal);
     }
 
-    setCB(getSetUD, trackVals.getFECRTValRef());
+    setCB(getSetUD, curveVals.getFECRTValRef());
   }
 }
 
@@ -5384,7 +5326,7 @@ DFGPlugToArgFunc getDFGPlugToArgFunc(const FTL::StrRef &dataType)
 
   if( dataType == FTL_STR( "Curves" ) )            return dfgPlugToPort_Curves;
 
-  if (dataType == FTL_STR("KeyframeTrack"))        return dfgPlugToPort_KeyframeTrack;
+  if (dataType == FTL_STR("AnimX::AnimCurve"))        return dfgPlugToPort_AnimXAnimCurve;
 
   if (dataType == FTL_STR("SpliceMayaData"))      return dfgPlugToPort_spliceMayaData;
 

@@ -490,8 +490,8 @@ void FabricSpliceEditorWidget::addAttrPressed(void * userData)
 
     if(extension.length() == 0)
     {
-      if(dataType == "KeyframeTrack")
-        extension = "Animation";
+      if(dataType == "AnimCurve" || dataType == "AnimX::AnimCurve")
+        extension = "AnimX";
     }
 
     if(arrayType != "Single Value")
