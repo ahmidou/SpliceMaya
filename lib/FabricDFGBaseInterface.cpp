@@ -116,7 +116,7 @@ void FabricDFGBaseInterface::bindingChanged()
   QString resolverID = "DFGPathValueResolver_" + QString::number(m_id);
   PathValueResolverFactory<DFGPathValueResolver>::Register(resolverID);
   DFGPathValueResolver *resolver = qobject_cast<DFGPathValueResolver *>(
-    PathValueResolverRegistry::GetRegistry()->getOrCreateResolver(resolverID)
+    PathValueResolverRegistry::getRegistry()->getResolver(resolverID)
     );
   resolver->onBindingChanged(m_binding); 
 }
