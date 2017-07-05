@@ -2688,6 +2688,14 @@ int MayaTangentTypeToAnimXTangentType(MFnAnimCurve::TangentType tangentType)
     {
       return 14;
     }
+    case MFnAnimCurve::kTangentAuto:
+    {
+      return 9;
+    }
+    default:
+    {
+      return 2; // linear
+    }
   }
 
   return 2; //linear
