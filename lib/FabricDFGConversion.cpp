@@ -2622,6 +2622,77 @@ void dfgPlugToPort_Curve(
     data );
 }
 
+int MayaTangentTypeToAnimXTangentType(MFnAnimCurve::TangentType tangentType)
+{
+  /*
+  const TangentType TangentType_Global = 0;     //!< Global
+  const TangentType TangentType_Fixed = 1;      //!< Fixed
+  const TangentType TangentType_Linear = 2;     //!< Linear
+  const TangentType TangentType_Flat = 3;       //!< Flat
+  const TangentType TangentType_Step = 4;       //!< Step
+  const TangentType TangentType_Slow = 5;       //!< Slow
+  const TangentType TangentType_Fast = 6;       //!< Fast
+  const TangentType TangentType_Smooth = 7;     //!< Smooth
+  const TangentType TangentType_Clamped = 8;    //!< Clamped
+  const TangentType TangentType_Auto = 9;       //!< Auto
+  const TangentType TangentType_Sine = 10;      //!< Sine
+  const TangentType TangentType_Parabolic = 11; //!< Parabolic
+  const TangentType TangentType_Log = 12;       //!< Log
+  const TangentType TangentType_Plateau = 13;   //!< Plateau
+  const TangentType TangentType_StepNext = 14;  //!< StepNext
+  */    
+
+  switch(tangentType)
+  {
+    case MFnAnimCurve::kTangentGlobal:
+    {
+      return 0;
+    }
+    case MFnAnimCurve::kTangentFixed:
+    {
+      return 1;
+    }
+    case MFnAnimCurve::kTangentLinear:
+    {
+      return 2;
+    }
+    case MFnAnimCurve::kTangentFlat:
+    {
+      return 3;
+    }
+    case MFnAnimCurve::kTangentSmooth:
+    {
+      return 7;
+    }
+    case MFnAnimCurve::kTangentStep:
+    {
+      return 4;
+    }
+    case MFnAnimCurve::kTangentSlow:
+    {
+      return 5;
+    }
+    case MFnAnimCurve::kTangentFast:
+    {
+      return 6;
+    }
+    case MFnAnimCurve::kTangentClamped:
+    {
+      return 8;
+    }
+    case MFnAnimCurve::kTangentPlateau:
+    {
+      return 13;
+    }
+    case MFnAnimCurve::kTangentStepNext:
+    {
+      return 14;
+    }
+  }
+
+  return 2; //linear
+}
+
 void dfgPlugToPort_AnimXAnimCurve_helper(MFnAnimCurve & curve, FabricCore::RTVal & curveVal) {
 
   FabricMayaProfilingEvent bracket("dfgPlugToPort_AnimXAnimCurve_helper");
@@ -2641,13 +2712,13 @@ void dfgPlugToPort_AnimXAnimCurve_helper(MFnAnimCurve & curve, FabricCore::RTVal
     blue = 1.0;
 
   FabricCore::RTVal constructCurveArgs[3];
-  constructCurveArgs[0] = FabricSplice::constructStringRTVal(curveName.asChar());
-  constructCurveArgs[1] = FabricSplice::constructRTVal("Color");
-  constructCurveArgs[1].setMember("r", FabricSplice::constructFloat64RTVal(red));
-  constructCurveArgs[1].setMember("g", FabricSplice::constructFloat64RTVal(green));
-  constructCurveArgs[1].setMember("b", FabricSplice::constructFloat64RTVal(blue));
-  constructCurveArgs[1].setMember("a", FabricSplice::constructFloat64RTVal(1.0));
-  constructCurveArgs[2] = FabricSplice::constructBooleanRTVal(curve.isWeighted());;
+  constructCurveArgs[0] = FabricSplice::constructBooleanRTVal(curve.isWeighted());;
+  constructCurveArgs[1] = FabricSplice::constructStringRTVal(curveName.asChar());
+  constructCurveArgs[2] = FabricSplice::constructRTVal("Color");
+  constructCurveArgs[2].setMember("r", FabricSplice::constructFloat64RTVal(red));
+  constructCurveArgs[2].setMember("g", FabricSplice::constructFloat64RTVal(green));
+  constructCurveArgs[2].setMember("b", FabricSplice::constructFloat64RTVal(blue));
+  constructCurveArgs[2].setMember("a", FabricSplice::constructFloat64RTVal(1.0));
 
   curveVal = FabricSplice::constructObjectRTVal("AnimX::AnimCurve", 3, constructCurveArgs);
 
@@ -2668,11 +2739,11 @@ void dfgPlugToPort_AnimXAnimCurve_helper(MFnAnimCurve & curve, FabricCore::RTVal
     FabricCore::RTVal pushKeyArgs[8];
     pushKeyArgs[0] = FabricSplice::constructFloat64RTVal(curve.time(i).as(MTime::kSeconds));
     pushKeyArgs[1] = FabricSplice::constructFloat64RTVal(curve.value(i));
-    pushKeyArgs[2] = FabricSplice::constructSInt32RTVal((int)curve.inTangentType(i));
+    pushKeyArgs[2] = FabricSplice::constructSInt32RTVal(MayaTangentTypeToAnimXTangentType(curve.inTangentType(i)));
     curve.getTangent(i, x, y, true);
     pushKeyArgs[3] = FabricSplice::constructFloat64RTVal(x);
     pushKeyArgs[4] = FabricSplice::constructFloat64RTVal(y);
-    pushKeyArgs[5] = FabricSplice::constructSInt32RTVal((int)curve.outTangentType(i));
+    pushKeyArgs[5] = FabricSplice::constructSInt32RTVal(MayaTangentTypeToAnimXTangentType(curve.outTangentType(i)));
     curve.getTangent(i, x, y, false);
     pushKeyArgs[6] = FabricSplice::constructFloat64RTVal(x);
     pushKeyArgs[7] = FabricSplice::constructFloat64RTVal(y);
