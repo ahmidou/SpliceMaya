@@ -9,15 +9,16 @@
 #include <maya/MDrawContext.h>
 #include <FabricUI/SceneHub/SHGLRenderer.h>
 
-bool isRTRPassEnabled();
-
-void enableRTRPass(
-  bool enable
-  );
 
 class FabricRenderCallback {
 
   public:
+    static bool isRTRPassEnabled();
+
+    static void enableRTRPass(
+      bool enable
+      );
+
     static uint32_t gViewId;
 
     static bool gCallbackEnabled;

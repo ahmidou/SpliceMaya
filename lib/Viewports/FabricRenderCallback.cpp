@@ -32,12 +32,12 @@ SceneHub::SHGLRenderer FabricRenderCallback::shHostGLRenderer;
 
 bool gRTRPassEnabled = true;
 
-bool isRTRPassEnabled() 
+bool FabricRenderCallback::isRTRPassEnabled() 
 {
   return gRTRPassEnabled;
 }
 
-void enableRTRPass(
+void FabricRenderCallback::enableRTRPass(
   bool enable) 
 {
   gRTRPassEnabled = enable;

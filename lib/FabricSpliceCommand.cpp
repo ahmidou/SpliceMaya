@@ -102,13 +102,13 @@ MStatus FabricSpliceCommand::doIt(const MArgList &args)
     }
     else if(actionStr == "toggleRenderer")
     {
-      enableRTRPass(!isRTRPassEnabled());
+      FabricRenderCallback::enableRTRPass(!FabricRenderCallback::isRTRPassEnabled());
       mayaRefreshFunc();
       return mayaErrorOccured();
     }
     else if(actionStr == "isRendererEnabled")
     {
-      setResult(isRTRPassEnabled());
+      setResult(FabricRenderCallback::isRTRPassEnabled());
       return mayaErrorOccured();
     }
     else if(actionStr == "startProfiling")

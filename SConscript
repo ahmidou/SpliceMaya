@@ -135,12 +135,12 @@ if not os.path.exists(uiSconscript.abspath):
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
-env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Application')])
-env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Conversion')])
-env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Commands')])
+# env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Application')])
+# env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Conversion')])
+# env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Commands')])
  
-if int(float(str(MAYA_VERSION[:4]))) >= 2016:
-  env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Viewports')])
+# if int(float(str(MAYA_VERSION[:4]))) >= 2016:
+#   env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Viewports')])
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
 env.Append(CPPPATH = [uiSconscript.dir])
