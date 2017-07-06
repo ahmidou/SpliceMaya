@@ -6,6 +6,7 @@
 
 #include <FabricCore.h>
 #include <maya/MString.h>
+#include <maya/M3dView.h>
 #include <maya/MDrawContext.h>
 #include <FabricUI/SceneHub/SHGLRenderer.h>
 
@@ -50,6 +51,11 @@ class FabricRenderCallback {
       uint32_t height, 
       uint32_t phase
       );
+
+    static void prepareViewport(
+      const MString &panelName,
+      M3dView &view
+    );
 
     static void preDrawCallback(
       const MString &panelName, 

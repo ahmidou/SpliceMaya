@@ -87,12 +87,15 @@ class FabricToolContext : public MPxContext {
       );
 
     bool onEvent(
-      QEvent *event
+      QEvent *event,
+      const MString &panelName,
+      M3dView &view
       );
 
   private:
     bool onIDEvent(
       QEvent *event, 
+      const MString &panelName,
       M3dView &view
       );
 

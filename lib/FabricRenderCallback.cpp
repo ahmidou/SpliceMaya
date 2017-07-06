@@ -216,6 +216,7 @@ inline void setProjection(
 
 MString gRenderName = "";
 MString gPanelName = "";
+RTVal gViewport;
 inline void setupIDViewport(
   const MString &panelName, 
   double width, 
@@ -223,15 +224,11 @@ inline void setupIDViewport(
   const MFnCamera &mCamera,
   const MMatrix &projection) 
 {
-  if(!FabricRenderCallback::canDraw()) return;
-
   initID(panelName);
 
   FabricRenderCallback::sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
 
   RTVal panelNameVal = FabricSplice::constructStringRTVal(panelName.asChar());
-  RTVal viewport = FabricRenderCallback::sDrawContext.maybeGetMember("viewport");
-  viewport.callMethod("", "setName", 1, &panelNameVal);
 
   M3dView view;
   M3dView::getM3dViewFromModelPanel(panelName, view);
@@ -239,14 +236,14 @@ inline void setupIDViewport(
 
   if(gRenderName != renderName || gPanelName != panelName)
   {
-    RTVal args2[2] = { panelNameVal, viewport };
-    RTVal drawing = FabricSplice::constructObjectRTVal("InlineDrawingScope");
-    drawing = drawing.callMethod("InlineDrawing", "getDrawing", 0, 0);
-    drawing.callMethod("", "registerViewport", 2, args2);
-   
+    RTVal drawing = FabricSplice::constructObjectRTVal( "InlineDrawingScope" );
+    drawing = drawing.callMethod( "InlineDrawing", "getDrawing", 0, 0 );
+    gViewport = drawing.callMethod( "Viewport", "getOrCreateViewport", 1, &panelNameVal );
     gRenderName = renderName;
     gPanelName = panelName;
   }
+
+  FabricRenderCallback::sDrawContext.setMember( "viewport", gViewport );
 
   RTVal args[3] = 
   {
@@ -254,9 +251,9 @@ inline void setupIDViewport(
     FabricSplice::constructFloat64RTVal(width),
     FabricSplice::constructFloat64RTVal(height)
   };
-  viewport.callMethod("", "resize", 3, args);
+  gViewport.callMethod("", "resize", 3, args);
 
-  RTVal camera = viewport.callMethod("InlineCamera", "getCamera", 0, 0);
+  RTVal camera = gViewport.callMethod("InlineCamera", "getCamera", 0, 0);
   setCamera(true, width, height, mCamera, camera);
   setProjection(true, projection, camera);
 }
@@ -338,37 +335,45 @@ MStatus FabricRenderCallback::drawRTR2(
   return status;
 }
 
+void FabricRenderCallback::prepareViewport(
+  const MString &panelName,
+  M3dView &view
+) {
+
+  MDagPath cameraDag;
+  view.getCamera( cameraDag );
+  MFnCamera mCamera( cameraDag );
+
+  MMatrix projection;
+  view.projectionMatrix( projection );
+
+  if( !isRTR2Enable() )
+    setupIDViewport( panelName, view.portWidth(), view.portHeight(), mCamera, projection );
+  else
+    setupRTR2Viewport( getActiveRenderName( view ), panelName, view.portWidth(), view.portHeight(), mCamera, projection );
+}
+
 void FabricRenderCallback::preDrawCallback(
   const MString &panelName, 
   void *clientData) 
 {  
-  M3dView view;
-  M3dView::getM3dViewFromModelPanel(panelName, view);
-  MString renderName = getActiveRenderName(view);
 
-// In Maya >= 2016, we deactive the maya viewport 2.0
+  if( !isRTR2Enable() && !FabricRenderCallback::canDraw() ) return;
+
+  M3dView view;
+  M3dView::getM3dViewFromModelPanel( panelName, view );
+
+  // In Maya >= 2016, we deactive the maya viewport 2.0
+  MString renderName = getActiveRenderName( view );
 #if MAYA_API_VERSION >= 201600
-  if(renderName == "vp2Renderer")
+  if( renderName == "vp2Renderer" )
     return;
 #endif
 
-  MDagPath cameraDag; 
-  view.getCamera(cameraDag);
-  MFnCamera mCamera(cameraDag);
-   
-  MMatrix projection; 
-  view.projectionMatrix(projection);
-  
-  if(!isRTR2Enable())
-  {
-    setupIDViewport(panelName, view.portWidth(), view.portHeight(), mCamera, projection);
-    //drawID();
-  }
-  else
-  {
-    setupRTR2Viewport(renderName, panelName, view.portWidth(), view.portHeight(), mCamera, projection);
-    drawRTR2(uint32_t(view.portWidth()), uint32_t(view.portHeight()), 2);
-  }
+  prepareViewport( panelName, view );
+
+  if( isRTR2Enable() )
+    drawRTR2( uint32_t( view.portWidth() ), uint32_t( view.portHeight() ), 2 );
 }
 
 // Special preDraw Callback for FabricViewport2Override in Maya >= 2016

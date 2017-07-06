@@ -51,8 +51,7 @@ MStatus FabricManipulationCmd::redoIt()
     for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++)
       m_rtval_commands.getArrayElement(i).callMethod("", "doAction", 0, 0);
   }
-  M3dView view = M3dView::active3dView();
-  view.refresh(true);
+  M3dView::scheduleRefreshAllViews();
   return MStatus::kSuccess;
  
   FABRIC_MAYA_CATCH_END("FabricManipulationCmd::redoIt");
@@ -69,8 +68,7 @@ MStatus FabricManipulationCmd::undoIt()
     for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++)
       m_rtval_commands.getArrayElement(i).callMethod("", "undoAction", 0, 0);
   }
-  M3dView view = M3dView::active3dView();
-  view.refresh(true);
+  M3dView::scheduleRefreshAllViews();
   return MStatus::kSuccess;
 
   FABRIC_MAYA_CATCH_END("FabricManipulationCmd::undoIt");
@@ -132,6 +130,7 @@ class EventFilterObject : public QObject
     FabricToolContext *tool;
 
     M3dView view;
+    MString panelName;
 
     bool eventFilter(
       QObject *object, 
@@ -157,7 +156,7 @@ void FabricToolContext::toolOnSetup(
   MEvent &) 
 {
   M3dView view = M3dView::active3dView();
-  setCursor(MCursor::editCursor);
+  //setCursor(MCursor::editCursor);
   setHelpString(helpString);
   setTitleString("FabricSplice Tool");
 
@@ -185,7 +184,7 @@ void FabricToolContext::toolOnSetup(
     if(mEventDispatcher.isValid())
     {
       mEventDispatcher.callMethod("", "activateManipulation", 0, 0);
-      view.refresh(true);
+      M3dView::scheduleRefreshAllViews();
     }
   }
 
@@ -200,13 +199,14 @@ void FabricToolContext::toolOnSetup(
       EventFilterObject* filter = new EventFilterObject();
       filter->tool = this;
       filter->view = panelView;
+      filter->panelName = modelPanels[i];
       sEventFilterObjectMap[panelView.widget()] = filter;
       panelView.widget()->installEventFilter( filter );
     }
   }
 
   view.widget()->setFocus();
-  view.refresh(true);
+  M3dView::scheduleRefreshAllViews();
 
   FABRIC_MAYA_CATCH_END("FabricToolContext::toolOnSetup");
 }
@@ -234,7 +234,7 @@ void FabricToolContext::toolOffCleanup()
 
   M3dView view = M3dView::active3dView();
   view.widget()->clearFocus();
-  view.refresh(true);
+  M3dView::scheduleRefreshAllViews();
   FABRIC_MAYA_CATCH_END("FabricToolContext::toolOffCleanup");
 }
 
@@ -276,11 +276,12 @@ bool EventFilterObject::eventFilter(
   QObject *object, 
   QEvent *event) 
 {
-  return tool->onEvent(event);
+  return tool->onEvent(event, panelName, view);
 }
  
 bool FabricToolContext::onIDEvent(
   QEvent *event, 
+  const MString &panelName,
   M3dView &view) 
 {
   
@@ -300,6 +301,9 @@ bool FabricToolContext::onIDEvent(
   }
 
   FABRIC_MAYA_CATCH_BEGIN();
+
+  //Setup the right viewport
+  FabricRenderCallback::prepareViewport( panelName, view );
 
   RTVal viewport = FabricRenderCallback::sDrawContext.maybeGetMember("viewport");
   RTVal klevent = QtToKLEvent(event, viewport, "Maya" );
@@ -464,7 +468,7 @@ bool FabricToolContext::onIDEvent(
     }
 
     if(host.maybeGetMember("redrawRequested").getBoolean())
-      view.refresh(true);
+      M3dView::scheduleRefreshAllViews();
 
     klevent.invalidate();
     return result;
@@ -505,12 +509,12 @@ bool FabricToolContext::onRTR2Event(
     }
   }
 
-  if(res) view.refresh(true);      
+  if(res)M3dView::scheduleRefreshAllViews();
   return res;
 }
 
 bool FabricToolContext::onEvent(
-  QEvent *event) 
+  QEvent *event, const MString &panelName, M3dView& view)
 {
   if(!FabricRenderCallback::canDraw()) 
   {
@@ -526,10 +530,9 @@ bool FabricToolContext::onEvent(
  
   FABRIC_MAYA_CATCH_BEGIN();
 
-  M3dView view = M3dView::active3dView();
   if(!FabricRenderCallback::isRTR2Enable())
   {
-    bool res = onIDEvent(event, view);
+    bool res = onIDEvent(event, panelName, view);
 
     if(event->type() == QEvent::MouseButtonRelease)
     {
