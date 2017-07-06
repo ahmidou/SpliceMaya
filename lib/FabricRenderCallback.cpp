@@ -20,7 +20,7 @@
 #if MAYA_API_VERSION >= 201600
 #include "Viewports/FabricViewport2Override.h"
 #endif
-#include "Commands/FabricCommandManagerCallback.h"
+#include "FabricCommandManagerCallback.h"
 
 using namespace FabricUI;
 using namespace FabricCore;

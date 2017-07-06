@@ -6,10 +6,10 @@
 #include <maya/MGlobal.h>
 #include "FabricCommand.h"
 #include "FabricDFGWidget.h"
+#include "FabricMayaException.h"
 #include <FabricUI/Util/RTValUtil.h>
 #include "FabricCommandManagerCallback.h"
 #include <FabricUI/Commands/CommandHelpers.h>
-#include "../Application/FabricMayaException.h"
 #include <FabricUI/Commands/KLCommandManager.h>
 #include <FabricUI/Commands/KLCommandRegistry.h>
 #include <FabricUI/Commands/BaseScriptableCommand.h>

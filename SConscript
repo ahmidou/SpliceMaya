@@ -39,9 +39,7 @@ uses_qt5 = int(float(str(MAYA_VERSION[:4]))) >= 2017
 mayaFlags = {
   'CPPPATH': [
       env.Dir('lib').srcnode(),
-      env.Dir('lib').Dir('Application').srcnode(),
       env.Dir('lib').Dir('Conversion').srcnode(),
-      env.Dir('lib').Dir('Commands').srcnode(),
       env.Dir('lib').Dir('Viewports').srcnode(),
       env.Dir('plugin').srcnode(),
     ],
@@ -135,13 +133,6 @@ if not os.path.exists(uiSconscript.abspath):
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
-# env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Application')])
-# env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Conversion')])
-# env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Commands')])
- 
-# if int(float(str(MAYA_VERSION[:4]))) >= 2016:
-#   env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib', 'Viewports')])
-
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include', 'FabricServices')])
 env.Append(CPPPATH = [uiSconscript.dir])
 
@@ -181,15 +172,13 @@ target = 'FabricMaya'
 
 mayaModule = None
 libSources = env.Glob('lib/*.cpp')
-libSources += env.Glob('lib/Commands/*.cpp')
 libSources += env.Glob('lib/Conversion/*.cpp')
-libSources += env.Glob('lib/Application/*.cpp')
 if int(float(str(MAYA_VERSION[:4]))) >= 2016:
   libSources += env.Glob('lib/Viewports/*.cpp')
 libSources += env.QTMOC(env.File('lib/FabricDFGWidget.h'))
 libSources += env.QTMOC(env.File('lib/FabricImportPatternDialog.h'))
 libSources += env.QTMOC(env.File('lib/FabricExportPatternDialog.h'))
-libSources += env.QTMOC(env.File('lib/Commands/FabricCommandManagerCallback.h'))
+libSources += env.QTMOC(env.File('lib/FabricCommandManagerCallback.h'))
 libSources += env.QTMOC(env.File('lib/FabricProgressbarDialog.h'))
 
 pluginSources = env.Glob('plugin/*.cpp')

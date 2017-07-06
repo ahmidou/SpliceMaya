@@ -5,9 +5,9 @@
 #include "Foundation.h"
 #include "FabricCommand.h"
 #include "FabricSpliceHelpers.h"
+#include "FabricMayaException.h"
 #include "FabricCommandManagerCallback.h"
 #include <FabricUI/Commands/CommandManager.h>
-#include "../Application/FabricMayaException.h"
 
 using namespace FabricUI::Commands;
 

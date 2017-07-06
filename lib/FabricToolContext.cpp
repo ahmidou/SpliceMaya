@@ -7,12 +7,12 @@
 #include <maya/MCursor.h>
  
 #include <FabricSplice.h>
+#include "FabricMayaException.h"
 #include "FabricSpliceHelpers.h"
 #include "FabricDFGBaseInterface.h"
 #include "FabricToolContext.h"
 #include "FabricRenderCallback.h"
 #include <FabricUI/Viewports/QtToKLEvent.h>
-#include "../Application/FabricMayaException.h"
 #include <FabricUI/Commands/KLCommandManager.h>
   
 using namespace FabricCore;
