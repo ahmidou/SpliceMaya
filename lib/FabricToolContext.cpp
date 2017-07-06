@@ -192,7 +192,7 @@ void FabricToolContext::toolOnSetup(
   // Install filters on all views
   MStringArray modelPanels;
   MGlobal::executeCommand( MString( "getPanel -type \"modelPanel\"" ), modelPanels );
-  for( int i = 0; i < modelPanels.length(); i++ ) 
+  for( unsigned int i = 0; i < modelPanels.length(); i++ ) 
   {
     M3dView panelView;
     if( MStatus::kSuccess == M3dView::getM3dViewFromModelPanel( modelPanels[i], panelView ) ) 
