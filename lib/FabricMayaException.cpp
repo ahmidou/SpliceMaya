@@ -21,5 +21,3 @@ void FabricMayaException::log() const throw()
     m_message.c_str()
     );
 }
-
- 
