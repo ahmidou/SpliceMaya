@@ -13,8 +13,11 @@
 #include <FabricUI/Commands/KLCommandManager.h>
 #include <FabricUI/Commands/KLCommandRegistry.h>
 #include <FabricUI/Commands/BaseScriptableCommand.h>
+#include <FabricUI/Tools/ToolsCommandRegistration.h>
+#include <FabricUI/Dialog/DialogCommandRegistration.h>
 #include <FabricUI/Commands/BaseRTValScriptableCommand.h>
 #include <FabricUI/Application/FabricApplicationStates.h>
+#include <FabricUI/OptionsEditor/Commands/OptionEditorCommandRegistration.h>
 
 using namespace FabricCore;
 using namespace FabricUI::Util;
@@ -58,17 +61,6 @@ void FabricCommandManagerCallback::onCommandDone(
   int canMergeID,
   int merge)
 {
-  /*   
-    std::cout 
-    << "\nFabricCommandManagerCallback::onCommandDone"
-    << ", addedToStack "
-    << addedToStack
-    << ", canMergeID "
-    << canMergeID
-    << ", merge "
-    << merge
-    << std::endl;
-  */
   FABRIC_MAYA_CATCH_BEGIN();
 
   // Maya creates log commands after they've been performed, while in Fabric, it's possible 
@@ -123,11 +115,12 @@ void FabricCommandManagerCallback::onCommandDone(
     m_commandCanUndo = ( canMergeID != CommandManager::NoCanMergeID && merge == CommandManager::MergeDone )
       ? true
       : addedToStack;
-   
-    MGlobal::executeCommandOnIdle(
-      fabricCmd.str().c_str(), 
-      cmd->canLog()
-      );
+    
+    if(cmd->canLog())
+      MGlobal::executeCommandOnIdle(
+        fabricCmd.str().c_str(), 
+        cmd->canLog()
+        );
   }
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::onCommandDone");
@@ -144,12 +137,17 @@ void FabricCommandManagerCallback::plug()
   registry->synchronizeKL();
   
   KLCommandManager *manager = new KLCommandManager();
+  
   QObject::connect(
     manager,
     SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, int, int)),
     this,
     SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, int, int))
     );
+
+  FabricUI::OptionsEditor::OptionEditorCommandRegistration::RegisterCommands();
+  FabricUI::Dialog::DialogCommandRegistration::RegisterCommands();
+  FabricUI::Tools::ToolsCommandRegistration::RegisterCommands();
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::plug");
 }
