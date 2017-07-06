@@ -7,6 +7,7 @@
 #include "Foundation.h"
 #include <QDialog>
 #include <QSettings>
+#include <QCheckBox>
 #include <DFG/DFGUICmdHandler_QUndo.h>
 #include <ModelItems/BindingModelItem.h>
 #include <ValueEditor/VEEditorOwner.h>
@@ -35,6 +36,7 @@ public slots:
   void onEnableMaterialsChanged(int state);
   void onScaleChanged(const QString & text);
   void onNameSpaceChanged(const QString & text);
+  void onStripNameSpacesChanged(int state);
 
 protected:
   virtual void closeEvent(QCloseEvent * event);
@@ -57,4 +59,6 @@ private:
   FabricUI::ValueEditor::VEEditorOwner * m_owner;
   bool m_wasAccepted;
   static bool s_previewRenderingEnabled;
+
+  QCheckBox * m_stripNameSpacesCheckbox;
 };
