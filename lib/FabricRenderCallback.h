@@ -5,11 +5,10 @@
 #pragma once
 
 #include <FabricCore.h>
+#include <FabricUI/SceneHub/SHGLRenderer.h>
 #include <maya/MString.h>
 #include <maya/M3dView.h>
 #include <maya/MDrawContext.h>
-#include <FabricUI/SceneHub/SHGLRenderer.h>
-
 
 class FabricRenderCallback {
 
