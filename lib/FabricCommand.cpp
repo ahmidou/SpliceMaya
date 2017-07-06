@@ -47,7 +47,7 @@ MStatus FabricCommand::doIt(
     FabricCommandManagerCallback::GetManagerCallback()->commandCreatedFromManagerCallback(false);
   }
   
-  // Create the fabric command. The maya will be created 
+  // Create the fabric command. The maya command is created 
   // after by the CommandManager/CommandManagerCallback.
   else
   {
