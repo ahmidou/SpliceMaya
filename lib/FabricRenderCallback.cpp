@@ -155,7 +155,7 @@ inline void setCamera(
   RTVal &camera) 
 {
   MDagPath mCameraDag;
-  MStatus status = mCamera.getPath(mCameraDag);
+  mCamera.getPath(mCameraDag);
   //(void)status;
   MMatrix mMatrix = mCameraDag.inclusiveMatrix();
 
