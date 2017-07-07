@@ -476,7 +476,8 @@ bool FabricToolContext::onIDEvent(
 
     if( host.maybeGetMember( "redrawRequested" ).getBoolean() ) {
       // NOTE: it seems that we need to do both activeView.refresh + scheduleRefreshAllViews to have all views refreshed
-      view.refresh( true );
+      M3dView activeView = M3dView::active3dView();
+      activeView.refresh( true );
       M3dView::scheduleRefreshAllViews();
     }
 
@@ -522,7 +523,8 @@ bool FabricToolContext::onRTR2Event(
   if( res ) {
     // NOTE: it seems that we need to do both activeView.refresh + scheduleRefreshAllViews to have all views refreshed
     M3dView::scheduleRefreshAllViews();
-    view.refresh( true );
+    M3dView activeView = M3dView::active3dView();
+    activeView.refresh( true );
   }
   return res;
 }
