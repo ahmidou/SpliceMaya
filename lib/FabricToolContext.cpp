@@ -303,7 +303,7 @@ bool FabricToolContext::onIDEvent(
   FABRIC_MAYA_CATCH_BEGIN();
 
   //Setup the right viewport
-  FabricRenderCallback::prepareViewport( panelName, view );
+  FabricRenderCallback::prepareViewport( panelName, view, true );
 
   RTVal viewport = FabricRenderCallback::sDrawContext.maybeGetMember("viewport");
   RTVal klevent = QtToKLEvent(event, viewport, "Maya" );

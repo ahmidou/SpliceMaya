@@ -92,8 +92,7 @@ inline MString getActiveRenderName(
   return name;
 }
 
-inline void initID(
-  const MString &panelName) 
+void initID() 
 {
  
   if( !FabricRenderCallback::sDrawContext.isValid() || 
@@ -147,7 +146,7 @@ inline void setMatrixTranspose(
   buffer[14] = (float)mMatrix[2][3];  buffer[15] = (float)mMatrix[3][3];
 }
 
-inline void setCamera(
+void setCamera(
   bool id, 
   double width, 
   double height, 
@@ -214,17 +213,19 @@ inline void setProjection(
   else camera.setMember("projection", projectionMat);
 }
 
-MString gRenderName = "";
 MString gPanelName = "";
+std::map<std::string, MString> gPanelNameToRenderName;
+
 RTVal gViewport;
-inline void setupIDViewport(
+void setupIDViewport(
   const MString &panelName, 
   double width, 
   double height, 
   const MFnCamera &mCamera,
-  const MMatrix &projection) 
+  const MMatrix &projection,
+  bool toolEventSetup )
 {
-  initID(panelName);
+  initID();
 
   FabricRenderCallback::sDrawContext.setMember("time", FabricSplice::constructFloat32RTVal(MAnimControl::currentTime().as(MTime::kSeconds)));
 
@@ -234,14 +235,23 @@ inline void setupIDViewport(
   M3dView::getM3dViewFromModelPanel(panelName, view);
   MString renderName = getActiveRenderName(view);
 
-  if(gRenderName != renderName || gPanelName != panelName)
+  if(gPanelName != panelName)
   {
     RTVal drawing = FabricSplice::constructObjectRTVal( "InlineDrawingScope" );
     drawing = drawing.callMethod( "InlineDrawing", "getDrawing", 0, 0 );
     gViewport = drawing.callMethod( "Viewport", "getOrCreateViewport", 1, &panelNameVal );
-    gRenderName = renderName;
     gPanelName = panelName;
   }
+
+  //if( !toolEventSetup ) {
+  //  // under toolEventSetup, renderer name is not consistant (getting vp2 instead of vpOverride)
+  //  if( gPanelNameToRenderName.find( panelName.asChar() ) == gPanelNameToRenderName.end() )
+  //    gPanelNameToRenderName[panelName.asChar()] = renderName;
+  //  else if( gPanelNameToRenderName[panelName.asChar()] != renderName ) {
+  //    gPanelNameToRenderName[panelName.asChar()] = renderName;
+  //    // Code to reset viewport specific data - put here
+  //  }
+  //}
 
   FabricRenderCallback::sDrawContext.setMember( "viewport", gViewport );
 
@@ -258,7 +268,7 @@ inline void setupIDViewport(
   setProjection(true, projection, camera);
 }
 
-inline void setupRTR2Viewport(
+void setupRTR2Viewport(
   const MString &renderName, 
   const MString &panelName, 
   double width, 
@@ -271,9 +281,12 @@ inline void setupRTR2Viewport(
   if(!FabricRenderCallback::isRTR2Enable()) return;
 
   FabricRenderCallback::gViewId = panelName.substringW(panelName.length()-2, panelName.length()-1).asInt();
-  if(gRenderName != renderName)
-  {
-    gRenderName = renderName;
+
+  // under toolEventSetup, renderer name is not consistant (getting vp2 instead of vpOverride)
+  if( gPanelNameToRenderName.find( panelName.asChar() ) == gPanelNameToRenderName.end() )
+    gPanelNameToRenderName[panelName.asChar()] = renderName;
+  else if( gPanelNameToRenderName[panelName.asChar()] != renderName ) {
+    gPanelNameToRenderName[panelName.asChar()] = renderName;
     FabricRenderCallback::shHostGLRenderer.removeViewport(FabricRenderCallback::gViewId);
   }
 
@@ -337,7 +350,8 @@ MStatus FabricRenderCallback::drawRTR2(
 
 void FabricRenderCallback::prepareViewport(
   const MString &panelName,
-  M3dView &view
+  M3dView &view,
+  bool toolEventSetup
 ) {
 
   MDagPath cameraDag;
@@ -348,7 +362,7 @@ void FabricRenderCallback::prepareViewport(
   view.projectionMatrix( projection );
 
   if( !isRTR2Enable() )
-    setupIDViewport( panelName, view.portWidth(), view.portHeight(), mCamera, projection );
+    setupIDViewport( panelName, view.portWidth(), view.portHeight(), mCamera, projection, toolEventSetup );
   else
     setupRTR2Viewport( getActiveRenderName( view ), panelName, view.portWidth(), view.portHeight(), mCamera, projection );
 }
@@ -370,7 +384,7 @@ void FabricRenderCallback::preDrawCallback(
     return;
 #endif
 
-  prepareViewport( panelName, view );
+  prepareViewport( panelName, view, false );
 
   if( isRTR2Enable() )
     drawRTR2( uint32_t( view.portWidth() ), uint32_t( view.portHeight() ), 2 );
@@ -398,7 +412,7 @@ void FabricRenderCallback::viewport2OverridePreDrawCallback(
 
   if(!isRTR2Enable())
   {
-    setupIDViewport(panelName, (double)width, (double)height, mCamera, projection);
+    setupIDViewport(panelName, (double)width, (double)height, mCamera, projection, false);
     //drawID();
   }
   else

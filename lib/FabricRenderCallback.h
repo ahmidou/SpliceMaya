@@ -53,7 +53,8 @@ class FabricRenderCallback {
 
     static void prepareViewport(
       const MString &panelName,
-      M3dView &view
+      M3dView &view,
+      bool toolEventSetup
     );
 
     static void preDrawCallback(
