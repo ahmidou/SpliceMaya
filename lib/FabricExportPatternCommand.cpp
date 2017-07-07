@@ -1013,6 +1013,12 @@ bool FabricExportPatternCommand::isShapeDeforming(FabricCore::RTVal shapeVal, MO
       isDeforming = deformHistory.length() > 0;
     }
 
+    if(!isDeforming)
+    {
+      // for curves also check if there are any connections to the control points
+      isDeforming = isPlugAnimated(shapeNode.findPlug("controlPoints"));
+    }
+
     if(isDeforming)
     {
       // also mark the property as varying (constant == false)
@@ -1174,4 +1180,34 @@ MObject FabricExportPatternCommand::getParentDagNode(MObject node, MString * par
   }
 
   return dagPath.node();
+}
+
+bool FabricExportPatternCommand::isPlugAnimated(MPlug plug)
+{
+  if(plug.isNull())
+    return false;
+
+  MPlugArray connections;
+  plug.connectedTo(connections, true, false);
+  if(connections.length() > 0)
+    return true;
+
+  if(plug.isArray())
+  {
+    for(unsigned int i=0;i<plug.numElements();i++)
+    {
+      MPlug element = plug.elementByPhysicalIndex(i);
+      if(isPlugAnimated(element))
+        return true;
+    }
+  }
+
+  for(unsigned int i=0;i<plug.numChildren();i++)
+  {
+    MPlug child = plug.child(i);
+    if(isPlugAnimated(child))
+      return true;
+  }
+
+  return false;
 }
