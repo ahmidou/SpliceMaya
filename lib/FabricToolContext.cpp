@@ -51,6 +51,9 @@ MStatus FabricManipulationCmd::redoIt()
     for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++)
       m_rtval_commands.getArrayElement(i).callMethod("", "doAction", 0, 0);
   }
+  M3dView view = M3dView::active3dView();
+  // NOTE: it seems that we need to do both activeView.refresh + scheduleRefreshAllViews to have all views refreshed
+  view.refresh( true );
   M3dView::scheduleRefreshAllViews();
   return MStatus::kSuccess;
  
@@ -68,6 +71,9 @@ MStatus FabricManipulationCmd::undoIt()
     for(uint32_t i=0; i<m_rtval_commands.getArraySize(); i++)
       m_rtval_commands.getArrayElement(i).callMethod("", "undoAction", 0, 0);
   }
+  M3dView view = M3dView::active3dView();
+  // NOTE: it seems that we need to do both activeView.refresh + scheduleRefreshAllViews to have all views refreshed
+  view.refresh( true );
   M3dView::scheduleRefreshAllViews();
   return MStatus::kSuccess;
 
@@ -182,10 +188,7 @@ void FabricToolContext::toolOnSetup(
   {
     mEventDispatcher = eventDispatcherHandle.callMethod("EventDispatcher", "getEventDispatcher", 0, 0);
     if(mEventDispatcher.isValid())
-    {
       mEventDispatcher.callMethod("", "activateManipulation", 0, 0);
-      M3dView::scheduleRefreshAllViews();
-    }
   }
 
   // Install filters on all views
@@ -206,6 +209,8 @@ void FabricToolContext::toolOnSetup(
   }
 
   view.widget()->setFocus();
+  // NOTE: it seems that we need to do both activeView.refresh + scheduleRefreshAllViews to have all views refreshed
+  view.refresh( true );
   M3dView::scheduleRefreshAllViews();
 
   FABRIC_MAYA_CATCH_END("FabricToolContext::toolOnSetup");
@@ -234,6 +239,8 @@ void FabricToolContext::toolOffCleanup()
 
   M3dView view = M3dView::active3dView();
   view.widget()->clearFocus();
+  // NOTE: it seems that we need to do both activeView.refresh + scheduleRefreshAllViews to have all views refreshed
+  view.refresh( true );
   M3dView::scheduleRefreshAllViews();
   FABRIC_MAYA_CATCH_END("FabricToolContext::toolOffCleanup");
 }
@@ -467,8 +474,11 @@ bool FabricToolContext::onIDEvent(
       event->accept();
     }
 
-    if(host.maybeGetMember("redrawRequested").getBoolean())
+    if( host.maybeGetMember( "redrawRequested" ).getBoolean() ) {
+      // NOTE: it seems that we need to do both activeView.refresh + scheduleRefreshAllViews to have all views refreshed
+      view.refresh( true );
       M3dView::scheduleRefreshAllViews();
+    }
 
     klevent.invalidate();
     return result;
@@ -509,7 +519,11 @@ bool FabricToolContext::onRTR2Event(
     }
   }
 
-  if(res)M3dView::scheduleRefreshAllViews();
+  if( res ) {
+    // NOTE: it seems that we need to do both activeView.refresh + scheduleRefreshAllViews to have all views refreshed
+    M3dView::scheduleRefreshAllViews();
+    view.refresh( true );
+  }
   return res;
 }
 
