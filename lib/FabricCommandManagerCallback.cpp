@@ -96,11 +96,16 @@ void FabricCommandManagerCallback::onCommandDone(
                   fabricCmd
                   );
 
-              else
-                encodeArg(
-                  CommandHelpers::encodeJSON(RTValUtil::toJSON(rtValScriptCmd->getRTValArgValue(key))), 
-                  fabricCmd
+              else {
+                RTVal val = rtValScriptCmd->getRTValArgValue( key );
+                // Don't encode if null
+                if( val.isValid() ) {
+                  encodeArg(
+                    CommandHelpers::encodeJSON( RTValUtil::toJSON( val ) ),
+                    fabricCmd
                   );
+                }
+              }
             }
             else
               encodeArg(
