@@ -87,19 +87,17 @@ void FabricCommandManagerCallback::onCommandDone(
         {
           if(!scriptCmd->hasArgFlag(key, CommandArgFlags::DONT_LOG_ARG))
           {
-            encodeArg(key, fabricCmd);
-            if(rtValScriptCmd)
-            {
-              QString path = rtValScriptCmd->getRTValArgPath(key).toUtf8().constData();
-              if(!path.isEmpty())
-                encodeArg(CommandHelpers::encodeJSON(CommandHelpers::castToPathValuePath(path)),
-                  fabricCmd
-                  );
-
-              else {
+            if( rtValScriptCmd ) {
+              QString path = rtValScriptCmd->getRTValArgPath( key ).toUtf8().constData();
+              if( !path.isEmpty() ) {
+                encodeArg( key, fabricCmd );
+                encodeArg( CommandHelpers::encodeJSON( CommandHelpers::castToPathValuePath( path ) ),
+                           fabricCmd );
+              } else {
                 RTVal val = rtValScriptCmd->getRTValArgValue( key );
                 // Don't encode if null
                 if( val.isValid() ) {
+                  encodeArg( key, fabricCmd );
                   encodeArg(
                     CommandHelpers::encodeJSON( RTValUtil::toJSON( val ) ),
                     fabricCmd
@@ -107,11 +105,13 @@ void FabricCommandManagerCallback::onCommandDone(
                 }
               }
             }
-            else
+            else {
+              encodeArg( key, fabricCmd );
               encodeArg(
-                scriptCmd->getArg(key), 
+                scriptCmd->getArg( key ),
                 fabricCmd
-                );
+              );
+            }
           }
         }
       }
