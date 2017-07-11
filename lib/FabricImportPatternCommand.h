@@ -27,6 +27,7 @@ struct FabricImportPatternSettings
   bool useLastArgValues;
   bool userAttributes;
   bool attachToSceneTime;
+  bool stripNameSpaces;
 
   FabricImportPatternSettings()
   {
@@ -39,6 +40,7 @@ struct FabricImportPatternSettings
     useLastArgValues = true;
     userAttributes = true;
     attachToSceneTime = true;
+    stripNameSpaces = false;
   }
 };
 

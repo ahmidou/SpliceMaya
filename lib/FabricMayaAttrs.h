@@ -24,7 +24,7 @@ enum DataType
   DT_Curves,
   DT_Curve,
   DT_Lines,
-  DT_KeyframeTrack,
+  DT_AnimXAnimCurve,
   DT_SpliceMayaData,
   DT_CompoundParam
 };

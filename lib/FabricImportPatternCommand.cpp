@@ -40,7 +40,7 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.addFlag( "-f", "-filepath", MSyntax::kString );
   syntax.addFlag( "-q", "-disableDialogs", MSyntax::kBoolean );
   syntax.addFlag( "-k", "-namespace", MSyntax::kString );
-  syntax.addFlag( "-x", "-attachToExisting", MSyntax::kBoolean );
+  syntax.addFlag( "-t", "-attachToExisting", MSyntax::kBoolean );
   syntax.addFlag( "-w", "-attachToSceneTime", MSyntax::kBoolean );
   syntax.addFlag( "-m", "-enableMaterials", MSyntax::kBoolean );
   syntax.addFlag( "-s", "-scale", MSyntax::kDouble );
@@ -49,6 +49,7 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.addFlag( "-a", "-args", MSyntax::kString );
   syntax.addFlag( "-g", "-geometries", MSyntax::kString );
   syntax.addFlag( "-u", "-userAttributes", MSyntax::kBoolean );
+  syntax.addFlag( "-x", "-stripNameSpaces", MSyntax::kBoolean );
   return syntax;
 }
 
@@ -142,6 +143,10 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     }
   }
 
+  if( argParser.isFlagSet("stripNameSpaces") )
+  {
+    m_settings.stripNameSpaces = argParser.flagArgumentBool("stripNameSpaces", 0);
+  }
   if( argParser.isFlagSet("namespace") )
   {
     m_settings.nameSpace = argParser.flagArgumentString("namespace", 0);
@@ -149,6 +154,7 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
     {
       while(m_settings.nameSpace.substring(m_settings.nameSpace.length()-1, m_settings.nameSpace.length()-1) == ":")
         m_settings.nameSpace = m_settings.nameSpace.substring(0, m_settings.nameSpace.length()-2);
+      m_settings.stripNameSpaces = true;
     }
   }
   if( argParser.isFlagSet("scale") )
@@ -686,9 +692,12 @@ MString FabricImportPatternCommand::simplifyPath(MString path)
     return concat;
   }
 
-  int rindex = path.rindex(':');
-  if(rindex > 0)
-    path = path.substring(rindex+1, path.length()-1);
+  if(m_settings.stripNameSpaces)
+  {
+    int rindex = path.rindex(':');
+    if(rindex > 0)
+      path = path.substring(rindex+1, path.length()-1);
+  }
 
   while(path.length() > 0)
   {
@@ -723,10 +732,10 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
   MObject parentNode;
 
   int rindex = path.rindex('/');
+  MString pathForParent;
   if(rindex > 0)
   {
-    MString pathForParent = parentPath(path, &name);
-    parentNode = getOrCreateNodeForPath(pathForParent, "transform", true);
+    pathForParent = parentPath(path, &name);
   }
 
   // try to find the node in the scene
@@ -734,7 +743,12 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
   {
     MSelectionList sl;
     sl.add(mayaPathFromPatternPath(path));
-    sl.add(name); // also add by name in case the pathStr failed
+
+    // also add by name in case the pathStr failed
+    if(m_settings.nameSpace.length() > 0)
+      sl.add(m_settings.nameSpace + ":" + name);
+    else
+      sl.add(name);
 
     if(sl.length() > 0)
     {
@@ -746,6 +760,11 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
         return node;
       }
     }
+  }
+
+  if(pathForParent.length() > 0)
+  {
+    parentNode = getOrCreateNodeForPath(pathForParent, "transform", true);
   }
 
   MObject node;
@@ -892,7 +911,12 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       lookupPath = simplifyPath(instancePath);
       instancePath = parentPath(instancePath, &name);
     }
-    MObject parentNode = getOrCreateNodeForPath(instancePath, "transform", true /*createIfMissing*/);
+
+    MString lookupName = lookupPath;
+    if(lookupName.rindex('/') >= 0)
+      lookupName = lookupName.substring(lookupName.rindex('/')+1, lookupName.length()-1);
+
+    MObject parentNode;
 
     // now check if we have already converted this shape before
     std::map< std::string, MObject >::iterator it = m_nodes.find(lookupPath.asChar());
@@ -915,6 +939,13 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
       {
         MSelectionList sl;
         sl.add(mayaPathFromPatternPath(lookupPath));
+
+        // also add by name in case the pathStr failed
+        if(m_settings.nameSpace.length() > 0)
+          sl.add(m_settings.nameSpace + ":" + lookupName);
+        else
+          sl.add(lookupName);
+
         if(sl.length() > 0)
         {
           MDagPath dagPath;
@@ -924,6 +955,11 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
             existed = true;
           }
         }
+      }
+
+      if(!existed)
+      {
+        parentNode = getOrCreateNodeForPath(instancePath, "transform", true /*createIfMissing*/);        
       }
 
       if(node.isNull())

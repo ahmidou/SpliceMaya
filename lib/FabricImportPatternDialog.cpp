@@ -30,6 +30,7 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
 , m_client(client)
 , m_binding(binding)
 , m_wasAccepted(false)
+, m_stripNameSpacesCheckbox(NULL)
 {
   setWindowTitle("Fabric Import Pattern");
   setAttribute(Qt::WA_DeleteOnClose, true);
@@ -104,6 +105,14 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
   nameSpaceLineEdit->setText(m_settings.nameSpace.asChar());
   optionsLayout->addWidget(nameSpaceLineEdit, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
   QObject::connect(nameSpaceLineEdit, SIGNAL(textChanged(const QString &)), this, SLOT(onNameSpaceChanged(const QString &)));
+
+  row++;
+  QLabel * stripNameSpacesLabel = new QLabel("Strip namespaces from file", optionsWidget);
+  optionsLayout->addWidget(stripNameSpacesLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  m_stripNameSpacesCheckbox = new QCheckBox(optionsWidget);
+  m_stripNameSpacesCheckbox->setCheckState(m_settings.stripNameSpaces ? Qt::Checked : Qt::Unchecked);
+  optionsLayout->addWidget(m_stripNameSpacesCheckbox, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(m_stripNameSpacesCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onStripNameSpacesChanged(int)));
 
   row++;
   QLabel * attachToSceneTimeLabel = new QLabel("Connect scene time", optionsWidget);
@@ -182,7 +191,21 @@ void FabricImportPatternDialog::onNameSpaceChanged(const QString & text)
   {
     while(m_settings.nameSpace.substring(m_settings.nameSpace.length()-1, m_settings.nameSpace.length()-1) == ":")
       m_settings.nameSpace = m_settings.nameSpace.substring(0, m_settings.nameSpace.length()-2);
+    m_stripNameSpacesCheckbox->setEnabled(false);
+    m_stripNameSpacesCheckbox->setCheckState(Qt::Checked);
+    m_settings.stripNameSpaces = true;
   }
+  else
+  {
+    m_stripNameSpacesCheckbox->setEnabled(true);
+    m_stripNameSpacesCheckbox->setCheckState(Qt::Unchecked);
+    m_settings.stripNameSpaces = false;
+  }
+}
+
+void FabricImportPatternDialog::onStripNameSpacesChanged(int state)
+{
+  m_settings.stripNameSpaces = state == Qt::Checked;
 }
 
 void FabricImportPatternDialog::closeEvent(QCloseEvent * event)

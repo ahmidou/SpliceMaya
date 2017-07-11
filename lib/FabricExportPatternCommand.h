@@ -64,6 +64,7 @@ private:
   bool isShapeDeforming(FabricCore::RTVal shapeVal, MObject node, bool isStart);
   void processUserAttributes(FabricCore::RTVal obj, const MObject & node, bool isStart);
   MObject getParentDagNode(MObject node, MString * parentPrefix = NULL);
+  bool isPlugAnimated(MPlug plug);
 
   FabricCore::Client m_client;
   FabricCore::RTVal m_exporterContext;
