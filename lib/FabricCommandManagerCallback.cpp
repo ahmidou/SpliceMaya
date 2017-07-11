@@ -57,77 +57,65 @@ inline void encodeArg(
  
 void FabricCommandManagerCallback::onCommandDone(
   BaseCommand *cmd,
-  bool addedToStack,
-  int canMergeID,
-  int merge)
+  bool addedToStack)
 {
   FABRIC_MAYA_CATCH_BEGIN();
 
   if(cmd->canLog())
   {
-    // Maya creates log commands after they've been performed, while in Fabric, it's possible 
-    // to log a command and then update it's content using the merging framework. We create 
-    // the maya command if the fabric command isn't merging or the merging is done.
-    if( ( canMergeID == CommandManager::NoCanMergeID && merge == CommandManager::NoCanMerge) || 
-        ( canMergeID != CommandManager::NoCanMergeID && merge == CommandManager::MergeDone )
-      )
+    std::stringstream fabricCmd;
+    fabricCmd << "FabricCommand";
+    encodeArg(cmd->getName(), fabricCmd);
+
+    // Fabric command args.
+    BaseScriptableCommand *scriptCmd = qobject_cast<BaseScriptableCommand*>(cmd);
+
+    if(scriptCmd)
     {
-      std::stringstream fabricCmd;
-      fabricCmd << "FabricCommand";
-      encodeArg(cmd->getName(), fabricCmd);
-
-      // Fabric command args.
-      BaseScriptableCommand *scriptCmd = qobject_cast<BaseScriptableCommand*>(cmd);
-
-      if(scriptCmd)
-      {
-        BaseRTValScriptableCommand *rtValScriptCmd = qobject_cast<BaseRTValScriptableCommand*>(cmd);
+      BaseRTValScriptableCommand *rtValScriptCmd = qobject_cast<BaseRTValScriptableCommand*>(cmd);
         
-        foreach(QString key, scriptCmd->getArgKeys())
+      foreach(QString key, scriptCmd->getArgKeys())
+      {
+        if(!scriptCmd->hasArgFlag(key, CommandArgFlags::DONT_LOG_ARG))
         {
-          if(!scriptCmd->hasArgFlag(key, CommandArgFlags::DONT_LOG_ARG))
-          {
-            if( rtValScriptCmd ) {
-              QString path = rtValScriptCmd->getRTValArgPath( key ).toUtf8().constData();
-              if( !path.isEmpty() ) {
+          if( rtValScriptCmd ) {
+            QString path = rtValScriptCmd->getRTValArgPath( key ).toUtf8().constData();
+            if( !path.isEmpty() ) {
+              encodeArg( key, fabricCmd );
+              encodeArg( CommandHelpers::encodeJSON( CommandHelpers::castToPathValuePath( path ) ),
+                          fabricCmd );
+            } else {
+              RTVal val = rtValScriptCmd->getRTValArgValue( key );
+              // Don't encode if null
+              if( val.isValid() ) {
                 encodeArg( key, fabricCmd );
-                encodeArg( CommandHelpers::encodeJSON( CommandHelpers::castToPathValuePath( path ) ),
-                           fabricCmd );
-              } else {
-                RTVal val = rtValScriptCmd->getRTValArgValue( key );
-                // Don't encode if null
-                if( val.isValid() ) {
-                  encodeArg( key, fabricCmd );
-                  encodeArg(
-                    CommandHelpers::encodeJSON( RTValUtil::toJSON( val ) ),
-                    fabricCmd
-                  );
-                }
+                encodeArg(
+                  CommandHelpers::encodeJSON( RTValUtil::toJSON( val ) ),
+                  fabricCmd
+                );
               }
             }
-            else {
-              encodeArg( key, fabricCmd );
-              encodeArg(
-                scriptCmd->getArg( key ),
-                fabricCmd
-              );
-            }
+          }
+          else {
+            encodeArg( key, fabricCmd );
+            encodeArg(
+              scriptCmd->getArg( key ),
+              fabricCmd
+            );
           }
         }
       }
-
-      // Indicates that the command has been created already.
-      // so we don't re-create it when constructing the maya command.
-      m_commandCreatedFromManagerCallback = true;
-      m_commandCanUndo = ( canMergeID != CommandManager::NoCanMergeID && merge == CommandManager::MergeDone )
-        ? true
-        : addedToStack;
-      
-        MGlobal::executeCommandOnIdle(
-          fabricCmd.str().c_str(), 
-          true
-          );
     }
+
+    // Indicates that the command has been created already.
+    // so we don't re-create it when constructing the maya command.
+    m_commandCreatedFromManagerCallback = true;
+    m_commandCanUndo = addedToStack;
+      
+      MGlobal::executeCommandOnIdle(
+        fabricCmd.str().c_str(), 
+        true
+        );
   }
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::onCommandDone");
@@ -147,14 +135,15 @@ void FabricCommandManagerCallback::plug()
   
   QObject::connect(
     manager,
-    SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool, int, int)),
+    SIGNAL(commandDone(FabricUI::Commands::BaseCommand*, bool)),
     this,
-    SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool, int, int))
+    SLOT(onCommandDone(FabricUI::Commands::BaseCommand*, bool))
     );
 
   FabricUI::OptionsEditor::OptionEditorCommandRegistration::RegisterCommands();
   FabricUI::Dialog::DialogCommandRegistration::RegisterCommands();
-  FabricUI::Tools::ToolsCommandRegistration::RegisterCommands();
+  //TODO: support tool commands!!
+  //FabricUI::Tools::ToolsCommandRegistration::RegisterCommands();
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::plug");
 }
