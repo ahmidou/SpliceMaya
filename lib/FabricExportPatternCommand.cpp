@@ -675,8 +675,8 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
   FabricCore::RTVal val;
   try
   {
-    if(typeName == L"mesh" ||
-      typeName == L"nurbsCurve") // or points
+    if((typeName == L"mesh") ||
+      (typeName == L"nurbsCurve")) // or points
     {
       FabricCore::RTVal args[3];
       args[0] = FabricCore::RTVal::ConstructString(m_client, "Shape");
@@ -698,31 +698,55 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
       args[1] = FabricCore::RTVal::ConstructString(m_client, path.asChar());
       args[2] = args[1];
       val = m_importer.callMethod("ImporterCamera", "getOrCreateObject", 3, &args[0]);
+
+      if(isPlugAnimated(dagNode.findPlug("focalLength")))
+      {
+        FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "focalLength");
+        val.callMethod("", "setPropertyVarying", 1, &arg);
+        arg = FabricCore::RTVal::ConstructString(m_client, "fovY");
+        val.callMethod("", "setPropertyVarying", 1, &arg);
+      }
+      if(isPlugAnimated(dagNode.findPlug("focusDistance")))
+      {
+        FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "focusDistance");
+        val.callMethod("", "setPropertyVarying", 1, &arg);
+      }
+      if(isPlugAnimated(dagNode.findPlug("nearClippingPlane")))
+      {
+        FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "near");
+        val.callMethod("", "setPropertyVarying", 1, &arg);
+      }
+      if(isPlugAnimated(dagNode.findPlug("farClippingPlane")))
+      {
+        FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "far");
+        val.callMethod("", "setPropertyVarying", 1, &arg);
+      }
+
     }
-    else if(typeName == L"pointlight" ||
-      typeName == L"spotlight" ||
-      typeName == L"directionallight")
+    else if((typeName == L"pointlight") ||
+      (typeName == L"spotlight") ||
+      (typeName == L"directionallight"))
     {
       mayaLogFunc(MString(getName())+": Warning: '"+dagNode.name()+"' is a light - to be implemented.");
     }
-    else if(typeName == L"world" ||
-      typeName == L"pointConstraint" ||
-      typeName == L"orientConstraint" ||
-      typeName == L"scaleConstraint" ||
-      typeName == L"parentConstraint" ||
-      typeName == L"aimConstraint" ||
-      typeName == L"poleVectorConstraint" ||
-      typeName == L"distanceDimShape"
+    else if((typeName == L"world") ||
+      (typeName == L"pointConstraint") ||
+      (typeName == L"orientConstraint") ||
+      (typeName == L"scaleConstraint") ||
+      (typeName == L"parentConstraint") ||
+      (typeName == L"aimConstraint") ||
+      (typeName == L"poleVectorConstraint") ||
+      (typeName == L"distanceDimShape")
       )
     {
       // ignore those
       return FabricCore::RTVal();
     }
-    else if(typeName == L"transform" ||
-      typeName == L"locator" ||
-      typeName == L"joint" ||
-      typeName == L"ikEffector" ||
-      typeName == L"ikHandle"
+    else if((typeName == L"transform") ||
+      (typeName == L"locator") ||
+      (typeName == L"joint") ||
+      (typeName == L"ikEffector") ||
+      (typeName == L"ikHandle")
       )
     {
       MString objType = "Transform";
@@ -742,6 +766,14 @@ FabricCore::RTVal FabricExportPatternCommand::createRTValForNode(const MObject &
   {
     mayaLogErrorFunc(MString(getName()) + ": "+e.getDesc_cstr());
     return FabricCore::RTVal();
+  }
+
+  if(isPlugAnimated(dagNode.findPlug("translate")) || 
+    isPlugAnimated(dagNode.findPlug("rotate")) || 
+    isPlugAnimated(dagNode.findPlug("scale")))
+  {
+    FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "localTransform");
+    val.callMethod("", "setPropertyVarying", 1, &arg);
   }
 
   return val;
@@ -772,12 +804,6 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
       MFnTransform transformNode(node);
       MMatrix localMatrix = transformNode.transformation().asMatrix();
       FabricCore::RTVal matrixVal = FabricConversion::MMatrixToMat44(localMatrix);
-
-      // make sure to also mark the property as varying
-      // todo: figure out if it is changing over time
-      FabricCore::RTVal arg;
-      arg = FabricCore::RTVal::ConstructString(m_client, "localTransform");
-      transform.callMethod("", "setPropertyVarying", 1, &arg);
 
       // now set the transform
       transform.callMethod("", "setLocalTransform", 1, &matrixVal);
@@ -1012,6 +1038,12 @@ bool FabricExportPatternCommand::isShapeDeforming(FabricCore::RTVal shapeVal, MO
       isDeforming = deformHistory.length() > 0;
     }
 
+    if(!isDeforming)
+    {
+      // for curves also check if there are any connections to the control points
+      isDeforming = isPlugAnimated(shapeNode.findPlug("controlPoints"));
+    }
+
     if(isDeforming)
     {
       // also mark the property as varying (constant == false)
@@ -1173,4 +1205,34 @@ MObject FabricExportPatternCommand::getParentDagNode(MObject node, MString * par
   }
 
   return dagPath.node();
+}
+
+bool FabricExportPatternCommand::isPlugAnimated(MPlug plug)
+{
+  if(plug.isNull())
+    return false;
+
+  MPlugArray connections;
+  plug.connectedTo(connections, true, false);
+  if(connections.length() > 0)
+    return true;
+
+  if(plug.isArray())
+  {
+    for(unsigned int i=0;i<plug.numElements();i++)
+    {
+      MPlug element = plug.elementByPhysicalIndex(i);
+      if(isPlugAnimated(element))
+        return true;
+    }
+  }
+
+  for(unsigned int i=0;i<plug.numChildren();i++)
+  {
+    MPlug child = plug.child(i);
+    if(isPlugAnimated(child))
+      return true;
+  }
+
+  return false;
 }

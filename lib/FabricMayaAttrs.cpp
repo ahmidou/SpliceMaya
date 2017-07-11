@@ -93,7 +93,7 @@ DataType ParseDataType( FTL::StrRef dataTypeStr )
 
   else if ( dataTypeOverride == FTL_STR("Lines"))           return DT_Lines;
 
-  else if ( dataTypeOverride == FTL_STR("KeyframeTrack"))   return DT_KeyframeTrack;
+  else if ( dataTypeOverride == FTL_STR("AnimX::AnimCurve"))   return DT_AnimXAnimCurve;
 
   else if ( dataTypeOverride == FTL_STR("SpliceMayaData"))  return DT_SpliceMayaData;
 
@@ -166,7 +166,7 @@ static void SetupMayaAttribute(
 
     case AT_Array_Multi:
       attr.setArray( true );
-      attr.setUsesArrayDataBuilder( dataType != DT_KeyframeTrack );
+      attr.setUsesArrayDataBuilder( dataType != DT_AnimXAnimCurve );
       break;
 
     default:
@@ -677,7 +677,7 @@ MObject CreateMayaAttribute(
     }
     break;
 
-    case DT_KeyframeTrack:
+    case DT_AnimXAnimCurve:
     {
       switch ( arrayType )
       {

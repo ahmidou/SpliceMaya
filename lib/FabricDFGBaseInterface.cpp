@@ -1930,7 +1930,7 @@ inline bool AddOtherAttributes(
     return false;
   }
  
-  if(strcmp(dataType.asChar(), "KeyframeTrack") == 0)
+  if(strcmp(dataType.asChar(), "AnimX::AnimCurve") == 0)
   {
     if(arrayType == "Single Value")
     {

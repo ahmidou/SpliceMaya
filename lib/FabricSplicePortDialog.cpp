@@ -37,7 +37,7 @@ FabricSplicePortDialog::FabricSplicePortDialog(QWidget * parent)
   mDataType->addItem("Vec3");
   mDataType->addItem("Euler");
   mDataType->addItem("Mat44");
-  mDataType->addItem("KeyframeTrack");
+  mDataType->addItem("AnimX::AnimCurve");
   mDataType->addItem("Points");
   mDataType->addItem("Lines");
   mDataType->addItem("PolygonMesh");
@@ -174,7 +174,7 @@ void FabricSplicePortDialog::onDataTypeChanged(void * userData)
     dataType == "Vec3" ||
     dataType == "Euler" ||
     dataType == "Mat44" ||
-    dataType == "KeyframeTrack" || 
+    dataType == "AnimX::AnimCurve" || 
     dataType == "PolygonMesh" || 
     dataType == "Lines")
   {
