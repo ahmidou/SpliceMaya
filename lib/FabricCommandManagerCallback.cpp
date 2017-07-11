@@ -57,7 +57,7 @@ inline void encodeArg(
  
 void FabricCommandManagerCallback::onCommandDone(
   BaseCommand *cmd,
-  bool addedToStack)
+  bool canUndo)
 {
   FABRIC_MAYA_CATCH_BEGIN();
 
@@ -110,7 +110,7 @@ void FabricCommandManagerCallback::onCommandDone(
     // Indicates that the command has been created already.
     // so we don't re-create it when constructing the maya command.
     m_commandCreatedFromManagerCallback = true;
-    m_commandCanUndo = addedToStack;
+    m_commandCanUndo = canUndo;
       
       MGlobal::executeCommandOnIdle(
         fabricCmd.str().c_str(), 

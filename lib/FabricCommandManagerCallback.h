@@ -50,10 +50,10 @@ class FabricCommandManagerCallback : public QObject
   private slots:
     /// Called when a command has been pushed to the manager.
     /// \param cmd The command that has been pushed.
-    /// \param addedToStack If true, the command has been pushed in the manager stack.
+    /// \param canUndo If true, the command can undo and is on the top of the manager stack.
     void onCommandDone(
     	FabricUI::Commands::BaseCommand *cmd,
-      bool addedToStack
+      bool canUndo
     	);
 
   private:
