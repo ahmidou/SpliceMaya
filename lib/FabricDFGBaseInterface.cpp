@@ -93,6 +93,9 @@ FabricDFGBaseInterface::~FabricDFGBaseInterface()
   m_evalContext = RTVal();
   m_binding = DFGBinding();
 
+  QString resolverID = "DFGPathValueResolver_" + QString::number( m_id );
+  PathValueResolverFactory<DFGPathValueResolver>::Unregister( resolverID );
+
   for(size_t i=0;i<_instances.size();i++){
     if(_instances[i] == this){
       std::vector<FabricDFGBaseInterface*>::iterator iter = _instances.begin() + i;

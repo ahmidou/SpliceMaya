@@ -136,7 +136,7 @@ void onSceneNew(void *userData){
       handleVal.callMethod("", "onNewScene", 0, NULL);
     }
   }
-  //FabricCommandManagerCallback::GetManagerCallback()->reset();
+  FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onSceneLoad(void *userData){
@@ -259,9 +259,12 @@ __attribute__ ((visibility("default")))
 #endif
 MAYA_EXPORT initializePlugin(MObject obj)
 {
-  freopen( "MayaLog.txt", "a", stdout );
-  freopen( "MayaError.txt", "a", stderr );
-  std::cout << "\n\n----- initializePlugin -----\n\n" << std::endl;
+  // Uncomment the following to have stdout and stderr printed into files (else these will not
+  // be seen in the Maya console)
+  //
+  //freopen( "MayaLog.txt", "a", stdout );
+  //freopen( "MayaError.txt", "a", stderr );
+  //std::cout << "\n\n----- initializePlugin -----\n\n" << std::endl;
 
   // [FE-6287]
   char const *disable_evalContext = ::getenv( "FABRIC_MAYA_DISABLE_EVALCONTEXT" );
