@@ -1315,7 +1315,7 @@ QString DFGUICmdHandler_Maya::dfgDoAddNLSPort(
   )
 {
   std::stringstream cmd;
-  cmd << FabricUI::DFG::DFGUICmd_AddPort::CmdName();
+  cmd << FabricUI::DFG::DFGUICmd_AddNLSPort::CmdName();
   encodeExec( binding, execPath, exec, cmd );
   encodeStringArg( FTL_STR("d"), desiredPortName, cmd );
   encodeStringArg( FTL_STR("t"), typeSpec, cmd );
