@@ -1303,6 +1303,86 @@ QString DFGUICmdHandler_Maya::dfgDoAddBlockPort(
   return QString::fromUtf8( mResult.asChar() );
 }
 
+QString DFGUICmdHandler_Maya::dfgDoAddNLSPort(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QString desiredPortName,
+  QString typeSpec,
+  QString connectToPortPath,
+  QString extDep,
+  QString uiMetadata
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_AddPort::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("d"), desiredPortName, cmd );
+  encodeStringArg( FTL_STR("t"), typeSpec, cmd );
+  if ( !connectToPortPath.isEmpty() )
+  encodeStringArg( FTL_STR("c"), connectToPortPath, cmd );
+  if ( !extDep.isEmpty() )
+    encodeStringArg( FTL_STR("xd"), extDep, cmd );
+  if ( !uiMetadata.isEmpty() )
+    encodeStringArg( FTL_STR("ui"), uiMetadata, cmd );
+  cmd << ';';
+
+  MString mResult;
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    mResult,
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+
+  /* FIXME [andrew 20160304]
+  if(mResult.length() > 0)
+  {
+    FabricDFGBaseInterface * interf = getInterfFromBinding(binding);
+    if(interf)
+    {
+      FabricCore::Client interfClient = interf->getCoreClient();
+      FabricCore::DFGBinding interfBinding = interf->getDFGBinding();
+      FabricUI::DFG::DFGController::bindUnboundRTVals(interfClient, interfBinding);
+    }
+  }
+  */
+
+  return QString::fromUtf8( mResult.asChar() );
+}
+
+void DFGUICmdHandler_Maya::dfgDoReorderNLSPorts(
+  FabricCore::DFGBinding const &binding,
+  QString execPath,
+  FabricCore::DFGExec const &exec,
+  QString itemPath,
+  QList<int> indices
+  )
+{
+  std::stringstream cmd;
+  cmd << FabricUI::DFG::DFGUICmd_ReorderNLSPorts::CmdName();
+  encodeExec( binding, execPath, exec, cmd );
+  encodeStringArg( FTL_STR("p"), itemPath, cmd );
+
+  cmd << " -i";
+  cmd << " \"[";
+  for(int i=0;i<indices.size();i++)
+  {
+    if(i > 0)
+      cmd << ", ";
+    cmd << (int)indices[i];
+  }
+  cmd << "]\"";
+  cmd << ';';
+
+  MGlobal::executeCommand(
+    cmd.str().c_str(),
+    true, // displayEnabled
+    true  // undoEnabled
+    );
+
+}
+
 /*
     misc
 */
