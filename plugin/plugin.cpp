@@ -346,6 +346,8 @@ MAYA_EXPORT initializePlugin(MObject obj)
   INITPLUGIN_STATE( status, MAYA_REGISTER_DFGUICMD( plugin, DismissLoadDiags    ) );
   INITPLUGIN_STATE( status, MAYA_REGISTER_DFGUICMD( plugin, AddBlock            ) );
   INITPLUGIN_STATE( status, MAYA_REGISTER_DFGUICMD( plugin, AddBlockPort        ) );
+  INITPLUGIN_STATE( status, MAYA_REGISTER_DFGUICMD( plugin, AddNLSPort          ) );
+  INITPLUGIN_STATE( status, MAYA_REGISTER_DFGUICMD( plugin, ReorderNLSPorts     ) );
 
   INITPLUGIN_STATE( status, plugin.registerCommand(
                               "dfgImportJSON",
@@ -512,6 +514,8 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   UNINITPLUGIN_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, DismissLoadDiags    ) );
   UNINITPLUGIN_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddBlock            ) );
   UNINITPLUGIN_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddBlockPort        ) );
+  UNINITPLUGIN_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, AddNLSPort          ) );
+  UNINITPLUGIN_STATE( status, MAYA_DEREGISTER_DFGUICMD( plugin, ReorderNLSPorts     ) );
 
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "dfgImportJSON" ) );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "dfgReloadJSON" ) );
