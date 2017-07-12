@@ -198,11 +198,14 @@ MStatus FabricDFGPackageExtensionsCommand::doIt(const MArgList &args)
     return mayaErrorOccured();
   }
 
-  MString suffix;
-  if(argData.isFlagSet("suffix"))
-    suffix = argData.flagArgumentString("suffix", 0);
-
   FabricCore::ExportKLExtensions_Flags flags = FabricCore::ExportKLExtensions_Flags_Default;
+
+  MString suffix;
+  if(argData.isFlagSet("suffix")) {
+    suffix = argData.flagArgumentString("suffix", 0);
+    flags = FabricCore::ExportKLExtensions_Flag_RequireAutoNamespace;
+  }
+
   if(argData.isFlagSet("autoNamespace"))
     flags = FabricCore::ExportKLExtensions_Flag_RequireAutoNamespace;
 
