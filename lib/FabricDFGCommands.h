@@ -1175,6 +1175,61 @@ typedef MayaDFGUICmdWrapper<
   FabricUI::DFG::DFGUICmd_AddBlockPort
   > MayaDFGUICmd_AddBlockPort;
 
+class FabricDFGAddNLSPortCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString desiredPortName;
+    QString typeSpec;
+    QString portToConnectWith;
+    QString extDep;
+    QString uiMetadata;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGAddNLSPortCommand,
+  FabricUI::DFG::DFGUICmd_AddNLSPort
+  > MayaDFGUICmd_AddNLSPort;
+
+class FabricDFGReorderNLSPortsCommand
+  : public FabricDFGExecCommand
+{
+  typedef FabricDFGExecCommand Parent;
+  
+protected:
+
+  static void AddSyntax( MSyntax &syntax );
+
+  struct Args : Parent::Args
+  {
+    QString itemPath;
+    QList<int> indices;
+  };
+
+  static void GetArgs( MArgParser &argParser, Args &args );
+
+  virtual FabricUI::DFG::DFGUICmd *executeDFGUICmd(
+    MArgParser &argParser
+    );
+};
+typedef MayaDFGUICmdWrapper<
+  FabricDFGReorderNLSPortsCommand,
+  FabricUI::DFG::DFGUICmd_ReorderNLSPorts
+  > MayaDFGUICmd_ReorderNLSPorts;
+
 // -------------------------
 
 class FabricDFGImportJSONCommand

@@ -2605,6 +2605,136 @@ FabricUI::DFG::DFGUICmd *FabricDFGAddBlockPortCommand::executeDFGUICmd(
   return cmd;
 }
 
+// FabricDFGAddNLSPortCommand
+
+void FabricDFGAddNLSPortCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-d", "-desiredPortName", MSyntax::kString);
+  syntax.addFlag("-t", "-typeSpec", MSyntax::kString);
+  syntax.addFlag("-c", "-connectToPortPath", MSyntax::kString);
+  syntax.addFlag("-xd", "-extDep", MSyntax::kString);
+  syntax.addFlag("-ui", "-uiMetadata", MSyntax::kString);
+}
+
+void FabricDFGAddNLSPortCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "desiredPortName" ) )
+    throw ArgException( MS::kFailure, "-d (-desiredPortName) not provided." );
+  args.desiredPortName = QString::fromUtf8(
+    argParser.flagArgumentString( "desiredPortName", 0 ).asChar()
+    );
+
+  if ( argParser.isFlagSet( "typeSpec" ) )
+    args.typeSpec = QString::fromUtf8(
+      argParser.flagArgumentString( "typeSpec", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "connectToPortPath" ) )
+    args.portToConnectWith = QString::fromUtf8(
+      argParser.flagArgumentString( "connectToPortPath", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "extDep" ) )
+    args.extDep = QString::fromUtf8(
+      argParser.flagArgumentString( "extDep", 0 ).asChar()
+      );
+
+  if ( argParser.isFlagSet( "uiMetadata" ) )
+    args.uiMetadata = QString::fromUtf8(
+      argParser.flagArgumentString( "uiMetadata", 0 ).asChar()
+      );
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGAddNLSPortCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_AddNLSPort *cmd =
+    new FabricUI::DFG::DFGUICmd_AddNLSPort(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.desiredPortName,
+      args.typeSpec,
+      args.portToConnectWith,
+      args.extDep,
+      args.uiMetadata
+      );
+  cmd->doit();
+  setResult( cmd->getActualPortName().toUtf8().constData() );
+  return cmd;
+}
+
+// FabricDFGReorderNLSPortsCommand
+
+void FabricDFGReorderNLSPortsCommand::AddSyntax( MSyntax &syntax )
+{
+  Parent::AddSyntax( syntax );
+  syntax.addFlag("-p", "-itemPath", MSyntax::kString);
+  syntax.addFlag("-i", "-indices", MSyntax::kString);
+}
+
+void FabricDFGReorderNLSPortsCommand::GetArgs(
+  MArgParser &argParser,
+  Args &args
+  )
+{
+  Parent::GetArgs( argParser, args );
+
+  if ( !argParser.isFlagSet( "itemPath" ) )
+    throw ArgException( MS::kFailure, "-p (-itemPath) not provided." );
+  args.itemPath = QString::fromUtf8(
+    argParser.flagArgumentString( "itemPath", 0 ).asChar()
+    );
+
+  if ( !argParser.isFlagSet( "indices" ) )
+    throw ArgException( MS::kFailure, "-i (-indices) not provided." );
+
+  std::string jsonStr = argParser.flagArgumentString( "indices", 0 ).asChar();
+
+  try
+  {
+    FTL::JSONStrWithLoc jsonStrWithLoc( jsonStr );
+    FTL::OwnedPtr<FTL::JSONArray> jsonArray(
+      FTL::JSONValue::Decode( jsonStrWithLoc )->cast<FTL::JSONArray>()
+      );
+    for ( size_t i=0; i < jsonArray->size(); i++ )
+      args.indices.append( jsonArray->get(i)->getSInt32Value() );
+  }
+  catch ( FabricCore::Exception e )
+  {
+    throw ArgException( MS::kFailure, "-i (-indices) not valid json." );
+  }
+}
+
+FabricUI::DFG::DFGUICmd *FabricDFGReorderNLSPortsCommand::executeDFGUICmd(
+  MArgParser &argParser
+  )
+{
+  Args args;
+  GetArgs( argParser, args );
+
+  FabricUI::DFG::DFGUICmd_ReorderNLSPorts *cmd =
+    new FabricUI::DFG::DFGUICmd_ReorderNLSPorts(
+      args.binding,
+      args.execPath,
+      args.exec,
+      args.itemPath,
+      args.indices
+      );
+  cmd->doit();
+  return cmd;
+}
+
 
 
 // -------------------------
