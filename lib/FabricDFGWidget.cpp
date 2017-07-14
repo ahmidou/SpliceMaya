@@ -14,6 +14,7 @@
 #include "FabricSpliceHelpers.h"
 
 #include <FabricUI/Util/LoadFabricStyleSheet.h>
+#include <FabricUI/SplashScreens/FabricSplashScreen.h>
 #include <maya/MEventMessage.h>
 #include <maya/MGlobal.h>
 
@@ -93,12 +94,23 @@ void FabricDFGWidget::Destroy()
 QWidget * FabricDFGWidget::creator(QWidget * parent, const QString & name)
 {
   return Instance();
-}
+} 
 
 void FabricDFGWidget::SetCurrentUINodeName(const char * node)
 {
   if ( node )
     Instance()->setCurrentUINodeName( node );
+}
+
+FabricCore::Client FabricDFGWidget::GetCoreClient()
+{
+  if(FabricSplice::DGGraph::getClient() == NULL)
+  {
+    FabricUI::FabricSplashScreenBracket splashBracket(MGlobal::mayaState() == MGlobal::kInteractive);
+    return FabricSplice::ConstructClient();
+  }
+
+  return FabricSplice::ConstructClient();
 }
 
 void FabricDFGWidget::refreshScene() {

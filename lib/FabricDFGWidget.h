@@ -59,10 +59,7 @@ public:
 
   static void SetCurrentUINodeName(const char * node);
 
-  static FabricCore::Client GetCoreClient()
-  {
-    return FabricSplice::ConstructClient();
-  }
+  static FabricCore::Client GetCoreClient();
 
   FabricCore::DFGHost &getDFGHost()
   {

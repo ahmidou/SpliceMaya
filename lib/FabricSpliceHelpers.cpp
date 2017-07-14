@@ -8,8 +8,13 @@
 #include <SceneHub/DFG/SHDFGCombinedWidget.h>
 #include <Licensing/Licensing.h>
 #include <FabricSplice.h>
+#include <FabricUI/SplashScreens/FabricSplashScreen.h>
 
 #include <maya/MGlobal.h>
+
+#include <FTL/StrRef.h>
+#include <FTL/JSONDec.h>
+#include <FTL/JSONValue.h>
 
 MString gLastLoadedScene;
 MString mayaGetLastLoadedScene()
@@ -124,8 +129,22 @@ void mayaKLStatusFunc(const char * topicData, unsigned int topicLength,  const c
       FabricUI::DFG::DFGLogWidget::log(e.getDesc_cstr());
     }
   }
+  else if( topic == FTL_STR( "slowOp.push"))
+  {
+    mayaSlowOpFunc(messageData, messageLength);
+  }
+
   // else
   //   FabricUI::DFG::DFGLogWidget::log(composed.asChar());
+}
+
+void mayaSlowOpFunc(const char *descCStr, unsigned int descLength)
+{
+  FabricSplashScreen * splash = FabricSplashScreen::getSplashScreen(false /*create*/);
+  if(splash)
+  {
+    splash->setMessage(descCStr);
+  }
 }
 
 void mayaRefreshFunc()
