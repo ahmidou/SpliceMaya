@@ -890,6 +890,14 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             meshVal = FabricCore::RTVal::Create(m_client, "PolygonMesh", 0, 0);
             shape.callMethod("", "setGeometry", 1, &meshVal);
           }
+
+          if(isDeforming)
+          {
+            FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "bounds");
+            shape.callMethod("", "setPropertyVarying", 1, &arg);
+            arg = FabricCore::RTVal::ConstructString(m_client, "geometry");
+            shape.callMethod("", "setPropertyVarying", 1, &arg);
+          }
           
           if(dfgMFnMeshToPolygonMesh(meshData, meshVal).isNullObject())
             return false;
@@ -961,6 +969,14 @@ bool FabricExportPatternCommand::updateRTValForNode(double t, const MObject & no
             curvesVal.callMethod( "", "setCurveCount", 1, &curveCountVal );
 
             shape.callMethod("", "setGeometry", 1, &curvesVal);
+          }
+
+          if(isDeforming)
+          {
+            FabricCore::RTVal arg = FabricCore::RTVal::ConstructString(m_client, "bounds");
+            shape.callMethod("", "setPropertyVarying", 1, &arg);
+            arg = FabricCore::RTVal::ConstructString(m_client, "geometry");
+            shape.callMethod("", "setPropertyVarying", 1, &arg);
           }
 
           if(!dfgMFnNurbsCurveToCurves(0, curveData, curvesVal))
