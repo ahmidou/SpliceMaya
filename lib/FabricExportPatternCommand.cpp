@@ -33,6 +33,8 @@
 
 #include <FTL/FS.h>
 
+#include <FabricUI/SplashScreens/FabricSplashScreen.h>
+
 MSyntax FabricExportPatternCommand::newSyntax()
 {
   MSyntax syntax;
@@ -195,6 +197,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
 
   MStringArray result;
   FabricCore::DFGBinding binding;
+  FabricUI::FabricSplashScreenBracket splashBracket(MGlobal::mayaState() == MGlobal::kInteractive);
 
   try
   {
