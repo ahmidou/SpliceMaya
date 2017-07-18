@@ -24,3 +24,4 @@ MStatus mayaErrorOccured();
 void mayaRefreshFunc();
 MString mayaGetLastLoadedScene();
 void mayaSetLastLoadedScene(MString scene);
+bool mayaShowSplashScreen();

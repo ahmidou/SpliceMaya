@@ -11,6 +11,7 @@
 #include <FabricUI/SplashScreens/FabricSplashScreen.h>
 
 #include <maya/MGlobal.h>
+#include <maya/MFileIO.h>
 
 #include <FTL/StrRef.h>
 #include <FTL/JSONDec.h>
@@ -155,4 +156,18 @@ void mayaRefreshFunc()
 void mayaSetLastLoadedScene(MString scene)
 {
   gLastLoadedScene = scene;
+}
+
+bool mayaShowSplashScreen()
+{
+#if MAYA_API_VERSION >= 201600
+  bool result = MGlobal::mayaState() == MGlobal::kInteractive;
+  if(result)
+  {
+    result = !MFileIO::isOpeningFile();
+  }
+  return result;
+#else
+  return false;
+#endif
 }

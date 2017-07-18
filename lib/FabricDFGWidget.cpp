@@ -17,7 +17,6 @@
 #include <FabricUI/SplashScreens/FabricSplashScreen.h>
 #include <maya/MEventMessage.h>
 #include <maya/MGlobal.h>
-#include <maya/MFileIO.h>
 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
@@ -107,11 +106,7 @@ FabricCore::Client FabricDFGWidget::GetCoreClient()
 {
   if(FabricSplice::DGGraph::getClient() == NULL)
   {
-    bool enabled = MGlobal::mayaState() == MGlobal::kInteractive;
-    if(enabled)
-      enabled = !MFileIO::isOpeningFile();
-    
-    FabricUI::FabricSplashScreenBracket splashBracket(enabled);
+    FabricUI::FabricSplashScreenBracket splashBracket(mayaShowSplashScreen());
     return FabricSplice::ConstructClient();
   }
 

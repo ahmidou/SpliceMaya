@@ -197,7 +197,7 @@ MStatus FabricExportPatternCommand::doIt(const MArgList &args)
 
   MStringArray result;
   FabricCore::DFGBinding binding;
-  FabricUI::FabricSplashScreenBracket splashBracket(MGlobal::mayaState() == MGlobal::kInteractive);
+  FabricUI::FabricSplashScreenBracket splashBracket(mayaShowSplashScreen());
 
   try
   {
