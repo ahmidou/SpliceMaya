@@ -714,30 +714,30 @@ MObject FabricConversion::CurveToMFnNurbsCurve(RTVal rtVal, int index) {
   return CurveToMFnNurbsCurve(rtVal, index, curve);
 }
 
-MObject FabricConversion::CurveToMFnNurbsCurve(RTVal rtVal, MFnNurbsCurve &curve) {
+MObject FabricConversion::CurveToMFnNurbsCurve(RTVal curveRTVal, MFnNurbsCurve &curve) {
 
-  MObject curveObject;
+  MObject mFnNurbsCurve;
 
   CONVERSION_CATCH_BEGIN;
 
-  RTVal rtVal = rtVal.callMethod( 
+  RTVal curvesContainerRTVal = curveRTVal.callMethod( 
     "Curves", 
     "createCurvesContainerIfNone", 
     0, 0);
 
-  unsigned int curveIndex = rtVal.callMethod( 
+  unsigned int indexInCurvesContainer = curveRTVal.callMethod( 
     "UInt32", 
     "getCurveIndex", 
     0, 0).getUInt32();
 
-  curveObject = CurveToMFnNurbsCurve( 
-    rtVal, 
-    curveIndex, 
+  mFnNurbsCurve = CurveToMFnNurbsCurve( 
+    curvesContainerRTVal, 
+    indexInCurvesContainer, 
     curve);
 
   CONVERSION_CATCH_END("FabricConversion::CurveToMFnNurbsCurve");
 
-  return curveObject;
+  return mFnNurbsCurve;
 }
 
 MObject FabricConversion::CurveToMFnNurbsCurve(RTVal rtVal) {
