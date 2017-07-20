@@ -123,7 +123,7 @@ FabricDFGBaseInterface *FabricDFGWidget::getBaseInterface()
   return FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
 }
 
-void FabricDFGWidget::GetCoreClient() 
+FabricCore::Client FabricDFGWidget::GetCoreClient() 
 {
   if(FabricSplice::DGGraph::getClient() == NULL)
   {
