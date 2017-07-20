@@ -415,6 +415,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
   FabricSplice::Logging::setKLReportFunc(mayaKLReportFunc);
   FabricSplice::Logging::setKLStatusFunc(mayaKLStatusFunc);
   FabricSplice::Logging::setCompilerErrorFunc(mayaCompilerErrorFunc);
+  FabricSplice::Logging::setSlowOperationFunc(mayaSlowOpFunc);
   // FabricSplice::SceneManagement::setManipulationFunc(FabricSpliceBaseInterface::manipulationCallback);
 
   MGlobal::executePythonCommandOnIdle("import AEspliceMayaNodeTemplate", true);

@@ -41,76 +41,84 @@ class FabricDFGWidget : public FabricDFGWidgetBaseClass
 {
   Q_OBJECT
   
-  public:
-    FabricDFGWidget(
-      QWidget * parent
-      );
-    
-    virtual ~FabricDFGWidget();
+public:
 
-    static QWidget * creator(
-      QWidget * parent, 
-      const QString & name
-      );
-   
-    static FabricDFGWidget *Instance(
-      bool createIfNull=true
-      );
+  FabricDFGWidget(
+    QWidget * parent
+    );
+  
+  virtual ~FabricDFGWidget();
 
-    static void Destroy();
+  static QWidget * creator(
+    QWidget * parent, 
+    const QString & name
+    );
+ 
+  static FabricDFGWidget *Instance(
+    bool createIfNull=true
+    );
 
-    static void SetCurrentUINodeName(
-      const char * node
-      );
+  static void Destroy();
 
-    static FabricCore::Client GetCoreClient();
-    
-    static FabricDFGBaseInterface *getBaseInterface();
+  static void SetCurrentUINodeName(
+    const char * node
+    );
 
-    static void OnSelectCanvasNodeInDCC(
-      void *client
-      );
+  static FabricCore::Client GetCoreClient();
+  
+  static FabricDFGBaseInterface *getBaseInterface();
 
-    FabricCore::DFGHost &getDFGHost();
+  static void OnSelectCanvasNodeInDCC(
+    void *client
+    );
 
-    virtual void keyPressEvent(
-      QKeyEvent * event
-      );
+  FabricCore::DFGHost &getDFGHost()
+  {
+    return m_dfgHost;
+  }
 
-  public slots:
-    virtual void onUndo();
-    
-    virtual void onRedo();
-    
-    virtual void onSelectCanvasNodeInDCC();
-    
-    virtual void onImportGraphInDCC();
-    
-    virtual void onExportGraphInDCC();
+  virtual void keyPressEvent(
+    QKeyEvent * event
+    );
 
-  private slots:
-    void onPortEditDialogCreated(
-      FabricUI::DFG::DFGBaseDialog * dialog
-      );
-    
-    void onPortEditDialogInvoked(
-      FabricUI::DFG::DFGBaseDialog * dialog, 
-      FTL::JSONObjectEnc<> * additionalMetaData
-      );
+public slots:
 
-  protected:
-    virtual void refreshScene();
+  virtual void onUndo();
+  
+  virtual void onRedo();
+  
+  virtual void onSelectCanvasNodeInDCC();
+  
+  virtual void onImportGraphInDCC();
+  
+  virtual void onExportGraphInDCC();
 
-    void setCurrentUINodeName(
-      const char * node
-      );
+private slots:
 
-  private:
-    MCallbackId m_onSelectionChangedCallbackId;
+  void onPortEditDialogCreated(
+    FabricUI::DFG::DFGBaseDialog * dialog
+    );
+  
+  void onPortEditDialogInvoked(
+    FabricUI::DFG::DFGBaseDialog * dialog, 
+    FTL::JSONObjectEnc<> * additionalMetaData
+    );
 
-    DFGUICmdHandler_Maya m_cmdHandler;
-    FabricCore::DFGHost m_dfgHost;
-    bool m_initialized;
+protected:
 
-    static FabricDFGWidget *s_widget;
+  virtual void refreshScene();
+
+  void setCurrentUINodeName(
+    const char * node
+    );
+
+private:
+
+  MCallbackId m_onSelectionChangedCallbackId;
+
+  DFGUICmdHandler_Maya m_cmdHandler;
+  FabricCore::DFGHost m_dfgHost;
+  bool m_initialized;
+
+  static FabricDFGWidget *s_widget;
 };

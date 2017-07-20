@@ -30,6 +30,8 @@
 
 #include <FTL/FS.h>
 
+#include <FabricUI/SplashScreens/FabricSplashScreen.h>
+
 bool FabricImportPatternCommand::s_loadedMatrixPlugin = false;
 
 MSyntax FabricImportPatternCommand::newSyntax()
@@ -176,6 +178,8 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
 
   MStringArray result;
   FabricCore::DFGBinding binding;
+
+  FabricUI::FabricSplashScreenBracket splashBracket(mayaShowSplashScreen());
 
   if(interf != NULL)
   {

@@ -11,7 +11,10 @@
 #include "FabricDFGBaseInterface.h"
 #include <DFG/Dialogs/DFGEditPortDialog.h>
 #include <FabricUI/Util/LoadFabricStyleSheet.h>
- 
+#include <FabricUI/SplashScreens/FabricSplashScreen.h>
+#include <maya/MEventMessage.h>
+#include <maya/MGlobal.h>
+
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
 
@@ -95,7 +98,7 @@ QWidget * FabricDFGWidget::creator(
   const QString & name)
 {
   return Instance();
-}
+} 
 
 void FabricDFGWidget::SetCurrentUINodeName(
   const char * node)
@@ -107,11 +110,6 @@ void FabricDFGWidget::SetCurrentUINodeName(
 FabricCore::Client FabricDFGWidget::GetCoreClient()
 {
   return FabricSplice::ConstructClient();
-}
-
-FabricCore::DFGHost &FabricDFGWidget::getDFGHost()
-{
-  return m_dfgHost;
 }
 
 FabricDFGBaseInterface *FabricDFGWidget::getBaseInterface()
@@ -132,6 +130,17 @@ FabricDFGBaseInterface *FabricDFGWidget::getBaseInterface()
 
 void FabricDFGWidget::refreshScene() 
 {
+  if(FabricSplice::DGGraph::getClient() == NULL)
+  {
+    FabricUI::FabricSplashScreenBracket splashBracket(mayaShowSplashScreen());
+    return FabricSplice::ConstructClient();
+  }
+
+  return FabricSplice::ConstructClient();
+}
+
+void FabricDFGWidget::refreshScene() {
+>>>>>>> origin/escher
   MStatus status;
   M3dView view = M3dView::active3dView(&status);
   view.refresh(true, true);
