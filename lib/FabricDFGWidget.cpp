@@ -107,11 +107,6 @@ void FabricDFGWidget::SetCurrentUINodeName(
     Instance()->setCurrentUINodeName( node );
 }
 
-FabricCore::Client FabricDFGWidget::GetCoreClient()
-{
-  return FabricSplice::ConstructClient();
-}
-
 FabricDFGBaseInterface *FabricDFGWidget::getBaseInterface()
 {
   if (s_widget == NULL)
@@ -128,7 +123,7 @@ FabricDFGBaseInterface *FabricDFGWidget::getBaseInterface()
   return FabricDFGBaseInterface::getInstanceById((uint32_t)interfIdStr.asInt());
 }
 
-void FabricDFGWidget::refreshScene() 
+void FabricDFGWidget::GetCoreClient() 
 {
   if(FabricSplice::DGGraph::getClient() == NULL)
   {
@@ -139,8 +134,8 @@ void FabricDFGWidget::refreshScene()
   return FabricSplice::ConstructClient();
 }
 
-void FabricDFGWidget::refreshScene() {
->>>>>>> origin/escher
+void FabricDFGWidget::refreshScene()
+{
   MStatus status;
   M3dView view = M3dView::active3dView(&status);
   view.refresh(true, true);
