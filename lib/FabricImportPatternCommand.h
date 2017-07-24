@@ -24,6 +24,7 @@ struct FabricImportPatternSettings
   double scale;
   bool enableMaterials;
   bool attachToExisting;
+  bool createIfMissing;
   bool useLastArgValues;
   bool userAttributes;
   bool attachToSceneTime;
@@ -37,6 +38,7 @@ struct FabricImportPatternSettings
     scale = 1.0;
     enableMaterials = false;
     attachToExisting = false;
+    createIfMissing = true;
     useLastArgValues = true;
     userAttributes = true;
     attachToSceneTime = true;

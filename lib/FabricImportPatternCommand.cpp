@@ -43,6 +43,7 @@ MSyntax FabricImportPatternCommand::newSyntax()
   syntax.addFlag( "-q", "-disableDialogs", MSyntax::kBoolean );
   syntax.addFlag( "-k", "-namespace", MSyntax::kString );
   syntax.addFlag( "-t", "-attachToExisting", MSyntax::kBoolean );
+  syntax.addFlag( "-v", "-createIfMissing", MSyntax::kBoolean );
   syntax.addFlag( "-w", "-attachToSceneTime", MSyntax::kBoolean );
   syntax.addFlag( "-m", "-enableMaterials", MSyntax::kBoolean );
   syntax.addFlag( "-s", "-scale", MSyntax::kDouble );
@@ -170,6 +171,10 @@ MStatus FabricImportPatternCommand::doIt(const MArgList &args)
   if( argParser.isFlagSet("attachToExisting") )
   {
     m_settings.attachToExisting = argParser.flagArgumentBool("attachToExisting", 0);
+  }
+  if( argParser.isFlagSet("createIfMissing") )
+  {
+    m_settings.createIfMissing = argParser.flagArgumentBool("createIfMissing", 0);
   }
   if( argParser.isFlagSet("userAttributes") )
   {
@@ -764,6 +769,12 @@ MObject FabricImportPatternCommand::getOrCreateNodeForPath(MString path, MString
         return node;
       }
     }
+
+    if(!m_settings.createIfMissing)
+    {
+      mayaLogErrorFunc("Object for path "+path+" not found.");
+      return MObject();
+    }
   }
 
   if(pathForParent.length() > 0)
@@ -959,6 +970,12 @@ MObject FabricImportPatternCommand::getOrCreateShapeForObject(FabricCore::RTVal 
             existed = true;
           }
         }
+
+        if(!m_settings.createIfMissing)
+        {
+          mayaLogErrorFunc("Object for path "+mayaPathFromPatternPath(lookupPath)+" not found.");
+          return MObject();
+        }        
       }
 
       if(!existed)
@@ -1198,7 +1215,8 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
   }
   if(it == m_nodes.end())
   {
-    mayaLogErrorFunc("Missing node for '"+objPath+"'.");
+    if(m_settings.createIfMissing)
+      mayaLogErrorFunc("Missing node for '"+objPath+"'.");
     return false;
   }
 
@@ -1232,7 +1250,8 @@ bool FabricImportPatternCommand::updateEvaluatorForObject(FabricCore::RTVal objR
     evaluatorNode = getOrCreateNodeForPath(evaluatorPath, "canvasFuncNode", true, false /* isDag */);
     if(evaluatorNode.isNull())
     {
-      mayaLogErrorFunc("Missing node for '"+evaluatorPath+"'.");
+      if(m_settings.createIfMissing)
+        mayaLogErrorFunc("Missing node for '"+evaluatorPath+"'.");
       return false;
     }
   }
@@ -1636,7 +1655,8 @@ void FabricImportPatternCommand::processUserAttributes(FabricCore::RTVal objRef)
     }
     if(it == m_nodes.end())
     {
-      mayaLogErrorFunc("Missing node for '"+objPath+"'.");
+      if(m_settings.createIfMissing)
+        mayaLogErrorFunc("Missing node for '"+objPath+"'.");
       return;
     }
 

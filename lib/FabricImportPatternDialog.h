@@ -32,6 +32,7 @@ public slots:
   void onRejected();
   void onUserAttributesChanged(int state);
   void onAttachToExistingChanged(int state);
+  void onCreateIfMissingChanged(int state);
   void onAttachToSceneTimeChanged(int state);
   void onEnableMaterialsChanged(int state);
   void onScaleChanged(const QString & text);
@@ -61,4 +62,5 @@ private:
   static bool s_previewRenderingEnabled;
 
   QCheckBox * m_stripNameSpacesCheckbox;
+  QCheckBox * m_createIfMissingCheckbox;
 };

@@ -74,6 +74,15 @@ FabricImportPatternDialog::FabricImportPatternDialog(QWidget * parent, FabricCor
   QObject::connect(attachToExistingCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onAttachToExistingChanged(int)));
 
   row++;
+  QLabel * createIfMissingLabel = new QLabel("Create missing objects", optionsWidget);
+  optionsLayout->addWidget(createIfMissingLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
+  m_createIfMissingCheckbox = new QCheckBox(optionsWidget);
+  m_createIfMissingCheckbox->setCheckState(m_settings.createIfMissing ? Qt::Checked : Qt::Unchecked);
+  m_createIfMissingCheckbox->setEnabled(m_settings.attachToExisting);
+  optionsLayout->addWidget(m_createIfMissingCheckbox, row, 1, Qt::AlignLeft | Qt::AlignVCenter);
+  QObject::connect(m_createIfMissingCheckbox, SIGNAL(stateChanged(int)), this, SLOT(onCreateIfMissingChanged(int)));
+
+  row++;
   QLabel * userAttributesLabel = new QLabel("User Attributes", optionsWidget);
   optionsLayout->addWidget(userAttributesLabel, row, 0, Qt::AlignLeft | Qt::AlignVCenter);
   QCheckBox * userAttributesCheckbox = new QCheckBox(optionsWidget);
@@ -162,6 +171,12 @@ void FabricImportPatternDialog::onRejected()
 void FabricImportPatternDialog::onAttachToExistingChanged(int state)
 {
   m_settings.attachToExisting = state == Qt::Checked;
+  m_createIfMissingCheckbox->setEnabled(m_settings.attachToExisting);
+}
+
+void FabricImportPatternDialog::onCreateIfMissingChanged(int state)
+{
+  m_settings.createIfMissing = state == Qt::Checked;
 }
 
 void FabricImportPatternDialog::onAttachToSceneTimeChanged(int state)

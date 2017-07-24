@@ -587,6 +587,25 @@ void FabricExportPatternCommand::cleanup(FabricCore::DFGBinding binding)
 bool FabricExportPatternCommand::registerNode(const MObject & node, MString prefix, bool addChildren)
 {
   MStatus status;
+
+  // first see if this is a set
+  MFnSet mayaSet(node, &status);
+  if(status == MS::kSuccess)
+  {
+    MSelectionList members;
+    mayaSet.getMembers(members, false);
+    for(unsigned int i=0;i<members.length();i++)
+    {
+      MObject member;
+      if(members.getDependNode(i, member) == MS::kSuccess)
+      {
+        if(!registerNode(member, prefix, addChildren))
+          return false;
+      }
+    }
+    return true;
+  }
+
   MFnDagNode dagNode(node, &status);
   if(status != MS::kSuccess)
     return false;
