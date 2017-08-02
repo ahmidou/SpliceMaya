@@ -152,19 +152,22 @@ void FabricCommandManagerCallback::clear()
 {  
   FABRIC_MAYA_CATCH_BEGIN();
 
-  CommandManager::getCommandManager()->clear();
+  if(CommandManager::isInitalized())
+  {
+    CommandManager::getCommandManager()->clear();
 
-  FabricUI::Application::FabricApplicationStates *appStates =  FabricUI::Application::FabricApplicationStates::GetAppStates();
-  delete appStates;
-  appStates = 0;
+    FabricUI::Application::FabricApplicationStates *appStates =  FabricUI::Application::FabricApplicationStates::GetAppStates();
+    delete appStates;
+    appStates = 0;
 
-  CommandManager *manager = CommandManager::getCommandManager();
-  delete manager;
-  manager = 0;
+    CommandManager *manager = CommandManager::getCommandManager();
+    delete manager;
+    manager = 0;
 
-  CommandRegistry *registry =  CommandRegistry::getCommandRegistry();
-  delete registry;
-  registry = 0;
+    CommandRegistry *registry =  CommandRegistry::getCommandRegistry();
+    delete registry;
+    registry = 0;
+  }
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::clear");
 }
