@@ -2086,11 +2086,6 @@ MObject FabricDFGBaseInterface::addMayaAttribute(
   bool compoundChild, 
   MStatus * stat)
 {
-  std::cout 
-    << "FabricDFGBaseInterface::addMayaAttribute " 
-    << portName.asChar() 
-    << std::endl;
-
   FabricMayaProfilingEvent bracket("FabricDFGBaseInterface::addMayaAttribute ");
 
   MAYADFG_CATCH_BEGIN(stat);
