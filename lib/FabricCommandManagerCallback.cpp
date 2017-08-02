@@ -112,20 +112,20 @@ void FabricCommandManagerCallback::onCommandDone(
     m_commandCreatedFromManagerCallback = true;
     m_commandCanUndo = canUndo;
       
-      MGlobal::executeCommandOnIdle(
-        fabricCmd.str().c_str(), 
-        true
-        );
+    MGlobal::executeCommandOnIdle(
+      fabricCmd.str().c_str(), 
+      true
+      );
   }
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::onCommandDone");
 }
 
-void FabricCommandManagerCallback::plug()
+void FabricCommandManagerCallback::init(
+  FabricCore::Client client)
 {
   FABRIC_MAYA_CATCH_BEGIN();
 
-  FabricCore::Client client = FabricDFGWidget::GetCoreClient();
   new FabricUI::Application::FabricApplicationStates(client);
   
   KLCommandRegistry *registry = new KLCommandRegistry();
@@ -145,14 +145,18 @@ void FabricCommandManagerCallback::plug()
   //TODO: support tool commands!!
   //FabricUI::Tools::ToolsCommandRegistration::RegisterCommands();
 
-  FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::plug");
+  FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::init");
 }
 
-void FabricCommandManagerCallback::unplug()
+void FabricCommandManagerCallback::clear()
 {  
   FABRIC_MAYA_CATCH_BEGIN();
 
   CommandManager::getCommandManager()->clear();
+
+  FabricUI::Application::FabricApplicationStates *appStates =  FabricUI::Application::FabricApplicationStates::GetAppStates();
+  delete appStates;
+  appStates = 0;
 
   CommandManager *manager = CommandManager::getCommandManager();
   delete manager;
@@ -162,7 +166,7 @@ void FabricCommandManagerCallback::unplug()
   delete registry;
   registry = 0;
 
-  FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::unplug");
+  FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::clear");
 }
 
 void FabricCommandManagerCallback::reset()
