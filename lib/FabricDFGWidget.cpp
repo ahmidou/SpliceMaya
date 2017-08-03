@@ -14,6 +14,8 @@
 #include <FabricUI/SplashScreens/FabricSplashScreen.h>
 #include <maya/MEventMessage.h>
 #include <maya/MGlobal.h>
+#include <iostream>
+#include "FabricCommandManagerCallback.h"
 
 FabricDFGWidget *FabricDFGWidget::s_widget = NULL;
 FabricServices::ASTWrapper::KLASTManager *s_manager = NULL;
@@ -128,7 +130,11 @@ FabricCore::Client FabricDFGWidget::GetCoreClient()
   if(FabricSplice::DGGraph::getClient() == NULL)
   {
     FabricUI::FabricSplashScreenBracket splashBracket(mayaShowSplashScreen());
-    return FabricSplice::ConstructClient();
+    FabricCore::Client client = FabricSplice::ConstructClient();
+
+    FabricCommandManagerCallback::GetManagerCallback()->init(client);
+
+    return client;
   }
 
   return FabricSplice::ConstructClient();

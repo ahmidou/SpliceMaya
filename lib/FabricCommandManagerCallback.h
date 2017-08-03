@@ -5,6 +5,7 @@
 #pragma once
 
 #include <QObject>
+#include <FabricCore.h>
 #include <FabricUI/Commands/BaseCommand.h>
  
 class FabricCommandManagerCallback : public QObject
@@ -25,13 +26,14 @@ class FabricCommandManagerCallback : public QObject
     /// Thows an error if the manager callback has not been created.
     static FabricCommandManagerCallback* GetManagerCallback();
     
-    /// Plugs and initializes the command system.
-    /// To call from the plugin.
-    void plug();
+    /// Initializes the command system.
+    /// To do when the Fabric client is created the first time.
+    void init(
+      FabricCore::Client client
+      );
 
-    /// Unplugs and deletes the command system.
-    /// To call from the plugin.
-    void unplug();
+    /// Clears and deletes the command system.
+    void clear();
  
     /// Resets the commands system (clears manager stacks)
     void reset();

@@ -201,7 +201,8 @@ void onSceneLoad(void *userData){
   // [FE-6612] invalidate all DFG nodes.
   for (unsigned int i=0;i<FabricDFGBaseInterface::getNumInstances();i++)
     FabricDFGBaseInterface::getInstanceByIndex(i)->invalidateNode();
-  //FabricCommandManagerCallback::GetManagerCallback()->reset();
+  
+  FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onBeforeImport(void *userData){
@@ -262,9 +263,9 @@ MAYA_EXPORT initializePlugin(MObject obj)
   // Uncomment the following to have stdout and stderr printed into files (else these will not
   // be seen in the Maya console)
   //
-  //freopen( "MayaLog.txt", "a", stdout );
-  //freopen( "MayaError.txt", "a", stderr );
-  //std::cout << "\n\n----- initializePlugin -----\n\n" << std::endl;
+  // freopen( "MayaLog.txt", "a", stdout );
+  // freopen( "MayaError.txt", "a", stderr );
+  // std::cout << "\n\n----- initializePlugin -----\n\n" << std::endl;
 
   // [FE-6287]
   char const *disable_evalContext = ::getenv( "FABRIC_MAYA_DISABLE_EVALCONTEXT" );
@@ -426,7 +427,6 @@ MAYA_EXPORT initializePlugin(MObject obj)
   else
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
 
-  FabricCommandManagerCallback::GetManagerCallback()->plug();
   INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricCommand::creator));
 
   return status;
@@ -548,7 +548,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasSetExecuteShared" ) );
   UNINITPLUGIN_STATE( status, plugin.deregisterCommand( "FabricCanvasReloadExtension"  ) );
 
-  FabricCommandManagerCallback::GetManagerCallback()->unplug();
+  FabricCommandManagerCallback::GetManagerCallback()->clear();
   UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricCommand"));
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
