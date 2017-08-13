@@ -13,7 +13,7 @@
 #include <FabricUI/Commands/KLCommandManager.h>
 #include <FabricUI/Commands/KLCommandRegistry.h>
 #include <FabricUI/Commands/BaseScriptableCommand.h>
-#include <FabricUI/Tools/ToolsCommandRegistration.h>
+#include <FabricUI/DFG/Tools/DFGToolsCommandRegistration.h>
 #include <FabricUI/Dialog/DialogCommandRegistration.h>
 #include <FabricUI/Commands/BaseRTValScriptableCommand.h>
 #include <FabricUI/Application/FabricApplicationStates.h>
@@ -143,7 +143,7 @@ void FabricCommandManagerCallback::init(
   FabricUI::OptionsEditor::OptionEditorCommandRegistration::RegisterCommands();
   FabricUI::Dialog::DialogCommandRegistration::RegisterCommands();
   //TODO: support tool commands!!
-  //FabricUI::Tools::ToolsCommandRegistration::RegisterCommands();
+  //FabricUI::DFG::Tools::DFGToolsCommandRegistration::RegisterCommands();
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::init");
 }
