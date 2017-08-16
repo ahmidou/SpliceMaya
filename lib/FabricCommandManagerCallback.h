@@ -7,7 +7,8 @@
 #include <QObject>
 #include <FabricCore.h>
 #include <FabricUI/Commands/BaseCommand.h>
- 
+#include <FabricUI/DFG/Tools/DFGPVToolsNotifier.h>
+
 class FabricCommandManagerCallback : public QObject
 {
   /**
@@ -67,4 +68,6 @@ class FabricCommandManagerCallback : public QObject
     bool m_commandCreatedFromManagerCallback;
     /// To know if the last command created is undoable
     bool m_commandCanUndo;
+
+    FabricUI::DFG::DFGPVToolsNotifierRegistry *m_toolsDFGPVNotifierRegistry;
 };
