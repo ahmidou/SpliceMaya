@@ -9,6 +9,25 @@
 #include <FabricUI/Commands/BaseCommand.h>
 #include <FabricUI/DFG/Tools/DFGPVToolsNotifier.h>
 
+class FabricDFGPVToolsNotifierCallBack : public QObject
+{
+  Q_OBJECT
+  
+  public:
+    FabricDFGPVToolsNotifierCallBack();
+      
+    virtual ~FabricDFGPVToolsNotifierCallBack();
+
+    void clear();
+
+  private slots:
+    /// Called when a command has been pushed to the manager.
+    void onToolUpdated();
+
+  private:
+    FabricUI::DFG::DFGPVToolsNotifierRegistry *m_toolsDFGPVNotifierRegistry;
+};
+
 class FabricCommandManagerCallback : public QObject
 {
   /**
@@ -68,6 +87,6 @@ class FabricCommandManagerCallback : public QObject
     bool m_commandCreatedFromManagerCallback;
     /// To know if the last command created is undoable
     bool m_commandCanUndo;
-
-    FabricUI::DFG::DFGPVToolsNotifierRegistry *m_toolsDFGPVNotifierRegistry;
+    /// Tools
+    FabricDFGPVToolsNotifierCallBack *m_dfgPVToolsNotifierCallBack;
 };

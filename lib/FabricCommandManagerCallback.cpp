@@ -26,9 +26,43 @@ using namespace FabricUI::Commands;
 bool FabricCommandManagerCallback::s_instanceFlag = false;
 FabricCommandManagerCallback* FabricCommandManagerCallback::s_cmdManagerMayaCallback = 0;
 
+FabricDFGPVToolsNotifierCallBack::FabricDFGPVToolsNotifierCallBack()
+  : QObject()
+  , m_toolsDFGPVNotifierRegistry(0)
+{
+  m_toolsDFGPVNotifierRegistry = new FabricUI::DFG::DFGPVToolsNotifierRegistry();
+  FabricUI::DFG::DFGToolsCommandRegistration::RegisterCommands(
+    m_toolsDFGPVNotifierRegistry
+    );
+
+  QObject::connect(
+    m_toolsDFGPVNotifierRegistry,
+    SIGNAL(toolUpdated()),
+    this,
+    SLOT(onToolUpdated())
+    );
+}
+
+FabricDFGPVToolsNotifierCallBack::~FabricDFGPVToolsNotifierCallBack()
+{
+  delete m_toolsDFGPVNotifierRegistry;
+  m_toolsDFGPVNotifierRegistry = 0;
+}
+
+void FabricDFGPVToolsNotifierCallBack::clear()
+{
+  m_toolsDFGPVNotifierRegistry->unregisterAllPathValueTools();
+}
+
+void FabricDFGPVToolsNotifierCallBack::onToolUpdated()
+{
+  MGlobal::executeCommandOnIdle("refresh;", false);
+}
+
 FabricCommandManagerCallback::FabricCommandManagerCallback()
   : QObject()
   , m_commandCreatedFromManagerCallback(false)
+  , m_dfgPVToolsNotifierCallBack(0)
 {
 }
 
@@ -143,10 +177,7 @@ void FabricCommandManagerCallback::init(
   FabricUI::OptionsEditor::OptionEditorCommandRegistration::RegisterCommands();
   FabricUI::Dialog::DialogCommandRegistration::RegisterCommands();
   // Support tool commands
-  m_toolsDFGPVNotifierRegistry = new FabricUI::DFG::DFGPVToolsNotifierRegistry();
-  FabricUI::DFG::DFGToolsCommandRegistration::RegisterCommands(
-    m_toolsDFGPVNotifierRegistry
-    );
+  m_dfgPVToolsNotifierCallBack = new FabricDFGPVToolsNotifierCallBack();
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::init");
 }
@@ -171,8 +202,8 @@ void FabricCommandManagerCallback::clear()
     delete registry;
     registry = 0;
 
-    delete m_toolsDFGPVNotifierRegistry;
-    m_toolsDFGPVNotifierRegistry = 0;
+    delete m_dfgPVToolsNotifierCallBack;
+    m_dfgPVToolsNotifierCallBack = 0;
   }
 
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::clear");
@@ -188,7 +219,7 @@ void FabricCommandManagerCallback::reset()
     CommandRegistry::getCommandRegistry());
   registry->synchronizeKL();
 
-  m_toolsDFGPVNotifierRegistry->unregisterAllPathValueTools();
+  m_dfgPVToolsNotifierCallBack->clear();
   
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::reset");
 }
