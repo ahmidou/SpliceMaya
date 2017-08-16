@@ -1572,12 +1572,14 @@ void FabricDFGMoveNodesCommand::GetArgs(
 
   if ( !argParser.isFlagSet( "xPos" ) )
     throw ArgException( MS::kFailure, "-x (-xPos) not provided." );
-  FTL::StrRef xPosStr =
-    argParser.flagArgumentString( "xPos", 0 ).asChar();
+  MString xPos = argParser.flagArgumentString( "xPos", 0 ).asChar();
+  FTL::StrRef xPosStr = xPos.asChar();
+   
   if ( !argParser.isFlagSet( "yPos" ) )
     throw ArgException( MS::kFailure, "-y (-yPos) not provided." );
-  FTL::StrRef yPosStr =
-    argParser.flagArgumentString( "yPos", 0 ).asChar();
+  MString yPos = argParser.flagArgumentString( "yPos", 0 ).asChar();
+  FTL::StrRef yPosStr = yPos.asChar();
+
   while ( !xPosStr.empty() && !yPosStr.empty() )
   {
     QPointF pos;
