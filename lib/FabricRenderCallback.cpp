@@ -395,7 +395,9 @@ void FabricRenderCallback::preDrawCallback(
 void FabricRenderCallback::viewport2OverridePreDrawCallback(
   MHWRender::MDrawContext &context, 
   void* clientData) 
-{
+{ 
+  if( !FabricRenderCallback::canDraw() ) return;
+
   MString panelName;
   context.renderingDestination(panelName);
 
