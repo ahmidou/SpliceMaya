@@ -16,6 +16,23 @@ global proc fabricSpliceActivateTool()
   }
 }
 
+global proc fabricSpliceActivateToolIfNot()
+{
+  // check to see if the context already exists
+  global string $gFabricSpliceToolName;
+  if(size($gFabricSpliceToolName) == 0)
+    $gFabricSpliceToolName = `eval "FabricToolContext"`;
+
+  string $currentTool = `currentCtx`;
+  if($currentTool != $gFabricSpliceToolName)
+  {
+    setToolTo($gFabricSpliceToolName);
+  }
+  else
+  {
+  }
+}
+
 global proc fabricSpliceSaveSplice()
 {
 	string $selNodes[] = `ls -sl -et "spliceMayaNode"`;

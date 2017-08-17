@@ -4,6 +4,7 @@
 
 #include <sstream>
 #include <maya/MGlobal.h>
+#include <maya/MString.h>
 #include "FabricCommand.h"
 #include "FabricDFGWidget.h"
 #include "FabricMayaException.h"
@@ -71,12 +72,12 @@ void FabricDFGPVToolsNotifierCallBack::onToolUpdated(
 void FabricDFGPVToolsNotifierCallBack::onToolRegistered(
   QString const& toolPath)
 {
-  if(!FabricRenderCallback::isRTRPassEnabled())
-    FabricRenderCallback::enableRTRPass(
-      true
-      );
-
-  MGlobal::executeCommandOnIdle("refresh;", false);
+  MString cmd = "source \"FabricSpliceTool.mel\"; fabricSpliceActivateToolIfNot";
+  MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
+    if (commandStatus != MStatus::kSuccess)
+      MGlobal::displayError(
+        "FabricDFGPVToolsNotifierCallBack::onToolRegistered, cannot execute 'FabricSpliceTool.mel::fabricSpliceActivateToolIfNot' command"
+        );
 }
 
 FabricCommandManagerCallback::FabricCommandManagerCallback()
