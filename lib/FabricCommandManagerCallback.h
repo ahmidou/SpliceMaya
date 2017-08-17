@@ -21,8 +21,13 @@ class FabricDFGPVToolsNotifierCallBack : public QObject
     void clear();
 
   private slots:
-    /// Called when a command has been pushed to the manager.
-    void onToolUpdated();
+    void onToolUpdated(
+      QString const& toolPath
+      );
+
+    void onToolRegistered(
+      QString const& toolPath
+      );
 
   private:
     FabricUI::DFG::DFGPVToolsNotifierRegistry *m_toolsDFGPVNotifierRegistry;

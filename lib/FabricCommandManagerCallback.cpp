@@ -7,6 +7,7 @@
 #include "FabricCommand.h"
 #include "FabricDFGWidget.h"
 #include "FabricMayaException.h"
+#include "FabricRenderCallback.h"
 #include <FabricUI/Util/RTValUtil.h>
 #include "FabricCommandManagerCallback.h"
 #include <FabricUI/Commands/CommandHelpers.h>
@@ -37,9 +38,16 @@ FabricDFGPVToolsNotifierCallBack::FabricDFGPVToolsNotifierCallBack()
 
   QObject::connect(
     m_toolsDFGPVNotifierRegistry,
-    SIGNAL(toolUpdated()),
+    SIGNAL(toolUpdated(QString const&)),
     this,
-    SLOT(onToolUpdated())
+    SLOT(onToolUpdated(QString const&))
+    );
+
+  QObject::connect(
+    m_toolsDFGPVNotifierRegistry,
+    SIGNAL(toolRegistered(QString const&)),
+    this,
+    SLOT(onToolRegistered(QString const&))
     );
 }
 
@@ -54,8 +62,20 @@ void FabricDFGPVToolsNotifierCallBack::clear()
   m_toolsDFGPVNotifierRegistry->unregisterAllPathValueTools();
 }
 
-void FabricDFGPVToolsNotifierCallBack::onToolUpdated()
+void FabricDFGPVToolsNotifierCallBack::onToolUpdated(
+  QString const& toolPath)
 {
+  MGlobal::executeCommandOnIdle("refresh;", false);
+}
+
+void FabricDFGPVToolsNotifierCallBack::onToolRegistered(
+  QString const& toolPath)
+{
+  if(!FabricRenderCallback::isRTRPassEnabled())
+    FabricRenderCallback::enableRTRPass(
+      true
+      );
+
   MGlobal::executeCommandOnIdle("refresh;", false);
 }
 
