@@ -82,8 +82,8 @@ void FabricDFGPVToolsNotifierCallBack::onToolRegistered(
 
 FabricCommandManagerCallback::FabricCommandManagerCallback()
   : QObject()
-  , m_commandCreatedFromManagerCallback(false)
   , m_dfgPVToolsNotifierCallBack(0)
+  , m_commandCreatedFromManagerCallback(false)
 {
 }
 
