@@ -93,6 +93,7 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   menuItem -p $assetPatternsMenu -ec 1 -c ("fabricExportPattern();") "Custom Export Pattern";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c $toolCmd "Toggle Tool";
+  menuItem -p $fabricSpliceMenu -ec 1 -c ("FabricDFGDeleteAllPVTools();") "Delete All Edition Tools";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("fabricSplice \"toggleRenderer\";") -checkBox true "Toggle Renderer";
   menuItem -p $fabricSpliceMenu -divider true;

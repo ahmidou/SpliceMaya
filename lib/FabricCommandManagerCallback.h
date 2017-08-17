@@ -6,6 +6,7 @@
 
 #include <QObject>
 #include <FabricCore.h>
+#include <maya/MPxCommand.h>
 #include <FabricUI/Commands/BaseCommand.h>
 #include <FabricUI/DFG/Tools/DFGPVToolsNotifier.h>
 
@@ -48,7 +49,6 @@ class FabricCommandManagerCallback : public QObject
     virtual ~FabricCommandManagerCallback();
 
  	  /// Gets the manager callback singleton.
-    /// Thows an error if the manager callback has not been created.
     static FabricCommandManagerCallback* GetManagerCallback();
     
     /// Initializes the command system.
@@ -74,17 +74,20 @@ class FabricCommandManagerCallback : public QObject
     /// To know if the command is created from maya or by the manager
     bool isCommandCanUndo();
 
+    /// Tools
+    FabricDFGPVToolsNotifierCallBack *m_dfgPVToolsNotifierCallBack;
+  
   private slots:
     /// Called when a command has been pushed to the manager.
     /// \param cmd The command that has been pushed.
     /// \param canUndo If true, the command can undo and is on the top of the manager stack.
     void onCommandDone(
-    	FabricUI::Commands::BaseCommand *cmd,
+      FabricUI::Commands::BaseCommand *cmd,
       bool canUndo
-    	);
+      );
 
   private:
-  	/// FabricCommandManagerCallback singleton, set from Constructor.
+    /// FabricCommandManagerCallback singleton, set from Constructor.
     static FabricCommandManagerCallback *s_cmdManagerMayaCallback;
     /// Check if the singleton has been set.
     static bool s_instanceFlag;
@@ -92,6 +95,18 @@ class FabricCommandManagerCallback : public QObject
     bool m_commandCreatedFromManagerCallback;
     /// To know if the last command created is undoable
     bool m_commandCanUndo;
-    /// Tools
-    FabricDFGPVToolsNotifierCallBack *m_dfgPVToolsNotifierCallBack;
+};
+
+class FabricDFGDeleteAllPVToolsCommand : public MPxCommand
+{
+  public:
+    virtual const char * getName();
+    
+    static void* creator();
+
+    virtual MStatus doIt(
+      const MArgList &args
+      );
+
+    virtual bool isUndoable() const;
 };

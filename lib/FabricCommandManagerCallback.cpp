@@ -260,3 +260,34 @@ bool FabricCommandManagerCallback::isCommandCanUndo()
 {
   return m_commandCanUndo;
 }
+
+const char * FabricDFGDeleteAllPVToolsCommand::getName() 
+{ 
+  return "FabricDFGDeleteAllPVToolsCommand"; 
+}
+    
+void* FabricDFGDeleteAllPVToolsCommand::creator()
+{
+  return new FabricDFGDeleteAllPVToolsCommand();
+}
+
+MStatus FabricDFGDeleteAllPVToolsCommand::doIt(
+  const MArgList &args)
+{
+  FabricCommandManagerCallback *cmdCallback = FabricCommandManagerCallback::GetManagerCallback();
+  if(cmdCallback)
+  {
+    FabricDFGPVToolsNotifierCallBack *toolCallback = cmdCallback->m_dfgPVToolsNotifierCallBack;
+    if(toolCallback)
+    {
+      toolCallback->clear();
+      return MS::kSuccess;
+    }
+  }
+  return MS::kFailure;
+}
+
+bool FabricDFGDeleteAllPVToolsCommand::isUndoable() const 
+{ 
+  return false; 
+}

@@ -428,6 +428,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
     FabricSplice::SetLicenseType(FabricCore::ClientLicenseType_Compute);
 
   INITPLUGIN_STATE(status, plugin.registerCommand("FabricCommand", FabricCommand::creator));
+  INITPLUGIN_STATE(status, plugin.registerCommand("FabricDFGDeleteAllPVTools", FabricDFGDeleteAllPVToolsCommand::creator));
 
   return status;
 }
@@ -550,6 +551,7 @@ MAYA_EXPORT uninitializePlugin(MObject obj)
 
   FabricCommandManagerCallback::GetManagerCallback()->clear();
   UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricCommand"));
+  UNINITPLUGIN_STATE(status, plugin.deregisterCommand("FabricDFGDeleteAllPVTools"));
 
   // [pzion 20141201] RM#3318: it seems that sending KL report statements
   // at this point, which might result from destructors called by

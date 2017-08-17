@@ -28,9 +28,6 @@ global proc fabricSpliceActivateToolIfNot()
   {
     setToolTo($gFabricSpliceToolName);
   }
-  else
-  {
-  }
 }
 
 global proc fabricSpliceSaveSplice()
