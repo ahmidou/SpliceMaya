@@ -1,32 +1,32 @@
-global proc fabricSpliceActivateTool()
+global proc fabricManipulationActivateTool()
 {
   // check to see if the context already exists
-  global string $gFabricSpliceToolName;
-  if(size($gFabricSpliceToolName) == 0)
-    $gFabricSpliceToolName = `eval "FabricToolContext"`;
+  global string $gFabricManipulationToolName;
+  if(size($gFabricManipulationToolName) == 0)
+    $gFabricManipulationToolName = `eval "FabricToolContext"`;
 
   string $currentTool = `currentCtx`;
-  if($currentTool == $gFabricSpliceToolName)
+  if($currentTool == $gFabricManipulationToolName)
   {
   	setToolTo("selectSuperContext");
   }
   else
   {
-  	setToolTo($gFabricSpliceToolName);
+  	setToolTo($gFabricManipulationToolName);
   }
 }
 
-global proc fabricSpliceActivateToolIfNot()
+global proc fabricManipulationActivateToolIfNot()
 {
   // check to see if the context already exists
-  global string $gFabricSpliceToolName;
-  if(size($gFabricSpliceToolName) == 0)
-    $gFabricSpliceToolName = `eval "FabricToolContext"`;
+  global string $gFabricManipulationToolName;
+  if(size($gFabricManipulationToolName) == 0)
+    $gFabricManipulationToolName = `eval "FabricToolContext"`;
 
   string $currentTool = `currentCtx`;
-  if($currentTool != $gFabricSpliceToolName)
+  if($currentTool != $gFabricManipulationToolName)
   {
-    setToolTo($gFabricSpliceToolName);
+    setToolTo($gFabricManipulationToolName);
   }
 }
 

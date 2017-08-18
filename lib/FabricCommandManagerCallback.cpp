@@ -72,11 +72,11 @@ void FabricDFGPVToolsNotifierCallBack::onToolUpdated(
 void FabricDFGPVToolsNotifierCallBack::onToolRegistered(
   QString const& toolPath)
 {
-  MString cmd = "source \"FabricSpliceTool.mel\"; fabricSpliceActivateToolIfNot";
+  MString cmd = "source \"FabricManipulationTool.mel\"; fabricManipulationActivateToolIfNot";
   MStatus commandStatus = MGlobal::executeCommandOnIdle(cmd, false);
     if (commandStatus != MStatus::kSuccess)
       MGlobal::displayError(
-        "FabricDFGPVToolsNotifierCallBack::onToolRegistered, cannot execute 'FabricSpliceTool.mel::fabricSpliceActivateToolIfNot' command"
+        "FabricDFGPVToolsNotifierCallBack::onToolRegistered, cannot execute 'FabricManipulationTool.mel::fabricManipulationActivateToolIfNot' command"
         );
 }
 

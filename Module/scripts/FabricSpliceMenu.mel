@@ -68,9 +68,9 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   $fabricSpliceMenu = `menu -p $gMainWindow -to true $name`;
 
   // setup hotkeys
-  string $toolCmd = "fabricSpliceToolActivate";
+  string $toolCmd = "fabricManipulationToolActivate";
   if( !`runTimeCommand -q -ex $toolCmd` ) {
-    runTimeCommand -annotation "FabricSplice Tool" -command "source \"FabricSpliceTool.mel\"; fabricSpliceActivateTool();" -category "Tools" $toolCmd;
+    runTimeCommand -annotation "FabricSplice Tool" -command "source \"FabricManipulationTool.mel\"; fabricManipulationActivateTool();" -category "Tools" $toolCmd;
     hotkey -k "`" -name $toolCmd;
   }
 

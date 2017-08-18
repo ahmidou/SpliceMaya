@@ -255,7 +255,7 @@ mayaFiles.append(installedLibFabricMaya)
 
 for png in ['canvasNode', 'out_canvasNode', 'canvasDeformer', 'out_canvasDeformer', 'canvasFuncNode', 'out_canvasFuncNode', 'canvasFuncDeformer', 'out_canvasFuncDeformer', 'canvasRigNode', 'out_canvasRigNode', 'fabricConstraint', 'out_fabricConstraint']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'icons'), os.path.join('Module', 'icons', png+'.png')))
-for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricSpliceTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
+for script in ['FabricSpliceMenu', 'FabricSpliceUI', 'FabricManipulationTool', 'FabricSpliceToolValues', 'FabricSpliceToolProperties', 'FabricDFGUI']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))
 for script in ['AEfabricConstraintTemplate']:
   mayaFiles.append(env.Install(os.path.join(STAGE_DIR.abspath, 'scripts'), os.path.join('Module', 'scripts', script+'.mel')))

@@ -155,7 +155,7 @@ FabricToolContext::FabricToolContext()
 void FabricToolContext::getClassName(
   MString & name) const 
 {
-  name.set("FabricSpliceTool");
+  name.set("FabricManipulationTool");
 }
 
 void FabricToolContext::toolOnSetup(
