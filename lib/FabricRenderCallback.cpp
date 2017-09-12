@@ -21,7 +21,6 @@
 #include "Viewports/FabricViewport2Override.h"
 #endif
 #include "FabricCommandManagerCallback.h"
-#include <iostream>
 
 using namespace FabricUI;
 using namespace FabricCore;
