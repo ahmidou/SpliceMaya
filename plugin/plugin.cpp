@@ -106,6 +106,21 @@ void onSceneSave(void *userData){
   FabricDFGBaseInterface::allStorePersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
+// [FE-8836] : Clear ID between two scenes.
+bool firstTime = true;
+void resetKLSingletonsOnNewScene() {
+  if(!firstTime) // Don't do it the first time.
+  {
+    const FabricCore::Client * client = NULL;
+    FECS_DGGraph_getClient(&client);
+    if (client) {
+      FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
+      handleVal.callMethod("", "onNewScene", 0, NULL);
+    }
+  }
+  firstTime = false;
+}
+
 void onSceneNew(void *userData){
   FabricCommandManagerCallback::GetManagerCallback()->reset();
 
@@ -128,45 +143,22 @@ void onSceneNew(void *userData){
     // rather than destroying the client via
     // FabricSplice::DestroyClient() we only
     // remove all singleton objects.
-    const FabricCore::Client * client = NULL;
-    FECS_DGGraph_getClient(&client);
-    if (client)
-    {
-      FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
-      handleVal.callMethod("", "onNewScene", 0, NULL);
-    }
+    resetKLSingletonsOnNewScene();
   }
-  FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onSceneLoad(void *userData){
-  FabricCommandManagerCallback::GetManagerCallback()->reset();
-
-  // FabricCore::RTVal drawing = FabricSplice::constructObjectRTVal( "InlineDrawingScope" );
-  // drawing = drawing.callMethod( "OGLInlineDrawing", "getDrawing", 0, 0 );
-  // drawing.callMethod("OGLInlineDrawing", "getNewInstance", 0, 0);
-
-  FabricSpliceEditorWidget::postClearAll();
-  FabricRenderCallback::sDrawContext.invalidate(); 
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
     FabricSplice::Logging::enableTimers();
+  
+  // [FE-8836]
+  resetKLSingletonsOnNewScene();
+  FabricCommandManagerCallback::GetManagerCallback()->reset();
 
   MStatus status = MS::kSuccess;
   mayaSetLastLoadedScene(MFileIO::currentFile());
-
-  // [FE-5508]
-  // rather than destroying the client via
-  // FabricSplice::DestroyClient() we only
-  // remove all singleton objects.
-  const FabricCore::Client * client = NULL;
-  FECS_DGGraph_getClient(&client);
-  if (client)
-  {
-    FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
-    handleVal.callMethod("", "onNewScene", 0, NULL);
-  }
-    
+     
   // visit all existing extension package nodes and check if this has already been packaged.
   // check for all names with the same suffix.
   if(FabricExtensionPackageNode::getNumInstances() > 0)
@@ -217,8 +209,6 @@ void onSceneLoad(void *userData){
   // [FE-6612] invalidate all DFG nodes.
   for (unsigned int i=0;i<FabricDFGBaseInterface::getNumInstances();i++)
     FabricDFGBaseInterface::getInstanceByIndex(i)->invalidateNode();
-  
-  FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onBeforeImport(void *userData){
@@ -279,9 +269,9 @@ MAYA_EXPORT initializePlugin(MObject obj)
   // Uncomment the following to have stdout and stderr printed into files (else these will not
   // be seen in the Maya console)
   //
-  // freopen( "MayaLog.txt", "a", stdout );
-  // freopen( "MayaError.txt", "a", stderr );
-  // std::cout << "\n\n----- initializePlugin -----\n\n" << std::endl;
+  freopen( "MayaLog.txt", "a", stdout );
+  freopen( "MayaError.txt", "a", stderr );
+  std::cout << "\n\n----- initializePlugin -----\n\n" << std::endl;
 
   // [FE-6287]
   char const *disable_evalContext = ::getenv( "FABRIC_MAYA_DISABLE_EVALCONTEXT" );
