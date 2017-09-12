@@ -107,9 +107,10 @@ void onSceneSave(void *userData){
 }
 
 // [FE-8836] : Clear ID between two scenes.
-bool firstTime = true;
+bool isFirstScene = true;
 void resetKLSingletonsOnNewScene() {
-  if(!firstTime) // Don't do it the first time.
+  // Don't do it the first time.
+  if(!isFirstScene) 
   {
     const FabricCore::Client * client = NULL;
     FECS_DGGraph_getClient(&client);
@@ -118,7 +119,6 @@ void resetKLSingletonsOnNewScene() {
       handleVal.callMethod("", "onNewScene", 0, NULL);
     }
   }
-  firstTime = false;
 }
 
 void onSceneNew(void *userData){
@@ -145,6 +145,8 @@ void onSceneNew(void *userData){
     // remove all singleton objects.
     resetKLSingletonsOnNewScene();
   }
+
+  isFirstScene = false;
 }
 
 void onSceneLoad(void *userData){
