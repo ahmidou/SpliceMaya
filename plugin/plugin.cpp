@@ -142,6 +142,10 @@ void onSceneNew(void *userData){
 void onSceneLoad(void *userData){
   FabricCommandManagerCallback::GetManagerCallback()->reset();
 
+  // FabricCore::RTVal drawing = FabricSplice::constructObjectRTVal( "InlineDrawingScope" );
+  // drawing = drawing.callMethod( "OGLInlineDrawing", "getDrawing", 0, 0 );
+  // drawing.callMethod("OGLInlineDrawing", "getNewInstance", 0, 0);
+
   FabricSpliceEditorWidget::postClearAll();
   FabricRenderCallback::sDrawContext.invalidate(); 
 
@@ -151,6 +155,18 @@ void onSceneLoad(void *userData){
   MStatus status = MS::kSuccess;
   mayaSetLastLoadedScene(MFileIO::currentFile());
 
+  // [FE-5508]
+  // rather than destroying the client via
+  // FabricSplice::DestroyClient() we only
+  // remove all singleton objects.
+  const FabricCore::Client * client = NULL;
+  FECS_DGGraph_getClient(&client);
+  if (client)
+  {
+    FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
+    handleVal.callMethod("", "onNewScene", 0, NULL);
+  }
+    
   // visit all existing extension package nodes and check if this has already been packaged.
   // check for all names with the same suffix.
   if(FabricExtensionPackageNode::getNumInstances() > 0)

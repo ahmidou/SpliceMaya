@@ -103,6 +103,15 @@ void initID()
     FabricRenderCallback::sDrawContext = FabricSplice::constructObjectRTVal("DrawContext");
     FabricRenderCallback::sDrawContext = FabricRenderCallback::sDrawContext.callMethod("DrawContext", "getInstance", 0, 0);
     RTVal::Create(FabricRenderCallback::sDrawContext.getContext(), "Tool::InlineDrawingRender::RenderSetup", 0, 0);
+
+    // RTVal drawing = FabricSplice::constructObjectRTVal( "InlineDrawingScope" );
+    // drawing = drawing.callMethod( "InlineDrawing", "getDrawing", 0, 0 );
+
+    // if(drawing.isValid() && FabricRenderCallback::sDrawContext.isObject() && !FabricRenderCallback::sDrawContext.isNullObject())
+    // { 
+    //   FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
+    //   handleVal.callMethod("", "onNewScene", 0, NULL);
+    // }
   }
 }
 
