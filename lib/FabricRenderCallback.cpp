@@ -21,6 +21,7 @@
 #include "Viewports/FabricViewport2Override.h"
 #endif
 #include "FabricCommandManagerCallback.h"
+#include <iostream>
 
 using namespace FabricUI;
 using namespace FabricCore;
@@ -61,14 +62,35 @@ void FabricRenderCallback::disable()
  
 // **************
 
+bool useOpenGLWithoutGradient() {
+  if(!MHWRender::MRenderer::theRenderer()->drawAPIIsOpenGL())
+  {
+    MGlobal::displayError("Fabric cannot draw in DirectX, please use OpenGL.");
+    return false;
+  }
+
+  if(MHWRender::MRenderer::theRenderer()->useGradient())
+  {
+    MGlobal::displayError("Fabric cannot draw with background gradient activated, please deactivate it.");
+    return false;
+  }
+
+  return true;
+}
+
 bool FabricRenderCallback::canDraw() 
 {
   if(!FabricRenderCallback::gCallbackEnabled)
     return false;
+
   if(!FabricSplice::SceneManagement::hasRenderableContent() && 
     FabricDFGBaseInterface::getNumInstances() == 0 &&
     !FabricImportPatternDialog::isPreviewRenderingEnabled())
     return false;
+
+  if(!useOpenGLWithoutGradient())
+    return false;
+
   return gRTRPassEnabled;
 }
 
@@ -403,7 +425,10 @@ void FabricRenderCallback::viewport2OverridePreDrawCallback(
 
   MString renderName = getActiveRenderName();
   if(renderName != FabricViewport2Override_name)
+  {
+    MGlobal::displayError("Fabric can draw in " + FabricViewport2Override_name + " only.");
     return;
+  }
 
   int oriX, oriY, width, height;
   MStatus status = context.getViewportDimensions(oriX, oriY, width, height);
