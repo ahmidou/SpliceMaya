@@ -68,11 +68,13 @@ bool useOpenGLWithoutGradient() {
     return false;
   }
 
+#if MAYA_API_VERSION >= 201600
   if(MHWRender::MRenderer::theRenderer()->useGradient())
   {
     MGlobal::displayError("Fabric can't draw when background gradient is enabled, please disable it.");
     return false;
   }
+#endif
 
   return true;
 }
