@@ -234,13 +234,16 @@ void FabricCommandManagerCallback::reset()
 {
   FABRIC_MAYA_CATCH_BEGIN();
 
-  CommandManager::getCommandManager()->clear();
+  if(CommandManager::isInitalized())
+  {
+    CommandManager::getCommandManager()->clear();
 
-  KLCommandRegistry *registry = qobject_cast<KLCommandRegistry*>(
-    CommandRegistry::getCommandRegistry());
-  registry->synchronizeKL();
+    KLCommandRegistry *registry = qobject_cast<KLCommandRegistry*>(
+      CommandRegistry::getCommandRegistry());
+    registry->synchronizeKL();
 
-  m_dfgPVToolsNotifierCallBack->clear();
+    m_dfgPVToolsNotifierCallBack->clear();
+  }
   
   FABRIC_MAYA_CATCH_END("FabricCommandManagerCallback::reset");
 }
