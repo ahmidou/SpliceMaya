@@ -146,7 +146,6 @@ void onSceneNew(void *userData){
     resetKLSingletonsOnNewScene();
   }
 
-  isFirstScene = false;
 }
 
 void onSceneLoad(void *userData){
@@ -157,6 +156,7 @@ void onSceneLoad(void *userData){
   // [FE-8836]
   resetKLSingletonsOnNewScene();
   FabricCommandManagerCallback::GetManagerCallback()->reset();
+  isFirstScene = false;
 
   MStatus status = MS::kSuccess;
   mayaSetLastLoadedScene(MFileIO::currentFile());
