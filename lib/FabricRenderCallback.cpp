@@ -64,13 +64,13 @@ void FabricRenderCallback::disable()
 bool useOpenGLWithoutGradient() {
   if(!MHWRender::MRenderer::theRenderer()->drawAPIIsOpenGL())
   {
-    MGlobal::displayError("Fabric cannot draw in DirectX, please use OpenGL.");
+    MGlobal::displayError("Fabric can't draw in DirectX, please use OpenGL.");
     return false;
   }
 
   if(MHWRender::MRenderer::theRenderer()->useGradient())
   {
-    MGlobal::displayError("Fabric cannot draw with background gradient activated, please deactivate it.");
+    MGlobal::displayError("Fabric can't draw when background gradient is enabled, please disable it.");
     return false;
   }
 
