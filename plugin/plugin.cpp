@@ -109,8 +109,8 @@ void onSceneSave(void *userData){
 // [FE-8836] : Clear ID between two scenes.
 bool canResetKLSingletonsOnNewScene = false;
 void resetKLSingletonsOnNewScene() {
-  // Don't do it the first time ID is loaded, otherwise
-  // the drawing is cleared. Need investigate why [FE-8879].
+  // Don't do it the first time ID is loaded, otherwise the
+  // drawing is cleared. Need to investigate why [FE-8879].
   if(canResetKLSingletonsOnNewScene) 
   {
     const FabricCore::Client * client = NULL;
