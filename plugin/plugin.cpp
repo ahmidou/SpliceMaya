@@ -107,10 +107,11 @@ void onSceneSave(void *userData){
 }
 
 // [FE-8836] : Clear ID between two scenes.
-bool isFirstScene = true;
+bool canResetKLSingletonsOnNewScene = false;
 void resetKLSingletonsOnNewScene() {
-  // Don't do it the first time.
-  if(!isFirstScene) 
+  // Don't do it the first time ID is loaded, otherwise
+  // the drawing is cleared. Need investigate why [FE-8879].
+  if(canResetKLSingletonsOnNewScene) 
   {
     const FabricCore::Client * client = NULL;
     FECS_DGGraph_getClient(&client);
@@ -145,7 +146,6 @@ void onSceneNew(void *userData){
     // remove all singleton objects.
     resetKLSingletonsOnNewScene();
   }
-
 }
 
 void onSceneLoad(void *userData){
@@ -156,7 +156,7 @@ void onSceneLoad(void *userData){
   // [FE-8836]
   resetKLSingletonsOnNewScene();
   FabricCommandManagerCallback::GetManagerCallback()->reset();
-  isFirstScene = false;
+  canResetKLSingletonsOnNewScene = true;
 
   MStatus status = MS::kSuccess;
   mayaSetLastLoadedScene(MFileIO::currentFile());
