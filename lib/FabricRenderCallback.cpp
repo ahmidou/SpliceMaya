@@ -61,14 +61,37 @@ void FabricRenderCallback::disable()
  
 // **************
 
+bool useOpenGLWithoutGradient() {
+  if(!MHWRender::MRenderer::theRenderer()->drawAPIIsOpenGL())
+  {
+    MGlobal::displayError("Fabric can't draw in DirectX, please use OpenGL.");
+    return false;
+  }
+
+#if MAYA_API_VERSION >= 201600
+  if(MHWRender::MRenderer::theRenderer()->useGradient())
+  {
+    MGlobal::displayError("Fabric can't draw when background gradient is enabled, please disable it.");
+    return false;
+  }
+#endif
+
+  return true;
+}
+
 bool FabricRenderCallback::canDraw() 
 {
   if(!FabricRenderCallback::gCallbackEnabled)
     return false;
+
   if(!FabricSplice::SceneManagement::hasRenderableContent() && 
     FabricDFGBaseInterface::getNumInstances() == 0 &&
     !FabricImportPatternDialog::isPreviewRenderingEnabled())
     return false;
+
+  if(!useOpenGLWithoutGradient())
+    return false;
+
   return gRTRPassEnabled;
 }
 
@@ -403,7 +426,10 @@ void FabricRenderCallback::viewport2OverridePreDrawCallback(
 
   MString renderName = getActiveRenderName();
   if(renderName != FabricViewport2Override_name)
+  {
+    MGlobal::displayError("Fabric can draw in " + FabricViewport2Override_name + " only.");
     return;
+  }
 
   int oriX, oriY, width, height;
   MStatus status = context.getViewportDimensions(oriX, oriY, width, height);
