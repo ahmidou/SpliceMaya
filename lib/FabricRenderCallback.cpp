@@ -425,12 +425,7 @@ void FabricRenderCallback::viewport2OverridePreDrawCallback(
   context.renderingDestination(panelName);
 
   MString renderName = getActiveRenderName();
-  if(renderName != FabricViewport2Override_name)
-  {
-    MGlobal::displayError("Fabric can draw in " + FabricViewport2Override_name + " only.");
-    return;
-  }
-
+ 
   int oriX, oriY, width, height;
   MStatus status = context.getViewportDimensions(oriX, oriY, width, height);
 
