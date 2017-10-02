@@ -8,6 +8,7 @@
 #include "FabricSpliceMayaData.h"
 #include "FabricDFGBaseInterface.h"
 #include "FabricSpliceBaseInterface.h"
+#include "FabricMayaException.h"
 #include <Persistence/RTValToJSONEncoder.hpp>
 
 #include <string>
@@ -2575,19 +2576,27 @@ void FabricDFGBaseInterface::bindingNotificationCallback(
   else if( descStr == FTL_STR("argInserted") )
   { 
     // FE-7722 -> Only work for maya > 2017 update 4
-    if(MGlobal::apiVersion() >= 201760)
-    {
-      std::string nameStr = jsonObject->getString( FTL_STR("name") );
-      MString plugName = getPlugName(nameStr.c_str());
-      std::string typeStr = jsonObject->getString( FTL_STR("type") );
+    if( MGlobal::apiVersion() >= 201760 ) {
+      FABRIC_MAYA_CATCH_BEGIN();
 
-      MFnDependencyNode thisNode(getThisMObject());
+      if( jsonObject->has( FTL_STR( "name" ) ) && jsonObject->has( FTL_STR( "type" ) ) ) {
+        // In some cases (eg: unsupported types in maya), the type has no String JSON value (Type_Null)     
+        const FTL::JSONString* nameStrValue = jsonObject->get( FTL_STR( "name" ) )->maybeCast<FTL::JSONString>();
+        const FTL::JSONString* typeStrValue = jsonObject->get( FTL_STR( "type" ) )->maybeCast<FTL::JSONString>();
 
-      FabricCore::DFGExec exec = getDFGExec();
-      FabricCore::DFGPortType portType = exec.getExecPortType(nameStr.c_str());
-      addMayaAttribute(nameStr.c_str(), typeStr.c_str(), portType);
+        if( nameStrValue && typeStrValue ) {
+          FTL::CStrRef nameStr = nameStrValue->getValue();
+          FTL::CStrRef typeStr = nameStrValue->getValue();
+
+          MString plugName = getPlugName( nameStr.data() );
+
+          FabricCore::DFGExec exec = getDFGExec();
+          FabricCore::DFGPortType portType = exec.getExecPortType( nameStr.data() );
+          addMayaAttribute( nameStr.data(), typeStr.data(), portType );
+        }
+      }
+      FABRIC_MAYA_CATCH_END( "FabricDFGBaseInterface::bindingNotificationCallback.argInserted" );
     }
-
     generateAttributeLookups();
   }
   else if(   descStr == FTL_STR("varInserted")
