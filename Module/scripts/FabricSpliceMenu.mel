@@ -7,6 +7,14 @@ global proc addCanvasDeformer()
   FabricCanvasAddPort -m $d -e "" -d "meshes" -p "IO" -t "PolygonMesh[]" -xd "Geometry";
 }
 
+global proc addCanvasFuncDeformer()
+{
+  string $sel[];
+  $sel = `ls -selection -exactType transform`;
+  $d=`deformer -type "canvasFuncDeformer"`;
+  select -r $d;
+}
+
 global proc addSpliceDeformer()
 {
   string $sel[];
@@ -77,6 +85,9 @@ global proc FabricSpliceLoadMenu(string $pluginName)
   // menu items
   menuItem -p $fabricSpliceMenu -ec 1 -c ("createNode \"canvasNode\";") "Create Canvas Node";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("addCanvasDeformer();") "Create Canvas Deformer";
+  menuItem -p $fabricSpliceMenu -divider true;
+  menuItem -p $fabricSpliceMenu -ec 1 -c ("createNode \"canvasFuncNode\";") "Create Canvas Func Node";
+  menuItem -p $fabricSpliceMenu -ec 1 -c ("addCanvasFuncDeformer();") "Create Canvas Func Deformer";
   menuItem -p $fabricSpliceMenu -divider true;
   menuItem -p $fabricSpliceMenu -ec 1 -c ("createReferencedDFGNode();") "Create referenced Graph";
   menuItem -p $fabricSpliceMenu -ec 1 -c ("reloadReferencedDFGNode();") "Reload referenced Graph";
