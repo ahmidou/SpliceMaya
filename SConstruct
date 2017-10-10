@@ -45,7 +45,9 @@ astWrapperFlags = {}
 codeCompletionFlags = {}
 Export('commandsFlags', 'astWrapperFlags', 'codeCompletionFlags')
 
-spliceEnv = Environment()
+spliceEnv = Environment(
+  MSVC_VERSION = ( os.environ['MSVC_VERSION'] if 'MSVC_VERSION' in os.environ else '12.0' )
+)
 
 if not os.path.exists(spliceEnv.Dir('.stage').Dir('lib').abspath):
   os.makedirs(spliceEnv.Dir('.stage').Dir('lib').abspath)
