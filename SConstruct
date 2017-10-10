@@ -37,7 +37,7 @@ for var in [
       exit(0)
 
 
-FTL_INCLUDE_DIR = os.path.join(os.environ['FABRIC_DIR'], 'include', 'FTL')
+FTL_INCLUDE_DIR = os.path.join(os.environ['FABRIC_DIR'], 'include')
 Export('FTL_INCLUDE_DIR')
 commandsFlags = {}
 astWrapperFlags = {}
