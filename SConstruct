@@ -79,7 +79,7 @@ else:
   print 'The folder "'+spliceApiDir.abspath+'" does not exist. Please see the README.md for build instructions.'
   exit(0)
 
-(mayaSpliceAlias, mayaSpliceFiles) = SConscript(
+(mayaSpliceAlias, mayaSpliceFiles, returned) = SConscript(
   os.path.join('SConscript'),
   exports = {
     'parentEnv': spliceEnv,
@@ -98,6 +98,18 @@ else:
   duplicate=0,
   variant_dir = spliceEnv.Dir('.build').Dir(os.environ['MAYA_VERSION'])
 )
+
+if os.environ['FABRIC_BUILD_OS'] == 'Windows' :
+
+  msvsEnv = returned['msvs']['env']
+  msvsEnv['CPPPATH'] = [ p if type(p) is str else p.srcnode().abspath for p in msvsEnv['CPPPATH'] ]
+  msvsProj = msvsEnv.MSVSProject(
+    target = 'MSVS/SpliceMaya' + msvsEnv['MSVSPROJECTSUFFIX'],
+    srcs = [ os.path.join(spliceEnv.Dir('.').srcnode().abspath, str(s)) for s in returned['msvs']['src'] ],
+    variant = 'Release'
+  )
+  msvsEnv.Alias( "MSVS", msvsProj )
+
 
 allAliases = [mayaSpliceAlias]
 spliceEnv.Alias('all', allAliases)

@@ -291,5 +291,10 @@ else:
 env.Depends(mayaModule, installedLibFabricMaya)
 
 alias = env.Alias('splicemaya', mayaFiles)
-spliceData = (alias, mayaFiles)
+spliceData = (alias, mayaFiles, {
+  'msvs' : {
+    'env' : libEnv.Clone(),
+    'src' : libSources
+  }
+})
 Return('spliceData')
