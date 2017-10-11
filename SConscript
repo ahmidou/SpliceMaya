@@ -126,11 +126,11 @@ env.Append(LIBS = ['FabricSplitSearch'])
 uiLibPrefix = 'uiMaya'+str(MAYA_VERSION)
 
 uiDir = env.Dir('#').Dir('Native').Dir('FabricUI')
-if os.environ.has_key('FABRIC_UI_DIR'):
+if 'FABRIC_UI_DIR' in os.environ:
   uiDir = env.Dir(os.environ['FABRIC_UI_DIR'])
 uiSconscript = uiDir.File('SConscript')
 if not os.path.exists(uiSconscript.abspath):
-  print "Error: You need to have FabricUI checked out to "+uiSconscript.dir.abspath
+  print( "Error: You need to have FabricUI checked out to "+uiSconscript.dir.abspath )
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])

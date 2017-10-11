@@ -28,12 +28,12 @@ for var in [
   'FABRIC_UI_DIR',
   'BOOST_DIR',
 ]:
-  if not os.environ.has_key(var):
-    print 'The environment variable %s is not defined.' % var
+  if not var in os.environ:
+    print( 'The environment variable %s is not defined.' % var )
     exit(0)
   if var.lower().endswith('_dir'):
     if not os.path.exists(os.environ[var]):
-      print 'The path for environment variable %s does not exist.' % var
+      print( 'The path for environment variable %s does not exist.' % var )
       exit(0)
 
 
@@ -78,7 +78,7 @@ if os.path.exists(spliceApiDir.abspath):
   
 else:
 
-  print 'The folder "'+spliceApiDir.abspath+'" does not exist. Please see the README.md for build instructions.'
+  print( 'The folder "'+spliceApiDir.abspath+'" does not exist. Please see the README.md for build instructions.' )
   exit(0)
 
 stageDir = spliceEnv.Dir('.stage').Dir('DCCIntegrations').Dir('FabricMaya'+os.environ['MAYA_VERSION'])
