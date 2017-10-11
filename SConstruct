@@ -81,6 +81,7 @@ else:
   print 'The folder "'+spliceApiDir.abspath+'" does not exist. Please see the README.md for build instructions.'
   exit(0)
 
+stageDir = spliceEnv.Dir('.stage').Dir('DCCIntegrations').Dir('FabricMaya'+os.environ['MAYA_VERSION'])
 (mayaSpliceAlias, mayaSpliceFiles, returned) = SConscript(
   os.path.join('SConscript'),
   exports = {
@@ -90,7 +91,8 @@ else:
     'FABRIC_BUILD_TYPE': os.environ['FABRIC_BUILD_TYPE'],
     'FABRIC_BUILD_OS': os.environ['FABRIC_BUILD_OS'],
     'FABRIC_BUILD_ARCH': os.environ['FABRIC_BUILD_ARCH'],
-    'STAGE_DIR': spliceEnv.Dir('.stage').Dir('DCCIntegrations').Dir('FabricMaya'+os.environ['MAYA_VERSION']),
+    'STAGE_DIR': stageDir,
+    'FABRIC_STAGE_DIR': stageDir,
     'MAYA_BIN_DIR': os.environ['MAYA_BIN_DIR'],
     'MAYA_INCLUDE_DIR': os.environ['MAYA_INCLUDE_DIR'],
     'MAYA_LIB_DIR': os.environ['MAYA_LIB_DIR'],

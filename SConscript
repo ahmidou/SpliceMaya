@@ -7,6 +7,7 @@ import os
 Import(
   'parentEnv',
   'FABRIC_DIR',
+  'FABRIC_STAGE_DIR',
   'FABRIC_SPLICE_VERSION',
   'STAGE_DIR',
   'FABRIC_BUILD_OS',
@@ -255,7 +256,7 @@ mayaModuleFile = env.SubstMayaModuleFile(
 
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
-installedLibFabricMaya = env.Install(Dir(STAGE_DIR).Dir('lib'), libFabricMaya)
+installedLibFabricMaya = env.Install(Dir(FABRIC_STAGE_DIR).Dir('lib'), libFabricMaya)
 mayaFiles.append(installedLibFabricMaya)
 
 for png in ['canvasNode', 'out_canvasNode', 'canvasDeformer', 'out_canvasDeformer', 'canvasFuncNode', 'out_canvasFuncNode', 'canvasFuncDeformer', 'out_canvasFuncDeformer', 'canvasRigNode', 'out_canvasRigNode', 'fabricConstraint', 'out_fabricConstraint']:
