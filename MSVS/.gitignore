@@ -1,0 +1,3 @@
+# call "scons MSVS" from SpliceMaya/ on Windows to generate files here
+*
+!.gitignore

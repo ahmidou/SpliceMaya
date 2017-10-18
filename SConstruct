@@ -15,17 +15,29 @@ if 'clean' in COMMAND_LINE_TARGETS:
   Return()
 
 # check environment variables
-for var in ['FABRIC_DIR', 'FABRIC_SPLICE_VERSION', 'FABRIC_BUILD_OS', 'FABRIC_BUILD_ARCH', 'FABRIC_BUILD_TYPE', 'MAYA_BIN_DIR', 'MAYA_INCLUDE_DIR', 'MAYA_LIB_DIR', 'MAYA_VERSION', 'FABRIC_UI_DIR']:
-  if not os.environ.has_key(var):
-    print 'The environment variable %s is not defined.' % var
+for var in [
+  'FABRIC_DIR',
+  'FABRIC_SPLICE_VERSION',
+  'FABRIC_BUILD_OS',
+  'FABRIC_BUILD_ARCH',
+  'FABRIC_BUILD_TYPE',
+  'MAYA_BIN_DIR',
+  'MAYA_INCLUDE_DIR',
+  'MAYA_LIB_DIR',
+  'MAYA_VERSION',
+  'FABRIC_UI_DIR',
+  'BOOST_DIR',
+]:
+  if not var in os.environ:
+    print( 'The environment variable %s is not defined.' % var )
     exit(0)
   if var.lower().endswith('_dir'):
     if not os.path.exists(os.environ[var]):
-      print 'The path for environment variable %s does not exist.' % var
+      print( 'The path for environment variable %s does not exist.' % var )
       exit(0)
 
 
-FTL_INCLUDE_DIR = os.path.join(os.environ['FABRIC_DIR'], 'include', 'FTL')
+FTL_INCLUDE_DIR = os.path.join(os.environ['FABRIC_DIR'], 'include')
 Export('FTL_INCLUDE_DIR')
 commandsFlags = {}
 astWrapperFlags = {}
@@ -33,7 +45,9 @@ astWrapperFlags = {}
 codeCompletionFlags = {}
 Export('commandsFlags', 'astWrapperFlags', 'codeCompletionFlags')
 
-spliceEnv = Environment()
+spliceEnv = Environment(
+  MSVC_VERSION = ( os.environ['MSVC_VERSION'] if 'MSVC_VERSION' in os.environ else '12.0' )
+)
 
 if not os.path.exists(spliceEnv.Dir('.stage').Dir('lib').abspath):
   os.makedirs(spliceEnv.Dir('.stage').Dir('lib').abspath)
@@ -54,6 +68,7 @@ if os.path.exists(spliceApiDir.abspath):
       'FABRIC_BUILD_OS': os.environ['FABRIC_BUILD_OS'],
       'FABRIC_BUILD_ARCH': os.environ['FABRIC_BUILD_ARCH'],
       'STAGE_DIR': spliceEnv.Dir('.stage'),
+      'BOOST_DIR': os.environ['BOOST_DIR'],
     },
     duplicate=0,
     variant_dir = spliceEnv.Dir('.build').Dir('SpliceAPI')
@@ -63,10 +78,11 @@ if os.path.exists(spliceApiDir.abspath):
   
 else:
 
-  print 'The folder "'+spliceApiDir.abspath+'" does not exist. Please see the README.md for build instructions.'
+  print( 'The folder "'+spliceApiDir.abspath+'" does not exist. Please see the README.md for build instructions.' )
   exit(0)
 
-(mayaSpliceAlias, mayaSpliceFiles) = SConscript(
+stageDir = spliceEnv.Dir('.stage').Dir('DCCIntegrations').Dir('FabricMaya'+os.environ['MAYA_VERSION'])
+(mayaSpliceAlias, mayaSpliceFiles, returned) = SConscript(
   os.path.join('SConscript'),
   exports = {
     'parentEnv': spliceEnv,
@@ -75,7 +91,8 @@ else:
     'FABRIC_BUILD_TYPE': os.environ['FABRIC_BUILD_TYPE'],
     'FABRIC_BUILD_OS': os.environ['FABRIC_BUILD_OS'],
     'FABRIC_BUILD_ARCH': os.environ['FABRIC_BUILD_ARCH'],
-    'STAGE_DIR': spliceEnv.Dir('.stage').Dir('DCCIntegrations').Dir('FabricMaya'+os.environ['MAYA_VERSION']),
+    'STAGE_DIR': stageDir,
+    'FABRIC_STAGE_DIR': stageDir,
     'MAYA_BIN_DIR': os.environ['MAYA_BIN_DIR'],
     'MAYA_INCLUDE_DIR': os.environ['MAYA_INCLUDE_DIR'],
     'MAYA_LIB_DIR': os.environ['MAYA_LIB_DIR'],
@@ -85,6 +102,18 @@ else:
   duplicate=0,
   variant_dir = spliceEnv.Dir('.build').Dir(os.environ['MAYA_VERSION'])
 )
+
+if os.environ['FABRIC_BUILD_OS'] == 'Windows' :
+
+  msvsEnv = returned['msvs']['env']
+  msvsEnv['CPPPATH'] = [ p if type(p) is str else p.srcnode().abspath for p in msvsEnv['CPPPATH'] ]
+  msvsProj = msvsEnv.MSVSProject(
+    target = 'MSVS/SpliceMaya' + msvsEnv['MSVSPROJECTSUFFIX'],
+    srcs = [ os.path.join(spliceEnv.Dir('.').srcnode().abspath, str(s)) for s in returned['msvs']['src'] ],
+    variant = 'Release'
+  )
+  msvsEnv.Alias( "MSVS", msvsProj )
+
 
 allAliases = [mayaSpliceAlias]
 spliceEnv.Alias('all', allAliases)

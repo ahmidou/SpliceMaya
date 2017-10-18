@@ -7,6 +7,7 @@ import os
 Import(
   'parentEnv',
   'FABRIC_DIR',
+  'FABRIC_STAGE_DIR',
   'FABRIC_SPLICE_VERSION',
   'STAGE_DIR',
   'FABRIC_BUILD_OS',
@@ -125,11 +126,11 @@ env.Append(LIBS = ['FabricSplitSearch'])
 uiLibPrefix = 'uiMaya'+str(MAYA_VERSION)
 
 uiDir = env.Dir('#').Dir('Native').Dir('FabricUI')
-if os.environ.has_key('FABRIC_UI_DIR'):
+if 'FABRIC_UI_DIR' in os.environ:
   uiDir = env.Dir(os.environ['FABRIC_UI_DIR'])
 uiSconscript = uiDir.File('SConscript')
 if not os.path.exists(uiSconscript.abspath):
-  print "Error: You need to have FabricUI checked out to "+uiSconscript.dir.abspath
+  print( "Error: You need to have FabricUI checked out to "+uiSconscript.dir.abspath )
 
 env.Append(CPPPATH = [os.path.join(os.environ['FABRIC_DIR'], 'include')])
 env.Append(LIBPATH = [os.path.join(os.environ['FABRIC_DIR'], 'lib')])
@@ -153,6 +154,11 @@ uiLibs = SConscript(uiSconscript, exports = {
   'buildOS': FABRIC_BUILD_OS,
   'buildArch': FABRIC_BUILD_ARCH,
   'stageDir': env.Dir('#').Dir('stage').Dir('lib'),
+  'capiSharedLibFlags': {},
+  'corePythonModuleFiles': [],
+  'pythonConfigs': {},
+  'withShiboken': False,
+  'servicesFlags_mt': {}
   },
   duplicate=0,
   variant_dir = env.Dir('FabricUI')
@@ -250,7 +256,7 @@ mayaModuleFile = env.SubstMayaModuleFile(
 
 mayaFiles = []
 mayaFiles.append(env.Install(STAGE_DIR, mayaModuleFile))
-installedLibFabricMaya = env.Install(Dir(FABRIC_DIR).Dir('lib'), libFabricMaya)
+installedLibFabricMaya = env.Install(Dir(FABRIC_STAGE_DIR).Dir('lib'), libFabricMaya)
 mayaFiles.append(installedLibFabricMaya)
 
 for png in ['canvasNode', 'out_canvasNode', 'canvasDeformer', 'out_canvasDeformer', 'canvasFuncNode', 'out_canvasFuncNode', 'canvasFuncDeformer', 'out_canvasFuncDeformer', 'canvasRigNode', 'out_canvasRigNode', 'fabricConstraint', 'out_fabricConstraint']:
@@ -286,5 +292,10 @@ else:
 env.Depends(mayaModule, installedLibFabricMaya)
 
 alias = env.Alias('splicemaya', mayaFiles)
-spliceData = (alias, mayaFiles)
+spliceData = (alias, mayaFiles, {
+  'msvs' : {
+    'env' : libEnv.Clone(),
+    'src' : libSources
+  }
+})
 Return('spliceData')
