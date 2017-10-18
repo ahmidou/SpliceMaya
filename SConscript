@@ -167,6 +167,11 @@ uiLibs = SConscript(uiSconscript, exports = {
 # import the maya specific libraries
 Import(uiLibPrefix+'Flags')
 
+if FABRIC_BUILD_OS == 'Windows':
+  env.Append(CCFLAGS = ['/EHa'])
+
+env.Append(CPPDEFINES = ['FECS_STATIC'])
+
 # ui flags
 env.MergeFlags(locals()[uiLibPrefix + 'Flags'])
 

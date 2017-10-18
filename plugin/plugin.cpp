@@ -258,7 +258,7 @@ bool isDestroyingScene()
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
 #endif
-MAYA_EXPORT initializePlugin(MObject obj)
+PLUGIN_EXPORT MStatus initializePlugin(MObject obj)
 {
   // Uncomment the following to have stdout and stderr printed into files (else these will not
   // be seen in the Maya console)
@@ -443,7 +443,7 @@ MAYA_EXPORT initializePlugin(MObject obj)
 #if defined(OSMac_)
 __attribute__ ((visibility("default")))
 #endif
-MAYA_EXPORT uninitializePlugin(MObject obj)
+PLUGIN_EXPORT MStatus uninitializePlugin(MObject obj)
 {
   MFnPlugin plugin(obj);
   MStatus status = MStatus::kSuccess;

@@ -19,16 +19,16 @@ using namespace FabricServices;
 using namespace FabricUI;
 
 #define MAYADFG_CATCH_BEGIN(statusPtr) \
-  if((MStatus *)(statusPtr) != NULL) \
-    *statusPtr=MS::kSuccess; \
+  if((uintptr_t)(statusPtr) != (uintptr_t)NULL) \
+    *((MStatus*)statusPtr) = MS::kSuccess; \
   try {
 
 #define MAYADFG_CATCH_END(statusPtr) } \
   catch (FabricCore::Exception e) { \
     if (e.getDescLength()) \
       mayaLogErrorFunc(e.getDesc_cstr()); \
-    if ((MStatus *)(statusPtr) != NULL) \
-      *statusPtr=MS::kFailure; \
+    if ((uintptr_t)(statusPtr) != (uintptr_t)NULL) \
+      *((MStatus*)statusPtr) = MS::kFailure; \
   }
 #define MAYADFG_CATCH_MPXNODE_END(statusPtr) } \
   catch (FabricCore::Exception e) { \
@@ -37,8 +37,8 @@ using namespace FabricUI;
       MFnDependencyNode depNode(thisMObject()); \
       mayaLogErrorFunc(depNode.name()+": "+MString(e.getDesc_cstr())); \
     } \
-    if ((MStatus *)(statusPtr) != NULL) \
-      *statusPtr=MS::kFailure; \
+    if ((uintptr_t)(statusPtr) != (uintptr_t)NULL) \
+      *((MStatus*)statusPtr) = MS::kFailure; \
   }
   
 class FabricDFGWidget;

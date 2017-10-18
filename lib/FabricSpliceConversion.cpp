@@ -1514,7 +1514,11 @@ void plugToPort_AnimXAnimCurve_helper(MFnAnimCurve & curve, FabricCore::RTVal & 
     Float64 tanOutY
     */
 
+#if MAYA_API_VERSION >= 201800
+    double x,y;
+#else
     float x,y;
+#endif
     FabricCore::RTVal pushKeyArgs[8];
     pushKeyArgs[0] = FabricSplice::constructFloat64RTVal(curve.time(i).as(MTime::kSeconds));
     pushKeyArgs[1] = FabricSplice::constructFloat64RTVal(curve.value(i));
