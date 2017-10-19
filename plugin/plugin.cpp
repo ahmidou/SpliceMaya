@@ -106,6 +106,22 @@ void onSceneSave(void *userData){
   FabricDFGBaseInterface::allStorePersistenceData(mayaGetLastLoadedScene(), &status);
 }
 
+// [FE-8836] : Clear ID between two scenes.
+bool canResetKLSingletonsOnNewScene = false;
+void resetKLSingletonsOnNewScene() {
+  // Don't do it the first time ID is loaded, otherwise the
+  // drawing is cleared. Need to investigate why [FE-8879].
+  if(canResetKLSingletonsOnNewScene) 
+  {
+    const FabricCore::Client * client = NULL;
+    FECS_DGGraph_getClient(&client);
+    if (client) {
+      FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
+      handleVal.callMethod("", "onNewScene", 0, NULL);
+    }
+  }
+}
+
 void onSceneNew(void *userData){
   FabricCommandManagerCallback::GetManagerCallback()->reset();
 
@@ -128,29 +144,23 @@ void onSceneNew(void *userData){
     // rather than destroying the client via
     // FabricSplice::DestroyClient() we only
     // remove all singleton objects.
-    const FabricCore::Client * client = NULL;
-    FECS_DGGraph_getClient(&client);
-    if (client)
-    {
-      FabricCore::RTVal handleVal = FabricSplice::constructObjectRTVal("SingletonHandle");
-      handleVal.callMethod("", "onNewScene", 0, NULL);
-    }
+    resetKLSingletonsOnNewScene();
   }
-  FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onSceneLoad(void *userData){
-  FabricCommandManagerCallback::GetManagerCallback()->reset();
-
-  FabricSpliceEditorWidget::postClearAll();
-  FabricRenderCallback::sDrawContext.invalidate(); 
 
   if(getenv("FABRIC_SPLICE_PROFILING") != NULL)
     FabricSplice::Logging::enableTimers();
+  
+  // [FE-8836]
+  resetKLSingletonsOnNewScene();
+  FabricCommandManagerCallback::GetManagerCallback()->reset();
+  canResetKLSingletonsOnNewScene = true;
 
   MStatus status = MS::kSuccess;
   mayaSetLastLoadedScene(MFileIO::currentFile());
-
+     
   // visit all existing extension package nodes and check if this has already been packaged.
   // check for all names with the same suffix.
   if(FabricExtensionPackageNode::getNumInstances() > 0)
@@ -201,8 +211,6 @@ void onSceneLoad(void *userData){
   // [FE-6612] invalidate all DFG nodes.
   for (unsigned int i=0;i<FabricDFGBaseInterface::getNumInstances();i++)
     FabricDFGBaseInterface::getInstanceByIndex(i)->invalidateNode();
-  
-  FabricCommandManagerCallback::GetManagerCallback()->reset();
 }
 
 void onBeforeImport(void *userData){
