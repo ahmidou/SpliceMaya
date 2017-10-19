@@ -49,6 +49,11 @@ spliceEnv = Environment(
   MSVC_VERSION = ( os.environ['MSVC_VERSION'] if 'MSVC_VERSION' in os.environ else '12.0' )
 )
 
+if os.environ['FABRIC_BUILD_OS'] != 'Windows' :
+  if 'GCC_ROOT' in os.environ :
+    spliceEnv.Replace( CC = os.path.join( os.environ['GCC_ROOT'], 'bin', 'gcc' ) )
+    spliceEnv.Replace( CXX = os.path.join( os.environ['GCC_ROOT'], 'bin', 'g++' ) )
+
 if not os.path.exists(spliceEnv.Dir('.stage').Dir('lib').abspath):
   os.makedirs(spliceEnv.Dir('.stage').Dir('lib').abspath)
 

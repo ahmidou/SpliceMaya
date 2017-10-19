@@ -51,6 +51,7 @@ To inform scons where to find the Fabric Core includes as well as the thirdparty
 * MAYA_BIN_DIR: The bin folder of the Autodesk Maya installation. It should contain a working `moc` (Qt's meta-object compiler) executable.
 * MAYA_VERSION: The Maya version to use including eventual SP suffix. (for example: 2014SP2)
 * BOOST_DIR: The folder of a Boost installation.
+* GCC_ROOT (optional): The compiler can be overridden by using this variable (`$GCC_ROOT/bin/gcc` and `$GCC_ROOT/bin/g++` will be used)
 
 The temporary files will be built into the *.build* folder, while the structured output files will be placed in the *.stage* folder.
 

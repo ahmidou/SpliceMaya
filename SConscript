@@ -37,6 +37,9 @@ env.Append(BUILDERS = {'QTMOC': qtMOCBuilder})
 
 uses_qt5 = int(float(str(MAYA_VERSION[:4]))) >= 2017
 
+if FABRIC_BUILD_OS != 'Windows' and int(MAYA_VERSION) >= 2018 :
+  env.Append( CXXFLAGS = '-std=c++11' )
+
 mayaFlags = {
   'CPPPATH': [
       env.Dir('lib').srcnode(),
